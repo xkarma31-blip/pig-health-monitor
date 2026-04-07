@@ -1,0 +1,20 @@
+# Task: Capstone Blueprint Ritual (The Binding)
+
+- [x] Phase 1: Peak Research "The Grand Ranking" <!-- id: 0 -->
+    - [x] Identified 5 "Master-Class" Innovations (Cacao, Aqua, Pig, Thermal, Seaweed) <!-- id: 1 -->
+    - [x] Verified Academic Gaps (2020-2025 RRL) <!-- id: 2 -->
+    - [x] Market Cross-checked (Shopee/Lazada) <!-- id: 3 -->
+- [x] Phase 2: The Binding (Selection) <!-- id: 4 -->
+    - [x] Confirm User Selection (Pig Health Monitor Focus) <!-- id: 5 -->
+    - [x] **Verify Exact Academic Sources for Pig Health Monitor** <!-- id: 6 -->
+    - [x] Execute "/binding_ritual" (Blueprint Created: `task_plan.md`) <!-- id: 7 -->
+- [x] Phase 3: The Architecture (BLAST Protocol) <!-- id: 8 -->
+    - [x] Define Hardware Stack (ESP32-S3 + INMP441 + MQ135) <!-- id: 9 -->
+    - [x] Define Software Stack (Edge Impulse + Firebase) <!-- id: 10 -->
+    - [x] Define RRL List (Lagua, Chae, Wen, Diab) <!-- id: 11 -->
+- [x] Phase 4: The Manifestation (Implementation) <!-- id: 12 -->
+    - [x] Create Shopping List (BOM) <!-- id: 13 -->
+    - [x] **Draft "Concept Paper" (Why & How) for User** <!-- id: 14 -->
+    - [x] Create Master Dossier (All 5 Ideas) <!-- id: 15 -->
+    - [x] Establish Git Repository & Firmware Structure <!-- id: 16 -->
+    - [ ] Create Firmware Skeleton (main.cpp, audio_config.h) <!-- id: 17 -->
