@@ -1,0 +1,10 @@
+nohup: ignoring input
+env: load .env
+env: export EXPO_PUBLIC_SUPABASE_URL EXPO_PUBLIC_SUPABASE_ANON_KEY
+Starting project at /home/solrahk/.gemini/antigravity/scratch/soul-expo-app
+› Port 8081 is running this app in another window
+  /home/solrahk/.gemini/antigravity/scratch/soul-expo-app (pid 402136)
+Input is required, but 'npx expo' is in non-interactive mode.
+Required input:
+> Use port 8082 instead?
+› Skipping dev server
