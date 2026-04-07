@@ -1,0 +1,15 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+spawn npx expo start --tunnel --clear
+
+expect {
+    -re "It is recommended to log in with your Expo account before proceeding." {
+        # Expo prints the options after a slight delay sometimes, wait half a second
+        sleep 0.5
+        # Send Down Arrow (\033\[B) and Enter (\r)
+        send "\033\[B\r"
+        exp_continue
+    }
+    eof
+}

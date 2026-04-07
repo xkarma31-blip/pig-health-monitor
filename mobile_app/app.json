@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "soul-expo-app",
-    "slug": "soul-expo-app",
+    "name": "Pig Health Monitor",
+    "slug": "pig-health-monitor",
     "scheme": "soulexpoapp",
     "version": "1.0.0",
     "orientation": "portrait",
