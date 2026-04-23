@@ -13,6 +13,7 @@
 #include "secrets.h"
 #include "ThermalCamera.h"
 #include "AcousticSignature.h"
+#include "ThermalIdentification.h"
 
 // ==========================================
 // 🐷 Pig Health Monitor FIRMWARE v1.1: Intelligence
@@ -22,6 +23,7 @@
 // --- Sensor Objects ---
 ThermalEye thermal;
 AcousticEar acoustic;
+ThermalID identify;
 
 // --- Firebase Global Objects ---
 FirebaseData fbdo;
@@ -130,6 +132,14 @@ void loop() {
       alertJson.set("message", "Acoustic signature matched a dry cough.");
       alertJson.set("timestamp/.sv", "timestamp");
       Firebase.RTDB.pushJSON(&fbdo, alertPath.c_str(), &alertJson);
+    }
+
+    // 4. Manual Data Collection Trigger (Serial Input)
+    if (Serial.available()) {
+      char c = Serial.read();
+      if (c == 'c') { // 'c' for Collect
+        identify.printDataForCollection(thermal.frame);
+      }
     }
   }
 }
