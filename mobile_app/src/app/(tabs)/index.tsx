@@ -1,11 +1,8 @@
 /**
  * 📊 Dashboard Screen (Tab 1 — Home)
- * 
- * This is the MAIN screen users see when they open the app.
- * It shows a summary of ALL sensor readings using compact SensorCards.
- * 
+ *
+ * Main screen showing a real-time summary of ALL sensor readings.
  * Uses Firebase RTDB for live data with mock data as fallback.
- * TODO: Remove mock fallback once ESP32 hardware is connected.
  */
 
 import { useState, useEffect } from 'react';
@@ -13,7 +10,7 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Theme } from '../../constants/Theme';
 import { SensorCard } from '../../components/SensorCard';
 import { AlertRow } from '../../components/AlertRow';
-import { subscribeSensors, subscribeAlerts } from '../../utils/firebase';
+import { subscribeSensors, subscribeAlerts, subscribeTelemetry } from '../../utils/firebase';
 import type { SensorReading } from '../../data/mockSensors';
 
 // Fallback mock data (used when Firebase has no entries)
@@ -24,6 +21,9 @@ export default function DashboardScreen() {
   const [sensors, setSensors] = useState<SensorReading[]>(mockSensors);
   const [alerts, setAlerts] = useState<any[]>(mockAlerts);
   const [isLive, setIsLive] = useState(false);
+  const [identifiedPig, setIdentifiedPig] = useState<string>('SCANNING...');
+  const [currentTemp, setCurrentTemp] = useState<string>('—');
+  const [healthStatus, setHealthStatus] = useState<string>('NORMAL');
 
   useEffect(() => {
     // Subscribe to Firebase RTDB — falls back to mock data if empty
@@ -40,9 +40,19 @@ export default function DashboardScreen() {
       }
     });
 
+    // Subscribe to telemetry using the proper helper (fixes missing ref/db/onValue imports)
+    const unsubTele = subscribeTelemetry('esp32-s3-01', (data) => {
+      if (data) {
+        if (data.identifiedPig) setIdentifiedPig(data.identifiedPig);
+        if (data.temperature != null) setCurrentTemp(`${data.temperature.toFixed(1)} °C`);
+        if (data.status) setHealthStatus(data.status);
+      }
+    });
+
     return () => {
       unsubSensors();
       unsubAlerts();
+      unsubTele();
     };
   }, []);
 
@@ -50,12 +60,40 @@ export default function DashboardScreen() {
   const dangerCount = sensors.filter((s) => s.status === 'danger').length;
   const recentAlerts = alerts.slice(0, 3);
 
+  const statusColor = healthStatus === 'CRITICAL'
+    ? Theme.colors.danger
+    : healthStatus === 'WARNING'
+    ? Theme.colors.warning
+    : Theme.colors.success;
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* === Header === */}
       <View style={styles.header}>
         <Text style={styles.title}>🐗 Pig Health Monitor</Text>
         <Text style={styles.subtitle}>Sovereign Aqua Protocol — Dashboard</Text>
+
+        {/* Hero Card: Identified Pig + Vitals */}
+        <View style={styles.heroContainer}>
+          <View style={styles.heroRow}>
+            <View style={styles.heroPanel}>
+              <Text style={styles.heroLabel}>IDENTIFIED PIG</Text>
+              <Text style={styles.heroValue}>{identifiedPig}</Text>
+            </View>
+            <View style={[styles.heroPanel, styles.heroDivider]}>
+              <Text style={styles.heroLabel}>TEMPERATURE</Text>
+              <Text style={[styles.heroValue, { color: statusColor }]}>{currentTemp}</Text>
+            </View>
+          </View>
+          <View style={[styles.statusBar, { backgroundColor: statusColor + '33', borderColor: statusColor }]}>
+            <Text style={[styles.statusText, { color: statusColor }]}>
+              {healthStatus === 'CRITICAL' ? '🚨 CRITICAL — Cough Detected' :
+               healthStatus === 'WARNING' ? '⚠️ WARNING — Elevated Temperature' :
+               '✅ NORMAL — All systems nominal'}
+            </Text>
+          </View>
+        </View>
+
         {isLive && (
           <View style={styles.liveBadge}>
             <Text style={styles.liveBadgeText}>🔴 LIVE — Firebase RTDB</Text>
@@ -144,6 +182,55 @@ const styles = StyleSheet.create({
     color: '#66fcf1',
     fontSize: Theme.typography.caption,
     fontWeight: 'bold',
+  },
+  heroContainer: {
+    marginTop: Theme.spacing.lg,
+    padding: Theme.spacing.md,
+    backgroundColor: Theme.colors.surface,
+    borderRadius: Theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: '#66fcf1' + '44',
+    width: '100%',
+    overflow: 'hidden',
+  },
+  heroRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: Theme.spacing.md,
+  },
+  heroPanel: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: Theme.spacing.sm,
+  },
+  heroDivider: {
+    borderLeftWidth: 1,
+    borderLeftColor: '#66fcf1' + '44',
+  },
+  heroLabel: {
+    color: Theme.colors.textMuted,
+    fontSize: Theme.typography.caption,
+    letterSpacing: 1.5,
+    marginBottom: Theme.spacing.xs,
+    textTransform: 'uppercase',
+  },
+  heroValue: {
+    color: '#66fcf1',
+    fontSize: Theme.typography.h2,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  statusBar: {
+    borderRadius: Theme.borderRadius.sm,
+    borderWidth: 1,
+    paddingVertical: Theme.spacing.xs,
+    paddingHorizontal: Theme.spacing.sm,
+    alignItems: 'center',
+  },
+  statusText: {
+    fontSize: Theme.typography.caption,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
   },
   statsRow: {
     flexDirection: 'row',

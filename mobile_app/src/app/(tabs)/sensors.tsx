@@ -9,10 +9,10 @@
  */
 
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, FlatList } from 'react-native';
 import { Theme } from '../../constants/Theme';
 import { SensorCard } from '../../components/SensorCard';
-import { subscribeSensors, enrollPig } from '../../utils/firebase';
+import { subscribeSensors, enrollPig, subscribeRoster } from '../../utils/firebase';
 import { TouchableOpacity } from 'react-native';
 import type { SensorReading } from '../../data/mockSensors';
 
@@ -21,17 +21,27 @@ import { mockSensors } from '../../data/mockSensors';
 
 export default function SensorsScreen() {
   const [sensors, setSensors] = useState<SensorReading[]>(mockSensors);
+  const [roster, setRoster] = useState<any[]>([]);
   const [isLive, setIsLive] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
+  const [newPigName, setNewPigName] = useState('');
 
   useEffect(() => {
-    const unsub = subscribeSensors((liveSensors) => {
+    const unsubSensors = subscribeSensors((liveSensors) => {
       if (liveSensors.length > 0) {
         setSensors(liveSensors);
         setIsLive(true);
       }
     });
-    return () => unsub();
+
+    const unsubRoster = subscribeRoster((liveRoster) => {
+      setRoster(liveRoster);
+    });
+
+    return () => {
+      unsubSensors();
+      unsubRoster();
+    };
   }, []);
 
   // Group sensors by type
@@ -52,23 +62,48 @@ export default function SensorsScreen() {
         <Text style={styles.sectionTitle}>🐷 Pig Roster</Text>
         <Text style={styles.sectionDesc}>Enroll and manage individual pig identities</Text>
         
-        <TouchableOpacity 
-          style={[styles.enrollButton, isEnrolling && styles.buttonDisabled]} 
-          onPress={async () => {
-            setIsEnrolling(true);
-            try {
-              await enrollPig("New Pig #" + (Math.floor(Math.random() * 100)));
-              alert("Ritual Initiated: Capture thermal reference frame.");
-            } finally {
-              setIsEnrolling(false);
-            }
-          }}
-          disabled={isEnrolling}
-        >
-          <Text style={styles.enrollButtonText}>
-            {isEnrolling ? '📡 COMMAND SENT...' : '+ ENROLL NEW PIG'}
-          </Text>
-        </TouchableOpacity>
+        <View style={styles.inputGroup}>
+          <TextInput
+            style={styles.input}
+            placeholder="Enter Pig Name (e.g. Boss Hog)"
+            placeholderTextColor={Theme.colors.textMuted}
+            value={newPigName}
+            onChangeText={setNewPigName}
+          />
+          <TouchableOpacity 
+            style={[styles.enrollButton, (isEnrolling || !newPigName) && styles.buttonDisabled]} 
+            onPress={async () => {
+              if (!newPigName) return;
+              setIsEnrolling(true);
+              try {
+                await enrollPig(newPigName);
+                alert(`Ritual Initiated: Capturing ${newPigName}. Stand by.`);
+                setNewPigName('');
+              } finally {
+                setIsEnrolling(false);
+              }
+            }}
+            disabled={isEnrolling || !newPigName}
+          >
+            <Text style={styles.enrollButtonText}>
+              {isEnrolling ? '📡 ENROLLING...' : '+ ENROLL PIG'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* --- Roster List --- */}
+        <View style={styles.rosterList}>
+          {roster.length === 0 ? (
+            <Text style={styles.emptyText}>No pigs enrolled yet.</Text>
+          ) : (
+            roster.map((pig) => (
+              <View key={pig.id} style={styles.rosterItem}>
+                <Text style={styles.rosterItemName}>🐖 {pig.name}</Text>
+                <Text style={styles.rosterItemDate}>{new Date(pig.enrolledAt).toLocaleDateString()}</Text>
+              </View>
+            ))
+          )}
+        </View>
       </View>
 
       {/* === Thermal Section === */}
@@ -163,6 +198,48 @@ const styles = StyleSheet.create({
     fontSize: Theme.typography.body,
     fontWeight: 'bold',
     letterSpacing: 1,
+  },
+  inputGroup: {
+    marginTop: Theme.spacing.md,
+  },
+  input: {
+    backgroundColor: Theme.colors.card,
+    color: Theme.colors.text,
+    padding: Theme.spacing.md,
+    borderRadius: Theme.borderRadius.sm,
+    borderWidth: 1,
+    borderColor: Theme.colors.cardBorder,
+    fontSize: Theme.typography.body,
+    marginBottom: Theme.spacing.sm,
+  },
+  rosterList: {
+    marginTop: Theme.spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: Theme.colors.cardBorder,
+    paddingTop: Theme.spacing.md,
+  },
+  rosterItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Theme.spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.cardBorder + '44',
+  },
+  rosterItemName: {
+    color: Theme.colors.text,
+    fontSize: Theme.typography.body,
+    fontWeight: '500',
+  },
+  rosterItemDate: {
+    color: Theme.colors.textMuted,
+    fontSize: Theme.typography.caption,
+  },
+  emptyText: {
+    color: Theme.colors.textMuted,
+    textAlign: 'center',
+    fontStyle: 'italic',
+    marginTop: Theme.spacing.md,
   },
   notice: {
     marginTop: Theme.spacing.xl,

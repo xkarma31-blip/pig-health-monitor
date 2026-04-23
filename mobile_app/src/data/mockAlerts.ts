@@ -1,61 +1,97 @@
 /**
  * 🚨 Mock Alert Data
- * 
- * Fake alert history for the Alerts tab.
- * Each alert has a severity level and a message.
+ *
+ * Realistic alert history for the Alerts tab.
+ * Timestamps are Unix epoch ms — required for the CoughTrendChart bucketing logic.
+ * Types match the ESP32 firmware alert schema (INFECTIOUS_COUGH, NON_INFECTIOUS_COUGH, etc.)
  */
 
-export type AlertSeverity = 'info' | 'warning' | 'critical';
+export type AlertSeverity = 'info' | 'warning' | 'critical' | 'HIGH' | 'LOW' | 'WARNING';
 
 export type AlertEntry = {
   id: string;
   severity: AlertSeverity;
+  type?: string;
   message: string;
-  timestamp: string;
-  sensorId: string;       // Which sensor triggered this
+  timestamp: number;        // Unix epoch ms
+  sensorId?: string;
+  pig?: string;
+  deviceId?: string;
 };
+
+// Helper: build a timestamp N hours ago from now
+const hoursAgo = (h: number) => Date.now() - h * 60 * 60 * 1000;
 
 export const mockAlerts: AlertEntry[] = [
   {
     id: 'alert-001',
-    severity: 'warning',
-    message: 'Body temperature elevated to 39.5°C — monitoring closely.',
-    timestamp: '2026-04-07 09:15',
-    sensorId: 'temp-01',
+    severity: 'HIGH',
+    type: 'INFECTIOUS_COUGH',
+    pig: 'Boss Hog',
+    message: 'Infectious cough signature detected (600Hz band dominant). Veterinary check advised.',
+    timestamp: hoursAgo(0.5),
+    deviceId: 'esp32-s3-01',
   },
   {
     id: 'alert-002',
-    severity: 'info',
-    message: 'Acoustic sensor calibrated successfully.',
-    timestamp: '2026-04-07 08:45',
-    sensorId: 'acoustic-01',
+    severity: 'LOW',
+    type: 'NON_INFECTIOUS_COUGH',
+    pig: 'Boss Hog',
+    message: 'Non-infectious cough detected (1600Hz band dominant). Monitor for pattern changes.',
+    timestamp: hoursAgo(1.2),
+    deviceId: 'esp32-s3-01',
   },
   {
     id: 'alert-003',
-    severity: 'critical',
-    message: 'Temperature spike detected: 41.2°C at 03:22 (auto-resolved).',
-    timestamp: '2026-04-06 03:22',
-    sensorId: 'temp-01',
+    severity: 'HIGH',
+    type: 'INFECTIOUS_COUGH',
+    pig: 'Wilbur',
+    message: 'Infectious cough signature detected (600Hz band dominant). Veterinary check advised.',
+    timestamp: hoursAgo(2.0),
+    deviceId: 'esp32-s3-01',
   },
   {
     id: 'alert-004',
-    severity: 'info',
-    message: 'Water bubble rate within optimal range.',
-    timestamp: '2026-04-06 14:00',
-    sensorId: 'flow-01',
+    severity: 'WARNING',
+    type: 'STORAGE_FULL',
+    message: 'Pig roster limit reached (50). Enrollment failed. Remove a pig first.',
+    timestamp: hoursAgo(3.5),
+    deviceId: 'esp32-s3-01',
   },
   {
     id: 'alert-005',
-    severity: 'warning',
-    message: 'Possible cough pattern detected — 2 events in 30 minutes.',
-    timestamp: '2026-04-05 16:30',
-    sensorId: 'acoustic-01',
+    severity: 'HIGH',
+    type: 'INFECTIOUS_COUGH',
+    pig: 'Wilbur',
+    message: 'Infectious cough signature detected (600Hz band dominant). Veterinary check advised.',
+    timestamp: hoursAgo(4.1),
+    deviceId: 'esp32-s3-01',
   },
   {
     id: 'alert-006',
-    severity: 'info',
-    message: 'System startup — all sensors initialized.',
-    timestamp: '2026-04-05 07:00',
-    sensorId: 'flow-02',
+    severity: 'LOW',
+    type: 'NON_INFECTIOUS_COUGH',
+    pig: 'Napoleon',
+    message: 'Non-infectious cough detected (1600Hz band dominant). Monitor for pattern changes.',
+    timestamp: hoursAgo(5.0),
+    deviceId: 'esp32-s3-01',
+  },
+  {
+    id: 'alert-007',
+    severity: 'HIGH',
+    type: 'INFECTIOUS_COUGH',
+    pig: 'Boss Hog',
+    message: 'Infectious cough signature detected (600Hz band dominant). Veterinary check advised.',
+    timestamp: hoursAgo(6.3),
+    deviceId: 'esp32-s3-01',
+  },
+  {
+    id: 'alert-008',
+    severity: 'LOW',
+    type: 'NON_INFECTIOUS_COUGH',
+    pig: 'Napoleon',
+    message: 'Non-infectious cough detected (1600Hz band dominant). Monitor for pattern changes.',
+    timestamp: hoursAgo(7.5),
+    deviceId: 'esp32-s3-01',
   },
 ];

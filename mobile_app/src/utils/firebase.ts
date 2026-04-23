@@ -97,11 +97,12 @@ export function subscribeAlerts(callback: (alerts: any[]) => void) {
 /**
  * Send a command to the ESP32 (e.g., trigger enrollment or calibration)
  */
-export async function sendCommand(command: string, deviceId: string = 'esp32-s3-01') {
-  const newCommandRef = push(commandsRef);
-  return set(newCommandRef, {
-    deviceId,
+export async function sendCommand(command: string, pigName: string = '', deviceId: string = 'esp32-s3-01') {
+  const commandPath = `commands/${deviceId}`;
+  const commandRef = ref(db, commandPath);
+  return set(commandRef, {
     command,
+    pigName, // For enrollment naming
     executed: false,
     timestamp: Date.now(),
   });
@@ -111,17 +112,44 @@ export async function sendCommand(command: string, deviceId: string = 'esp32-s3-
  * Enroll a new pig into the system
  */
 export async function enrollPig(name: string, deviceId: string = 'esp32-s3-01') {
-  // 1. Tell ESP32 to capture a reference embedding
-  await sendCommand('ENROLL_START', deviceId);
+  // 1. Tell ESP32 to capture a reference embedding with a specific name
+  await sendCommand('ENROLL_START', name, deviceId);
   
-  // 2. Placeholder for where the app might receive the embedding back
-  // For now, we just create the record in the roster
+  // 2. Create the record in the roster
   const newPigRef = push(rosterRef);
   return set(newPigRef, {
     name,
     deviceId,
     enrolledAt: new Date().toISOString(),
     status: 'active'
+  });
+}
+
+/**
+ * Subscribe to the pig roster
+ */
+export function subscribeRoster(callback: (roster: any[]) => void) {
+  return onValue(rosterRef, (snapshot) => {
+    const data = snapshot.val();
+    if (!data) {
+      callback([]);
+      return;
+    }
+    const roster = Object.entries(data).map(([id, val]: [string, any]) => ({
+      id,
+      ...val,
+    }));
+    callback(roster);
+  });
+}
+
+/**
+ * Subscribe to telemetry for a specific device
+ */
+export function subscribeTelemetry(deviceId: string, callback: (telemetry: any) => void) {
+  const deviceTeleRef = ref(db, `telemetry/${deviceId}`);
+  return onValue(deviceTeleRef, (snapshot) => {
+    callback(snapshot.val());
   });
 }
 

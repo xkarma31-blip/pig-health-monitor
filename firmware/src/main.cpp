@@ -101,45 +101,91 @@ void loop() {
   size_t bytesRead = 0;
   i2s_read(I2S_PORT, &sampleBuffer, sizeof(sampleBuffer), &bytesRead, portMAX_DELAY);
 
-  // 2. Perform Cough Detection
-  bool coughDetected = acoustic.detectCough(sampleBuffer, bytesRead / 2);
+  // 2. Perform Cough Classification (Dual-Band Research Model)
+  CoughType coughType = acoustic.classifyCough(sampleBuffer, bytesRead / 2);
+  bool coughDetected = (coughType != COUGH_NONE);
 
-  // 3. Telemetry and Alerting (Non-blocking)
+  // 3. Command & Identification Ritual
+  String currentPig = "SCANNING...";
+  if (Firebase.ready()) {
+    // Check for incoming commands
+    if (Firebase.RTDB.getJSON(&fbdo, "/commands/esp32-s3-01")) {
+      FirebaseJson &json = fbdo.jsonData();
+      FirebaseJsonData cmdData;
+      json.get(cmdData, "command");
+      if (cmdData.success && cmdData.stringValue == "ENROLL_START") {
+        FirebaseJsonData nameData;
+        String pigName = "Pig_Auto";
+        if (json.get(nameData, "pigName") && nameData.success) {
+          pigName = nameData.stringValue;
+        }
+        
+        if (!identify.saveEnrollment(pigName, thermal.frame)) {
+          // Alert if storage is full — visible in mobile app
+          String alertPath = "/alerts";
+          FirebaseJson alertJson;
+          alertJson.set("deviceId", deviceId);
+          alertJson.set("type", "STORAGE_FULL");
+          alertJson.set("severity", "WARNING");
+          alertJson.set("message", "Pig roster limit reached (50). Enrollment failed. Remove a pig first.");
+          alertJson.set("timestamp/.sv", "timestamp");
+          Firebase.RTDB.pushJSON(&fbdo, alertPath.c_str(), &alertJson);
+        }
+        Firebase.RTDB.deleteNode(&fbdo, "/commands/esp32-s3-01");
+      }
+    }
+
+    // Continuous ID
+    float bestScore = 0;
+    currentPig = identify.identifyPig(thermal.frame, bestScore);
+    if (currentPig == "UNKNOWN" && bestScore > 0.85) {
+      Serial.printf("🔍 Near Match: %.2f (try re-enrolling this pig)\n", bestScore);
+    }
+  }
+
+  // 4. Telemetry and Alerting (every 5s, non-blocking)
   if (Firebase.ready() && (millis() - sendDataPrevMillis > 5000 || sendDataPrevMillis == 0)) {
     sendDataPrevMillis = millis();
 
     float currentTemp = thermal.getMaxTemp();
     String healthStatus = "NORMAL";
-
     if (currentTemp > 39.5) healthStatus = "WARNING";
     if (coughDetected) healthStatus = "CRITICAL";
 
-    // A. Update Telemetry
+    // A. Push telemetry
     String telePath = "/telemetry/" + deviceId;
     FirebaseJson teleJson;
     teleJson.set("temperature", currentTemp);
     teleJson.set("status", healthStatus);
+    teleJson.set("identifiedPig", currentPig);
     teleJson.set("timestamp/.sv", "timestamp");
     Firebase.RTDB.setJSON(&fbdo, telePath.c_str(), &teleJson);
 
-    // B. Trigger Alert if Critical
+    // B. Alert with severity based on cough type
     if (coughDetected) {
+      String severity = (coughType == COUGH_INFECTIOUS) ? "HIGH" : "LOW";
+      String coughLabel = (coughType == COUGH_INFECTIOUS)
+        ? "INFECTIOUS_COUGH"
+        : "NON_INFECTIOUS_COUGH";
+      String msg = (coughType == COUGH_INFECTIOUS)
+        ? "Infectious cough signature detected (600Hz band dominant). Veterinary check advised."
+        : "Non-infectious cough detected (1600Hz band dominant). Monitor for pattern changes.";
+
       String alertPath = "/alerts";
       FirebaseJson alertJson;
       alertJson.set("deviceId", deviceId);
-      alertJson.set("type", "COUGH_DETECTED");
-      alertJson.set("severity", "HIGH");
-      alertJson.set("message", "Acoustic signature matched a dry cough.");
+      alertJson.set("pig", currentPig);
+      alertJson.set("type", coughLabel);
+      alertJson.set("severity", severity);
+      alertJson.set("message", msg);
       alertJson.set("timestamp/.sv", "timestamp");
       Firebase.RTDB.pushJSON(&fbdo, alertPath.c_str(), &alertJson);
     }
 
-    // 4. Manual Data Collection Trigger (Serial Input)
+    // C. Serial data collection trigger
     if (Serial.available()) {
       char c = Serial.read();
-      if (c == 'c') { // 'c' for Collect
-        identify.printDataForCollection(thermal.frame);
-      }
+      if (c == 'c') identify.printDataForCollection(thermal.frame);
     }
   }
 }
