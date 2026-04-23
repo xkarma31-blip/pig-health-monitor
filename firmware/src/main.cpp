@@ -14,6 +14,7 @@
 #include "ThermalCamera.h"
 #include "AcousticSignature.h"
 #include "ThermalIdentification.h"
+#include <mbedtls/base64.h>
 
 // ==========================================
 // 🐷 Pig Health Monitor FIRMWARE v1.1: Intelligence
@@ -153,11 +154,45 @@ void loop() {
     if (coughDetected) healthStatus = "CRITICAL";
 
     // A. Push telemetry
+    // Calculate target X and Y for bounding box logic using the brightest pixel
+    int targetX = 0;
+    int targetY = 0;
+    float maxT = 0;
+    for (int y = 0; y < 24; y++) {
+      for (int x = 0; x < 32; x++) {
+        float t = thermal.frame[y * 32 + x];
+        if (t > maxT) {
+          maxT = t;
+          targetX = x;
+          targetY = y;
+        }
+      }
+    }
+
+    // Convert thermal float array to uint8_t for smaller payload (base 20C, mapping 20-40C to 0-255)
+    uint8_t byteFrame[768];
+    for(int i = 0; i < 768; i++) {
+      float t = thermal.frame[i];
+      if(t < 20.0f) t = 20.0f;
+      if(t > 40.0f) t = 40.0f;
+      byteFrame[i] = (uint8_t)((t - 20.0f) * 12.75f);
+    }
+
+    // Base64 encode
+    unsigned char base64Str[1500]; // 768 * 4/3 + padding
+    size_t olen = 0;
+    mbedtls_base64_encode(base64Str, sizeof(base64Str), &olen, byteFrame, 768);
+    base64Str[olen] = '\0'; // Ensure null-termination
+    String b64Frame = String((char*)base64Str);
+
     String telePath = "/telemetry/" + deviceId;
     FirebaseJson teleJson;
     teleJson.set("temperature", currentTemp);
     teleJson.set("status", healthStatus);
     teleJson.set("identifiedPig", currentPig);
+    teleJson.set("targetX", targetX);
+    teleJson.set("targetY", targetY);
+    teleJson.set("thermalFrame", b64Frame);
     teleJson.set("timestamp/.sv", "timestamp");
     Firebase.RTDB.setJSON(&fbdo, telePath.c_str(), &teleJson);
 

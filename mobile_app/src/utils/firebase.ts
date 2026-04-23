@@ -8,7 +8,7 @@
  * Backend: Firebase RTDB (replaces legacy Supabase)
  */
 
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getDatabase, ref, onValue, query, orderByChild, limitToLast, push, set } from 'firebase/database';
 import type { SensorReading } from '../data/mockSensors';
 
@@ -23,8 +23,8 @@ const firebaseConfig = {
   appId: '',
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
+// Initialize Firebase securely (avoiding double-init on Fast Refresh)
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
 const db = getDatabase(app);
 
 // === Database References ===

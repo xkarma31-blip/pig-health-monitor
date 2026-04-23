@@ -9,10 +9,11 @@
  */
 
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, FlatList } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput } from 'react-native';
 import { Theme } from '../../constants/Theme';
 import { SensorCard } from '../../components/SensorCard';
-import { subscribeSensors, enrollPig, subscribeRoster } from '../../utils/firebase';
+import { subscribeSensors, enrollPig, subscribeRoster, subscribeTelemetry } from '../../utils/firebase';
+import { ThermalLiveView } from '../../components/ThermalLiveView';
 import { TouchableOpacity } from 'react-native';
 import type { SensorReading } from '../../data/mockSensors';
 
@@ -25,6 +26,8 @@ export default function SensorsScreen() {
   const [isLive, setIsLive] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [newPigName, setNewPigName] = useState('');
+  const [telemetry, setTelemetry] = useState<any>(null);
+  const [selectedTrackingPig, setSelectedTrackingPig] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const unsubSensors = subscribeSensors((liveSensors) => {
@@ -38,9 +41,14 @@ export default function SensorsScreen() {
       setRoster(liveRoster);
     });
 
+    const unsubTelemetry = subscribeTelemetry('esp32-s3-01', (liveData) => {
+      setTelemetry(liveData);
+    });
+
     return () => {
       unsubSensors();
       unsubRoster();
+      unsubTelemetry();
     };
   }, []);
 
@@ -57,6 +65,19 @@ export default function SensorsScreen() {
         </View>
       )}
       
+      {/* === Live Thermal Tracking === */}
+      <View style={{ marginTop: Theme.spacing.md }}>
+        <Text style={styles.sectionTitle}>📡 Live Thermal Feed</Text>
+        <Text style={styles.sectionDesc}>Tap a pig in the roster below to highlight it on the thermal grid</Text>
+        <ThermalLiveView 
+          base64Frame={telemetry?.thermalFrame}
+          targetX={telemetry?.targetX}
+          targetY={telemetry?.targetY}
+          identifiedPig={telemetry?.identifiedPig}
+          selectedPigToTrack={selectedTrackingPig}
+        />
+      </View>
+
       {/* === Enrollment Section === */}
       <View style={styles.enrollmentContainer}>
         <Text style={styles.sectionTitle}>🐷 Pig Roster</Text>
@@ -97,10 +118,17 @@ export default function SensorsScreen() {
             <Text style={styles.emptyText}>No pigs enrolled yet.</Text>
           ) : (
             roster.map((pig) => (
-              <View key={pig.id} style={styles.rosterItem}>
+              <TouchableOpacity 
+                key={pig.id} 
+                style={[
+                  styles.rosterItem, 
+                  selectedTrackingPig === pig.name && styles.rosterItemActive
+                ]}
+                onPress={() => setSelectedTrackingPig(pig.name === selectedTrackingPig ? undefined : pig.name)}
+              >
                 <Text style={styles.rosterItemName}>🐖 {pig.name}</Text>
                 <Text style={styles.rosterItemDate}>{new Date(pig.enrolledAt).toLocaleDateString()}</Text>
-              </View>
+              </TouchableOpacity>
             ))
           )}
         </View>
@@ -225,6 +253,13 @@ const styles = StyleSheet.create({
     paddingVertical: Theme.spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.cardBorder + '44',
+  },
+  rosterItemActive: {
+    backgroundColor: '#00D4AA' + '22',
+    borderColor: '#00D4AA',
+    borderWidth: 1,
+    borderRadius: Theme.borderRadius.sm,
+    paddingHorizontal: Theme.spacing.sm,
   },
   rosterItemName: {
     color: Theme.colors.text,

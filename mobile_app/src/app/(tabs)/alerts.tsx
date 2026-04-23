@@ -11,7 +11,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, Dimensions,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions,
 } from 'react-native';
 import Svg, { Rect, Line, Text as SvgText, G } from 'react-native-svg';
 import { Theme } from '../../constants/Theme';
@@ -21,8 +21,6 @@ import { subscribeAlerts } from '../../utils/firebase';
 // Fallback mock data
 import { mockAlerts } from '../../data/mockAlerts';
 
-const SCREEN_WIDTH = Dimensions.get('window').width;
-const CHART_WIDTH = SCREEN_WIDTH - 48;  // account for padding
 const CHART_HEIGHT = 120;
 const BAR_SLOT_COUNT = 8;               // last 8 hours
 
@@ -50,9 +48,9 @@ function buildCoughTrend(alerts: any[], hours = BAR_SLOT_COUNT) {
 }
 
 // ── Cough Trend Bar Chart (custom SVG) ───────────────────────────────────────
-function CoughTrendChart({ data }: { data: number[] }) {
+function CoughTrendChart({ data, chartWidth }: { data: number[]; chartWidth: number }) {
   const maxVal = Math.max(...data, 1); // avoid /0
-  const barW = (CHART_WIDTH - 32) / data.length;
+  const barW = (chartWidth - 32) / data.length;
   const barGap = 4;
   const effectiveBarW = barW - barGap;
   const chartBottom = CHART_HEIGHT - 20; // leave space for labels
@@ -60,10 +58,10 @@ function CoughTrendChart({ data }: { data: number[] }) {
   return (
     <View style={chartStyles.wrapper}>
       <Text style={chartStyles.title}>🫁 Cough Frequency — Last 8h</Text>
-      <Svg width={CHART_WIDTH} height={CHART_HEIGHT + 8}>
+      <Svg width={chartWidth} height={CHART_HEIGHT + 8}>
         {/* Baseline */}
         <Line
-          x1={0} y1={chartBottom} x2={CHART_WIDTH} y2={chartBottom}
+          x1={0} y1={chartBottom} x2={chartWidth} y2={chartBottom}
           stroke={Theme.colors.cardBorder} strokeWidth={1}
         />
         {data.map((val, i) => {
@@ -113,7 +111,7 @@ function CoughTrendChart({ data }: { data: number[] }) {
         })}
       </Svg>
       <Text style={chartStyles.legend}>
-        🟡 Cough detected&nbsp;&nbsp;🔴 High frequency (≥3)
+        {'🟡 Cough detected   🔴 High frequency (≥3)'}
       </Text>
     </View>
   );
@@ -151,6 +149,9 @@ const FILTERS: { key: FilterType; label: string }[] = [
 ];
 
 export default function AlertsScreen() {
+  const { width } = useWindowDimensions();
+  const chartWidth = width - 48; // 24px padding each side
+
   const [alerts, setAlerts] = useState<any[]>(mockAlerts);
   const [isLive, setIsLive] = useState(false);
   const [filter, setFilter] = useState<FilterType>('ALL');
@@ -158,7 +159,9 @@ export default function AlertsScreen() {
   useEffect(() => {
     const unsub = subscribeAlerts((liveAlerts) => {
       if (liveAlerts.length > 0) {
-        setAlerts(liveAlerts);
+        // Sort by timestamp DESC so newest appears first in list and chart is chronological
+        const sorted = [...liveAlerts].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+        setAlerts(sorted);
         setIsLive(true);
       }
     });
@@ -191,7 +194,7 @@ export default function AlertsScreen() {
       )}
 
       {/* === Cough Trend Chart === */}
-      <CoughTrendChart data={trendData} />
+      <CoughTrendChart data={trendData} chartWidth={chartWidth} />
 
       {/* === Summary Stats === */}
       <View style={styles.summaryRow}>

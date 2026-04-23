@@ -11,9 +11,15 @@
 import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
+import { useEffect } from 'react';
 import { Theme } from '../constants/Theme';
+import { registerForPushNotificationsAsync } from '../utils/notifications';
 
 export default function RootLayout() {
+  useEffect(() => {
+    registerForPushNotificationsAsync().catch(console.error);
+  }, []);
+
   return (
     <View style={{ flex: 1, backgroundColor: Theme.colors.background }}>
       <StatusBar style="light" />
