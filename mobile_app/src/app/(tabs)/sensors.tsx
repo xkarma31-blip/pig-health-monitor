@@ -12,7 +12,8 @@ import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Theme } from '../../constants/Theme';
 import { SensorCard } from '../../components/SensorCard';
-import { subscribeSensors } from '../../utils/firebase';
+import { subscribeSensors, enrollPig } from '../../utils/firebase';
+import { TouchableOpacity } from 'react-native';
 import type { SensorReading } from '../../data/mockSensors';
 
 // Fallback mock data
@@ -21,6 +22,7 @@ import { mockSensors } from '../../data/mockSensors';
 export default function SensorsScreen() {
   const [sensors, setSensors] = useState<SensorReading[]>(mockSensors);
   const [isLive, setIsLive] = useState(false);
+  const [isEnrolling, setIsEnrolling] = useState(false);
 
   useEffect(() => {
     const unsub = subscribeSensors((liveSensors) => {
@@ -44,6 +46,30 @@ export default function SensorsScreen() {
           <Text style={styles.liveBannerText}>🔴 LIVE — Firebase RTDB</Text>
         </View>
       )}
+      
+      {/* === Enrollment Section === */}
+      <View style={styles.enrollmentContainer}>
+        <Text style={styles.sectionTitle}>🐷 Pig Roster</Text>
+        <Text style={styles.sectionDesc}>Enroll and manage individual pig identities</Text>
+        
+        <TouchableOpacity 
+          style={[styles.enrollButton, isEnrolling && styles.buttonDisabled]} 
+          onPress={async () => {
+            setIsEnrolling(true);
+            try {
+              await enrollPig("New Pig #" + (Math.floor(Math.random() * 100)));
+              alert("Ritual Initiated: Capture thermal reference frame.");
+            } finally {
+              setIsEnrolling(false);
+            }
+          }}
+          disabled={isEnrolling}
+        >
+          <Text style={styles.enrollButtonText}>
+            {isEnrolling ? '📡 COMMAND SENT...' : '+ ENROLL NEW PIG'}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {/* === Thermal Section === */}
       <Text style={styles.sectionTitle}>🌡️ Thermal Sensors</Text>
@@ -113,6 +139,30 @@ const styles = StyleSheet.create({
     fontSize: Theme.typography.caption,
     color: Theme.colors.textMuted,
     marginBottom: Theme.spacing.md,
+  },
+  enrollmentContainer: {
+    backgroundColor: Theme.colors.surface,
+    padding: Theme.spacing.md,
+    borderRadius: Theme.borderRadius.md,
+    marginTop: Theme.spacing.md,
+    borderWidth: 1,
+    borderColor: '#66fcf1' + '44',
+  },
+  enrollButton: {
+    backgroundColor: '#66fcf1',
+    paddingVertical: Theme.spacing.md,
+    borderRadius: Theme.borderRadius.sm,
+    alignItems: 'center',
+    marginTop: Theme.spacing.sm,
+  },
+  buttonDisabled: {
+    backgroundColor: Theme.colors.textMuted,
+  },
+  enrollButtonText: {
+    color: Theme.colors.background,
+    fontSize: Theme.typography.body,
+    fontWeight: 'bold',
+    letterSpacing: 1,
   },
   notice: {
     marginTop: Theme.spacing.xl,

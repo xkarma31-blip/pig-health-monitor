@@ -9,7 +9,7 @@
  */
 
 import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, onValue, query, orderByChild, limitToLast } from 'firebase/database';
+import { getDatabase, ref, onValue, query, orderByChild, limitToLast, push, set } from 'firebase/database';
 import type { SensorReading } from '../data/mockSensors';
 
 // Firebase project configuration
@@ -37,6 +37,8 @@ export const alertsRef = ref(db, 'alerts');
 
 /** Reference to /telemetry node (raw ESP32 data) */
 export const telemetryRef = ref(db, 'telemetry');
+export const commandsRef = ref(db, 'commands');
+export const rosterRef = ref(db, 'roster');
 
 // === Listener Helpers ===
 
@@ -89,6 +91,37 @@ export function subscribeAlerts(callback: (alerts: any[]) => void) {
       ...val,
     }));
     callback(alerts);
+  });
+}
+
+/**
+ * Send a command to the ESP32 (e.g., trigger enrollment or calibration)
+ */
+export async function sendCommand(command: string, deviceId: string = 'esp32-s3-01') {
+  const newCommandRef = push(commandsRef);
+  return set(newCommandRef, {
+    deviceId,
+    command,
+    executed: false,
+    timestamp: Date.now(),
+  });
+}
+
+/**
+ * Enroll a new pig into the system
+ */
+export async function enrollPig(name: string, deviceId: string = 'esp32-s3-01') {
+  // 1. Tell ESP32 to capture a reference embedding
+  await sendCommand('ENROLL_START', deviceId);
+  
+  // 2. Placeholder for where the app might receive the embedding back
+  // For now, we just create the record in the roster
+  const newPigRef = push(rosterRef);
+  return set(newPigRef, {
+    name,
+    deviceId,
+    enrolledAt: new Date().toISOString(),
+    status: 'active'
   });
 }
 
