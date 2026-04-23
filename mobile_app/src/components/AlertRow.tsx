@@ -24,15 +24,17 @@ const severityConfig: Record<AlertSeverity, { icon: string; color: string }> = {
 };
 
 export function AlertRow({ alert }: Props) {
-  const config = severityConfig[alert.severity];
+  const config = severityConfig[alert.severity as AlertSeverity] || { icon: '❓', color: Theme.colors.textMuted };
+
 
   return (
     <View style={[styles.row, { borderLeftColor: config.color }]}>
       <View style={styles.headerRow}>
         <Text style={styles.icon}>{config.icon}</Text>
         <Text style={[styles.severity, { color: config.color }]}>
-          {alert.severity.toUpperCase()}
+          {(alert.severity || 'unknown').toUpperCase()}
         </Text>
+
         <Text style={styles.timestamp}>{alert.timestamp}</Text>
       </View>
       <Text style={styles.message}>{alert.message}</Text>

@@ -4,25 +4,47 @@
  * Shows ALL sensors grouped by type: Thermal, Acoustic, Flow.
  * Each sensor gets a full detailed card (non-compact mode).
  * 
- * ⚠️ TEMPORARY: Data comes from data/mockSensors.ts
- * TODO: Replace with real-time Supabase subscription when backend is ready.
+ * Uses Firebase RTDB for live data with mock data as fallback.
+ * TODO: Remove mock fallback once ESP32 hardware is connected.
  */
 
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Theme } from '../../constants/Theme';
 import { SensorCard } from '../../components/SensorCard';
+import { subscribeSensors } from '../../utils/firebase';
+import type { SensorReading } from '../../data/mockSensors';
 
-// ⚠️ TEMPORARY — Mock data (replace with Supabase query later)
-import { getSensorsByType } from '../../data/mockSensors';
+// Fallback mock data
+import { mockSensors } from '../../data/mockSensors';
 
 export default function SensorsScreen() {
-  // Group sensors by type using the helper function
-  const thermalSensors = getSensorsByType('thermal');
-  const acousticSensors = getSensorsByType('acoustic');
-  const flowSensors = getSensorsByType('flow');
+  const [sensors, setSensors] = useState<SensorReading[]>(mockSensors);
+  const [isLive, setIsLive] = useState(false);
+
+  useEffect(() => {
+    const unsub = subscribeSensors((liveSensors) => {
+      if (liveSensors.length > 0) {
+        setSensors(liveSensors);
+        setIsLive(true);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  // Group sensors by type
+  const thermalSensors = sensors.filter((s) => s.type === 'thermal');
+  const acousticSensors = sensors.filter((s) => s.type === 'acoustic');
+  const flowSensors = sensors.filter((s) => s.type === 'flow');
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {isLive && (
+        <View style={styles.liveBanner}>
+          <Text style={styles.liveBannerText}>🔴 LIVE — Firebase RTDB</Text>
+        </View>
+      )}
+
       {/* === Thermal Section === */}
       <Text style={styles.sectionTitle}>🌡️ Thermal Sensors</Text>
       <Text style={styles.sectionDesc}>Body and ambient temperature monitoring</Text>
@@ -44,11 +66,12 @@ export default function SensorsScreen() {
         <SensorCard key={sensor.id} sensor={sensor} />
       ))}
 
-      {/* Temporary Notice */}
+      {/* Status Notice */}
       <View style={styles.notice}>
         <Text style={styles.noticeText}>
-          ⚠️ TEMPORARY: All values above are mock data.{'\n'}
-          When ESP32 hardware connects, these will update in real-time.
+          {isLive
+            ? '🔥 Live sensor data from Firebase RTDB.\nWhen ESP32 hardware connects, values update in real-time.'
+            : '⚠️ TEMPORARY: All values above are mock data.\nWhen ESP32 hardware connects, these will update in real-time.'}
         </Text>
       </View>
     </ScrollView>
@@ -63,6 +86,21 @@ const styles = StyleSheet.create({
   content: {
     padding: Theme.spacing.lg,
     paddingBottom: Theme.spacing.xxl,
+  },
+  liveBanner: {
+    alignSelf: 'center',
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: Theme.spacing.xs,
+    backgroundColor: '#66fcf1' + '22',
+    borderRadius: Theme.borderRadius.sm,
+    borderWidth: 1,
+    borderColor: '#66fcf1',
+    marginBottom: Theme.spacing.md,
+  },
+  liveBannerText: {
+    color: '#66fcf1',
+    fontSize: Theme.typography.caption,
+    fontWeight: 'bold',
   },
   sectionTitle: {
     fontSize: Theme.typography.h2,

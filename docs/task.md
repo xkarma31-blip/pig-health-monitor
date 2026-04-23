@@ -17,4 +17,9 @@
     - [x] **Draft "Concept Paper" (Why & How) for User** <!-- id: 14 -->
     - [x] Create Master Dossier (All 5 Ideas) <!-- id: 15 -->
     - [x] Establish Git Repository & Firmware Structure <!-- id: 16 -->
-    - [ ] Create Firmware Skeleton (main.cpp, audio_config.h) <!-- id: 17 -->
+    - [x] Create Firmware Skeleton (main.cpp, audio_config.h) <!-- id: 17 -->
+- [/] Phase 5: Stabilization & Deployment <!-- id: 18 -->
+    - [x] Implement Multimodal Sensor Fusion (Thermal + Acoustic) <!-- id: 19 -->
+    - [x] Refine Edge Intelligence (Smoothing & SNR Thresholding) <!-- id: 20 -->
+    - [x] Configure Vercel Web Deployment <!-- id: 21 -->
+    - [ ] Final Presentation Preparation (Walkthrough & Demo) <!-- id: 22 -->

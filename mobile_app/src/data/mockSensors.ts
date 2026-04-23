@@ -2,7 +2,7 @@
  * 📊 Mock Sensor Data
  * 
  * This file contains FAKE data used for development/testing.
- * Later, we will replace this with real API calls to Supabase.
+ * Later, we will replace this with real-time Firebase RTDB subscriptions.
  * 
  * HOW TO ADD A NEW SENSOR:
  *   1. Add a new object to the `mockSensors` array below

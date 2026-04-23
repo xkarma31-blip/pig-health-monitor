@@ -4,24 +4,51 @@
  * This is the MAIN screen users see when they open the app.
  * It shows a summary of ALL sensor readings using compact SensorCards.
  * 
- * ⚠️ TEMPORARY: Currently uses mock data from data/mockSensors.ts
- * TODO: Replace `mockSensors` with a real Supabase API call when backend is ready.
+ * Uses Firebase RTDB for live data with mock data as fallback.
+ * TODO: Remove mock fallback once ESP32 hardware is connected.
  */
 
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Theme } from '../../constants/Theme';
 import { SensorCard } from '../../components/SensorCard';
 import { AlertRow } from '../../components/AlertRow';
+import { subscribeSensors, subscribeAlerts } from '../../utils/firebase';
+import type { SensorReading } from '../../data/mockSensors';
 
-// ⚠️ TEMPORARY — Mock data imports (replace with API calls later)
+// Fallback mock data (used when Firebase has no entries)
 import { mockSensors } from '../../data/mockSensors';
 import { mockAlerts } from '../../data/mockAlerts';
 
 export default function DashboardScreen() {
-  // ⚠️ TEMPORARY — These counts come from mock data
-  const warningCount = mockSensors.filter((s) => s.status === 'warning').length;
-  const dangerCount = mockSensors.filter((s) => s.status === 'danger').length;
-  const recentAlerts = mockAlerts.slice(0, 3); // Show only 3 most recent
+  const [sensors, setSensors] = useState<SensorReading[]>(mockSensors);
+  const [alerts, setAlerts] = useState<any[]>(mockAlerts);
+  const [isLive, setIsLive] = useState(false);
+
+  useEffect(() => {
+    // Subscribe to Firebase RTDB — falls back to mock data if empty
+    const unsubSensors = subscribeSensors((liveSensors) => {
+      if (liveSensors.length > 0) {
+        setSensors(liveSensors);
+        setIsLive(true);
+      }
+    });
+
+    const unsubAlerts = subscribeAlerts((liveAlerts) => {
+      if (liveAlerts.length > 0) {
+        setAlerts(liveAlerts);
+      }
+    });
+
+    return () => {
+      unsubSensors();
+      unsubAlerts();
+    };
+  }, []);
+
+  const warningCount = sensors.filter((s) => s.status === 'warning').length;
+  const dangerCount = sensors.filter((s) => s.status === 'danger').length;
+  const recentAlerts = alerts.slice(0, 3);
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -29,12 +56,17 @@ export default function DashboardScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>🐗 Pig Health Monitor</Text>
         <Text style={styles.subtitle}>Sovereign Aqua Protocol — Dashboard</Text>
+        {isLive && (
+          <View style={styles.liveBadge}>
+            <Text style={styles.liveBadgeText}>🔴 LIVE — Firebase RTDB</Text>
+          </View>
+        )}
       </View>
 
       {/* === Quick Stats Row === */}
       <View style={styles.statsRow}>
         <View style={[styles.statBox, { borderColor: Theme.colors.success }]}>
-          <Text style={[styles.statValue, { color: Theme.colors.success }]}>{mockSensors.length}</Text>
+          <Text style={[styles.statValue, { color: Theme.colors.success }]}>{sensors.length}</Text>
           <Text style={styles.statLabel}>Sensors</Text>
         </View>
         <View style={[styles.statBox, { borderColor: Theme.colors.warning }]}>
@@ -49,7 +81,7 @@ export default function DashboardScreen() {
 
       {/* === Sensor Overview (Compact) === */}
       <Text style={styles.sectionTitle}>Sensor Overview</Text>
-      {mockSensors.map((sensor) => (
+      {sensors.map((sensor) => (
         <SensorCard key={sensor.id} sensor={sensor} compact />
       ))}
 
@@ -62,8 +94,9 @@ export default function DashboardScreen() {
       {/* === Footer === */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>
-          ⚠️ Currently showing MOCK DATA for development.{'\n'}
-          Real sensors will connect via Supabase API.
+          {isLive
+            ? '🔥 Connected to Firebase RTDB — Live telemetry active.'
+            : '⚠️ Currently showing MOCK DATA for development.\nReal sensors will connect via Firebase RTDB.'}
         </Text>
         <Text style={styles.footerText}>
           Cross-Platform: Web ↔ Mobile synced via Expo Router
@@ -97,6 +130,20 @@ const styles = StyleSheet.create({
     color: Theme.colors.textSecondary,
     textAlign: 'center',
     marginTop: Theme.spacing.xs,
+  },
+  liveBadge: {
+    marginTop: Theme.spacing.sm,
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: Theme.spacing.xs,
+    backgroundColor: '#66fcf1' + '22',
+    borderRadius: Theme.borderRadius.sm,
+    borderWidth: 1,
+    borderColor: '#66fcf1',
+  },
+  liveBadgeText: {
+    color: '#66fcf1',
+    fontSize: Theme.typography.caption,
+    fontWeight: 'bold',
   },
   statsRow: {
     flexDirection: 'row',

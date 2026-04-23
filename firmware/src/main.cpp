@@ -1,19 +1,63 @@
 #include <Arduino.h>
+#include <WiFi.h>
+#include <Firebase_ESP_Client.h>
 #include <driver/i2s.h>
+#include <Wire.h>
+
+// Provide the token generation process info.
+#include "addons/TokenHelper.h"
+// Provide the RTDB payload printing info and other helper functions.
+#include "addons/RTDBHelper.h"
+
 #include "audio_config.h"
+#include "secrets.h"
+#include "ThermalCamera.h"
+#include "AcousticSignature.h"
 
 // ==========================================
-// 🐷 Pig Health Monitor FIRMWARE v0.1: The Awakening
-// Purpose: Test if the INMP441 Microphone is hearing sound.
-// Usage: Open 'Serial Plotter' (Ctrl+Shift+L in Arduino) to see the waves.
+// 🐷 Pig Health Monitor FIRMWARE v1.1: Intelligence
+// Purpose: Multi-modal sensor fusion and edge analysis.
 // ==========================================
+
+// --- Sensor Objects ---
+ThermalEye thermal;
+AcousticEar acoustic;
+
+// --- Firebase Global Objects ---
+FirebaseData fbdo;
+FirebaseAuth auth;
+FirebaseConfig config;
+
+// --- Timing and State ---
+unsigned long sendDataPrevMillis = 0;
+String deviceId = "esp32-s3-01";
+
+void setupWiFi() {
+  Serial.printf("Connecting to WiFi: %s\n", WIFI_SSID);
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(300);
+  }
+  Serial.println("\nWiFi Connected!");
+}
+
+void setupFirebase() {
+  config.api_key = FIREBASE_API_KEY;
+  config.database_url = FIREBASE_DATABASE_URL;
+  auth.user.email = FIREBASE_USER_EMAIL;
+  auth.user.password = FIREBASE_USER_PASSWORD;
+  config.token_status_callback = tokenStatusCallback; 
+  Firebase.begin(&config, &auth);
+  Firebase.reconnectWiFi(true);
+}
 
 void setupI2S() {
   i2s_config_t i2s_config = {
     .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX),
     .sample_rate = SAMPLE_RATE,
     .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
-    .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT, // INMP441 L/R pin grounded = Left
+    .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
     .communication_format = I2S_COMM_FORMAT_I2S,
     .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
     .dma_buf_count = DMA_BUF_CNT,
@@ -32,30 +76,60 @@ void setupI2S() {
 
   i2s_driver_install(I2S_PORT, &i2s_config, 0, NULL);
   i2s_set_pin(I2S_PORT, &pin_config);
-  i2s_zero_dma_buffer(I2S_PORT);
 }
 
 void setup() {
   Serial.begin(SERIAL_BAUD);
+  Wire.begin(); // Initialize I2C for Thermal Camera
   delay(1000);
-  Serial.println("🐷 Pig Health Monitor: Initializing Ears...");
   
+  Serial.println("🐷 Pig Health Monitor: Initializing Intelligence...");
+  
+  setupWiFi();
+  setupFirebase();
   setupI2S();
+  thermal.begin();
   
-  Serial.println("🐷 Pig Health Monitor: Listening... (Open Serial Plotter!)");
+  Serial.println("🐷 Pig Health Monitor: Operational.");
 }
 
 void loop() {
-  // 1. Read Data from I2S Buffer
-  int16_t sampleBuffer[128]; // Small buffer for immediate plotting
+  // 1. Read Audio Data for FFT Analysis
+  int16_t sampleBuffer[SAMPLES];
   size_t bytesRead = 0;
-  
   i2s_read(I2S_PORT, &sampleBuffer, sizeof(sampleBuffer), &bytesRead, portMAX_DELAY);
 
-  // 2. Plot Data to Serial (For Visual Debugging)
-  if (bytesRead > 0) {
-    for (int i = 0; i < bytesRead / 2; i++) {
-      Serial.println(sampleBuffer[i]); // Print raw sample value
+  // 2. Perform Cough Detection
+  bool coughDetected = acoustic.detectCough(sampleBuffer, bytesRead / 2);
+
+  // 3. Telemetry and Alerting (Non-blocking)
+  if (Firebase.ready() && (millis() - sendDataPrevMillis > 5000 || sendDataPrevMillis == 0)) {
+    sendDataPrevMillis = millis();
+
+    float currentTemp = thermal.getMaxTemp();
+    String healthStatus = "NORMAL";
+
+    if (currentTemp > 39.5) healthStatus = "WARNING";
+    if (coughDetected) healthStatus = "CRITICAL";
+
+    // A. Update Telemetry
+    String telePath = "/telemetry/" + deviceId;
+    FirebaseJson teleJson;
+    teleJson.set("temperature", currentTemp);
+    teleJson.set("status", healthStatus);
+    teleJson.set("timestamp/.sv", "timestamp");
+    Firebase.RTDB.setJSON(&fbdo, telePath.c_str(), &teleJson);
+
+    // B. Trigger Alert if Critical
+    if (coughDetected) {
+      String alertPath = "/alerts";
+      FirebaseJson alertJson;
+      alertJson.set("deviceId", deviceId);
+      alertJson.set("type", "COUGH_DETECTED");
+      alertJson.set("severity", "HIGH");
+      alertJson.set("message", "Acoustic signature matched a dry cough.");
+      alertJson.set("timestamp/.sv", "timestamp");
+      Firebase.RTDB.pushJSON(&fbdo, alertPath.c_str(), &alertJson);
     }
   }
 }

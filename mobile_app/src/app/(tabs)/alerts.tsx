@@ -4,24 +4,44 @@
  * Shows a chronological log of all health alerts and events.
  * Think of it like a "notification history" for the pig pen.
  * 
- * ⚠️ TEMPORARY: Data comes from data/mockAlerts.ts
- * TODO: Replace with Supabase real-time subscription when backend is ready.
+ * Uses Firebase RTDB for live data with mock data as fallback.
+ * TODO: Remove mock fallback once ESP32 hardware is connected.
  */
 
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import { Theme } from '../../constants/Theme';
 import { AlertRow } from '../../components/AlertRow';
+import { subscribeAlerts } from '../../utils/firebase';
 
-// ⚠️ TEMPORARY — Mock data (replace with Supabase query later)
+// Fallback mock data
 import { mockAlerts } from '../../data/mockAlerts';
 
 export default function AlertsScreen() {
-  // Count by severity for the header summary
-  const criticalCount = mockAlerts.filter((a) => a.severity === 'critical').length;
-  const warningCount = mockAlerts.filter((a) => a.severity === 'warning').length;
+  const [alerts, setAlerts] = useState<any[]>(mockAlerts);
+  const [isLive, setIsLive] = useState(false);
+
+  useEffect(() => {
+    const unsub = subscribeAlerts((liveAlerts) => {
+      if (liveAlerts.length > 0) {
+        setAlerts(liveAlerts);
+        setIsLive(true);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  const criticalCount = alerts.filter((a) => a.severity === 'critical').length;
+  const warningCount = alerts.filter((a) => a.severity === 'warning').length;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      {isLive && (
+        <View style={styles.liveBanner}>
+          <Text style={styles.liveBannerText}>🔴 LIVE — Firebase RTDB</Text>
+        </View>
+      )}
+
       {/* === Summary Header === */}
       <View style={styles.summaryRow}>
         <View style={styles.summaryBox}>
@@ -33,22 +53,23 @@ export default function AlertsScreen() {
           <Text style={styles.summaryLabel}>Warnings</Text>
         </View>
         <View style={styles.summaryBox}>
-          <Text style={[styles.summaryValue, { color: Theme.colors.info }]}>{mockAlerts.length}</Text>
+          <Text style={[styles.summaryValue, { color: Theme.colors.info }]}>{alerts.length}</Text>
           <Text style={styles.summaryLabel}>Total</Text>
         </View>
       </View>
 
       {/* === Alert History === */}
       <Text style={styles.sectionTitle}>Alert History</Text>
-      {mockAlerts.map((alert) => (
+      {alerts.map((alert) => (
         <AlertRow key={alert.id} alert={alert} />
       ))}
 
-      {/* Temporary Notice */}
+      {/* Status Notice */}
       <View style={styles.notice}>
         <Text style={styles.noticeText}>
-          ⚠️ TEMPORARY: Alert log populated with sample data.{'\n'}
-          Real alerts will trigger from ESP32 sensor thresholds.
+          {isLive
+            ? '🔥 Live alert feed from Firebase RTDB.\nReal alerts trigger from ESP32 sensor thresholds.'
+            : '⚠️ TEMPORARY: Alert log populated with sample data.\nReal alerts will trigger from ESP32 sensor thresholds.'}
         </Text>
       </View>
     </ScrollView>
@@ -63,6 +84,21 @@ const styles = StyleSheet.create({
   content: {
     padding: Theme.spacing.lg,
     paddingBottom: Theme.spacing.xxl,
+  },
+  liveBanner: {
+    alignSelf: 'center',
+    paddingHorizontal: Theme.spacing.md,
+    paddingVertical: Theme.spacing.xs,
+    backgroundColor: '#66fcf1' + '22',
+    borderRadius: Theme.borderRadius.sm,
+    borderWidth: 1,
+    borderColor: '#66fcf1',
+    marginBottom: Theme.spacing.md,
+  },
+  liveBannerText: {
+    color: '#66fcf1',
+    fontSize: Theme.typography.caption,
+    fontWeight: 'bold',
   },
   summaryRow: {
     flexDirection: 'row',

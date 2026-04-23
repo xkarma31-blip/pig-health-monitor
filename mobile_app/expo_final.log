@@ -1,9 +1,0 @@
-nohup: ignoring input
-  --non-interactive is not supported, use $CI=1 instead
-env: load .env
-env: export EXPO_PUBLIC_SUPABASE_URL EXPO_PUBLIC_SUPABASE_ANON_KEY
-Starting project at /home/solrahk/.gemini/antigravity/scratch/soul-expo-app
-Starting Metro Bundler
-CommandError: Input is required, but 'npx expo' is in non-interactive mode.
-Required input:
-> The package @expo/ngrok@^4.1.0 is required to use tunnels, would you like to install it globally?
