@@ -1,0 +1,5 @@
+kosme/arduinoFFT @ ^2.0.2
+mobizt/Firebase Arduino Client Library for ESP8266 and ESP32 @ ^4.4.14
+arduino-libraries/NTPClient @ ^3.2.1
+bblanchon/ArduinoJson @ ^7.0.4
+adafruit/Adafruit MLX90640 @ ^1.0.2

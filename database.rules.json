@@ -1,6 +1,41 @@
 {
   "rules": {
-    ".read": "now < 1745376000000",
-    ".write": "now < 1745376000000"
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid",
+        "alerts": { ".indexOn": ["timestamp", "severity"] },
+        "roster": { ".indexOn": ["lastSeen"] },
+        "sensors": { ".indexOn": ["lastUpdated"] },
+        "telemetry": { ".indexOn": ["timestamp"] }
+      }
+    },
+    "sensors": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["lastUpdated"]
+    },
+    "alerts": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["timestamp", "severity"]
+    },
+    "roster": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["lastSeen"]
+    },
+    "telemetry": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "commands": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "pushTokens": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
   }
 }

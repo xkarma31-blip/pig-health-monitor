@@ -55,7 +55,6 @@ export default function SensorsScreen() {
   // Group sensors by type
   const thermalSensors = sensors.filter((s) => s.type === 'thermal');
   const acousticSensors = sensors.filter((s) => s.type === 'acoustic');
-  const flowSensors = sensors.filter((s) => s.type === 'flow');
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -148,12 +147,6 @@ export default function SensorsScreen() {
         <SensorCard key={sensor.id} sensor={sensor} />
       ))}
 
-      {/* === Flow Section === */}
-      <Text style={styles.sectionTitle}>🫧 Flow Sensors</Text>
-      <Text style={styles.sectionDesc}>Water bubble rate and dissolved oxygen</Text>
-      {flowSensors.map((sensor) => (
-        <SensorCard key={sensor.id} sensor={sensor} />
-      ))}
 
       {/* Status Notice */}
       <View style={styles.notice}>

@@ -30,9 +30,12 @@ onChildAdded(alertsRef, async (snapshot) => {
   if (isInitialLoad) return; // Skip historical alerts
 
   const alert = snapshot.val();
+  const highPriority = ['HIGH', 'CRITICAL'].includes(alert.severity);
   
-  if (alert && alert.severity === 'HIGH') {
-    console.log(`\n🚨 NEW HIGH SEVERITY ALERT: ${alert.type} for ${alert.pig}`);
+  if (alert && highPriority) {
+    const isCritical = alert.severity === 'CRITICAL';
+    const alertIcon = isCritical ? '🚨🚨' : '🚨';
+    console.log(`\n${alertIcon} NEW ${alert.severity} SEVERITY ALERT: ${alert.type} for ${alert.pig}`);
     
     // Fetch registered push tokens
     const tokensRef = ref(db, 'pushTokens');
@@ -61,8 +64,9 @@ onChildAdded(alertsRef, async (snapshot) => {
       messages.push({
         to: pushToken,
         sound: 'default',
-        title: `🚨 HIGH ALERT: ${alert.pig}`,
-        body: alert.message || 'Critical health signature detected.',
+        title: `${alertIcon} ${alert.severity} ALERT: ${alert.pig}`,
+        body: alert.message || `${alert.type} signature detected on ${alert.pig}.`,
+        priority: isCritical ? 'high' : 'normal',
         data: { alertId: snapshot.key, type: alert.type, severity: alert.severity },
       });
     }

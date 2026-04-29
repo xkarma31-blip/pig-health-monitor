@@ -6,11 +6,13 @@
  */
 
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { useRouter } from 'expo-router';
+import { onAuthStateChanged } from 'firebase/auth';
 import { Theme } from '../../constants/Theme';
 import { SensorCard } from '../../components/SensorCard';
 import { AlertRow } from '../../components/AlertRow';
-import { subscribeSensors, subscribeAlerts, subscribeTelemetry } from '../../utils/firebase';
+import { auth, subscribeSensors, subscribeAlerts, subscribeTelemetry, subscribeRoster } from '../../utils/firebase';
 import type { SensorReading } from '../../data/mockSensors';
 
 // Fallback mock data (used when Firebase has no entries)
@@ -18,32 +20,58 @@ import { mockSensors } from '../../data/mockSensors';
 import { mockAlerts } from '../../data/mockAlerts';
 
 export default function DashboardScreen() {
-  const [sensors, setSensors] = useState<SensorReading[]>(mockSensors);
-  const [alerts, setAlerts] = useState<any[]>(mockAlerts);
+  const router = useRouter();
+  const [sensors, setSensors] = useState<SensorReading[]>([]);
+  const [alerts, setAlerts] = useState<any[]>([]);
   const [isLive, setIsLive] = useState(false);
-  const [identifiedPig, setIdentifiedPig] = useState<string>('SCANNING...');
+  const [isAuthenticated, setIsAuthenticated] = useState(!!auth.currentUser);
+  const [identifiedPigs, setIdentifiedPigs] = useState<string[]>(['SCANNING...']);
   const [currentTemp, setCurrentTemp] = useState<string>('—');
   const [healthStatus, setHealthStatus] = useState<string>('NORMAL');
+  const [roster, setRoster] = useState<any[]>([]);
 
+  // Listen to auth state
   useEffect(() => {
-    // Subscribe to Firebase RTDB — falls back to mock data if empty
-    const unsubSensors = subscribeSensors((liveSensors) => {
-      if (liveSensors.length > 0) {
-        setSensors(liveSensors);
-        setIsLive(true);
+    const unsub = onAuthStateChanged(auth, (user) => {
+      setIsAuthenticated(!!user);
+      if (!user) {
+        // Clear live data when logged out
+        setRoster([]);
+        setSensors([]);
+        setAlerts([]);
+        setIsLive(false);
+        setIdentifiedPigs(['SCANNING...']);
+        setCurrentTemp('—');
+        setHealthStatus('NORMAL');
       }
+    });
+    return unsub;
+  }, []);
+
+  // Subscribe to Firebase data ONLY when authenticated
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const unsubSensors = subscribeSensors((liveSensors) => {
+      setSensors(liveSensors);
+      setIsLive(true); // Connected to DB
     });
 
     const unsubAlerts = subscribeAlerts((liveAlerts) => {
-      if (liveAlerts.length > 0) {
-        setAlerts(liveAlerts);
-      }
+      setAlerts(liveAlerts);
     });
 
-    // Subscribe to telemetry using the proper helper (fixes missing ref/db/onValue imports)
+    const unsubRoster = subscribeRoster((liveRoster) => {
+      setRoster(liveRoster);
+    });
+
     const unsubTele = subscribeTelemetry('esp32-s3-01', (data) => {
       if (data) {
-        if (data.identifiedPig) setIdentifiedPig(data.identifiedPig);
+        if (data.identifiedPigs) {
+          setIdentifiedPigs(data.identifiedPigs);
+        } else if (data.identifiedPig) {
+          setIdentifiedPigs([data.identifiedPig]);
+        }
         if (data.temperature != null) setCurrentTemp(`${data.temperature.toFixed(1)} °C`);
         if (data.status) setHealthStatus(data.status);
       }
@@ -53,11 +81,13 @@ export default function DashboardScreen() {
       unsubSensors();
       unsubAlerts();
       unsubTele();
+      unsubRoster();
     };
-  }, []);
+  }, [isAuthenticated]);
 
   const warningCount = sensors.filter((s) => s.status === 'warning').length;
   const dangerCount = sensors.filter((s) => s.status === 'danger').length;
+  const coughCount = alerts.filter((a) => a.type && a.type.includes('COUGH')).length;
   const recentAlerts = alerts.slice(0, 3);
 
   const statusColor = healthStatus === 'CRITICAL'
@@ -70,15 +100,40 @@ export default function DashboardScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* === Header === */}
       <View style={styles.header}>
-        <Text style={styles.title}>🐗 Pig Health Monitor</Text>
-        <Text style={styles.subtitle}>Sovereign Aqua Protocol — Dashboard</Text>
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={styles.title}>🐗 Pig Health Monitor</Text>
+            <Text style={styles.subtitle}>Sovereign Aqua Protocol — Dashboard</Text>
+          </View>
+          {isAuthenticated && isLive && (
+            <View style={styles.liveBadge}>
+              <Text style={styles.liveBadgeText}>🔴 LIVE</Text>
+            </View>
+          )}
+        </View>
+
+        {!isAuthenticated && (
+          <TouchableOpacity 
+            style={styles.guestBanner} 
+            onPress={() => router.push('/(auth)/login')}
+          >
+            <Text style={styles.guestBannerText}>
+              🛡️ GUEST MODE — Tap to Sign In for Cloud Data
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {/* Hero Card: Identified Pig + Vitals */}
-        <View style={styles.heroContainer}>
+        <View style={[styles.heroContainer, healthStatus === 'INACTIVE' && { borderColor: Theme.colors.warning }]}>
           <View style={styles.heroRow}>
             <View style={styles.heroPanel}>
-              <Text style={styles.heroLabel}>IDENTIFIED PIG</Text>
-              <Text style={styles.heroValue}>{identifiedPig}</Text>
+              <Text style={styles.heroLabel}>IDENTIFIED PIGS</Text>
+              <View style={styles.pigsList}>
+                {identifiedPigs.map((name, i) => (
+                  <Text key={i} style={styles.heroValue}>{name}{i < identifiedPigs.length - 1 ? ', ' : ''}</Text>
+                ))}
+              </View>
+              {healthStatus === 'INACTIVE' && <Text style={styles.lethargyBadge}>⚠️ LETHARGIC</Text>}
             </View>
             <View style={[styles.heroPanel, styles.heroDivider]}>
               <Text style={styles.heroLabel}>TEMPERATURE</Text>
@@ -87,22 +142,23 @@ export default function DashboardScreen() {
           </View>
           <View style={[styles.statusBar, { backgroundColor: statusColor + '33', borderColor: statusColor }]}>
             <Text style={[styles.statusText, { color: statusColor }]}>
-              {healthStatus === 'CRITICAL' ? '🚨 CRITICAL — Cough Detected' :
+              {healthStatus === 'INACTIVE' ? '⚠️ WARNING — Pig Activity Low (Lethargy Check)' :
+               healthStatus === 'CRITICAL' ? '🚨 CRITICAL — Cough Detected' :
                healthStatus === 'WARNING' ? '⚠️ WARNING — Elevated Temperature' :
                '✅ NORMAL — All systems nominal'}
             </Text>
           </View>
         </View>
 
-        {isLive && (
-          <View style={styles.liveBadge}>
-            <Text style={styles.liveBadgeText}>🔴 LIVE — Firebase RTDB</Text>
-          </View>
-        )}
+
       </View>
 
       {/* === Quick Stats Row === */}
       <View style={styles.statsRow}>
+        <View style={[styles.statBox, { borderColor: Theme.colors.info }]}>
+          <Text style={[styles.statValue, { color: Theme.colors.info }]}>{coughCount}</Text>
+          <Text style={styles.statLabel}>Coughs</Text>
+        </View>
         <View style={[styles.statBox, { borderColor: Theme.colors.success }]}>
           <Text style={[styles.statValue, { color: Theme.colors.success }]}>{sensors.length}</Text>
           <Text style={styles.statLabel}>Sensors</Text>
@@ -122,6 +178,43 @@ export default function DashboardScreen() {
       {sensors.map((sensor) => (
         <SensorCard key={sensor.id} sensor={sensor} compact />
       ))}
+
+      {/* === Active Pig Roster (Tags & Status) === */}
+      <Text style={styles.sectionTitle}>Active Pig Roster</Text>
+      {roster.length === 0 ? (
+          <Text style={{color: Theme.colors.textMuted}}>No pigs currently tracked.</Text>
+      ) : (
+          roster.map((pig) => (
+            <View key={pig.id} style={[
+                styles.rosterCard, 
+                pig.status === 'INACTIVE' && { borderColor: Theme.colors.warning },
+                pig.tags?.includes('FEVER') && { borderColor: Theme.colors.danger },
+                pig.tags?.includes('RESPIRATORY_DISTRESS') && { borderColor: Theme.colors.danger }
+            ]}>
+              <View style={styles.rosterHeader}>
+                <Text style={styles.rosterName}>{pig.name}</Text>
+                <Text style={[styles.rosterTemp, (pig.temperature != null && pig.temperature > 39.5) ? {color: Theme.colors.danger} : {color: Theme.colors.success}]}>
+                    {pig.temperature != null ? `${pig.temperature.toFixed(1)}°C` : '--'}
+                </Text>
+              </View>
+              <View style={styles.tagsContainer}>
+                  <Text style={[styles.tag, {backgroundColor: Theme.colors.surface}]}>
+                      Status: {pig.status || 'NORMAL'}
+                  </Text>
+                  {pig.tags && pig.tags.map((tag: string, idx: number) => (
+                      <Text key={idx} style={[
+                          styles.tag,
+                          tag === 'FEVER' ? styles.tagDanger : 
+                          tag === 'RESPIRATORY_DISTRESS' ? styles.tagDanger : 
+                          tag === 'LETHARGIC' ? styles.tagWarning : styles.tagInfo
+                      ]}>
+                          {tag}
+                      </Text>
+                  ))}
+              </View>
+            </View>
+          ))
+      )}
 
       {/* === Recent Alerts === */}
       <Text style={styles.sectionTitle}>Recent Alerts</Text>
@@ -154,20 +247,55 @@ const styles = StyleSheet.create({
     paddingBottom: Theme.spacing.xxl,
   },
   header: {
-    marginBottom: Theme.spacing.xl,
+    marginBottom: Theme.spacing.lg,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 5,
   },
   title: {
     fontSize: Theme.typography.h1,
     color: Theme.colors.primary,
     fontWeight: 'bold',
-    textAlign: 'center',
+  },
+  presButton: {
+    backgroundColor: Theme.colors.surface,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: Theme.borderRadius.sm,
+    borderWidth: 1,
+    borderColor: Theme.colors.cardBorder,
+  },
+  presButtonActive: {
+    backgroundColor: Theme.colors.primary,
+  },
+  presButtonText: {
+    color: Theme.colors.text,
+    fontSize: 10,
+    fontWeight: 'bold',
   },
   subtitle: {
     fontSize: Theme.typography.body,
     color: Theme.colors.textSecondary,
     textAlign: 'center',
     marginTop: Theme.spacing.xs,
+  },
+  guestBanner: {
+    marginTop: Theme.spacing.md,
+    padding: Theme.spacing.sm,
+    backgroundColor: Theme.colors.warning + '22',
+    borderRadius: Theme.borderRadius.sm,
+    borderWidth: 1,
+    borderColor: Theme.colors.warning,
+    width: '100%',
+    alignItems: 'center',
+  },
+  guestBannerText: {
+    color: Theme.colors.warning,
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   liveBadge: {
     marginTop: Theme.spacing.sm,
@@ -214,11 +342,26 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.xs,
     textTransform: 'uppercase',
   },
+  pigsList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
   heroValue: {
     color: '#66fcf1',
     fontSize: Theme.typography.h2,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  lethargyBadge: {
+    color: Theme.colors.warning,
+    fontSize: 10,
+    fontWeight: 'bold',
+    marginTop: 4,
+    backgroundColor: Theme.colors.warning + '22',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
   statusBar: {
     borderRadius: Theme.borderRadius.sm,
@@ -278,4 +421,50 @@ const styles = StyleSheet.create({
     fontSize: Theme.typography.caption,
     marginVertical: 2,
   },
+  rosterCard: {
+    backgroundColor: Theme.colors.card,
+    borderRadius: Theme.borderRadius.md,
+    padding: Theme.spacing.md,
+    marginBottom: Theme.spacing.sm,
+    borderWidth: 1,
+    borderColor: Theme.colors.cardBorder,
+  },
+  rosterHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Theme.spacing.sm,
+  },
+  rosterName: {
+    color: Theme.colors.primary,
+    fontSize: Theme.typography.h3,
+    fontWeight: 'bold',
+  },
+  rosterTemp: {
+    fontSize: Theme.typography.h3,
+    fontWeight: 'bold',
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  tag: {
+    fontSize: 10,
+    fontWeight: 'bold',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    overflow: 'hidden',
+    color: '#fff',
+  },
+  tagDanger: {
+    backgroundColor: Theme.colors.danger,
+  },
+  tagWarning: {
+    backgroundColor: Theme.colors.warning,
+  },
+  tagInfo: {
+    backgroundColor: Theme.colors.info,
+  }
 });

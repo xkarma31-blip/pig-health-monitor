@@ -16,7 +16,7 @@
 
 export type SensorStatus = 'normal' | 'warning' | 'danger';
 
-export type SensorType = 'thermal' | 'acoustic' | 'flow';
+export type SensorType = 'thermal' | 'acoustic';
 
 export type SensorReading = {
   id: string;            // Unique identifier (e.g., "temp-01")
@@ -81,31 +81,28 @@ export const mockSensors: SensorReading[] = [
     status: 'normal',
     lastUpdated: '2026-04-07 09:10',
     minRange: 0,
-    maxRange: 60,
+    maxRange: 100,
+  },
+];
+
+export const mockRoster = [
+  {
+    id: 'pig-01',
+    name: 'Bacon-A1',
+    isTemporary: false,
+    tags: ['FEVER'],
+    healthStatus: 'WARNING',
+    lastSeen: new Date().toISOString(),
+    enrolledAt: '2026-04-01T10:00:00Z',
   },
   {
-    id: 'flow-01',
-    type: 'flow',
-    label: 'Water Bubble Rate',
-    icon: '🫧',
-    value: 2,
-    unit: 'bubbles/min',
-    status: 'normal',
-    lastUpdated: '2026-04-07 09:05',
-    minRange: 0,
-    maxRange: 20,
-  },
-  {
-    id: 'flow-02',
-    type: 'flow',
-    label: 'Dissolved Oxygen',
-    icon: '💧',
-    value: 7.8,
-    unit: 'mg/L',
-    status: 'normal',
-    lastUpdated: '2026-04-07 09:05',
-    minRange: 5.0,
-    maxRange: 12.0,
+    id: 'pig-02',
+    name: 'TEMP-8821',
+    isTemporary: true,
+    tags: ['UNIDENTIFIED', 'COUGH'],
+    healthStatus: 'CRITICAL',
+    lastSeen: new Date(Date.now() - 600000).toISOString(), // 10 mins ago
+    enrolledAt: new Date().toISOString(),
   },
 ];
 

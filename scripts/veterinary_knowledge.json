@@ -1,0 +1,22 @@
+{
+  "pig_health_parameters": {
+    "temperature": {
+      "normal_range_celsius": [38.5, 39.5],
+      "fever_threshold_celsius": 39.6,
+      "critical_fever_celsius": 40.5,
+      "hypothermia_threshold_celsius": 37.5
+    },
+    "respiratory_rate": {
+      "normal_breaths_per_min": [15, 40],
+      "distress_threshold": 50
+    },
+    "behavioral_indicators": {
+      "lethargy": "Activity levels dropping below 10% of normal baseline; failing to orbit trough during feeding cycles.",
+      "coughing": "High-frequency acoustic anomaly (600Hz dominant for infectious, 1600Hz for dust/environmental)."
+    },
+    "environmental_baselines": {
+      "optimal_ambient_temp_celsius": [18, 22],
+      "dangerous_ambient_temp_celsius": 30
+    }
+  }
+}

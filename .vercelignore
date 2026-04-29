@@ -1,0 +1,5 @@
+node_modules
+.expo
+firmware/.pio
+mobile_app/node_modules
+mobile_app/.expo

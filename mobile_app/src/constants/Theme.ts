@@ -17,34 +17,34 @@ export const Theme = {
     cardBorder: '#2A2A45',       // Subtle card borders
 
     // === Text ===
-    text: '#F0F0F0',             // Primary text (white-ish)
-    textSecondary: '#8A8AA0',    // Muted/detail text
-    textMuted: '#5A5A70',        // Very subtle text
+    text: '#FFFFFF',             // Primary text (Pure white for max contrast)
+    textSecondary: '#A0A0C0',    // Muted text (Lighter than before)
+    textMuted: '#8080A0',        // Subtlest text (Now readable)
 
     // === Brand / Accent ===
-    primary: '#00D4AA',          // Aqua green (main accent)
-    primaryDim: '#00A080',       // Dimmer aqua for pressed states
-    secondary: '#3A86FF',        // Blue accent
+    primary: '#00FFE0',          // Electric Aqua (Brighter for better visibility)
+    primaryDim: '#00D4AA',       // Previous primary is now the dim version
+    secondary: '#5599FF',        // Lighter blue
 
     // === Status Colors ===
-    success: '#00D4AA',          // Green/Aqua — healthy
-    warning: '#FFB020',          // Amber — elevated/watch
-    danger: '#FF4D4D',           // Red — critical alert
-    info: '#3A86FF',             // Blue — informational
+    success: '#00FFE0',          
+    warning: '#FFC040',          
+    danger: '#FF6060',           
+    info: '#5599FF',             
 
     // === Misc ===
-    tabBar: '#12121F',           // Bottom tab background
-    tabActive: '#00D4AA',        // Active tab icon
-    tabInactive: '#5A5A70',      // Inactive tab icon
+    tabBar: '#12121F',           
+    tabActive: '#00FFE0',        
+    tabInactive: '#8080A0',      
   },
 
   typography: {
-    h1: 28,         // Page titles
-    h2: 22,         // Section headers
-    h3: 18,         // Card headers
-    body: 16,       // Normal text
-    caption: 13,    // Small detail text
-    huge: 36,       // Big sensor values
+    h1: 32,         // Page titles (Constitutional Requirement)
+    h2: 24,         // Section headers (Constitutional Requirement)
+    h3: 20,         // Card headers
+    body: 16,       // Normal text (Constitutional Requirement)
+    caption: 14,    // Small detail text (Increased from 13)
+    huge: 42,       // Big sensor values (Increased for clarity)
   },
 
   spacing: {

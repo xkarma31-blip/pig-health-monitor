@@ -41,3 +41,4 @@ credentials.txt
 # generated native folders
 /ios
 /android
+.vercel

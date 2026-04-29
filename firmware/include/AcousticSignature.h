@@ -43,31 +43,50 @@ class AcousticEar {
 public:
     double vReal[SAMPLES];
     double vImag[SAMPLES];
-    ArduinoFFT<double> FFT = ArduinoFFT<double>(vReal, vImag, SAMPLES, SAMPLE_RATE);
+    double vRealAmbient[SAMPLES];
+    double vImagAmbient[SAMPLES];
+    ArduinoFFT<double> FFTTarget = ArduinoFFT<double>(vReal, vImag, SAMPLES, SAMPLE_RATE);
+    ArduinoFFT<double> FFTAmbient = ArduinoFFT<double>(vRealAmbient, vImagAmbient, SAMPLES, SAMPLE_RATE);
 
     /**
-     * Analyse a raw PCM buffer and classify any detected cough.
-     * Returns CoughType enum; caller should treat INFECTIOUS as high-severity.
+     * Analyse a raw interleaved stereo PCM buffer (Dual Mic).
+     * Channel 0: Target (Pig)
+     * Channel 1: Ambient (Noise)
+     * Performs Spectral Subtraction before classification.
      */
-    CoughType classifyCough(int16_t* buffer, size_t sampleCount) {
-        if (sampleCount < SAMPLES) return COUGH_NONE;
+    CoughType classifyCough(int16_t* stereoBuffer, size_t sampleCount) {
+        // sampleCount is total shorts (L+R). We need at least SAMPLES per channel.
+        if (sampleCount < SAMPLES * 2) return COUGH_NONE;
 
-        // ── Step 1: RMS Silence Gate ──────────────────────────────────────
-        double rms = 0;
+        // ── Step 1: De-interleave and RMS Silence Gate ────────────────────
+        double rmsTarget = 0;
         for (int i = 0; i < SAMPLES; i++) {
-            vReal[i] = buffer[i];
+            vReal[i] = stereoBuffer[i * 2];         // Left channel (Target)
             vImag[i] = 0;
-            rms += (double)buffer[i] * buffer[i];
+            vRealAmbient[i] = stereoBuffer[i * 2 + 1]; // Right channel (Ambient)
+            vImagAmbient[i] = 0;
+            rmsTarget += (double)vReal[i] * vReal[i];
         }
-        rms = sqrt(rms / SAMPLES);
-        if (rms < SILENCE_RMS) return COUGH_NONE;
+        rmsTarget = sqrt(rmsTarget / SAMPLES);
+        if (rmsTarget < SILENCE_RMS) return COUGH_NONE;
 
-        // ── Step 2: FFT ───────────────────────────────────────────────────
-        FFT.windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);
-        FFT.compute(FFT_FORWARD);
-        FFT.complexToMagnitude();
+        // ── Step 2: Dual FFT ──────────────────────────────────────────────
+        FFTTarget.windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);
+        FFTTarget.compute(FFT_FORWARD);
+        FFTTarget.complexToMagnitude();
 
-        // ── Step 3: Dynamic Noise Floor (bins above 4 kHz) ────────────────
+        FFTAmbient.windowing(FFT_WIN_TYP_HAMMING, FFT_FORWARD);
+        FFTAmbient.compute(FFT_FORWARD);
+        FFTAmbient.complexToMagnitude();
+
+        // ── Step 3: Spectral Subtraction ──────────────────────────────────
+        // Subtract ambient magnitude from target magnitude to eliminate continuous noise
+        for (int i = 0; i < (SAMPLES / 2); i++) {
+            vReal[i] = vReal[i] - vRealAmbient[i];
+            if (vReal[i] < 0) vReal[i] = 0; // Prevent negative energy
+        }
+
+        // ── Step 4: Dynamic Noise Floor (bins above 4 kHz) ────────────────
         double noiseFloor = 0;
         int noiseCount = (SAMPLES / 2) - NOISE_BAND_START;
         for (int i = NOISE_BAND_START; i < (SAMPLES / 2); i++) {
@@ -76,7 +95,7 @@ public:
         noiseFloor /= (double)noiseCount;
         if (noiseFloor < 1.0) noiseFloor = 1.0;
 
-        // ── Step 4: Extract Band Energies ─────────────────────────────────
+        // ── Step 5: Extract Band Energies (Cleaned Signal) ────────────────
         double magA = 0; // Infectious band   (500–800 Hz)
         double magB = 0; // Non-infect band   (1200–2000 Hz)
         for (int i = BAND_A_START; i <= BAND_A_END; i++) {
@@ -89,32 +108,27 @@ public:
         double snrA = magA / noiseFloor;
         double snrB = magB / noiseFloor;
 
-        // ── Step 5: Classify ──────────────────────────────────────────────
+        // ── Step 6: Classify ──────────────────────────────────────────────
         bool aTriggered = (snrA > SNR_THRESHOLD && magA > ABS_MAG_THRESHOLD);
         bool bTriggered = (snrB > SNR_THRESHOLD && magB > ABS_MAG_THRESHOLD);
 
         if (aTriggered || bTriggered) {
             // Dominant band determines type
             if (magA >= magB) {
-                Serial.printf("🔴 INFECTIOUS COUGH | SNR: %.1f | MagA: %.0f | RMS: %.0f\n", snrA, magA, rms);
+                Serial.printf("🔴 INFECTIOUS COUGH | SNR: %.1f | MagA: %.0f | RMS: %.0f\n", snrA, magA, rmsTarget);
                 return COUGH_INFECTIOUS;
             } else {
-                Serial.printf("🟡 NON-INFECTIOUS COUGH | SNR: %.1f | MagB: %.0f | RMS: %.0f\n", snrB, magB, rms);
+                Serial.printf("🟡 NON-INFECTIOUS COUGH | SNR: %.1f | MagB: %.0f | RMS: %.0f\n", snrB, magB, rmsTarget);
                 return COUGH_NON_INFECTIOUS;
             }
-        }
-
-        // Sub-threshold logging for field tuning
-        if (magA > ABS_MAG_THRESHOLD * 0.7 || magB > ABS_MAG_THRESHOLD * 0.7) {
-            Serial.printf("🔍 Sub-threshold: SNR_A=%.1f SNR_B=%.1f NF=%.0f\n", snrA, snrB, noiseFloor);
         }
 
         return COUGH_NONE;
     }
 
-    // Backwards-compatible wrapper — returns true if ANY cough detected
-    bool detectCough(int16_t* buffer, size_t sampleCount) {
-        return classifyCough(buffer, sampleCount) != COUGH_NONE;
+    // Backwards-compatible wrapper
+    bool detectCough(int16_t* stereoBuffer, size_t sampleCount) {
+        return classifyCough(stereoBuffer, sampleCount) != COUGH_NONE;
     }
 };
 

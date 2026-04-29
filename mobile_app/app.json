@@ -22,7 +22,8 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.solrahk.pighealthmonitor"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -33,9 +34,8 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "8a923ce2-b52a-4a73-96c0-a2bba554558b"
+        "projectId": "95debbb9-d07a-467e-9d79-eb5decab2967"
       }
-    },
-    "owner": "solrahk_sentinel"
+    }
   }
 }

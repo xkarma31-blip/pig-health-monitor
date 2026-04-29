@@ -46,11 +46,19 @@ void setupWiFi() {
 }
 
 void setupFirebase() {
+  // Sync time via NTP for valid SSL certificates and Firebase tokens
+  configTime(0, 0, "pool.ntp.org", "time.nist.gov");
+  
   config.api_key = FIREBASE_API_KEY;
   config.database_url = FIREBASE_DATABASE_URL;
   auth.user.email = FIREBASE_USER_EMAIL;
   auth.user.password = FIREBASE_USER_PASSWORD;
   config.token_status_callback = tokenStatusCallback; 
+  
+  // Optimize SSL buffers for handling the 1.5KB base64 thermal payloads
+  fbdo.setBSSLBufferSize(4096, 1024);
+  fbdo.setResponseSize(4096);
+  
   Firebase.begin(&config, &auth);
   Firebase.reconnectWiFi(true);
 }
@@ -60,7 +68,7 @@ void setupI2S() {
     .mode = (i2s_mode_t)(I2S_MODE_MASTER | I2S_MODE_RX),
     .sample_rate = SAMPLE_RATE,
     .bits_per_sample = I2S_BITS_PER_SAMPLE_16BIT,
-    .channel_format = I2S_CHANNEL_FMT_ONLY_LEFT,
+    .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,
     .communication_format = I2S_COMM_FORMAT_I2S,
     .intr_alloc_flags = ESP_INTR_FLAG_LEVEL1,
     .dma_buf_count = DMA_BUF_CNT,
@@ -81,9 +89,141 @@ void setupI2S() {
   i2s_set_pin(I2S_PORT, &pin_config);
 }
 
+// --- RTOS Task Handles ---
+TaskHandle_t AudioTaskHandle;
+TaskHandle_t ThermalTaskHandle;
+
+// ── TASK 1: AUDIO PERCEPTION (Pinned to Core 0 - High Priority) ───────────
+void AudioTask(void *pvParameters) {
+  int16_t stereoBuffer[SAMPLES * 2]; // Dual Mic (L+R)
+  size_t bytesRead = 0;
+
+  for (;;) {
+    // 1. Read Stereo Audio Data
+    i2s_read(I2S_PORT, &stereoBuffer, sizeof(stereoBuffer), &bytesRead, portMAX_DELAY);
+
+    // 2. Perform Spectral Subtraction & Classification
+    CoughType coughType = acoustic.classifyCough(stereoBuffer, bytesRead / 2); // div 2 because int16_t is 2 bytes
+
+    // 3. Trigger Alert if Infectious or Non-Infectious (Send via RTDB)
+    if (coughType != COUGH_NONE && Firebase.ready()) {
+      String severity = (coughType == COUGH_INFECTIOUS) ? "HIGH" : "LOW";
+      String coughLabel = (coughType == COUGH_INFECTIOUS) ? "INFECTIOUS_COUGH" : "NON_INFECTIOUS_COUGH";
+      String msg = (coughType == COUGH_INFECTIOUS)
+        ? "Infectious cough signature detected (600Hz band dominant). Veterinary check advised."
+        : "Non-infectious cough detected (1600Hz band dominant). Monitor for pattern changes.";
+
+      String alertPath = "/alerts";
+      FirebaseJson alertJson;
+      alertJson.set("deviceId", deviceId);
+      alertJson.set("type", coughLabel);
+      alertJson.set("severity", severity);
+      alertJson.set("message", msg);
+      alertJson.set("timestamp/.sv", "timestamp");
+      Firebase.RTDB.pushJSON(&fbdo, alertPath.c_str(), &alertJson);
+    }
+    
+    // Yield to FreeRTOS scheduler
+    vTaskDelay(pdMS_TO_TICKS(10)); 
+  }
+}
+
+// ── TASK 2: THERMAL PERCEPTION & TELEMETRY (Pinned to Core 1) ───────────
+void ThermalTask(void *pvParameters) {
+  String currentPig = "SCANNING...";
+
+  for (;;) {
+    // 1. Thermal Read (Slow I2C block)
+    // Assuming thermal.readFrame() exists in ThermalCamera.h
+    // thermal.readFrame(); // Uncomment when library is fully integrated
+    
+    if (Firebase.ready()) {
+      // 2. Command & Identification Ritual (Zero-Shot)
+      if (Firebase.RTDB.getJSON(&fbdo, "/commands/esp32-s3-01")) {
+        FirebaseJson &json = fbdo.jsonObject();
+        FirebaseJsonData cmdData;
+        json.get(cmdData, "command");
+        if (cmdData.success && cmdData.stringValue == "ENROLL_START") {
+          FirebaseJsonData nameData;
+          String pigName = "Pig_Auto";
+          json.get(nameData, "pigName");
+          if (nameData.success) {
+            pigName = nameData.stringValue;
+          }
+          if (!identify.saveEnrollment(pigName, thermal.frame)) {
+            // Alert if storage is full
+            FirebaseJson alertJson;
+            alertJson.set("deviceId", deviceId);
+            alertJson.set("type", "STORAGE_FULL");
+            alertJson.set("severity", "WARNING");
+            alertJson.set("message", "Pig roster limit reached (50).");
+            alertJson.set("timestamp/.sv", "timestamp");
+            Firebase.RTDB.pushJSON(&fbdo, "/alerts", &alertJson);
+          }
+          Firebase.RTDB.deleteNode(&fbdo, "/commands/esp32-s3-01");
+        }
+      }
+
+      // Continuous Identification (Cosine Similarity / Embeddings)
+      float bestScore = 0;
+      currentPig = identify.identifyPig(thermal.frame, bestScore);
+      if (currentPig == "UNKNOWN" && bestScore > 0.85) {
+        Serial.printf("🔍 Near Match: %.2f (try re-enrolling this pig)\n", bestScore);
+      }
+
+      // 3. Telemetry and Alerting (every 5s)
+      if (millis() - sendDataPrevMillis > 5000 || sendDataPrevMillis == 0) {
+        sendDataPrevMillis = millis();
+
+        float currentTemp = thermal.getMaxTemp();
+        String healthStatus = "NORMAL";
+        if (currentTemp > 39.5) healthStatus = "WARNING";
+
+        int targetX = 0, targetY = 0;
+        float maxT = 0;
+        for (int y = 0; y < 24; y++) {
+          for (int x = 0; x < 32; x++) {
+            float t = thermal.frame[y * 32 + x];
+            if (t > maxT) { maxT = t; targetX = x; targetY = y; }
+          }
+        }
+
+        uint8_t byteFrame[768];
+        for(int i = 0; i < 768; i++) {
+          float t = thermal.frame[i];
+          if(t < 20.0f) t = 20.0f;
+          if(t > 40.0f) t = 40.0f;
+          byteFrame[i] = (uint8_t)((t - 20.0f) * 12.75f);
+        }
+
+        unsigned char base64Str[1500]; 
+        size_t olen = 0;
+        mbedtls_base64_encode(base64Str, sizeof(base64Str), &olen, byteFrame, 768);
+        base64Str[olen] = '\0'; 
+        String b64Frame = String((char*)base64Str);
+
+        String telePath = "/telemetry/" + deviceId;
+        FirebaseJson teleJson;
+        teleJson.set("temperature", currentTemp);
+        teleJson.set("status", healthStatus);
+        teleJson.set("identifiedPig", currentPig);
+        teleJson.set("targetX", targetX);
+        teleJson.set("targetY", targetY);
+        teleJson.set("thermalFrame", b64Frame);
+        teleJson.set("timestamp/.sv", "timestamp");
+        Firebase.RTDB.setJSON(&fbdo, telePath.c_str(), &teleJson);
+      }
+    }
+    
+    // Yield to FreeRTOS scheduler to prevent Watchdog Reset
+    vTaskDelay(pdMS_TO_TICKS(100));
+  }
+}
+
 void setup() {
   Serial.begin(SERIAL_BAUD);
-  Wire.begin(); // Initialize I2C for Thermal Camera
+  Wire.begin(); // Initialize I2C for MLX90640 (Pin 21 SDA, 22 SCL typically)
+  Wire.setClock(1000000); // 1MHz Fast Mode Plus required for 768 pixels at 8Hz+
   delay(1000);
   
   Serial.println("🐷 Pig Health Monitor: Initializing Intelligence...");
@@ -93,134 +233,14 @@ void setup() {
   setupI2S();
   thermal.begin();
   
-  Serial.println("🐷 Pig Health Monitor: Operational.");
+  // Launch RTOS Tasks
+  xTaskCreatePinnedToCore(AudioTask, "AudioTask", 8192, NULL, 2, &AudioTaskHandle, 0); // Core 0
+  xTaskCreatePinnedToCore(ThermalTask, "ThermalTask", 16384, NULL, 1, &ThermalTaskHandle, 1); // Core 1
+
+  Serial.println("🐷 Pig Health Monitor: Operational. Dual-Core Ritual Active.");
 }
 
 void loop() {
-  // 1. Read Audio Data for FFT Analysis
-  int16_t sampleBuffer[SAMPLES];
-  size_t bytesRead = 0;
-  i2s_read(I2S_PORT, &sampleBuffer, sizeof(sampleBuffer), &bytesRead, portMAX_DELAY);
-
-  // 2. Perform Cough Classification (Dual-Band Research Model)
-  CoughType coughType = acoustic.classifyCough(sampleBuffer, bytesRead / 2);
-  bool coughDetected = (coughType != COUGH_NONE);
-
-  // 3. Command & Identification Ritual
-  String currentPig = "SCANNING...";
-  if (Firebase.ready()) {
-    // Check for incoming commands
-    if (Firebase.RTDB.getJSON(&fbdo, "/commands/esp32-s3-01")) {
-      FirebaseJson &json = fbdo.jsonData();
-      FirebaseJsonData cmdData;
-      json.get(cmdData, "command");
-      if (cmdData.success && cmdData.stringValue == "ENROLL_START") {
-        FirebaseJsonData nameData;
-        String pigName = "Pig_Auto";
-        if (json.get(nameData, "pigName") && nameData.success) {
-          pigName = nameData.stringValue;
-        }
-        
-        if (!identify.saveEnrollment(pigName, thermal.frame)) {
-          // Alert if storage is full — visible in mobile app
-          String alertPath = "/alerts";
-          FirebaseJson alertJson;
-          alertJson.set("deviceId", deviceId);
-          alertJson.set("type", "STORAGE_FULL");
-          alertJson.set("severity", "WARNING");
-          alertJson.set("message", "Pig roster limit reached (50). Enrollment failed. Remove a pig first.");
-          alertJson.set("timestamp/.sv", "timestamp");
-          Firebase.RTDB.pushJSON(&fbdo, alertPath.c_str(), &alertJson);
-        }
-        Firebase.RTDB.deleteNode(&fbdo, "/commands/esp32-s3-01");
-      }
-    }
-
-    // Continuous ID
-    float bestScore = 0;
-    currentPig = identify.identifyPig(thermal.frame, bestScore);
-    if (currentPig == "UNKNOWN" && bestScore > 0.85) {
-      Serial.printf("🔍 Near Match: %.2f (try re-enrolling this pig)\n", bestScore);
-    }
-  }
-
-  // 4. Telemetry and Alerting (every 5s, non-blocking)
-  if (Firebase.ready() && (millis() - sendDataPrevMillis > 5000 || sendDataPrevMillis == 0)) {
-    sendDataPrevMillis = millis();
-
-    float currentTemp = thermal.getMaxTemp();
-    String healthStatus = "NORMAL";
-    if (currentTemp > 39.5) healthStatus = "WARNING";
-    if (coughDetected) healthStatus = "CRITICAL";
-
-    // A. Push telemetry
-    // Calculate target X and Y for bounding box logic using the brightest pixel
-    int targetX = 0;
-    int targetY = 0;
-    float maxT = 0;
-    for (int y = 0; y < 24; y++) {
-      for (int x = 0; x < 32; x++) {
-        float t = thermal.frame[y * 32 + x];
-        if (t > maxT) {
-          maxT = t;
-          targetX = x;
-          targetY = y;
-        }
-      }
-    }
-
-    // Convert thermal float array to uint8_t for smaller payload (base 20C, mapping 20-40C to 0-255)
-    uint8_t byteFrame[768];
-    for(int i = 0; i < 768; i++) {
-      float t = thermal.frame[i];
-      if(t < 20.0f) t = 20.0f;
-      if(t > 40.0f) t = 40.0f;
-      byteFrame[i] = (uint8_t)((t - 20.0f) * 12.75f);
-    }
-
-    // Base64 encode
-    unsigned char base64Str[1500]; // 768 * 4/3 + padding
-    size_t olen = 0;
-    mbedtls_base64_encode(base64Str, sizeof(base64Str), &olen, byteFrame, 768);
-    base64Str[olen] = '\0'; // Ensure null-termination
-    String b64Frame = String((char*)base64Str);
-
-    String telePath = "/telemetry/" + deviceId;
-    FirebaseJson teleJson;
-    teleJson.set("temperature", currentTemp);
-    teleJson.set("status", healthStatus);
-    teleJson.set("identifiedPig", currentPig);
-    teleJson.set("targetX", targetX);
-    teleJson.set("targetY", targetY);
-    teleJson.set("thermalFrame", b64Frame);
-    teleJson.set("timestamp/.sv", "timestamp");
-    Firebase.RTDB.setJSON(&fbdo, telePath.c_str(), &teleJson);
-
-    // B. Alert with severity based on cough type
-    if (coughDetected) {
-      String severity = (coughType == COUGH_INFECTIOUS) ? "HIGH" : "LOW";
-      String coughLabel = (coughType == COUGH_INFECTIOUS)
-        ? "INFECTIOUS_COUGH"
-        : "NON_INFECTIOUS_COUGH";
-      String msg = (coughType == COUGH_INFECTIOUS)
-        ? "Infectious cough signature detected (600Hz band dominant). Veterinary check advised."
-        : "Non-infectious cough detected (1600Hz band dominant). Monitor for pattern changes.";
-
-      String alertPath = "/alerts";
-      FirebaseJson alertJson;
-      alertJson.set("deviceId", deviceId);
-      alertJson.set("pig", currentPig);
-      alertJson.set("type", coughLabel);
-      alertJson.set("severity", severity);
-      alertJson.set("message", msg);
-      alertJson.set("timestamp/.sv", "timestamp");
-      Firebase.RTDB.pushJSON(&fbdo, alertPath.c_str(), &alertJson);
-    }
-
-    // C. Serial data collection trigger
-    if (Serial.available()) {
-      char c = Serial.read();
-      if (c == 'c') identify.printDataForCollection(thermal.frame);
-    }
-  }
+  // Empty. RTOS Tasks handle execution.
+  vTaskDelete(NULL); 
 }

@@ -73,6 +73,24 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="roster"
+        options={{
+          title: 'Roster',
+          tabBarIcon: ({ color }) => (
+            <TabIcon emoji="🐗" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="auth"
+        options={{
+          title: 'Session',
+          tabBarIcon: ({ color }) => (
+            <TabIcon emoji="🛡️" color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }

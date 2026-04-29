@@ -3,11 +3,12 @@ import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 import { push, ref } from 'firebase/database';
-import { database } from './firebase';
+import { db } from './firebase';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
   }),
@@ -73,7 +74,7 @@ async function saveTokenToDatabase(token: string) {
   try {
     // Ideally, we'd check if it exists first, or map by a unique device ID.
     // For capstone simplicity, we'll push. A small Cloud Function or Node script will read these.
-    const tokensRef = ref(database, 'pushTokens');
+    const tokensRef = ref(db, 'pushTokens');
     // Using push to append. If it already exists, the server script can deduplicate when sending.
     // However, it's better to store by sanitized token key to prevent duplicates:
     const sanitizedToken = token.replace(/[.#$[\]]/g, '_');
