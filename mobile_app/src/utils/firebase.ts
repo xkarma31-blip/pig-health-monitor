@@ -10,8 +10,9 @@
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getDatabase, ref, onValue, query, orderByChild, limitToLast, push, set } from 'firebase/database';
-import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import { getAuth, initializeAuth, getReactNativePersistence, browserLocalPersistence } from 'firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 import type { SensorReading } from '../data/mockSensors';
 
 // Firebase project configuration
@@ -26,13 +27,20 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase securely with persistence (avoiding double-init on Fast Refresh)
+// Web uses browserLocalPersistence (localStorage), Native uses AsyncStorage
 let app;
 let auth;
 if (getApps().length === 0) {
   app = initializeApp(firebaseConfig);
-  auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(AsyncStorage)
-  });
+  if (Platform.OS === 'web') {
+    auth = initializeAuth(app, {
+      persistence: browserLocalPersistence
+    });
+  } else {
+    auth = initializeAuth(app, {
+      persistence: getReactNativePersistence(AsyncStorage)
+    });
+  }
 } else {
   app = getApp();
   auth = getAuth(app);
