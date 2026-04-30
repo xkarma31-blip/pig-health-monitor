@@ -9,17 +9,32 @@ import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
 import { Theme } from '../../constants/Theme';
 import { subscribeRoster, enrollPig, updatePigHealth } from '../../utils/firebase';
+import { getAuth } from 'firebase/auth';
 
 export default function RosterScreen() {
   const [roster, setRoster] = useState<any[]>([]);
   const [mountainMode, setMountainMode] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
+    const unsubAuth = getAuth().onAuthStateChanged((user) => {
+      if (user) {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+        setRoster([]);
+      }
+    });
+    return () => unsubAuth();
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
     const unsub = subscribeRoster((data) => {
       setRoster(data);
     });
     return () => unsub();
-  }, []);
+  }, [isAuthenticated]);
 
   const handleQuickEnroll = async () => {
     const tempName = `TEMP-${Math.floor(1000 + Math.random() * 9000)}`;

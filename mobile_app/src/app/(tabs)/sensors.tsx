@@ -17,12 +17,12 @@ import { ThermalLiveView } from '../../components/ThermalLiveView';
 import { TouchableOpacity } from 'react-native';
 import type { SensorReading } from '../../data/mockSensors';
 
-// Fallback mock data
-import { mockSensors } from '../../data/mockSensors';
+import { getAuth } from 'firebase/auth';
 
 export default function SensorsScreen() {
-  const [sensors, setSensors] = useState<SensorReading[]>(mockSensors);
+  const [sensors, setSensors] = useState<SensorReading[]>([]);
   const [roster, setRoster] = useState<any[]>([]);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLive, setIsLive] = useState(false);
   const [isEnrolling, setIsEnrolling] = useState(false);
   const [newPigName, setNewPigName] = useState('');
@@ -30,10 +30,30 @@ export default function SensorsScreen() {
   const [selectedTrackingPig, setSelectedTrackingPig] = useState<string | undefined>(undefined);
 
   useEffect(() => {
+    const unsubAuth = getAuth().onAuthStateChanged((user) => {
+      if (user) {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+        setIsLive(false);
+        setSensors([]);
+        setRoster([]);
+        setTelemetry(null);
+      }
+    });
+    return () => unsubAuth();
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
     const unsubSensors = subscribeSensors((liveSensors) => {
       if (liveSensors.length > 0) {
         setSensors(liveSensors);
         setIsLive(true);
+      } else {
+        setSensors([]);
+        setIsLive(false);
       }
     });
 
@@ -50,7 +70,7 @@ export default function SensorsScreen() {
       unsubRoster();
       unsubTelemetry();
     };
-  }, []);
+  }, [isAuthenticated]);
 
   // Group sensors by type
   const thermalSensors = sensors.filter((s) => s.type === 'thermal');
@@ -153,7 +173,7 @@ export default function SensorsScreen() {
         <Text style={styles.noticeText}>
           {isLive
             ? '🔥 Live sensor data from Firebase RTDB.\nWhen ESP32 hardware connects, values update in real-time.'
-            : '⚠️ TEMPORARY: All values above are mock data.\nWhen ESP32 hardware connects, these will update in real-time.'}
+            : '⚠️ OFFLINE: Please log in to view active sensor telemetry.'}
         </Text>
       </View>
     </ScrollView>

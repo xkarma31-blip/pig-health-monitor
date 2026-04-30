@@ -18,8 +18,7 @@ import { Theme } from '../../constants/Theme';
 import { AlertRow } from '../../components/AlertRow';
 import { subscribeAlerts } from '../../utils/firebase';
 
-// Fallback mock data
-import { mockAlerts } from '../../data/mockAlerts';
+import { getAuth } from 'firebase/auth';
 
 const CHART_HEIGHT = 120;
 const BAR_SLOT_COUNT = 8;               // last 8 hours
@@ -152,21 +151,40 @@ export default function AlertsScreen() {
   const { width } = useWindowDimensions();
   const chartWidth = width - 48; // 24px padding each side
 
-  const [alerts, setAlerts] = useState<any[]>(mockAlerts);
+  const [alerts, setAlerts] = useState<any[]>([]);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLive, setIsLive] = useState(false);
   const [filter, setFilter] = useState<FilterType>('ALL');
 
   useEffect(() => {
+    const unsubAuth = getAuth().onAuthStateChanged((user) => {
+      if (user) {
+        setIsAuthenticated(true);
+      } else {
+        setIsAuthenticated(false);
+        setIsLive(false);
+        setAlerts([]);
+      }
+    });
+    return () => unsubAuth();
+  }, []);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    
     const unsub = subscribeAlerts((liveAlerts) => {
       if (liveAlerts.length > 0) {
         // Sort by timestamp DESC so newest appears first in list and chart is chronological
         const sorted = [...liveAlerts].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
         setAlerts(sorted);
         setIsLive(true);
+      } else {
+        setAlerts([]);
+        setIsLive(false);
       }
     });
     return () => unsub();
-  }, []);
+  }, [isAuthenticated]);
 
   // Memoised derived data
   const trendData = useMemo(() => buildCoughTrend(alerts), [alerts]);

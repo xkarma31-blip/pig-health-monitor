@@ -10,7 +10,8 @@
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getDatabase, ref, onValue, query, orderByChild, limitToLast, push, set } from 'firebase/database';
-import { getAuth } from 'firebase/auth';
+import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { SensorReading } from '../data/mockSensors';
 
 // Firebase project configuration
@@ -24,10 +25,19 @@ const firebaseConfig = {
   appId: '',
 };
 
-// Initialize Firebase securely (avoiding double-init on Fast Refresh)
-const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+// Initialize Firebase securely with persistence (avoiding double-init on Fast Refresh)
+let app;
+let auth;
+if (getApps().length === 0) {
+  app = initializeApp(firebaseConfig);
+  auth = initializeAuth(app, {
+    persistence: getReactNativePersistence(AsyncStorage)
+  });
+} else {
+  app = getApp();
+  auth = getAuth(app);
+}
 const db = getDatabase(app);
-const auth = getAuth(app);
 
 // === Path Helpers ===
 

@@ -17,7 +17,7 @@ import type { SensorReading } from '../../data/mockSensors';
 
 // Fallback mock data (used when Firebase has no entries)
 import { mockSensors } from '../../data/mockSensors';
-import { mockAlerts } from '../../data/mockAlerts';
+
 
 export default function DashboardScreen() {
   const router = useRouter();
