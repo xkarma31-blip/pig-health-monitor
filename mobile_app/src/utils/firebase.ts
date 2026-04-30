@@ -10,10 +10,15 @@
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getDatabase, ref, onValue, query, orderByChild, limitToLast, push, set } from 'firebase/database';
-import { getAuth, initializeAuth, getReactNativePersistence, browserLocalPersistence } from 'firebase/auth';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
 import { Platform } from 'react-native';
 import type { SensorReading } from '../data/mockSensors';
+
+// Conditionally import AsyncStorage only on native to avoid web bundle issues
+let AsyncStorage: any = null;
+if (Platform.OS !== 'web') {
+  AsyncStorage = require('@react-native-async-storage/async-storage').default;
+}
 
 // Firebase project configuration
 const firebaseConfig = {
@@ -27,16 +32,17 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase securely with persistence (avoiding double-init on Fast Refresh)
-// Web uses browserLocalPersistence (localStorage), Native uses AsyncStorage
+// Web: getAuth() auto-persists to localStorage
+// Native: initializeAuth() + AsyncStorage for disk persistence
 let app;
 let auth;
 if (getApps().length === 0) {
   app = initializeApp(firebaseConfig);
   if (Platform.OS === 'web') {
-    auth = initializeAuth(app, {
-      persistence: browserLocalPersistence
-    });
+    // On web, getAuth() uses browserLocalPersistence by default
+    auth = getAuth(app);
   } else {
+    // On native, explicitly set AsyncStorage for login persistence
     auth = initializeAuth(app, {
       persistence: getReactNativePersistence(AsyncStorage)
     });
