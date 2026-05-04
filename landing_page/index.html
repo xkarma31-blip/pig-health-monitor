@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pig Health Monitor | Sovereign Aqua</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <style>
+        :root {
+            --bg: #02040A; --surface: rgba(13, 17, 28, 0.6);
+            --primary: #00E5FF; --secondary: #FF0055; --tertiary: #9D4EDD;
+            --text: #F8FAFC; --text-muted: #94A3B8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        body { background-color: var(--bg); color: var(--text); font-family: 'Outfit', sans-serif; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+
+        /* CURSOR */
+        #cursor-dot { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; position: fixed; pointer-events: none; z-index: 10000; transform: translate(-50%, -50%); box-shadow: 0 0 10px var(--primary); }
+        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); transition: all 0.3s; mix-blend-mode: difference; }
+        .hovering #cursor-ring { width: 60px; height: 60px; background: rgba(255, 255, 255, 0.1); border-color: var(--primary); }
+
+        #audio-banner { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(2,4,10,0.9); z-index: 20000; display: flex; align-items: center; justify-content: center; flex-direction: column; cursor: pointer; transition: 0.5s; backdrop-filter: blur(10px); }
+        .banner-btn { padding: 15px 40px; background: var(--primary); color: #000; font-weight: 800; border-radius: 30px; font-size: 1.2rem; margin-top: 20px; border: none; box-shadow: 0 0 20px var(--primary); animation: pulse 2s infinite; }
+        
+        #global-tooltip { position: fixed; top: 0; left: 0; background: rgba(10, 15, 30, 0.95); border: 1px solid var(--primary); color: #fff; padding: 8px 14px; border-radius: 8px; font-family: 'Fira Code', monospace; font-size: 0.85rem; pointer-events: none; z-index: 10001; opacity: 0; transform: translate(15px, 15px) scale(0.9); box-shadow: 0 10px 20px rgba(0,0,0,0.5), 0 0 15px rgba(0, 229, 255, 0.2); transition: opacity 0.2s, transform 0.2s; white-space: pre-wrap; }
+        #global-tooltip.active { opacity: 1; transform: translate(15px, 15px) scale(1); }
+
+        #audio-toggle { position: fixed; bottom: 30px; right: 30px; z-index: 9000; background: rgba(10, 15, 30, 0.8); border: 1px solid var(--primary); color: var(--primary); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); font-size: 20px; transition: 0.3s; }
+        #audio-toggle:hover { background: var(--primary); color: var(--bg); transform: scale(1.1); }
+        #audio-toggle.muted { border-color: var(--text-muted); color: var(--text-muted); }
+
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 0 5vw; }
+        section { min-height: 100vh; display: flex; align-items: center; padding: 100px 0; }
+
+        .badge { display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px; background: rgba(157, 78, 221, 0.1); border: 1px solid rgba(157, 78, 221, 0.3); border-radius: 30px; color: var(--tertiary); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.85rem; margin-bottom: 30px; }
+        h1 { font-size: clamp(3rem, 7vw, 6.5rem); font-weight: 900; line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 30px; }
+        .gradient-text { background: linear-gradient(to right, #fff, #718096); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .gradient-text-accent { background: linear-gradient(135deg, var(--primary), var(--tertiary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hero-desc { font-size: clamp(1.1rem, 2vw, 1.4rem); color: var(--text-muted); max-width: 600px; line-height: 1.6; margin-bottom: 50px; }
+
+        .btn-row { display: flex; gap: 20px; flex-wrap: wrap; }
+        .magnetic-btn { position: relative; display: inline-flex; align-items: center; gap: 12px; padding: 18px 40px; border-radius: 100px; font-weight: 700; font-size: 1.1rem; text-decoration: none; overflow: hidden; border: 1px solid transparent; }
+        .magnetic-btn .text, .magnetic-btn svg { z-index: 2; pointer-events: none; }
+        .btn-primary { background: var(--text); color: var(--bg); }
+        .btn-primary::before { content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 100%; background: linear-gradient(45deg, var(--primary), var(--tertiary)); transition: top 0.4s cubic-bezier(0.7, 0, 0.2, 1); z-index: 1; }
+        .btn-primary:hover { color: #fff; } .btn-primary:hover::before { top: 0; }
+        .btn-secondary { background: rgba(255, 255, 255, 0.03); color: var(--text); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255,255,255,0.3); }
+
+        .section-title { font-size: clamp(2.5rem, 5vw, 4rem); margin-bottom: 60px; text-align: center; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; width: 100%; }
+        .glass-card { background: var(--surface); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 24px; padding: 40px; backdrop-filter: blur(20px); transition: transform 0.5s; display: flex; flex-direction: column; }
+        .glass-card:hover { transform: translateY(-15px) scale(1.02); border-color: rgba(0, 229, 255, 0.3); box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        
+        .card-visual { height: 120px; width: 100%; background: rgba(0,0,0,0.3); border-radius: 12px; margin-bottom: 24px; overflow: hidden; position: relative; display: flex; align-items: flex-end; justify-content: center; gap: 4px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        .thermal-grid { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(4, 1fr); width: 100%; height: 100%; gap: 2px; }
+        .t-cell { background: #1a1a2e; border-radius: 2px; transition: background 0.5s, transform 0.2s; }
+        .t-cell:hover { transform: scale(1.2); z-index: 2; box-shadow: 0 0 10px currentColor; }
+        
+        .audio-bar { width: 12px; background: var(--primary); border-radius: 4px 4px 0 0; transform-origin: bottom; animation: eq 1s ease-in-out infinite alternate; box-shadow: 0 0 10px var(--primary); transition: filter 0.2s; }
+        .audio-bar:hover { filter: brightness(1.5); }
+        .audio-bar:nth-child(1) { animation-duration: 0.8s; height: 40%; }
+        .audio-bar:nth-child(2) { animation-duration: 1.2s; height: 80%; background: var(--tertiary); box-shadow: 0 0 10px var(--tertiary); }
+        .audio-bar:nth-child(3) { animation-duration: 0.9s; height: 60%; }
+        .audio-bar:nth-child(4) { animation-duration: 1.5s; height: 100%; background: var(--secondary); box-shadow: 0 0 10px var(--secondary); }
+        .audio-bar:nth-child(5) { animation-duration: 0.7s; height: 50%; }
+        .audio-bar:nth-child(6) { animation-duration: 1.1s; height: 70%; background: var(--tertiary); box-shadow: 0 0 10px var(--tertiary); }
+        @keyframes eq { 0% { transform: scaleY(0.2); } 100% { transform: scaleY(1); } }
+
+        .telemetry-node { width: 20px; height: 20px; background: var(--primary); border-radius: 50%; position: absolute; left: 20px; top: 50%; transform: translateY(-50%); box-shadow: 0 0 15px var(--primary); animation: pulse 1.5s infinite; transition: 0.3s; }
+        .telemetry-node:hover { transform: translateY(-50%) scale(1.5); background: var(--secondary); box-shadow: 0 0 20px var(--secondary); }
+        .telemetry-line { width: calc(100% - 80px); height: 2px; background: rgba(0,229,255,0.2); position: absolute; left: 40px; top: 50%; transform: translateY(-50%); overflow: hidden; }
+        .telemetry-packet { width: 30px; height: 100%; background: var(--primary); position: absolute; left: 0; box-shadow: 0 0 10px var(--primary); animation: shoot 2s infinite linear; }
+        .telemetry-cloud { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 24px; animation: bounce 2s infinite; transition: 0.3s; }
+        .telemetry-cloud:hover { transform: translateY(-50%) scale(1.5) !important; filter: drop-shadow(0 0 15px var(--primary)) !important; }
+        
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0,229,255,0.7); } 70% { box-shadow: 0 0 0 15px rgba(0,229,255,0); } 100% { box-shadow: 0 0 0 0 rgba(0,229,255,0); } }
+        @keyframes shoot { 0% { left: -30px; } 100% { left: 100%; } }
+        @keyframes bounce { 0%, 100% { transform: translateY(-50%) scale(1); filter: drop-shadow(0 0 5px var(--primary)); } 50% { transform: translateY(-50%) scale(1.2); filter: drop-shadow(0 0 15px var(--secondary)); } }
+
+        #easter-egg-pig { position: fixed; bottom: 20px; left: -100px; font-size: 40px; filter: drop-shadow(0 0 10px var(--secondary)); z-index: 9998; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        @keyframes walkAcross { 0% { left: -100px; transform: translateY(0); } 25% { transform: translateY(-10px) rotate(5deg); } 50% { transform: translateY(0) rotate(-5deg); } 75% { transform: translateY(-10px) rotate(5deg); } 100% { left: 100vw; transform: translateY(0); } }
+        .walking { animation: walkAcross 4s linear forwards; opacity: 1 !important; }
+
+        .glass-card h3 { font-size: 1.8rem; margin-bottom: 15px; font-weight: 800; cursor: none; transition: 0.3s; display: inline-block; }
+        .glass-card h3:hover { color: var(--secondary); text-shadow: 0 0 10px var(--secondary); transform: scale(1.05); }
+        .glass-card p { color: var(--text-muted); line-height: 1.7; font-size: 1.05rem; }
+
+        /* FIRMWARE SECTION */
+        .fw-container { display: flex; flex-direction: column; gap: 40px; width: 100%; margin-top: 50px; }
+        .fw-header { max-width: 800px; margin: 0 auto; text-align: center; }
+        .fw-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 40px; align-items: stretch; margin-top: 40px; }
+        @media (max-width: 968px) { .fw-grid { grid-template-columns: 1fr; } }
+        
+        .chip-container { width: 100%; min-height: 500px; background: rgba(10, 15, 30, 0.5); border: 1px solid rgba(157, 78, 221, 0.3); border-radius: 24px; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        /* Fullscreen handling */
+        .chip-container:fullscreen { border-radius: 0; background: #000; border: none; }
+        .chip-container:fullscreen #chip-3d { height: 100vh; }
+        .chip-container:fullscreen .sim-controls { bottom: 40px; right: 40px; }
+
+        .env-background { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; opacity: 0; transition: opacity 1.5s ease; z-index: 1; mix-blend-mode: screen; pointer-events: none; }
+        
+        #chip-3d { width: 100%; height: 500px; z-index: 5; position: relative; }
+        
+        .sim-controls { position: absolute; bottom: 20px; right: 20px; z-index: 30; display: flex; gap: 10px; flex-direction: row; flex-wrap: wrap; justify-content: flex-end; }
+        .sim-btn { background: rgba(0, 229, 255, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 8px 16px; border-radius: 20px; font-family: 'Fira Code', monospace; font-size: 12px; transition: 0.3s; }
+        .sim-btn:hover { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
+        .env-btn { background: rgba(255, 0, 85, 0.1); border: 1px solid var(--secondary); color: var(--secondary); }
+        .env-btn:hover { background: var(--secondary); color: #000; box-shadow: 0 0 15px var(--secondary); }
+
+        .pin-label { position: absolute; font-family: 'Fira Code', monospace; font-size: 10px; color: #00E5FF; background: rgba(10,15,30,0.8); border: 1px solid #00E5FF; padding: 2px 4px; border-radius: 3px; pointer-events: none; opacity: 0; transition: opacity 0.3s; transform: translate(-50%, -50%); z-index: 15; white-space: nowrap; }
+        .main-label { position: absolute; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 18px; color: #02040A; background: #00E5FF; border: 2px solid #fff; padding: 8px 18px; border-radius: 12px; pointer-events: none; opacity: 0; transition: opacity 0.3s; transform: translate(-50%, -50%); z-index: 15; white-space: nowrap; box-shadow: 0 0 30px rgba(0, 229, 255, 0.9); animation: labelPop 1.5s ease-in-out infinite alternate; text-transform: uppercase; letter-spacing: 1px;}
+        .main-label::after { content:''; position:absolute; bottom:-12px; left:50%; transform:translateX(-50%); border-width: 12px 12px 0; border-style: solid; border-color: #fff transparent transparent transparent; filter: drop-shadow(0 5px 5px rgba(0,229,255,0.5)); }
+        @keyframes labelPop { 0% { transform: translate(-50%, -50%) translateY(0) scale(1); box-shadow: 0 0 20px rgba(0, 229, 255, 0.6); } 100% { transform: translate(-50%, -50%) translateY(-10px) scale(1.05); box-shadow: 0 0 40px rgba(0, 229, 255, 1); } }
+
+        .svg-flow-container { width: 100%; background: var(--surface); border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 24px; padding: 40px; display: flex; flex-direction: column; justify-content: center; }
+        .svg-diagram { width: 100%; height: auto; max-height: 400px; overflow: visible; }
+        .flow-path { stroke: rgba(255,255,255,0.1); stroke-width: 2; fill: none; }
+        .flow-active { stroke: var(--primary); stroke-width: 3; fill: none; filter: drop-shadow(0 0 8px var(--primary)); stroke-dasharray: 10; animation: dashMove 1s linear infinite; }
+        .flow-active-pink { stroke: var(--secondary); stroke-width: 3; fill: none; filter: drop-shadow(0 0 8px var(--secondary)); stroke-dasharray: 10; animation: dashMove 1s linear infinite; }
+        @keyframes dashMove { to { stroke-dashoffset: -20; } }
+        
+        .svg-node-group { cursor: none; }
+        .svg-node { fill: rgba(10,15,30,0.8); stroke: rgba(255,255,255,0.2); stroke-width: 2; rx: 8; transition: 0.3s; }
+        .svg-node-group:hover .svg-node { stroke: var(--primary); filter: drop-shadow(0 0 15px rgba(0,229,255,0.4)); transform: scale(1.05); }
+        .svg-node-group:hover .svg-text { fill: var(--primary); }
+        .svg-text { fill: #fff; font-family: 'Fira Code', monospace; font-size: 14px; text-anchor: middle; transition: 0.3s; }
+        .svg-text-small { fill: var(--text-muted); font-family: 'Fira Code', monospace; font-size: 10px; text-anchor: middle; pointer-events: none;}
+        
+        .terminal { background: rgba(5, 5, 10, 0.9); border: 1px solid #333; border-radius: 16px; padding: 30px; font-family: 'Fira Code', monospace; font-size: 0.95rem; line-height: 1.8; color: #A0A0B0; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
+        .terminal::after { content: ''; position: absolute; top: -100%; left: 0; width: 100%; height: 20%; background: linear-gradient(to bottom, transparent, rgba(0,229,255,0.1), transparent); animation: scanline 4s linear infinite; pointer-events: none; }
+        @keyframes scanline { 0% { top: -20%; } 100% { top: 120%; } }
+        .term-cyan { color: var(--primary); } .term-pink { color: var(--secondary); } .term-green { color: #27C93F; }
+        .term-hover { transition: 0.2s; border-radius: 4px; padding: 0 4px; cursor: none; }
+        .term-hover:hover { background: rgba(255,255,255,0.1); color: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+
+        .references-list { display: flex; flex-direction: column; gap: 15px; max-width: 900px; margin: 0 auto; width: 100%; }
+        .ref-item { padding: 20px; background: rgba(255,255,255,0.02); border-left: 3px solid var(--tertiary); border-radius: 0 8px 8px 0; transition: background 0.3s; }
+        .ref-item:hover { background: rgba(157, 78, 221, 0.1); }
+        .ref-title { font-weight: 700; color: #fff; margin-bottom: 5px; }
+        .ref-desc { font-size: 0.95rem; color: var(--text-muted); }
+        .ref-link { color: var(--primary); text-decoration: none; font-size: 0.9rem; margin-top: 5px; display: inline-block; font-family: 'Fira Code', monospace; }
+        
+        footer { text-align: center; padding: 60px 0; border-top: 1px solid rgba(255,255,255,0.05); color: var(--text-muted); margin-top: 50px; }
+        
+        .rickroll-trigger { transition: 0.3s; border-bottom: 1px dotted transparent; }
+        .rickroll-trigger:hover { color: var(--secondary); text-shadow: 0 0 10px var(--secondary); border-bottom: 1px dotted var(--secondary); }
+        .rickroll-trigger.active-seq { color: #00E5FF; text-shadow: 0 0 15px #00E5FF; border-bottom: 1px solid #00E5FF; }
+    </style>
+</head>
+<body>
+
+    <div id="audio-banner" onclick="startAudioEngine()">
+        <h1 style="margin:0;">Initialize Sensory Array</h1>
+        <p class="hero-desc" style="text-align: center; margin-top: 10px;">Click anywhere to enable the full audio-visual experience.</p>
+        <button class="banner-btn">SYSTEM BOOT</button>
+    </div>
+
+    <div id="easter-egg-pig">🐷</div>
+
+    <script>
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let actx;
+        let isMuted = false;
+        let ambientOsc, ambientGain, lfo;
+
+        function startAudioEngine() {
+            document.getElementById('audio-banner').style.opacity = '0';
+            setTimeout(() => document.getElementById('audio-banner').style.display = 'none', 500);
+            
+            if(actx) return;
+            actx = new AudioContext();
+            
+            ambientOsc = actx.createOscillator();
+            ambientGain = actx.createGain();
+            lfo = actx.createOscillator();
+            
+            ambientOsc.type = 'sine';
+            ambientOsc.frequency.value = 55;
+            
+            lfo.type = 'sine';
+            lfo.frequency.value = 0.15;
+            
+            const lfoGain = actx.createGain();
+            lfoGain.gain.value = 0.08;
+            lfo.connect(lfoGain);
+            lfoGain.connect(ambientGain.gain);
+            
+            ambientGain.gain.value = 0.1;
+            
+            ambientOsc.connect(ambientGain);
+            ambientGain.connect(actx.destination);
+            
+            ambientOsc.start();
+            lfo.start();
+
+            playTelemetryPing();
+        }
+
+        function toggleAmbient() {
+            const btn = document.getElementById('audio-toggle');
+            isMuted = !isMuted;
+            
+            if(isMuted) {
+                if(actx && ambientGain) ambientGain.gain.setTargetAtTime(0, actx.currentTime, 0.5);
+                btn.classList.add('muted'); btn.innerHTML = '🔇';
+            } else {
+                if(actx && ambientGain) ambientGain.gain.setTargetAtTime(0.1, actx.currentTime, 0.5);
+                btn.classList.remove('muted'); btn.innerHTML = '🔊';
+            }
+        }
+
+        function playHover() {
+            if(isMuted || !actx) return;
+            const osc = actx.createOscillator(); const gain = actx.createGain();
+            osc.connect(gain); gain.connect(actx.destination);
+            osc.type = 'sine'; osc.frequency.setValueAtTime(600, actx.currentTime); osc.frequency.exponentialRampToValueAtTime(1200, actx.currentTime + 0.05);
+            gain.gain.setValueAtTime(0, actx.currentTime); gain.gain.linearRampToValueAtTime(0.02, actx.currentTime + 0.02); gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.1);
+            osc.start(); osc.stop(actx.currentTime + 0.1);
+        }
+
+        function playClick() {
+            if(isMuted || !actx) return;
+            const osc = actx.createOscillator(); const gain = actx.createGain();
+            osc.connect(gain); gain.connect(actx.destination);
+            osc.type = 'square'; osc.frequency.setValueAtTime(150, actx.currentTime); osc.frequency.exponentialRampToValueAtTime(40, actx.currentTime + 0.15);
+            gain.gain.setValueAtTime(0, actx.currentTime); gain.gain.linearRampToValueAtTime(0.05, actx.currentTime + 0.01); gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.2);
+            osc.start(); osc.stop(actx.currentTime + 0.2);
+        }
+
+        function playThermalBlip() {
+            if(isMuted || !actx) return;
+            const osc = actx.createOscillator(); const gain = actx.createGain();
+            osc.connect(gain); gain.connect(actx.destination);
+            osc.type = 'triangle'; osc.frequency.setValueAtTime(2000, actx.currentTime); osc.frequency.exponentialRampToValueAtTime(100, actx.currentTime + 0.02);
+            gain.gain.setValueAtTime(0, actx.currentTime); gain.gain.linearRampToValueAtTime(0.03, actx.currentTime + 0.005); gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.03);
+            osc.start(); osc.stop(actx.currentTime + 0.03);
+        }
+
+        function playAudioChord() {
+            if(isMuted || !actx) return;
+            const freqs = [300, 450, 600];
+            freqs.forEach(f => {
+                const osc = actx.createOscillator(); const gain = actx.createGain();
+                osc.connect(gain); gain.connect(actx.destination);
+                osc.type = 'sine'; osc.frequency.setValueAtTime(f, actx.currentTime);
+                gain.gain.setValueAtTime(0, actx.currentTime); gain.gain.linearRampToValueAtTime(0.015, actx.currentTime + 0.01); gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.3);
+                osc.start(); osc.stop(actx.currentTime + 0.3);
+            });
+        }
+
+        function playTelemetryPing() {
+            if(isMuted || !actx) return;
+            const osc = actx.createOscillator(); const gain = actx.createGain();
+            osc.connect(gain); gain.connect(actx.destination);
+            osc.type = 'sine'; osc.frequency.setValueAtTime(1800, actx.currentTime);
+            gain.gain.setValueAtTime(0, actx.currentTime); gain.gain.linearRampToValueAtTime(0.04, actx.currentTime + 0.01); gain.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.4);
+            osc.start(); osc.stop(actx.currentTime + 0.4);
+        }
+
+        function playPigCough() {
+            if(isMuted || !actx) return;
+            const bufferSize = actx.sampleRate * 0.2;
+            const buffer = actx.createBuffer(1, bufferSize, actx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+            for(let i=0; i<2; i++) {
+                setTimeout(() => {
+                    const noiseSource = actx.createBufferSource();
+                    noiseSource.buffer = buffer;
+                    const filter = actx.createBiquadFilter();
+                    filter.type = 'lowpass';
+                    filter.frequency.value = 400; filter.Q.value = 1;
+                    const gain = actx.createGain();
+                    gain.gain.setValueAtTime(0, actx.currentTime);
+                    gain.gain.linearRampToValueAtTime(0.3, actx.currentTime + 0.02);
+                    gain.gain.exponentialRampToValueAtTime(0.01, actx.currentTime + 0.15);
+                    noiseSource.connect(filter); filter.connect(gain); gain.connect(actx.destination);
+                    noiseSource.start();
+                }, i * 250);
+            }
+        }
+    </script>
+
+    <div id="audio-toggle" class="interactive" onclick="toggleAmbient()">🔊</div>
+    <div id="global-tooltip"></div>
+    <div id="cursor-dot"></div>
+    <div id="cursor-ring"></div>
+    <div id="canvas-container"></div>
+
+    <main class="container">
+        <!-- HERO -->
+        <section class="hero">
+            <div class="hero-content gs-reveal">
+                <div class="badge"><span class="rickroll-trigger interactive" data-word="Sovereign">Sovereign</span> Aqua Protocol</div>
+                <h1 class="gradient-text"><span class="rickroll-trigger interactive" data-word="Edge">Edge</span> Intelligence for <br><span class="rickroll-trigger interactive" data-word="Swine">Swine</span> Health</h1>
+                <p class="hero-desc">
+                    Fusing MLX90640 thermal arrays and I2S acoustic spectral analysis. 
+                    A zero-contact, real-time telemetry pipeline detecting respiratory distress before physical symptoms manifest.
+                </p>
+                <div class="btn-row">
+                    <a href="https://mobileapp-lyart.vercel.app/" class="magnetic-btn btn-primary interactive">
+                        <span class="text">Launch App</span>
+                    </a>
+                    <a href="app-release.apk" download class="magnetic-btn btn-secondary interactive">
+                        <span class="text">Download APK</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- DYNAMIC SENSORS -->
+        <section id="methodology">
+            <div style="width: 100%">
+                <h2 class="section-title gradient-text gs-fade"><span class="rickroll-trigger interactive" data-word="Sensory">Sensory</span> <span class="gradient-text-accent">Architecture</span></h2>
+                <div class="grid-3">
+                    <div class="glass-card interactive gs-fade">
+                        <div class="card-visual">
+                            <div class="thermal-grid" id="thermalGrid"></div>
+                        </div>
+                        <h3 id="thermal-title">Thermal Matrix</h3>
+                        <p>MLX90640 32x24 infrared array maps surface temps. Edge algorithms isolate subjects and detect anomalies >39.5°C.</p>
+                    </div>
+
+                    <div class="glass-card interactive gs-fade">
+                        <div class="card-visual" style="align-items: flex-end;">
+                            <div class="audio-bar has-tooltip" data-tooltip="Freq: 120 Hz\nAmp: -40dB"></div>
+                            <div class="audio-bar has-tooltip" data-tooltip="Freq: 500 Hz\nAmp: -12dB\n[WARNING PEAK]"></div>
+                            <div class="audio-bar has-tooltip" data-tooltip="Freq: 1.2 kHz\nAmp: -30dB"></div>
+                            <div class="audio-bar has-tooltip" data-tooltip="Freq: 2.5 kHz\nAmp: -8dB\n[COUGH SIGNATURE]"></div>
+                            <div class="audio-bar has-tooltip" data-tooltip="Freq: 4.0 kHz\nAmp: -45dB"></div>
+                            <div class="audio-bar has-tooltip" data-tooltip="Freq: 8.0 kHz\nAmp: -20dB"></div>
+                        </div>
+                        <h3 id="acoustic-title">Acoustic Spectra</h3>
+                        <p>INMP441 I2S MEMS mic feeds an FFT pipeline. Distinguishes infectious coughs from ambient barn noise in real-time.</p>
+                    </div>
+
+                    <div class="glass-card interactive gs-fade">
+                        <div class="card-visual">
+                            <div class="telemetry-node has-tooltip" data-tooltip="ESP32 Edge Node\nStatus: ONLINE"></div>
+                            <div class="telemetry-line"><div class="telemetry-packet"></div></div>
+                            <div class="telemetry-cloud has-tooltip" data-tooltip="Firebase RTDB\nLatency: 42ms">☁️</div>
+                        </div>
+                        <h3 id="telemetry-title">Cloud Telemetry</h3>
+                        <p>Dual-core ESP32 orchestrates I2C/I2S buffers and multiplexes payloads to Firebase RTDB with zero perceived latency.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ADVANCED FIRMWARE CONTENT -->
+        <section id="firmware" style="display:block;">
+            <div class="fw-header gs-fade">
+                <h2 class="section-title gradient-text"><span class="rickroll-trigger interactive" data-word="Hardware">Hardware</span> <span class="gradient-text-accent">Deployment Core</span></h2>
+                <p class="hero-desc" style="margin: 0 auto 40px auto; text-align:center;">
+                    The ESP32-S3 acts as the central brain of the edge node, orchestrating the MLX90640 thermal matrix and INMP441 acoustic sensor. Explore the fully assembled physical deployment below.
+                </p>
+            </div>
+
+            <div class="fw-grid">
+                <!-- 3D Chip with OrbitControls, Backgrounds, and Fullscreen -->
+                <div class="chip-container gs-reveal interactive" id="chip-wrapper">
+                    <!-- Dynamic Backgrounds -->
+                    <div id="env-bg-thermal" class="env-background" style="background-image: url('env_thermal.png');"></div>
+                    <div id="env-bg-acoustic" class="env-background" style="background-image: url('env_acoustic.png');"></div>
+
+                    <div style="position:absolute; top:20px; left:20px; font-family:'Fira Code'; font-size:12px; color:var(--tertiary); z-index:10; pointer-events:none;">
+                        [ WEBGL_RENDER_TARGET ]<br><span id="env-status">ENV: LAB (NEUTRAL)</span><br><br><span style="color:#fff">Drag to rotate. Scroll to zoom to reveal pinouts.</span>
+                    </div>
+                    
+                    <div class="sim-controls">
+                        <button class="sim-btn interactive" onclick="toggleFullscreen()" id="fs-btn">⛶ Fullscreen</button>
+                        <button class="sim-btn env-btn interactive" onclick="toggleEnvironment()">🔄 Switch Environment</button>
+                        <button class="sim-btn interactive" onclick="triggerSimulation()">▶ Run Simulation</button>
+                    </div>
+
+                    <div id="chip-3d"></div>
+                    <!-- Pin Labels Container -->
+                    <div id="pin-labels-container"></div>
+                </div>
+
+                <!-- Terminal -->
+                <div class="terminal gs-reveal interactive" id="fw-term">
+                    <span style="color:#6B7280">// FreeRTOS Task Delegation</span><br>
+                    <span class="term-cyan term-hover has-tooltip" data-tooltip="Spawns task pinned strictly to Core 0.\nUsed for deterministic timing (DSP).">xTaskCreatePinnedToCore</span>(<br>
+                    &nbsp;&nbsp;AcousticFFT_Task, <span class="term-pink">"FFT"</span>, 8192, NULL, 1, NULL, <span class="term-green has-tooltip" data-tooltip="PRO_CPU (Core 0)">0</span><br>
+                    );<br><br>
+                    <span class="term-cyan term-hover has-tooltip" data-tooltip="Spawns task pinned to Core 1.\nIsolates network blocking calls from DSP.">xTaskCreatePinnedToCore</span>(<br>
+                    &nbsp;&nbsp;FirebaseStream_Task, <span class="term-pink">"NET"</span>, 8192, NULL, 2, NULL, <span class="term-green has-tooltip" data-tooltip="APP_CPU (Core 1)">1</span><br>
+                    );<br><br>
+                    <span style="color:#6B7280">// Boot Logs (Hover for stats)</span><br>
+                    <div id="sim-logs">
+                        <span class="term-hover has-tooltip" data-tooltip="DMA Buffer Size: 1024 bytes\nSample Rate: 16000Hz">[CORE_0] I2S DMA Buffer ... <span class="term-green">LOCKED</span></span><br>
+                        <span class="term-hover has-tooltip" data-tooltip="Fast Mode+ enabled\nSDA/SCL Pullups active">[CORE_0] MLX90640 I2C 1MHz .. <span class="term-green">OK</span></span><br>
+                        <span class="term-hover has-tooltip" data-tooltip="Bearer Token Expiry: 3600s\nRSA-256 Sig Valid">[CORE_1] JWT Signed, Auth ... <span class="term-green">200 OK</span></span><br>
+                        <span class="term-hover has-tooltip" data-tooltip="WSS:// stream to Realtime DB">[CORE_1] RTDB Socket ........ <span class="term-cyan">OPEN</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SVG Flow -->
+            <div class="svg-flow-container gs-fade interactive" style="margin-top: 40px;">
+                <h3 style="font-family:'Fira Code'; font-size:14px; color:var(--text-muted); margin-bottom: 20px;">TELEMETRY_PIPELINE.SVG (Hover Nodes)</h3>
+                <svg class="svg-diagram" viewBox="0 0 800 200" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M 120 70 L 250 100" class="flow-path"/>
+                    <path d="M 120 130 L 250 100" class="flow-path"/>
+                    <path d="M 350 100 L 550 100" class="flow-path"/>
+                    <path d="M 650 100 L 750 100" class="flow-path"/>
+                    <path d="M 120 70 L 250 100" class="flow-active"/>
+                    <path d="M 120 130 L 250 100" class="flow-active-pink"/>
+                    <path d="M 350 100 L 550 100" class="flow-active"/>
+                    
+                    <g class="svg-node-group has-tooltip" data-tooltip="MLX90640 Thermal Camera\n• Protocol: I2C (Fast Mode+)\n• Address: 0x33\n• Array: 768 Pixels (32x24)\n• Refresh: 8Hz">
+                        <rect x="20" y="40" width="100" height="40" class="svg-node"/>
+                        <text x="70" y="65" class="svg-text">MLX90640</text>
+                    </g>
+                    <g class="svg-node-group has-tooltip" data-tooltip="INMP441 Omnidirectional Mic\n• Protocol: I2S\n• Interface: Bottom Port\n• SNR: 61 dBA\n• Freq Resp: 60Hz - 15kHz">
+                        <rect x="20" y="110" width="100" height="40" class="svg-node"/>
+                        <text x="70" y="135" class="svg-text">INMP441</text>
+                    </g>
+                    <g class="svg-node-group has-tooltip" data-tooltip="ESP32-S3 WROOM\n• Core 0: DSP / FFT / Buffers\n• Core 1: WiFi / HTTPS POST\n• RAM: 512KB SRAM">
+                        <rect x="250" y="60" width="100" height="80" class="svg-node" style="stroke: var(--tertiary); transform-origin: center;"/>
+                        <text x="300" y="95" class="svg-text">ESP32-S3</text>
+                    </g>
+                    <g class="svg-node-group has-tooltip" data-tooltip="Google Firebase RTDB\n• Security: JWT Auth Rules\n• Path: /swine_telemetry/id\n• Arch: NoSQL JSON Tree">
+                        <rect x="550" y="70" width="100" height="60" class="svg-node" style="stroke: #FFCA28; transform-origin: center;"/>
+                        <text x="600" y="100" class="svg-text">Firebase</text>
+                    </g>
+                </svg>
+            </div>
+        </section>
+        
+        <section id="references" style="display:block; padding-top: 0;">
+            <h2 class="section-title gradient-text gs-fade" style="font-size: 2.5rem; margin-bottom: 40px;"><span class="rickroll-trigger interactive" data-word="Citation">Citation</span>s & <span class="gradient-text-accent">References</span></h2>
+            <div class="references-list gs-reveal">
+                <div class="ref-item interactive">
+                    <div class="ref-title">1. Early Detection of Porcine Respiratory Disease Complex</div>
+                    <div class="ref-desc">Acoustic and thermal indicators precede clinical symptoms by up to 72 hours, drastically reducing antibiotic usage through targeted early intervention.</div>
+                    <a href="#" class="ref-link">Read Literature [DOI: 10.1016/j.compag.xxx]</a>
+                </div>
+                <div class="ref-item interactive">
+                    <div class="ref-title">2. MLX90640 Thermal Array Datasheet (Melexis)</div>
+                    <div class="ref-desc">Specifications on the 32x24 IR pixel array, I2C fast-mode+ interface, and embedded calibration EEPROM utilized for absolute temperature mapping.</div>
+                    <a href="https://www.melexis.com/en/documents/documentation/datasheets/datasheet-mlx90640" target="_blank" class="ref-link">View Datasheet</a>
+                </div>
+                <div class="ref-item interactive">
+                    <div class="ref-title">3. Espressif ESP-IDF Audio DSP Library</div>
+                    <div class="ref-desc">Implementation details regarding the hardware-accelerated Fast Fourier Transform (FFT) used to extract spectral features from the I2S microphone stream.</div>
+                    <a href="https://github.com/espressif/esp-dsp" target="_blank" class="ref-link">ESP-DSP Documentation</a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // TOOLTIP & CURSOR & EASTER EGGS
+        const tooltip = document.getElementById('global-tooltip');
+        document.querySelectorAll('.has-tooltip').forEach(el => {
+            el.addEventListener('mouseenter', (e) => {
+                tooltip.innerHTML = el.getAttribute('data-tooltip').replace(/\\n/g, '<br>');
+                tooltip.classList.add('active'); document.body.classList.add('hovering');
+                if(el.classList.contains('t-cell')) playThermalBlip();
+                else if(el.classList.contains('audio-bar')) playAudioChord();
+                else if(el.classList.contains('telemetry-node') || el.classList.contains('telemetry-cloud')) playTelemetryPing();
+                else playHover(); 
+            });
+            el.addEventListener('mousemove', (e) => { tooltip.style.left = e.clientX + 'px'; tooltip.style.top = e.clientY + 'px'; });
+            el.addEventListener('mouseleave', () => { tooltip.classList.remove('active'); document.body.classList.remove('hovering'); });
+        });
+
+        const dot = document.getElementById('cursor-dot');
+        const ring = document.getElementById('cursor-ring');
+        window.addEventListener('mousemove', (e) => {
+            gsap.to(dot, { x: e.clientX, y: e.clientY, duration: 0 });
+            gsap.to(ring, { x: e.clientX, y: e.clientY, duration: 0.15 });
+        });
+
+        function spawnPig() {
+            const pig = document.getElementById('easter-egg-pig');
+            pig.classList.remove('walking'); void pig.offsetWidth; pig.classList.add('walking');
+        }
+        document.getElementById('thermal-title').addEventListener('mouseenter', () => { playHover(); spawnPig(); });
+        document.getElementById('acoustic-title').addEventListener('mouseenter', () => { playPigCough(); });
+        document.getElementById('telemetry-title').addEventListener('mouseenter', () => { playPigCough(); spawnPig(); });
+
+        // Rickroll Easter Egg Implementation (Sequence: Sensory -> Hardware -> Edge -> Citation)
+        const rickrollTarget = ['Citation', 'Hardware', 'Edge', 'Sensory', 'Swine'];
+        let rickrollCurrent = 0;
+        
+        document.querySelectorAll('.rickroll-trigger').forEach(el => {
+            el.addEventListener('click', (e) => {
+                playClick();
+                const word = el.getAttribute('data-word');
+                if(word === rickrollTarget[rickrollCurrent]) {
+                    el.classList.add('active-seq');
+                    rickrollCurrent++;
+                    if(rickrollCurrent === rickrollTarget.length) {
+                        // Sequence Complete!
+                        setTimeout(() => {
+                            window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
+                            document.querySelectorAll('.rickroll-trigger').forEach(r => r.classList.remove('active-seq'));
+                            rickrollCurrent = 0;
+                        }, 500);
+                    }
+                } else {
+                    // Reset sequence if wrong word clicked
+                    document.querySelectorAll('.rickroll-trigger').forEach(r => r.classList.remove('active-seq'));
+                    if(word === rickrollTarget[0]) {
+                        el.classList.add('active-seq');
+                        rickrollCurrent = 1;
+                    } else {
+                        rickrollCurrent = 0;
+                    }
+                }
+            });
+        });
+
+        const grid = document.getElementById('thermalGrid');
+        for(let i=0; i<32; i++) {
+            let cell = document.createElement('div'); cell.className = 't-cell has-tooltip'; grid.appendChild(cell);
+        }
+        setInterval(() => {
+            document.querySelectorAll('.t-cell').forEach(c => {
+                const rand = Math.random();
+                if(rand > 0.8) { c.style.background = '#FF0055'; c.setAttribute('data-tooltip', `Temp: ${(39.5 + Math.random()*2).toFixed(1)}°C\n[FEVER DETECTED]`); }
+                else if(rand > 0.6) { c.style.background = '#FFBD2E'; c.setAttribute('data-tooltip', `Temp: ${(38.0 + Math.random()*1.4).toFixed(1)}°C\n[ELEVATED]`); }
+                else { c.style.background = '#00E5FF'; c.setAttribute('data-tooltip', `Temp: ${(36.0 + Math.random()*1.5).toFixed(1)}°C\n[NORMAL]`); }
+            });
+        }, 800);
+        document.getElementById('thermalGrid').addEventListener('mouseover', (e) => {
+            if(e.target.classList.contains('t-cell')) {
+                tooltip.innerHTML = e.target.getAttribute('data-tooltip').replace(/\\n/g, '<br>');
+                tooltip.classList.add('active'); playThermalBlip();
+            }
+        });
+        document.getElementById('thermalGrid').addEventListener('mouseout', (e) => { if(e.target.classList.contains('t-cell')) tooltip.classList.remove('active'); });
+
+        // FULLSCREEN API
+        function toggleFullscreen() {
+            const wrapper = document.getElementById('chip-wrapper');
+            const btn = document.getElementById('fs-btn');
+            if (!document.fullscreenElement) {
+                if (wrapper.requestFullscreen) {
+                    wrapper.requestFullscreen();
+                } else if (wrapper.webkitRequestFullscreen) { /* Safari */
+                    wrapper.webkitRequestFullscreen();
+                } else if (wrapper.msRequestFullscreen) { /* IE11 */
+                    wrapper.msRequestFullscreen();
+                }
+                btn.innerText = "✖ Exit Fullscreen";
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) { /* Safari */
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) { /* IE11 */
+                    document.msExitFullscreen();
+                }
+                btn.innerText = "⛶ Fullscreen";
+            }
+            playClick();
+        }
+        document.addEventListener('fullscreenchange', () => {
+            if(!document.fullscreenElement) document.getElementById('fs-btn').innerText = "⛶ Fullscreen";
+            // Need to tell renderer to resize
+            setTimeout(() => {
+                const container = document.getElementById('chip-3d');
+                chipCamera.aspect = container.clientWidth / container.clientHeight;
+                chipCamera.updateProjectionMatrix();
+                chipRenderer.setSize(container.clientWidth, container.clientHeight);
+            }, 100);
+        });
+
+        // WEBGL ENGINE
+        let bgScene, bgCamera, bgRenderer, bgMesh, bgMat;
+        const initBg = () => {
+            const container = document.getElementById('canvas-container');
+            bgScene = new THREE.Scene();
+            bgCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            bgRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            bgRenderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(bgRenderer.domElement);
+
+            const geo = new THREE.BufferGeometry();
+            const pos = new Float32Array(3000);
+            for(let i=0; i<3000; i++) pos[i] = (Math.random() - 0.5) * 40;
+            geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+            bgMat = new THREE.PointsMaterial({ size: 0.05, color: 0x00E5FF, transparent: true, opacity: 0.3 });
+            bgMesh = new THREE.Points(geo, bgMat);
+            bgScene.add(bgMesh);
+
+            bgCamera.position.z = 10;
+            const tick = () => { bgMesh.rotation.y += 0.001; bgMesh.rotation.x += 0.0005; bgRenderer.render(bgScene, bgCamera); requestAnimationFrame(tick); };
+            tick();
+        };
+        initBg();
+
+        // HIGH-FIDELITY 3D CHIP & PERIPHERALS (ESP32-S3, MLX90640, INMP441)
+        let chipCoreMaterial, mlxLensMat, inmpCoreMat;
+        let chipScene, chipCamera, chipRenderer, chipControls;
+        let wireGroup;
+        let mlxGroup, inmpGroup; 
+        let mlxWires = [], inmpWires = []; 
+        const pins = []; 
+        const mainLabels = [];
+        
+        const initChip = () => {
+            const container = document.getElementById('chip-3d');
+            const labelContainer = document.getElementById('pin-labels-container');
+            chipScene = new THREE.Scene();
+            chipCamera = new THREE.PerspectiveCamera(50, container.clientWidth / container.clientHeight, 0.1, 100);
+            chipRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+            chipRenderer.setSize(container.clientWidth, container.clientHeight);
+            container.appendChild(chipRenderer.domElement);
+
+            chipControls = new THREE.OrbitControls(chipCamera, chipRenderer.domElement);
+            chipControls.enableDamping = true; chipControls.dampingFactor = 0.05;
+            chipControls.enablePan = false; chipControls.minDistance = 3; chipControls.maxDistance = 15;
+
+            const assemblyGroup = new THREE.Group();
+
+            // ==========================================
+            // 1. ESP32-S3 WROOM-1 (Accurate Model)
+            // ==========================================
+            const espGroup = new THREE.Group();
+            
+            // Base PCB (Black/Greenish)
+            const pcbGeo = new THREE.BoxGeometry(3.5, 0.1, 5);
+            const pcbMat = new THREE.MeshPhongMaterial({ color: 0x1A1C1A, specular: 0x333333, shininess: 10 });
+            const pcb = new THREE.Mesh(pcbGeo, pcbMat);
+            espGroup.add(pcb);
+
+            // Metallic Shielding Box
+            const shieldGeo = new THREE.BoxGeometry(3, 0.4, 3.5);
+            const shieldMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.3, metalness: 0.8 });
+            const shield = new THREE.Mesh(shieldGeo, shieldMat);
+            shield.position.set(0, 0.25, 0.5); // Offset to bottom
+            espGroup.add(shield);
+
+            // "Glowing" Core indicator (for simulation) inside/on top of shield
+            const coreGeo = new THREE.BoxGeometry(1.5, 0.45, 1.5);
+            chipCoreMaterial = new THREE.MeshBasicMaterial({ color: 0x9D4EDD, wireframe: true });
+            const core = new THREE.Mesh(coreGeo, chipCoreMaterial);
+            core.position.set(0, 0.25, 0.5);
+            espGroup.add(core);
+
+            // Antenna Trace Area (Gold zig-zag top)
+            const antGeo = new THREE.PlaneGeometry(3, 0.8);
+            const antMat = new THREE.MeshBasicMaterial({ color: 0xD4AF37, side: THREE.DoubleSide, map: createZigZagTexture() });
+            const antenna = new THREE.Mesh(antGeo, antMat);
+            antenna.rotation.x = -Math.PI / 2;
+            antenna.position.set(0, 0.06, -1.8);
+            espGroup.add(antenna);
+
+            // Black Headers with Silver Pins
+            const headerGeo = new THREE.BoxGeometry(0.3, 0.3, 4.5);
+            const headerMat = new THREE.MeshPhongMaterial({ color: 0x050505 });
+            const leftHeader = new THREE.Mesh(headerGeo, headerMat); leftHeader.position.set(-1.6, 0.2, 0); espGroup.add(leftHeader);
+            const rightHeader = new THREE.Mesh(headerGeo, headerMat); rightHeader.position.set(1.6, 0.2, 0); espGroup.add(rightHeader);
+
+            const pinGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.6, 8);
+            const pinMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.9, roughness: 0.2 });
+            
+            const pinNamesLeft = ["3V3", "EN", "IO4", "IO5", "IO6", "IO7", "IO15", "IO16"]; 
+            const pinNamesRight = ["GND", "IO18", "IO19", "IO21", "RX", "TX", "IO22", "IO23"];
+
+            let pinIO22, pinIO21, pinIO15, pinIO4, pinIO6;
+
+            for(let i=0; i<8; i++) {
+                const lp = new THREE.Mesh(pinGeo, pinMat); lp.position.set(-1.6, -0.1, -1.5 + (i * 0.43)); espGroup.add(lp);
+                createPinLabel(lp, pinNamesLeft[i], labelContainer, assemblyGroup);
+                if(pinNamesLeft[i] === "IO15") pinIO15 = lp;
+                if(pinNamesLeft[i] === "IO4") pinIO4 = lp;
+                if(pinNamesLeft[i] === "IO6") pinIO6 = lp;
+
+                const rp = new THREE.Mesh(pinGeo, pinMat); rp.position.set(1.6, -0.1, -1.5 + (i * 0.43)); espGroup.add(rp);
+                createPinLabel(rp, pinNamesRight[i], labelContainer, assemblyGroup);
+                if(pinNamesRight[i] === "IO22") pinIO22 = rp;
+                if(pinNamesRight[i] === "IO21") pinIO21 = rp;
+            }
+            
+            createMainLabel(espGroup, "ESP32-S3 WROOM-1", labelContainer);
+            assemblyGroup.add(espGroup);
+
+            // ==========================================
+            // 2. MLX90640 THERMAL CAMERA (Accurate Model)
+            // ==========================================
+            mlxGroup = new THREE.Group();
+            mlxGroup.position.set(5, 0, -1);
+            
+            // Purple/Dark Blue PCB
+            const mlxBoardGeo = new THREE.BoxGeometry(1.8, 0.1, 1.8);
+            const mlxBoardMat = new THREE.MeshPhongMaterial({ color: 0x2A1B38, specular: 0x111111 });
+            mlxGroup.add(new THREE.Mesh(mlxBoardGeo, mlxBoardMat));
+
+            // Silver Can / Lens Housing
+            const mlxLensGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.6, 32);
+            mlxLensMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.3 });
+            const mlxLens = new THREE.Mesh(mlxLensGeo, mlxLensMat);
+            mlxLens.position.y = 0.35;
+            mlxGroup.add(mlxLens);
+            
+            // Dark Silicon Window
+            const mlxInnerGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.61, 32);
+            const mlxInnerMat = new THREE.MeshPhongMaterial({ color: 0x111111, shininess: 100, specular: 0x555555 });
+            const mlxInner = new THREE.Mesh(mlxInnerGeo, mlxInnerMat);
+            mlxInner.position.y = 0.35;
+            mlxGroup.add(mlxInner);
+
+            // 4 Pins
+            const mlxPinGrp = new THREE.Group();
+            for(let i=0; i<4; i++) {
+                const mp = new THREE.Mesh(pinGeo, pinMat); mp.position.set(-0.6 + (i*0.4), -0.2, 0.7); mlxGroup.add(mp);
+            }
+
+            createMainLabel(mlxGroup, "MLX90640 ARRAY", labelContainer);
+            assemblyGroup.add(mlxGroup);
+
+            // ==========================================
+            // 3. INMP441 ACOUSTIC MIC (Accurate Model)
+            // ==========================================
+            inmpGroup = new THREE.Group();
+            inmpGroup.position.set(-5, 0, 1);
+            
+            // Circular Board with flat edge
+            const inmpShape = new THREE.Shape();
+            inmpShape.arc(0, 0, 1.2, 0, Math.PI * 2, false);
+            const inmpBoardGeo = new THREE.CylinderGeometry(1.2, 1.2, 0.1, 32);
+            const inmpBoardMat = new THREE.MeshPhongMaterial({ color: 0x111111, specular: 0x222222 });
+            const inmpBoard = new THREE.Mesh(inmpBoardGeo, inmpBoardMat);
+            inmpGroup.add(inmpBoard);
+
+            // Metallic Mic Port
+            const inmpMicGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.15, 32);
+            inmpCoreMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.8, roughness: 0.4 });
+            const inmpMic = new THREE.Mesh(inmpMicGeo, inmpCoreMat);
+            inmpMic.position.y = 0.1;
+            inmpGroup.add(inmpMic);
+
+            // Mic Hole
+            const holeGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.16, 16);
+            const holeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const hole = new THREE.Mesh(holeGeo, holeMat);
+            hole.position.y = 0.1;
+            inmpGroup.add(hole);
+
+            // 6 Pins on edge
+            for(let i=0; i<6; i++) {
+                const ip = new THREE.Mesh(pinGeo, pinMat); ip.position.set(-0.8 + (i*0.32), -0.2, 0.9); inmpGroup.add(ip);
+            }
+
+            createMainLabel(inmpGroup, "INMP441 I2S MIC", labelContainer);
+            assemblyGroup.add(inmpGroup);
+
+            // ==========================================
+            // 4. WIRING (I2C & I2S Lines)
+            // ==========================================
+            wireGroup = new THREE.Group();
+            const createWire = (mesh1, mesh2, color, isLeft) => {
+                const material = new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: 0.8, linewidth: 3 });
+                const p1 = new THREE.Vector3().setFromMatrixPosition(mesh1.matrixWorld);
+                const p2 = new THREE.Vector3().setFromMatrixPosition(mesh2.matrixWorld);
+                
+                // Route wires neatly down to breadboard level then up
+                const p1_down = new THREE.Vector3(p1.x, -1.0, p1.z);
+                const p2_down = new THREE.Vector3(p2.x, -1.0, p2.z);
+                const mid = new THREE.Vector3().lerpVectors(p1_down, p2_down, 0.5);
+                mid.z += isLeft ? 1 : -1; // Bow outwards
+                
+                const curve = new THREE.CatmullRomCurve3([p1, p1_down, mid, p2_down, p2]);
+                const curvePoints = curve.getPoints(30);
+                const geometry = new THREE.BufferGeometry().setFromPoints(curvePoints);
+                return new THREE.Line(geometry, material);
+            };
+
+            assemblyGroup.updateMatrixWorld(true);
+
+            // MLX wires (I2C) - Right side
+            mlxWires.push(createWire(pinIO22, mlxGroup, 0x00E5FF, false)); // SCL
+            mlxWires.push(createWire(pinIO21, mlxGroup, 0xFF0055, false)); // SDA
+            mlxWires.forEach(w => wireGroup.add(w));
+            
+            // INMP wires (I2S) - Left side
+            inmpWires.push(createWire(pinIO15, inmpGroup, 0x9D4EDD, true)); // WS
+            inmpWires.push(createWire(pinIO4, inmpGroup, 0x00E5FF, true)); // DIN
+            inmpWires.push(createWire(pinIO6, inmpGroup, 0x00E5FF, true)); // SCK
+            inmpWires.forEach(w => wireGroup.add(w));
+
+            assemblyGroup.add(wireGroup);
+            chipScene.add(assemblyGroup);
+            
+            const light1 = new THREE.DirectionalLight(0x00E5FF, 1.5); light1.position.set(5, 5, 5); chipScene.add(light1);
+            const light2 = new THREE.DirectionalLight(0xFF0055, 1.0); light2.position.set(-5, 5, -5); chipScene.add(light2);
+            chipScene.add(new THREE.AmbientLight(0x444444));
+
+            chipCamera.position.set(0, 8, 10); chipCamera.lookAt(0, 0, 0);
+
+            // Handle resize for fullscreen toggles
+            window.addEventListener('resize', () => {
+                if(chipCamera && chipRenderer) {
+                    chipCamera.aspect = container.clientWidth / container.clientHeight;
+                    chipCamera.updateProjectionMatrix();
+                    chipRenderer.setSize(container.clientWidth, container.clientHeight);
+                }
+            });
+
+            const tick = () => {
+                chipControls.update();
+                
+                const dist = chipCamera.position.length();
+                if(!chipControls.state && dist > 7 && assemblyGroup.rotation.y < Math.PI*2) {
+                    assemblyGroup.rotation.y += 0.003;
+                }
+
+                const canvasRect = chipRenderer.domElement.getBoundingClientRect();
+                
+                // Update Pin Labels
+                pins.forEach(pin => {
+                    const vector = pin.mesh.position.clone();
+                    if(pin.mesh.parent && pin.mesh.parent !== assemblyGroup) {
+                        vector.applyMatrix4(pin.mesh.parent.matrixWorld);
+                    } else {
+                        vector.applyMatrix4(assemblyGroup.matrixWorld); 
+                    }
+                    vector.project(chipCamera); 
+                    const x = (vector.x * .5 + .5) * canvasRect.width;
+                    const y = (vector.y * -.5 + .5) * canvasRect.height;
+                    pin.element.style.left = `${x}px`; pin.element.style.top = `${y}px`;
+
+                    const isVisibleGroup = pin.mesh.parent ? pin.mesh.parent.visible : true;
+                    if(isVisibleGroup && dist < 5.5 && vector.z < 1) pin.element.style.opacity = '1';
+                    else pin.element.style.opacity = '0';
+                });
+
+                // Update Main Component Labels
+                mainLabels.forEach(ml => {
+                    const vector = ml.group.position.clone();
+                    vector.y += 1.5; // Hover above component
+                    vector.applyMatrix4(assemblyGroup.matrixWorld); 
+                    vector.project(chipCamera); 
+                    const x = (vector.x * .5 + .5) * canvasRect.width;
+                    const y = (vector.y * -.5 + .5) * canvasRect.height;
+                    ml.element.style.left = `${x}px`; ml.element.style.top = `${y}px`;
+
+                    if(ml.group.visible && dist > 4 && vector.z < 1) ml.element.style.opacity = '1';
+                    else ml.element.style.opacity = '0';
+                });
+
+                chipRenderer.render(chipScene, chipCamera);
+                requestAnimationFrame(tick);
+            };
+            tick();
+        };
+
+        function createPinLabel(mesh, text, container, parentGroup) {
+            const el = document.createElement('div');
+            el.className = 'pin-label'; el.innerHTML = text;
+            container.appendChild(el); pins.push({ mesh: mesh, element: el, text: text });
+        }
+
+        function createMainLabel(group, text, container) {
+            const el = document.createElement('div');
+            el.className = 'main-label'; el.innerHTML = text;
+            container.appendChild(el); mainLabels.push({ group: group, element: el, text: text });
+        }
+
+        function createZigZagTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#1A1C1A'; ctx.fillRect(0,0,256,128);
+            ctx.strokeStyle = '#D4AF37'; ctx.lineWidth = 6; ctx.beginPath();
+            ctx.moveTo(20, 20); ctx.lineTo(236, 20); ctx.lineTo(236, 40); ctx.lineTo(20, 40);
+            ctx.lineTo(20, 60); ctx.lineTo(236, 60); ctx.lineTo(236, 80); ctx.lineTo(20, 80);
+            ctx.stroke(); return new THREE.CanvasTexture(canvas);
+        }
+        initChip();
+
+        // ENVIRONMENT TOGGLER WITH PROPER HARDWARE LOGIC
+        let currentEnv = 0; // 0 = Neutral, 1 = Top-Down Thermal, 2 = Close-Up Barn
+        function toggleEnvironment() {
+            playClick();
+            currentEnv = (currentEnv + 1) % 3;
+            const statusLabel = document.getElementById('env-status');
+            const bgThermal = document.getElementById('env-bg-thermal');
+            const bgAcoustic = document.getElementById('env-bg-acoustic');
+
+            if(currentEnv === 0) {
+                // Neutral Lab: Show BOTH sensors
+                statusLabel.innerHTML = "ENV: LAB (NEUTRAL PROTO)";
+                bgThermal.style.opacity = '0'; bgAcoustic.style.opacity = '0';
+                
+                mlxGroup.visible = true; inmpGroup.visible = true;
+                mlxWires.forEach(w => w.visible = true); inmpWires.forEach(w => w.visible = true);
+                
+                gsap.to(bgMat.color, { r: 0, g: 0.9, b: 1, duration: 2 }); 
+                gsap.to(chipCamera.position, { x: 0, y: 8, z: 10, duration: 1.5, ease: "power2.inOut" });
+            } 
+            else if(currentEnv === 1) {
+                // Thermal Above Pen: Show ONLY MLX90640
+                statusLabel.innerHTML = "ENV: THERMAL NODE (ABOVE PEN)";
+                bgThermal.style.opacity = '0.5'; bgAcoustic.style.opacity = '0';
+                
+                mlxGroup.visible = true; inmpGroup.visible = false;
+                mlxWires.forEach(w => w.visible = true); inmpWires.forEach(w => w.visible = false);
+
+                gsap.to(bgMat.color, { r: 1, g: 0, b: 0.3, duration: 2 }); 
+                gsap.to(chipCamera.position, { x: 2, y: 12, z: 0.1, duration: 1.5, ease: "power2.inOut" });
+            }
+            else if(currentEnv === 2) {
+                // Acoustic Close to Pigs: Show ONLY INMP441
+                statusLabel.innerHTML = "ENV: ACOUSTIC NODE (BARN LEVEL)";
+                bgThermal.style.opacity = '0'; bgAcoustic.style.opacity = '0.5'; 
+                
+                mlxGroup.visible = false; inmpGroup.visible = true;
+                mlxWires.forEach(w => w.visible = false); inmpWires.forEach(w => w.visible = true);
+
+                gsap.to(bgMat.color, { r: 1, g: 0.6, b: 0, duration: 2 }); 
+                gsap.to(chipCamera.position, { x: -4, y: 3, z: 6, duration: 1.5, ease: "power2.inOut" });
+            }
+        }
+
+        // SIMULATION
+        function triggerSimulation() {
+            playClick();
+            // Flash ESP32 Core
+            if(chipCoreMaterial) gsap.to(chipCoreMaterial.color, { r: 1, g: 0, b: 0.33, duration: 0.1, yoyo: true, repeat: 5 });
+            // Flash visible sensors
+            if(mlxGroup.visible && mlxLensMat) gsap.to(mlxLensMat.color, { r: 1, g: 0, b: 0, duration: 0.2, yoyo: true, repeat: 3 });
+            if(inmpGroup.visible && inmpCoreMat) gsap.to(inmpCoreMat.color, { r: 1, g: 0.3, b: 0.3, duration: 0.2, yoyo: true, repeat: 3 });
+            // Flash Wires
+            if(wireGroup) {
+                wireGroup.children.forEach(wire => {
+                    if(wire.visible) gsap.to(wire.material, { opacity: 1, duration: 0.2, yoyo: true, repeat: 3 });
+                });
+            }
+
+            const logs = document.getElementById('sim-logs');
+            const newLog = document.createElement('div');
+            
+            // Dynamic logs based on visible hardware
+            let simText = "";
+            if(mlxGroup.visible) {
+                const temp = (38.5 + Math.random() * 2.5).toFixed(1);
+                const isFever = temp >= 39.5;
+                const tempColor = isFever ? "term-pink" : "term-green";
+                const tempLabel = isFever ? "[FEVER DETECTED]" : "[NORMAL]";
+                simText += `[MLX] Frame Captured ... <span class="${tempColor}">${temp}°C ${tempLabel}</span><br>`;
+            }
+            if(inmpGroup.visible) {
+                const isCough = Math.random() > 0.3;
+                const freq = (2.0 + Math.random() * 1.5).toFixed(1);
+                const msg = isCough ? `Cough Peak @ ${freq}kHz` : `Ambient @ 120Hz`;
+                const color = isCough ? "term-pink" : "term-cyan";
+                const label = isCough ? "DETECTED" : "CLEAR";
+                simText += `[FFT] ${msg} ... <span class="${color}">${label}</span><br>`;
+            }
+            simText += `[NET] Payload Pushed ... <span class="term-green">OK (${Math.floor(20 + Math.random()*40)}ms)</span>`;
+
+            newLog.innerHTML = `<br><span style="color:#6B7280">// Simulation Event</span><br>${simText}`;
+            logs.appendChild(newLog);
+            const term = document.getElementById('fw-term');
+            term.scrollTop = term.scrollHeight;
+            playTelemetryPing();
+        }
+
+        gsap.registerPlugin(ScrollTrigger);
+        gsap.utils.toArray('.gs-fade').forEach(el => gsap.from(el, { scrollTrigger: { trigger: el, start: "top 85%" }, y: 50, opacity: 0, duration: 1, ease: "power3.out" }));
+        gsap.from('.gs-reveal', { y: 30, opacity: 0, duration: 1, stagger: 0.2, ease: "power3.out" });
+    </script>
+</body>
+</html>
