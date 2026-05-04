@@ -35,11 +35,11 @@ typedef struct {
 extern int run_classifier(signal_t *signal, ei_impulse_result_t *result, bool debug = false);
 #endif
 
-enum CoughClassification {
-    COUGH_NONE,
-    COUGH_DETECTED,
-    GRUNT_DETECTED,
-    NOISE
+enum EICoughClass {
+    EI_COUGH_NONE,
+    EI_COUGH_DETECTED,
+    EI_GRUNT_DETECTED,
+    EI_NOISE
 };
 
 class EdgeImpulseAudio {
@@ -61,7 +61,7 @@ public:
      * Feed cleaned (spectrally subtracted) PCM data into the EI buffer.
      * When the buffer is full, it runs inference.
      */
-    CoughClassification processBuffer(int16_t* cleanedBuffer, size_t sampleCount) {
+    EICoughClass processBuffer(int16_t* cleanedBuffer, size_t sampleCount) {
         // Convert int16_t to float and feed the rolling buffer
         for (size_t i = 0; i < sampleCount; i++) {
             if (feature_index < EI_CLASSIFIER_SLICE_SIZE) {
@@ -75,11 +75,11 @@ public:
             return runInference();
         }
 
-        return COUGH_NONE; // Not enough data yet
+        return EI_COUGH_NONE; // Not enough data yet
     }
 
 private:
-    CoughClassification runInference() {
+    EICoughClass runInference() {
         // Wrap the feature buffer in an EI signal_t structure
         signal_t signal;
         signal.total_length = EI_CLASSIFIER_SLICE_SIZE;
@@ -91,7 +91,7 @@ private:
         EI_IMPULSE_ERROR res = run_classifier(&signal, &result, false);
         if (res != 0) {
             Serial.printf("❌ Edge Impulse Error: %d\n", res);
-            return COUGH_NONE;
+            return EI_COUGH_NONE;
         }
 
         // Analyze results
@@ -108,14 +108,14 @@ private:
         if (highest_prob > 0.8) {
             if (top_label.indexOf("cough") != -1 || top_label.indexOf("Cough") != -1) {
                 Serial.printf("🔴 EDGE IMPULSE COUGH DETECTED (%.2f)\n", highest_prob);
-                return COUGH_DETECTED;
+                return EI_COUGH_DETECTED;
             } else if (top_label.indexOf("grunt") != -1 || top_label.indexOf("Grunt") != -1) {
                 Serial.printf("🟡 GRUNT DETECTED (%.2f)\n", highest_prob);
-                return GRUNT_DETECTED;
+                return EI_GRUNT_DETECTED;
             }
         }
 
-        return NOISE;
+        return EI_NOISE;
     }
 
     // Callback required by Edge Impulse to fetch the raw data
