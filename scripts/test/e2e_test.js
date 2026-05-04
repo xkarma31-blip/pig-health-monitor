@@ -2,14 +2,14 @@ const puppeteer = require('puppeteer');
 
 (async () => {
   console.log("Launching browser for visual test...");
-  const browser = await puppeteer.launch({ headless: false, args: ['--no-sandbox'] });
+  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
   const page = await browser.newPage();
   
   page.on('console', msg => console.log('PAGE LOG:', msg.text()));
   page.on('pageerror', error => console.log('PAGE ERROR:', error.message));
 
   console.log("Navigating to production dashboard...");
-  await page.goto('https://mobileapp-lyart.vercel.app', { waitUntil: 'networkidle2' });
+  await page.goto('https://pig-health-monitor.vercel.app', { waitUntil: 'networkidle2' });
 
   // TEST 1: Check Guest Mode
   console.log("\n=== TEST 1: GUEST MODE ===");
@@ -28,33 +28,34 @@ const puppeteer = require('puppeteer');
 
   // TEST 2: Login
   console.log("\n=== TEST 2: AUTHENTICATING ===");
-  console.log("Navigating to Login tab...");
-  await page.goto('https://mobileapp-lyart.vercel.app/login', { waitUntil: 'networkidle2' });
+  console.log("Navigating to Session tab...");
+  await page.goto('https://pig-health-monitor.vercel.app/auth', { waitUntil: 'networkidle2' });
   
-  console.log("Typing credentials...");
-  await page.waitForSelector('input[placeholder="admin@farm.local"]', {timeout: 10000});
-  await page.type('input[placeholder="admin@farm.local"]', 'admin@farm.local');
-  await page.type('input[placeholder="••••••••"]', '357631');
-  
-  // Click the login button using exact layout coordinates
-  console.log("Clicking login button...");
-  const buttonRect = await page.evaluate(() => {
-    const buttons = Array.from(document.querySelectorAll('div[role="button"]'));
-    console.log("BUTTON TEXTS:", buttons.map(b => b.innerText));
-    const loginBtn = buttons.find(b => b.innerText && b.innerText.includes('AUTHENTICATE'));
-    if (!loginBtn) return null;
-    const rect = loginBtn.getBoundingClientRect();
-    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  console.log("Waiting for SIGN IN button...");
+  await page.evaluate(() => {
+    const btns = Array.from(document.querySelectorAll('div'));
+    const signInBtn = btns.find(b => b.innerText === 'SIGN IN');
+    if (signInBtn) signInBtn.click();
   });
+  await new Promise(r => setTimeout(r, 4000));
+
+  console.log("Typing credentials...");
+  // Wait for ANY input to appear
+  await page.waitForFunction(() => document.querySelectorAll('input').length >= 2, {timeout: 15000});
+  const inputs = await page.$$('input');
+  // Usually email is 1st, password is 2nd
+  await inputs[0].type('admin@farm.local');
+  await inputs[1].type('357631');
   
-  if (buttonRect) {
-    await page.mouse.click(buttonRect.x, buttonRect.y);
-  } else {
-    console.log("❌ Could not find login button!");
-  }
+  console.log("Clicking AUTHENTICATE...");
+  await page.evaluate(() => {
+    const btns = Array.from(document.querySelectorAll('div'));
+    const authBtn = btns.find(b => b.innerText === 'AUTHENTICATE');
+    if (authBtn) authBtn.click();
+  });
 
   console.log("Waiting for network idle after login...");
-  await new Promise(r => setTimeout(r, 5000)); // Give Firebase time to auth
+  await new Promise(r => setTimeout(r, 8000)); // Give Firebase time to auth
 
   const errorText = await page.evaluate(() => {
     const errObj = document.querySelector('div[dir="auto"][style*="color: rgb(255, 68, 68)"]');

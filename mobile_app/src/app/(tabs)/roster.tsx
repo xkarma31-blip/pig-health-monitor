@@ -6,8 +6,9 @@
  */
 
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, Alert, Switch } from 'react-native';
 import { Theme } from '../../constants/Theme';
+import { ResponsiveLayout } from '../../components/Layout/ResponsiveLayout';
 import { subscribeRoster, enrollPig, updatePigHealth } from '../../utils/firebase';
 import { getAuth } from 'firebase/auth';
 
@@ -59,6 +60,7 @@ export default function RosterScreen() {
   };
 
   return (
+<ResponsiveLayout>
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* === Mountain Mode Toggle === */}
       <View style={styles.mountainBox}>
@@ -128,6 +130,7 @@ export default function RosterScreen() {
         );
       })}
     </ScrollView>
+</ResponsiveLayout>
   );
 }
 

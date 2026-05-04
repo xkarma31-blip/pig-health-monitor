@@ -3,48 +3,36 @@
  * 
  * This is the SINGLE SOURCE OF TRUTH for all colors, sizes, and spacing.
  * To restyle the entire app, just change values here.
- * 
- * EXAMPLE: Want to change the background color? 
- *   Change `background` below, and EVERY screen updates automatically.
  */
 
 export const Theme = {
   colors: {
-    // === Core Palette ===
-    background: '#0D0D1A',       // Deep navy (main background)
-    surface: '#1A1A2E',          // Slightly lighter (card backgrounds)
-    card: '#1E1E34',             // Card/panel fill
-    cardBorder: '#2A2A45',       // Subtle card borders
-
-    // === Text ===
-    text: '#FFFFFF',             // Primary text (Pure white for max contrast)
-    textSecondary: '#A0A0C0',    // Muted text (Lighter than before)
-    textMuted: '#8080A0',        // Subtlest text (Now readable)
-
-    // === Brand / Accent ===
-    primary: '#00FFE0',          // Electric Aqua (Brighter for better visibility)
-    primaryDim: '#00D4AA',       // Previous primary is now the dim version
-    secondary: '#5599FF',        // Lighter blue
-
-    // === Status Colors ===
+    background: '#0D0D1A',       
+    surface: '#1A1A2E',          
+    card: '#1E1E34',             
+    cardBorder: '#2A2A45',       
+    text: '#FFFFFF',             
+    textSecondary: '#A0A0C0',    
+    textMuted: '#8080A0',        
+    primary: '#00FFE0',          
+    primaryDim: '#00D4AA',       
+    secondary: '#5599FF',        
     success: '#00FFE0',          
     warning: '#FFC040',          
     danger: '#FF6060',           
     info: '#5599FF',             
-
-    // === Misc ===
     tabBar: '#12121F',           
     tabActive: '#00FFE0',        
     tabInactive: '#8080A0',      
   },
 
   typography: {
-    h1: 32,         // Page titles (Constitutional Requirement)
-    h2: 24,         // Section headers (Constitutional Requirement)
-    h3: 20,         // Card headers
-    body: 16,       // Normal text (Constitutional Requirement)
-    caption: 14,    // Small detail text (Increased from 13)
-    huge: 42,       // Big sensor values (Increased for clarity)
+    h1: 32,         
+    h2: 24,         
+    h3: 20,         
+    body: 16,       
+    caption: 14,    
+    huge: 42,       
   },
 
   spacing: {
@@ -60,16 +48,43 @@ export const Theme = {
     sm: 6,
     md: 12,
     lg: 16,
-    pill: 999,    // For badges/pills
+    pill: 999,
   },
 };
 
+export const DesktopTheme = {
+  typography: {
+    h1: 24,         
+    h2: 20,         
+    h3: 16,         
+    body: 14,       
+    caption: 12,    
+    huge: 30,       
+  },
+  spacing: {
+    xs: 4,
+    sm: 6,
+    md: 10,
+    lg: 14,
+    xl: 20,
+    xxl: 24,
+  }
+};
+
 /**
- * Helper: Get status color from theme
- * Usage: getStatusColor('warning') → '#FFB020'
+ * Helper: Get responsive theme values
  */
-export function getStatusColor(status: 'normal' | 'warning' | 'danger'): string {
-  const map = {
+export function getResponsiveTheme(isDesktop: boolean) {
+  if (!isDesktop) return Theme;
+  return {
+    ...Theme,
+    typography: { ...Theme.typography, ...DesktopTheme.typography },
+    spacing: { ...Theme.spacing, ...DesktopTheme.spacing },
+  };
+}
+
+export function getStatusColor(status: 'normal' | 'warning' | 'danger' | string): string {
+  const map: Record<string, string> = {
     normal: Theme.colors.success,
     warning: Theme.colors.warning,
     danger: Theme.colors.danger,

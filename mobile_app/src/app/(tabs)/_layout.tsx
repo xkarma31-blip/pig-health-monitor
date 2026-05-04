@@ -11,9 +11,14 @@
  */
 
 import { Tabs } from 'expo-router';
+import { useWindowDimensions } from 'react-native';
 import { Theme } from '../../constants/Theme';
+import { ResponsiveLayout } from '../../components/Layout/ResponsiveLayout';
 
 export default function TabLayout() {
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
+
   return (
     <Tabs
       screenOptions={{
@@ -24,6 +29,7 @@ export default function TabLayout() {
           height: 64,
           paddingBottom: 8,
           paddingTop: 8,
+          display: isDesktop ? 'none' : 'flex',
         },
         tabBarActiveTintColor: Theme.colors.tabActive,
         tabBarInactiveTintColor: Theme.colors.tabInactive,
@@ -32,6 +38,7 @@ export default function TabLayout() {
           fontWeight: '600',
         },
         // Screen header styling
+        headerShown: !isDesktop,
         headerStyle: {
           backgroundColor: Theme.colors.background,
         },
@@ -46,7 +53,7 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="dashboard"
         options={{
           title: 'Dashboard',
           tabBarIcon: ({ color }) => (

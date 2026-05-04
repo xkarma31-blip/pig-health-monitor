@@ -9,9 +9,10 @@
  */
 
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput } from 'react-native';
-import { Theme } from '../../constants/Theme';
+import { View, Text, StyleSheet, ScrollView, TextInput, useWindowDimensions } from 'react-native';
+import { Theme, getResponsiveTheme } from '../../constants/Theme';
 import { SensorCard } from '../../components/SensorCard';
+import { ResponsiveLayout } from '../../components/Layout/ResponsiveLayout';
 import { subscribeSensors, enrollPig, subscribeRoster, subscribeTelemetry } from '../../utils/firebase';
 import { ThermalLiveView } from '../../components/ThermalLiveView';
 import { TouchableOpacity } from 'react-native';
@@ -20,6 +21,9 @@ import type { SensorReading } from '../../data/mockSensors';
 import { getAuth } from 'firebase/auth';
 
 export default function SensorsScreen() {
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
+  const T = getResponsiveTheme(isDesktop);
   const [sensors, setSensors] = useState<SensorReading[]>([]);
   const [roster, setRoster] = useState<any[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -77,92 +81,100 @@ export default function SensorsScreen() {
   const acousticSensors = sensors.filter((s) => s.type === 'acoustic');
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+<ResponsiveLayout>
+    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { padding: T.spacing.lg }]}>
       {isLive && (
         <View style={styles.liveBanner}>
           <Text style={styles.liveBannerText}>🔴 LIVE — Firebase RTDB</Text>
         </View>
       )}
       
-      {/* === Live Thermal Tracking === */}
-      <View style={{ marginTop: Theme.spacing.md }}>
-        <Text style={styles.sectionTitle}>📡 Live Thermal Feed</Text>
-        <Text style={styles.sectionDesc}>Tap a pig in the roster below to highlight it on the thermal grid</Text>
-        <ThermalLiveView 
-          base64Frame={telemetry?.thermalFrame}
-          targetX={telemetry?.targetX}
-          targetY={telemetry?.targetY}
-          identifiedPig={telemetry?.identifiedPig}
-          selectedPigToTrack={selectedTrackingPig}
-        />
-      </View>
+      {/* === Main Content Grid (Side-by-Side on Desktop) === */}
+      <View style={isDesktop ? styles.desktopRow : {}}>
+          
+          {/* --- Left: Thermal Feed --- */}
+          <View style={isDesktop ? styles.desktopCol : {}}>
+            <View style={{ marginTop: T.spacing.sm }}>
+              <Text style={[styles.sectionTitle, { fontSize: T.typography.h3, marginTop: T.spacing.sm }]}>📡 Live Thermal Feed</Text>
+              <Text style={[styles.sectionDesc, { fontSize: T.typography.caption }]}>Tap a pig in the roster to highlight it</Text>
+              <ThermalLiveView 
+                base64Frame={telemetry?.thermalFrame}
+                targetX={telemetry?.targetX}
+                targetY={telemetry?.targetY}
+                identifiedPig={telemetry?.identifiedPig}
+                selectedPigToTrack={selectedTrackingPig}
+                width={isDesktop ? Math.min(width * 0.4, 600) : undefined}
+              />
+            </View>
+          </View>
 
-      {/* === Enrollment Section === */}
-      <View style={styles.enrollmentContainer}>
-        <Text style={styles.sectionTitle}>🐷 Pig Roster</Text>
-        <Text style={styles.sectionDesc}>Enroll and manage individual pig identities</Text>
-        
-        <View style={styles.inputGroup}>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter Pig Name (e.g. Boss Hog)"
-            placeholderTextColor={Theme.colors.textMuted}
-            value={newPigName}
-            onChangeText={setNewPigName}
-          />
-          <TouchableOpacity 
-            style={[styles.enrollButton, (isEnrolling || !newPigName) && styles.buttonDisabled]} 
-            onPress={async () => {
-              if (!newPigName) return;
-              setIsEnrolling(true);
-              try {
-                await enrollPig(newPigName);
-                alert(`Ritual Initiated: Capturing ${newPigName}. Stand by.`);
-                setNewPigName('');
-              } finally {
-                setIsEnrolling(false);
-              }
-            }}
-            disabled={isEnrolling || !newPigName}
-          >
-            <Text style={styles.enrollButtonText}>
-              {isEnrolling ? '📡 ENROLLING...' : '+ ENROLL PIG'}
-            </Text>
-          </TouchableOpacity>
-        </View>
+          <View style={[isDesktop ? styles.desktopCol : {}, { paddingLeft: isDesktop ? 40 : 0 }]}>
+            <View style={styles.enrollmentContainer}>
+              <Text style={[styles.sectionTitle, { fontSize: T.typography.h3, marginTop: T.spacing.xs }]}>🐷 Pig Roster</Text>
+              <Text style={[styles.sectionDesc, { fontSize: T.typography.caption }]}>Enroll and manage identities</Text>
+              
+              <View style={[styles.inputGroup, isDesktop && { maxWidth: 600 }]}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter Pig Name"
+                  placeholderTextColor={Theme.colors.textMuted}
+                  value={newPigName}
+                  onChangeText={setNewPigName}
+                />
+                <TouchableOpacity 
+                  style={[styles.enrollButton, (isEnrolling || !newPigName) && styles.buttonDisabled]} 
+                  onPress={async () => {
+                    if (!newPigName) return;
+                    setIsEnrolling(true);
+                    try {
+                      await enrollPig(newPigName);
+                      alert(`Ritual Initiated: Capturing ${newPigName}.`);
+                      setNewPigName('');
+                    } finally {
+                      setIsEnrolling(false);
+                    }
+                  }}
+                  disabled={isEnrolling || !newPigName}
+                >
+                  <Text style={styles.enrollButtonText}>
+                    {isEnrolling ? '📡 ENROLLING...' : '+ ENROLL'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
 
-        {/* --- Roster List --- */}
-        <View style={styles.rosterList}>
-          {roster.length === 0 ? (
-            <Text style={styles.emptyText}>No pigs enrolled yet.</Text>
-          ) : (
-            roster.map((pig) => (
-              <TouchableOpacity 
-                key={pig.id} 
-                style={[
-                  styles.rosterItem, 
-                  selectedTrackingPig === pig.name && styles.rosterItemActive
-                ]}
-                onPress={() => setSelectedTrackingPig(pig.name === selectedTrackingPig ? undefined : pig.name)}
-              >
-                <Text style={styles.rosterItemName}>🐖 {pig.name}</Text>
-                <Text style={styles.rosterItemDate}>{new Date(pig.enrolledAt).toLocaleDateString()}</Text>
-              </TouchableOpacity>
-            ))
-          )}
-        </View>
+              <View style={styles.rosterList}>
+                {roster.length === 0 ? (
+                  <Text style={styles.emptyText}>No pigs enrolled yet.</Text>
+                ) : (
+                  roster.map((pig) => (
+                    <TouchableOpacity 
+                      key={pig.id} 
+                      style={[
+                        styles.rosterItem, 
+                        selectedTrackingPig === pig.name && styles.rosterItemActive
+                      ]}
+                      onPress={() => setSelectedTrackingPig(pig.name === selectedTrackingPig ? undefined : pig.name)}
+                    >
+                      <Text style={styles.rosterItemName}>🐖 {pig.name}</Text>
+                      <Text style={styles.rosterItemDate}>{new Date(pig.enrolledAt).toLocaleDateString()}</Text>
+                    </TouchableOpacity>
+                  ))
+                )}
+              </View>
+            </View>
+          </View>
       </View>
 
       {/* === Thermal Section === */}
-      <Text style={styles.sectionTitle}>🌡️ Thermal Sensors</Text>
-      <Text style={styles.sectionDesc}>Body and ambient temperature monitoring</Text>
+      <Text style={[styles.sectionTitle, { fontSize: T.typography.h3 }]}>🌡️ Thermal Sensors</Text>
+      <Text style={[styles.sectionDesc, { fontSize: T.typography.caption }]}>Body and ambient temperature monitoring</Text>
       {thermalSensors.map((sensor) => (
         <SensorCard key={sensor.id} sensor={sensor} />
       ))}
 
       {/* === Acoustic Section === */}
-      <Text style={styles.sectionTitle}>🩺 Acoustic Sensors</Text>
-      <Text style={styles.sectionDesc}>Respiratory sound and squeal detection</Text>
+      <Text style={[styles.sectionTitle, { fontSize: T.typography.h3 }]}>🩺 Acoustic Sensors</Text>
+      <Text style={[styles.sectionDesc, { fontSize: T.typography.caption }]}>Respiratory sound and squeal detection</Text>
       {acousticSensors.map((sensor) => (
         <SensorCard key={sensor.id} sensor={sensor} />
       ))}
@@ -172,11 +184,14 @@ export default function SensorsScreen() {
       <View style={styles.notice}>
         <Text style={styles.noticeText}>
           {isLive
-            ? '🔥 Live sensor data from Firebase RTDB.\nWhen ESP32 hardware connects, values update in real-time.'
-            : '⚠️ OFFLINE: Please log in to view active sensor telemetry.'}
+            ? '🔥 Live telemetry active — Streaming from Firebase RTDB.'
+            : isAuthenticated
+            ? '☁️ Connected to Cloud — Waiting for ESP32 hardware pulse...'
+            : '⚠️ GUEST MODE: Please log in to view active sensors.'}
         </Text>
       </View>
     </ScrollView>
+</ResponsiveLayout>
   );
 }
 
@@ -303,4 +318,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: Theme.typography.caption,
   },
+  desktopRow: {
+    flexDirection: 'row',
+    gap: 30,
+    alignItems: 'flex-start',
+  },
+  desktopCol: {
+    flex: 1,
+  }
 });

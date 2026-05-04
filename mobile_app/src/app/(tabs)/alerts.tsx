@@ -14,8 +14,9 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions,
 } from 'react-native';
 import Svg, { Rect, Line, Text as SvgText, G } from 'react-native-svg';
-import { Theme } from '../../constants/Theme';
+import { Theme, getResponsiveTheme } from '../../constants/Theme';
 import { AlertRow } from '../../components/AlertRow';
+import { ResponsiveLayout } from '../../components/Layout/ResponsiveLayout';
 import { subscribeAlerts } from '../../utils/firebase';
 
 import { getAuth } from 'firebase/auth';
@@ -149,7 +150,9 @@ const FILTERS: { key: FilterType; label: string }[] = [
 
 export default function AlertsScreen() {
   const { width } = useWindowDimensions();
-  const chartWidth = width - 48; // 24px padding each side
+  const isDesktop = width >= 768;
+  const T = getResponsiveTheme(isDesktop);
+  const chartWidth = isDesktop ? Math.min(width * 0.5, 600) : width - 48;
 
   const [alerts, setAlerts] = useState<any[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -204,7 +207,8 @@ export default function AlertsScreen() {
   const warningCount = alerts.filter((a) => a.severity === 'WARNING').length;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+<ResponsiveLayout>
+    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { padding: T.spacing.lg }]}>
       {isLive && (
         <View style={styles.liveBanner}>
           <Text style={styles.liveBannerText}>🔴 LIVE — Firebase RTDB</Text>
@@ -217,20 +221,20 @@ export default function AlertsScreen() {
       {/* === Summary Stats === */}
       <View style={styles.summaryRow}>
         <View style={[styles.summaryBox, { borderColor: Theme.colors.danger }]}>
-          <Text style={[styles.summaryValue, { color: Theme.colors.danger }]}>{infectiousCount}</Text>
-          <Text style={styles.summaryLabel}>🔴 Infectious</Text>
+          <Text style={[styles.summaryValue, { color: Theme.colors.danger, fontSize: T.typography.h2 }]}>{infectiousCount}</Text>
+          <Text style={[styles.summaryLabel, { fontSize: T.typography.caption }]}>🔴 Infectious</Text>
         </View>
         <View style={[styles.summaryBox, { borderColor: '#f5a623' }]}>
-          <Text style={[styles.summaryValue, { color: '#f5a623' }]}>{nonInfectCount}</Text>
-          <Text style={styles.summaryLabel}>🟡 Non-Infect</Text>
+          <Text style={[styles.summaryValue, { color: '#f5a623', fontSize: T.typography.h2 }]}>{nonInfectCount}</Text>
+          <Text style={[styles.summaryLabel, { fontSize: T.typography.caption }]}>🟡 Non-Infect</Text>
         </View>
         <View style={[styles.summaryBox, { borderColor: Theme.colors.warning }]}>
-          <Text style={[styles.summaryValue, { color: Theme.colors.warning }]}>{warningCount}</Text>
-          <Text style={styles.summaryLabel}>⚠️ Warnings</Text>
+          <Text style={[styles.summaryValue, { color: Theme.colors.warning, fontSize: T.typography.h2 }]}>{warningCount}</Text>
+          <Text style={[styles.summaryLabel, { fontSize: T.typography.caption }]}>⚠️ Warnings</Text>
         </View>
         <View style={[styles.summaryBox, { borderColor: Theme.colors.info }]}>
-          <Text style={[styles.summaryValue, { color: Theme.colors.info }]}>{alerts.length}</Text>
-          <Text style={styles.summaryLabel}>Total</Text>
+          <Text style={[styles.summaryValue, { color: Theme.colors.info, fontSize: T.typography.h2 }]}>{alerts.length}</Text>
+          <Text style={[styles.summaryLabel, { fontSize: T.typography.caption }]}>Total</Text>
         </View>
       </View>
 
@@ -250,7 +254,7 @@ export default function AlertsScreen() {
       </ScrollView>
 
       {/* === Alert History === */}
-      <Text style={styles.sectionTitle}>
+      <Text style={[styles.sectionTitle, { fontSize: T.typography.h3 }]}>
         Alert History {filter !== 'ALL' ? `— ${filter.replace('_', ' ')}` : ''}
       </Text>
       {filteredAlerts.length === 0 ? (
@@ -267,11 +271,14 @@ export default function AlertsScreen() {
       <View style={styles.notice}>
         <Text style={styles.noticeText}>
           {isLive
-            ? '🔥 Live alert feed from Firebase RTDB.\nInfectious coughs trigger HIGH severity. Non-infectious = LOW.'
-            : '⚠️ Showing sample data. Real alerts stream from ESP32.'}
+            ? '🔥 Live alert feed active — Streaming from Firebase RTDB.'
+            : isAuthenticated
+            ? '☁️ Connected — Waiting for ESP32 to trigger alerts...'
+            : '⚠️ GUEST MODE: Please log in to view active alerts.'}
         </Text>
       </View>
     </ScrollView>
+</ResponsiveLayout>
   );
 }
 

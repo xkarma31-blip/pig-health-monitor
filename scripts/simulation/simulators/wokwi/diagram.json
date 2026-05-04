@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "author": "PigHealthMonitor",
+  "editor": "wokwi",
+  "parts": [
+    { "type": "wokwi-esp32-devkit-v1", "id": "esp", "top": -40, "left": 0, "attrs": {} },
+    { "type": "wokwi-dht22", "id": "dht1", "top": -100, "left": 200, "attrs": { "temperature": "40.5", "humidity": "65" } },
+    { "type": "wokwi-led", "id": "led_green", "top": 80, "left": -60, "attrs": { "color": "green" } },
+    { "type": "wokwi-led", "id": "led_yellow", "top": 80, "left": -20, "attrs": { "color": "yellow" } },
+    { "type": "wokwi-led", "id": "led_red", "top": 80, "left": 20, "attrs": { "color": "red" } },
+    { "type": "wokwi-resistor", "id": "r1", "top": 60, "left": -55, "attrs": { "resistance": "220" } },
+    { "type": "wokwi-resistor", "id": "r2", "top": 60, "left": -15, "attrs": { "resistance": "220" } },
+    { "type": "wokwi-resistor", "id": "r3", "top": 60, "left": 25, "attrs": { "resistance": "220" } }
+  ],
+  "connections": [
+    ["esp:D4", "dht1:SDA", "green", ["v:10"]],
+    ["dht1:VCC", "esp:3V3", "red", ["h:0"]],
+    ["dht1:GND", "esp:GND.1", "black", ["h:0"]],
+    ["esp:D12", "r1:1", "green", ["v:5"]],
+    ["r1:2", "led_green:A", "green", ["v:0"]],
+    ["led_green:C", "esp:GND.1", "black", ["v:10"]],
+    ["esp:D13", "r2:1", "orange", ["v:5"]],
+    ["r2:2", "led_yellow:A", "orange", ["v:0"]],
+    ["led_yellow:C", "esp:GND.1", "black", ["v:10"]],
+    ["esp:D14", "r3:1", "red", ["v:5"]],
+    ["r3:2", "led_red:A", "red", ["v:0"]],
+    ["led_red:C", "esp:GND.1", "black", ["v:10"]]
+  ]
+}
