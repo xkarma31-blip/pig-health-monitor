@@ -17,8 +17,7 @@ firmware/.pio/
 # === Python venvs inside scripts ===
 scripts/venv/
 
-# === Large Binary Assets (hosted externally) ===
-landing_page/app-release.apk
+# === Large Binary Assets (host externally for defense) ===
 docs/*.mp4
 docs/*.webm
 docs/*.webp
