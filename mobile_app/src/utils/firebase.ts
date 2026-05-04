@@ -10,7 +10,9 @@
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getDatabase, ref, onValue, query, orderByChild, limitToLast, push, set } from 'firebase/database';
-import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
+import { getAuth, initializeAuth } from 'firebase/auth';
+// @ts-ignore - type definitions are missing in this version but runtime export exists
+import { getReactNativePersistence } from 'firebase/auth';
 import { Platform } from 'react-native';
 import type { SensorReading } from '../data/mockSensors';
 
@@ -34,8 +36,8 @@ const firebaseConfig = {
 // Initialize Firebase securely with persistence (avoiding double-init on Fast Refresh)
 // Web: getAuth() auto-persists to localStorage
 // Native: initializeAuth() + AsyncStorage for disk persistence
-let app;
-let auth;
+let app: any;
+let auth: any;
 if (getApps().length === 0) {
   app = initializeApp(firebaseConfig);
   if (Platform.OS === 'web') {
