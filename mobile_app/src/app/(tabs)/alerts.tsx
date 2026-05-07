@@ -219,7 +219,12 @@ export default function AlertsScreen() {
       <CoughTrendChart data={trendData} chartWidth={chartWidth} />
 
       {/* === Summary Stats === */}
-      <View style={styles.summaryRow}>
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false} 
+        style={styles.summaryScroll}
+        contentContainerStyle={styles.summaryRow}
+      >
         <View style={[styles.summaryBox, { borderColor: Theme.colors.danger }]}>
           <Text style={[styles.summaryValue, { color: Theme.colors.danger, fontSize: T.typography.h2 }]}>{infectiousCount}</Text>
           <Text style={[styles.summaryLabel, { fontSize: T.typography.caption }]}>🔴 Infectious</Text>
@@ -236,7 +241,7 @@ export default function AlertsScreen() {
           <Text style={[styles.summaryValue, { color: Theme.colors.info, fontSize: T.typography.h2 }]}>{alerts.length}</Text>
           <Text style={[styles.summaryLabel, { fontSize: T.typography.caption }]}>Total</Text>
         </View>
-      </View>
+      </ScrollView>
 
       {/* === Filter Pills === */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterRow}>
@@ -254,9 +259,16 @@ export default function AlertsScreen() {
       </ScrollView>
 
       {/* === Alert History === */}
-      <Text style={[styles.sectionTitle, { fontSize: T.typography.h3 }]}>
-        Alert History {filter !== 'ALL' ? `— ${filter.replace('_', ' ')}` : ''}
-      </Text>
+      <View style={{ flexWrap: 'wrap', flexDirection: 'row', alignItems: 'center', marginBottom: T.spacing.sm }}>
+        <Text style={[styles.sectionTitle, { fontSize: T.typography.h3, marginBottom: 0 }]}>
+          Alert History
+        </Text>
+        {filter !== 'ALL' && (
+          <Text style={{ color: Theme.colors.textMuted, fontSize: T.typography.caption, marginLeft: 8 }}>
+            — {filter.replace('_', ' ')}
+          </Text>
+        )}
+      </View>
       {filteredAlerts.length === 0 ? (
         <View style={styles.emptyState}>
           <Text style={styles.emptyStateText}>✅ No alerts in this category.</Text>
@@ -306,14 +318,16 @@ const styles = StyleSheet.create({
     fontSize: Theme.typography.caption,
     fontWeight: 'bold',
   },
+  summaryScroll: {
+    marginBottom: Theme.spacing.lg,
+  },
   summaryRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: Theme.spacing.lg,
-    gap: Theme.spacing.xs,
+    gap: Theme.spacing.sm,
+    paddingRight: 20,
   },
   summaryBox: {
-    flex: 1,
+    width: 120,
     backgroundColor: Theme.colors.card,
     padding: Theme.spacing.sm,
     borderRadius: Theme.borderRadius.md,

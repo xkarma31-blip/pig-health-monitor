@@ -55,26 +55,25 @@ export default function TabLayout() {
       <Tabs.Screen
         name="dashboard"
         options={{
-          title: 'Dashboard',
+          title: 'Home',
           tabBarIcon: ({ color }) => (
-            // Using emoji as icon — no extra dependencies needed!
-            <TabIcon emoji="📊" color={color} />
+            <TabIcon emoji="🏠" color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="sensors"
         options={{
-          title: 'Sensors',
+          title: 'Nodes',
           tabBarIcon: ({ color }) => (
-            <TabIcon emoji="🌡️" color={color} />
+            <TabIcon emoji="📡" color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="alerts"
         options={{
-          title: 'Alerts',
+          title: 'Events',
           tabBarIcon: ({ color }) => (
             <TabIcon emoji="🔔" color={color} />
           ),
@@ -83,19 +82,16 @@ export default function TabLayout() {
       <Tabs.Screen
         name="roster"
         options={{
-          title: 'Roster',
+          title: 'Analytics',
           tabBarIcon: ({ color }) => (
-            <TabIcon emoji="🐗" color={color} />
+            <TabIcon emoji="📈" color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="auth"
         options={{
-          title: 'Session',
-          tabBarIcon: ({ color }) => (
-            <TabIcon emoji="🛡️" color={color} />
-          ),
+          href: null, // Hide from tab bar but keep accessible via direct link
         }}
       />
     </Tabs>

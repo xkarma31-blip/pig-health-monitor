@@ -29,7 +29,7 @@ export default function LoginScreen() {
         await signInWithEmailAndPassword(auth, email.trim(), password);
       }
       // Real Firebase Auth session is now active
-      router.replace('/(tabs)');
+      router.replace('/dashboard');
     } catch (err: any) {
       // Friendly error messages
       const code = err.code || '';
@@ -98,8 +98,8 @@ export default function LoginScreen() {
         </TouchableOpacity>
 
         <TouchableOpacity 
-          style={styles.skipButton} 
-          onPress={() => router.replace('/(tabs)')}
+          style={styles.skipButton}
+          onPress={() => router.replace('/dashboard')}
         >
           <Text style={styles.skipButtonText}>
             CONTINUE AS GUEST →

@@ -43,7 +43,7 @@ export default function RootLayout() {
     // They can enter (tabs) as guests.
     // We only redirect away from auth group if they are logged in.
     if (user && inAuthGroup) {
-      router.replace('/(tabs)');
+      router.replace('/dashboard');
     }
   }, [user, initializing, segments]);
 

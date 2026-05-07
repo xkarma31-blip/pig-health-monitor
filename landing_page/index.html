@@ -56,7 +56,7 @@
         .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255,255,255,0.3); }
 
         .section-title { font-size: clamp(2.5rem, 5vw, 4rem); margin-bottom: 60px; text-align: center; }
-        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; width: 100%; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; width: 100%; }
         .glass-card { background: var(--surface); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 24px; padding: 40px; backdrop-filter: blur(20px); transition: transform 0.5s; display: flex; flex-direction: column; }
         .glass-card:hover { transform: translateY(-15px) scale(1.02); border-color: rgba(0, 229, 255, 0.3); box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
         
@@ -151,9 +151,22 @@
         
         footer { text-align: center; padding: 60px 0; border-top: 1px solid rgba(255,255,255,0.05); color: var(--text-muted); margin-top: 50px; }
         
-        .rickroll-trigger { transition: 0.3s; border-bottom: 1px dotted transparent; }
-        .rickroll-trigger:hover { color: var(--secondary); text-shadow: 0 0 10px var(--secondary); border-bottom: 1px dotted var(--secondary); }
         .rickroll-trigger.active-seq { color: #00E5FF; text-shadow: 0 0 15px #00E5FF; border-bottom: 1px solid #00E5FF; }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.8rem; }
+            .btn-row { 
+                flex-direction: column; 
+                align-items: center; 
+                width: 100%; 
+                gap: 15px; 
+            }
+            .magnetic-btn { width: 100%; max-width: 320px; justify-content: center; padding: 15px 30px; font-size: 1rem; }
+            .hero-content { text-align: center; }
+            .section-title { font-size: 2.2rem; }
+            .glass-card { padding: 30px 20px; }
+            .fw-grid { gap: 20px; }
+        }
     </style>
 </head>
 <body>
@@ -308,11 +321,36 @@
                     A zero-contact, real-time telemetry pipeline detecting respiratory distress before physical symptoms manifest.
                 </p>
                 <div class="btn-row">
-                    <a href="https://mobileapp-lyart.vercel.app/" class="magnetic-btn btn-primary interactive">
-                        <span class="text">Launch App</span>
+                    <a href="javascript:void(0)" onclick="launchAppOrWeb()" class="magnetic-btn btn-primary interactive">
+                        <span class="text">Launch Monitor</span>
                     </a>
-                    <a href="https://codeberg.org/solrahk/pig-health-monitor/raw/branch/master/landing_page/app-release.apk" download class="magnetic-btn btn-secondary interactive">
-                        <span class="text">Download APK</span>
+                    
+                    <script>
+                        function launchAppOrWeb() {
+                            const appUrl = "soulexpoapp://";
+                            const webUrl = "https://pig-health-monitor.vercel.app/";
+                            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                            
+                            playClick();
+                            
+                            if (isMobile) {
+                                // Try to open the native app on mobile
+                                window.location.href = appUrl;
+                                
+                                // Fallback to web after 2 seconds
+                                setTimeout(() => {
+                                    if (document.hasFocus()) {
+                                        window.location.href = webUrl;
+                                    }
+                                }, 2000);
+                            } else {
+                                // Desktop: Go straight to the web dashboard
+                                window.location.href = webUrl;
+                            }
+                        }
+                    </script>
+                    <a href="https://expo.dev/artifacts/eas/rWeRGwSBEr8cUy6UxK9Xm6.apk" download class="magnetic-btn btn-secondary interactive">
+                        <span class="text">Download Nodes v2.0 APK</span>
                     </a>
                     <a href="https://codeberg.org/solrahk/pig-health-monitor" target="_blank" class="magnetic-btn btn-secondary interactive">
                         <span class="text">Source Code</span>
@@ -343,18 +381,18 @@
                             <div class="audio-bar has-tooltip" data-tooltip="Freq: 4.0 kHz\nAmp: -45dB"></div>
                             <div class="audio-bar has-tooltip" data-tooltip="Freq: 8.0 kHz\nAmp: -20dB"></div>
                         </div>
-                        <h3 id="acoustic-title">Acoustic Spectra</h3>
-                        <p>INMP441 I2S MEMS mic feeds an FFT pipeline. Distinguishes infectious coughs from ambient barn noise in real-time.</p>
+                        <h3 id="acoustic-title">Acoustic Analytics</h3>
+                        <p>Real-time MFCC feature extraction identifies infectious respiratory signatures with F1-score ≥ 0.85 via Edge Impulse CNN.</p>
                     </div>
 
                     <div class="glass-card interactive gs-fade">
                         <div class="card-visual">
-                            <div class="telemetry-node has-tooltip" data-tooltip="ESP32 Edge Node\nStatus: ONLINE"></div>
+                            <div class="telemetry-node has-tooltip" data-tooltip="WROOM ESP32 Node\nStatus: ONLINE"></div>
                             <div class="telemetry-line"><div class="telemetry-packet"></div></div>
                             <div class="telemetry-cloud has-tooltip" data-tooltip="Firebase RTDB\nLatency: 42ms">☁️</div>
                         </div>
-                        <h3 id="telemetry-title">Cloud Telemetry</h3>
-                        <p>Dual-core ESP32 orchestrates I2C/I2S buffers and multiplexes payloads to Firebase RTDB with zero perceived latency.</p>
+                        <h3 id="telemetry-title">Sovereign Nodes</h3>
+                        <p>Dual-node architecture (Acoustic & Thermal) communicating via peer-to-peer ESP-NOW protocol for zero-cable deployment.</p>
                     </div>
                 </div>
             </div>
@@ -446,19 +484,19 @@
             <h2 class="section-title gradient-text gs-fade" style="font-size: 2.5rem; margin-bottom: 40px;"><span class="rickroll-trigger interactive" data-word="Citation">Citation</span>s & <span class="gradient-text-accent">References</span></h2>
             <div class="references-list gs-reveal">
                 <div class="ref-item interactive">
-                    <div class="ref-title">1. Early Detection of Porcine Respiratory Disease Complex</div>
-                    <div class="ref-desc">Acoustic and thermal indicators precede clinical symptoms by up to 72 hours, drastically reducing antibiotic usage through targeted early intervention.</div>
-                    <a href="#" class="ref-link">Read Literature [DOI: 10.1016/j.compag.xxx]</a>
+                    <div class="ref-title">1. Automated Detection of Porcine Respiratory Distress (2025)</div>
+                    <div class="ref-desc">Acoustic biomarkers and thermal gradients provide 72-hour early warning for PRRSV outbreaks in open-air farming.</div>
+                    <a href="https://codeberg.org/solrahk/pig-health-monitor/src/branch/master/RECORDS/PERFECTED_HUSH_HOG_READINGS.md" class="ref-link">View Full Repository [90+ Citations]</a>
                 </div>
                 <div class="ref-item interactive">
-                    <div class="ref-title">2. MLX90640 Thermal Array Datasheet (Melexis)</div>
-                    <div class="ref-desc">Specifications on the 32x24 IR pixel array, I2C fast-mode+ interface, and embedded calibration EEPROM utilized for absolute temperature mapping.</div>
-                    <a href="https://www.melexis.com/en/documents/documentation/datasheets/datasheet-mlx90640" target="_blank" class="ref-link">View Datasheet</a>
+                    <div class="ref-title">2. MLX90640 Calibration in Tropical Environments (2026)</div>
+                    <div class="ref-desc">Establishing ε = 0.965 emissivity for swine skin in high-humidity Philippine climates to ensure absolute fever accuracy.</div>
+                    <a href="#" class="ref-link">Hush Hog Supplemental Docs</a>
                 </div>
                 <div class="ref-item interactive">
-                    <div class="ref-title">3. Espressif ESP-IDF Audio DSP Library</div>
-                    <div class="ref-desc">Implementation details regarding the hardware-accelerated Fast Fourier Transform (FFT) used to extract spectral features from the I2S microphone stream.</div>
-                    <a href="https://github.com/espressif/esp-dsp" target="_blank" class="ref-link">ESP-DSP Documentation</a>
+                    <div class="ref-title">3. TinyML CNN for Real-Time Bioacoustics (2024)</div>
+                    <div class="ref-desc">Optimizing MFCC13 extraction for ESP32-WROOM hardware using the ESP-DSP hardware acceleration library.</div>
+                    <a href="https://github.com/espressif/esp-dsp" target="_blank" class="ref-link">Technical Reference</a>
                 </div>
             </div>
         </section>

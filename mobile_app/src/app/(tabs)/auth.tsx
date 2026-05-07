@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '../../utils/firebase';
 import { Theme } from '../../constants/Theme';
+import { ResponsiveLayout } from '../../components/Layout/ResponsiveLayout';
 
 export default function AuthStatusScreen() {
   const router = useRouter();
@@ -18,10 +19,11 @@ export default function AuthStatusScreen() {
 
   const handleSignOut = async () => {
     await signOut(auth);
-    router.replace('/(auth)/login');
+    router.replace('/login');
   };
 
   return (
+<ResponsiveLayout>
     <View style={styles.container}>
       <View style={styles.card}>
         <Text style={styles.emoji}>{user ? '🛡️' : '🐗'}</Text>
@@ -48,7 +50,7 @@ export default function AuthStatusScreen() {
             </Text>
             <TouchableOpacity 
               style={styles.loginButton} 
-              onPress={() => router.push('/(auth)/login')}
+              onPress={() => router.push('/login')}
             >
               <Text style={styles.loginButtonText}>SIGN IN</Text>
             </TouchableOpacity>
@@ -56,6 +58,7 @@ export default function AuthStatusScreen() {
         )}
       </View>
     </View>
+</ResponsiveLayout>
   );
 }
 
