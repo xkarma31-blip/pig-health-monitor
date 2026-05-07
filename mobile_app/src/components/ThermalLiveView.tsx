@@ -166,8 +166,8 @@ export function ThermalLiveView({
           style={[
             styles.trackerLabel,
             {
-              left: (targetX - 2) * pixelSize - 10,
-              top: (targetY - 4) * pixelSize - 20,
+              left: Math.max(0, Math.min(width - 100, (targetX - 2) * pixelSize - 10)),
+              top: Math.max(0, Math.min(height - 80, (targetY - 4) * pixelSize - 20)),
             },
           ]}
         >
@@ -189,7 +189,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: '#000',
     borderRadius: Theme.borderRadius.sm,
-    overflow: 'hidden',
+    // overflow: 'hidden', // Disabled to prevent label clipping
     borderWidth: 2,
     borderColor: Theme.colors.cardBorder,
   },
