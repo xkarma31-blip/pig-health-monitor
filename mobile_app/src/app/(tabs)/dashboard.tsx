@@ -123,9 +123,9 @@ export default function DashboardScreen() {
       {/* === Header === */}
       <View style={{ marginBottom: T.spacing.lg }}>
         <View style={styles.headerTop}>
-          <View>
-            <Text style={[styles.title, { fontSize: T.typography.h1 }]}>🐗 Pig Health Monitor</Text>
-            <Text style={[styles.subtitle, { fontSize: T.typography.caption }]}>Sovereign Aqua Protocol — Dashboard</Text>
+          <View style={styles.headerLeft}>
+            <Text style={[styles.title, { fontSize: T.typography.h1 }]} adjustsFontSizeToFit numberOfLines={1}>🐗 Pig Health Monitor</Text>
+            <Text style={[styles.subtitle, { fontSize: T.typography.caption }]} numberOfLines={1}>Sovereign Aqua Protocol — Dashboard</Text>
           </View>
           {isAuthenticated && (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -149,7 +149,7 @@ export default function DashboardScreen() {
         {!isAuthenticated && (
           <TouchableOpacity 
             style={styles.guestBanner} 
-            onPress={() => router.push('/(auth)/login')}
+            onPress={() => router.push('/login')}
           >
             <Text style={styles.guestBannerText}>
               🛡️ GUEST MODE — Tap to Sign In for Cloud Data
@@ -230,7 +230,7 @@ export default function DashboardScreen() {
                     pig.tags?.includes('RESPIRATORY_DISTRESS') && { borderColor: Theme.colors.danger }
                 ]}>
                   <View style={[styles.rosterHeader, { marginBottom: T.spacing.xs }]}>
-                    <Text style={[styles.rosterName, { fontSize: T.typography.body }]}>{pig.name}</Text>
+                    <Text style={[styles.rosterName, { fontSize: T.typography.body, flexShrink: 1, marginRight: 8 }]} numberOfLines={1}>{pig.name}</Text>
                     <Text style={[styles.rosterTemp, { fontSize: T.typography.body }, (pig.temperature != null && pig.temperature > 39.5) ? {color: Theme.colors.danger} : {color: Theme.colors.success}]}>
                         {pig.temperature != null ? `${pig.temperature.toFixed(1)}°C` : '--'}
                     </Text>
@@ -290,6 +290,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 5,
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  headerLeft: {
+    flex: 1,
+    minWidth: 200,
   },
   title: {
     color: Theme.colors.primary,
@@ -403,9 +409,11 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
   },
   statBox: {
     flex: 1,
+    minWidth: '45%',
     backgroundColor: Theme.colors.card,
     borderRadius: Theme.borderRadius.md,
     alignItems: 'center',

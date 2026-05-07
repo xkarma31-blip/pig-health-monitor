@@ -41,7 +41,11 @@ export function SensorCard({ sensor, compact = false }: Props) {
       </View>
 
       {/* Value Display */}
-      <Text style={[styles.value, { color: accentColor, fontSize: T.typography.huge }]}>
+      <Text 
+        style={[styles.value, { color: accentColor, fontSize: T.typography.huge }]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+      >
         {sensor.value}{sensor.unit}
       </Text>
 

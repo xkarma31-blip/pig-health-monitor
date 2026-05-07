@@ -9,13 +9,13 @@
  */
 
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TextInput, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TextInput, useWindowDimensions, TouchableOpacity, Platform, Modal } from 'react-native';
 import { Theme, getResponsiveTheme } from '../../constants/Theme';
 import { SensorCard } from '../../components/SensorCard';
 import { ResponsiveLayout } from '../../components/Layout/ResponsiveLayout';
 import { subscribeSensors, enrollPig, subscribeRoster, subscribeTelemetry } from '../../utils/firebase';
 import { ThermalLiveView } from '../../components/ThermalLiveView';
-import { TouchableOpacity } from 'react-native';
+
 import type { SensorReading } from '../../data/mockSensors';
 
 import { getAuth } from 'firebase/auth';
@@ -32,6 +32,19 @@ export default function SensorsScreen() {
   const [newPigName, setNewPigName] = useState('');
   const [telemetry, setTelemetry] = useState<any>(null);
   const [selectedTrackingPig, setSelectedTrackingPig] = useState<string | undefined>(undefined);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isBarExpanded, setIsBarExpanded] = useState(true);
+  const [isRightPanelExpanded, setIsRightPanelExpanded] = useState(true);
+
+  // Keyboard listener for Fullscreen (Escape to exit)
+  useEffect(() => {
+    if (Platform.OS !== 'web') return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsFullscreen(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   useEffect(() => {
     const unsubAuth = getAuth().onAuthStateChanged((user) => {
@@ -95,22 +108,116 @@ export default function SensorsScreen() {
           {/* --- Left: Thermal Feed --- */}
           <View style={isDesktop ? styles.desktopCol : {}}>
             <View style={{ marginTop: T.spacing.sm }}>
-              <Text style={[styles.sectionTitle, { fontSize: T.typography.h3, marginTop: T.spacing.sm }]}>📡 Live Thermal Feed</Text>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Text style={[styles.sectionTitle, { fontSize: T.typography.h3, marginTop: T.spacing.sm }]}>📡 Live Thermal Feed</Text>
+                <TouchableOpacity 
+                  onPress={() => setIsFullscreen(!isFullscreen)}
+                  style={styles.fullscreenButton}
+                >
+                  <Text style={styles.fullscreenButtonText}>{isFullscreen ? '⤬ CLOSE' : '⛶ CINEMA MODE'}</Text>
+                </TouchableOpacity>
+
+                {isDesktop && (
+                  <TouchableOpacity 
+                    onPress={() => setIsRightPanelExpanded(!isRightPanelExpanded)}
+                    style={[styles.fullscreenButton, { marginLeft: 10, borderColor: '#7C4DFF' }]}
+                  >
+                    <Text style={[styles.fullscreenButtonText, { color: '#7C4DFF' }]}>
+                      {isRightPanelExpanded ? '⌵ HIDE ROSTER' : '˄ SHOW ROSTER'}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
               <Text style={[styles.sectionDesc, { fontSize: T.typography.caption }]}>Tap a pig in the roster to highlight it</Text>
-              <ThermalLiveView 
-                base64Frame={telemetry?.thermalFrame}
-                targetX={telemetry?.targetX}
-                targetY={telemetry?.targetY}
-                identifiedPig={telemetry?.identifiedPig}
-                selectedPigToTrack={selectedTrackingPig}
-                width={isDesktop ? Math.min(width * 0.4, 600) : undefined}
-              />
+              
+              {/* Normal View Thermal Feed */}
+              {!isFullscreen && (
+                <ThermalLiveView 
+                  base64Frame={telemetry?.thermalFrame}
+                  targetX={telemetry?.targetX}
+                  targetY={telemetry?.targetY}
+                  identifiedPig={telemetry?.identifiedPig}
+                  selectedPigToTrack={selectedTrackingPig}
+                  width={isDesktop ? (isRightPanelExpanded ? Math.min(width * 0.4, 600) : Math.min(width * 0.7, 1000)) : undefined}
+                />
+              )}
+              
+              {/* True Fullscreen Modal (Breakout Mode) */}
+              <Modal 
+                visible={isFullscreen} 
+                animationType="fade" 
+                transparent={false}
+                onRequestClose={() => setIsFullscreen(false)}
+              >
+                <View style={styles.fullscreenOverlay}>
+                  <TouchableOpacity 
+                    onPress={() => setIsFullscreen(false)}
+                    style={styles.closeButton}
+                  >
+                    <Text style={styles.closeButtonText}>✕</Text>
+                  </TouchableOpacity>
+
+                  <View style={styles.thermalContainer}>
+                    <ThermalLiveView 
+                      base64Frame={telemetry?.thermalFrame}
+                      targetX={telemetry?.targetX}
+                      targetY={telemetry?.targetY}
+                      identifiedPig={telemetry?.identifiedPig}
+                      selectedPigToTrack={selectedTrackingPig}
+                      width={(() => {
+                        const availableWidth = isDesktop ? width * 0.8 : width * 0.95;
+                        const availableHeight = Platform.OS === 'web' ? window.innerHeight * 0.6 : 350;
+                        const widthFromHeight = availableHeight * (32/24);
+                        return Math.min(availableWidth, widthFromHeight, 800);
+                      })()}
+                    />
+                  </View>
+                  
+                  <View style={[styles.youtubeStyleBottomBar, !isBarExpanded && styles.bottomBarMinimized]}>
+                    <TouchableOpacity 
+                      onPress={() => setIsBarExpanded(!isBarExpanded)}
+                      style={styles.expandToggle}
+                    >
+                      <Text style={styles.expandToggleText}>{isBarExpanded ? '▼ HIDE' : '▲ SELECT PIG'}</Text>
+                    </TouchableOpacity>
+
+                    {isBarExpanded && (
+                      <>
+                        <Text style={styles.overlayTitle}>🐖 PIG IDENTITIES</Text>
+                        <View style={styles.gridContainer}>
+                          {roster.map((pig) => (
+                            <TouchableOpacity 
+                              key={pig.id}
+                              onPress={() => {
+                                setSelectedTrackingPig(pig.name === selectedTrackingPig ? undefined : pig.name);
+                                setIsBarExpanded(false); 
+                              }}
+                              style={[styles.overlayItem, selectedTrackingPig === pig.name && styles.overlayItemActive]}
+                            >
+                              <Text style={styles.overlayItemText}>🐖 {pig.name}</Text>
+                            </TouchableOpacity>
+                          ))}
+                        </View>
+                        <View style={{ height: 20 }} />
+                      </>
+                    )}
+                  </View>
+                </View>
+              </Modal>
             </View>
           </View>
 
-          <View style={[isDesktop ? styles.desktopCol : {}, { paddingLeft: isDesktop ? 40 : 0 }]}>
-            <View style={styles.enrollmentContainer}>
-              <Text style={[styles.sectionTitle, { fontSize: T.typography.h3, marginTop: T.spacing.xs }]}>🐷 Pig Roster</Text>
+          {(!isDesktop || isRightPanelExpanded) && (
+            <View style={[isDesktop ? styles.desktopCol : {}, { paddingLeft: isDesktop ? 40 : 0 }]}>
+              <View style={styles.enrollmentContainer}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <Text style={[styles.sectionTitle, { fontSize: T.typography.h3, marginTop: 0 }]}>🐷 Pig Roster</Text>
+                  {isDesktop && (
+                    <TouchableOpacity onPress={() => setIsRightPanelExpanded(false)}>
+                      <Text style={{ color: '#7C4DFF', fontWeight: 'bold', fontSize: 14 }}>⌵ HIDE</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
               <Text style={[styles.sectionDesc, { fontSize: T.typography.caption }]}>Enroll and manage identities</Text>
               
               <View style={[styles.inputGroup, isDesktop && { maxWidth: 600 }]}>
@@ -156,13 +263,18 @@ export default function SensorsScreen() {
                       onPress={() => setSelectedTrackingPig(pig.name === selectedTrackingPig ? undefined : pig.name)}
                     >
                       <Text style={styles.rosterItemName}>🐖 {pig.name}</Text>
-                      <Text style={styles.rosterItemDate}>{new Date(pig.enrolledAt).toLocaleDateString()}</Text>
+                      <Text style={styles.rosterItemDate}>
+                        {pig.enrolledAt && !isNaN(new Date(pig.enrolledAt).getTime()) 
+                          ? new Date(pig.enrolledAt).toLocaleDateString() 
+                          : 'Recent'}
+                      </Text>
                     </TouchableOpacity>
                   ))
                 )}
               </View>
             </View>
           </View>
+        )}
       </View>
 
       {/* === Thermal Section === */}
@@ -199,6 +311,123 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Theme.colors.background,
+  },
+  fullscreenButton: {
+    backgroundColor: 'rgba(0, 212, 170, 0.1)',
+    borderWidth: 1,
+    borderColor: '#00D4AA',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  fullscreenButtonText: {
+    color: '#00D4AA',
+    fontSize: 10,
+    fontWeight: 'bold',
+  },
+  fullscreenOverlay: {
+    position: Platform.OS === 'web' ? 'fixed' : 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#050505',
+    zIndex: 99999,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  thermalContainer: {
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 2, // Take more space for the feed
+    paddingTop: 40, 
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 40,
+    right: 40,
+    zIndex: 100000,
+    width: 50,
+    height: 50,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#00D4AA',
+  },
+  closeButtonText: {
+    color: '#00D4AA',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  youtubeStyleBottomBar: {
+    width: '100%',
+    backgroundColor: 'rgba(5, 5, 10, 0.9)',
+    paddingVertical: 20,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0, 212, 170, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+  },
+  gridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    width: '100%',
+    maxHeight: 200, // Limit height to prevent covering too much
+  },
+  bottomBarMinimized: {
+    paddingVertical: 10,
+    backgroundColor: 'transparent',
+    borderTopWidth: 0,
+  },
+  expandToggle: {
+    backgroundColor: 'rgba(0, 212, 170, 0.2)',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#00D4AA',
+    marginBottom: 10,
+  },
+  expandToggleText: {
+    color: '#00D4AA',
+    fontSize: 12,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  overlayTitle: {
+    color: '#00D4AA',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    letterSpacing: 2,
+  },
+  overlayItem: {
+    backgroundColor: '#1a1a2e',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    minWidth: 120,
+    alignItems: 'center',
+  },
+  overlayItemActive: {
+    backgroundColor: '#00D4AA',
+    borderColor: '#fff',
+  },
+  overlayItemText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '900', // Ultra bold for readability
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
   content: {
     padding: Theme.spacing.lg,

@@ -1,8 +1,10 @@
 import React, { useMemo } from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, Image } from 'react-native';
 import Svg, { Rect, G, Path } from 'react-native-svg';
 import { Buffer } from 'buffer';
 import { Theme } from '../constants/Theme';
+
+const PEPPA_ICON = 'https://upload.wikimedia.org/wikipedia/en/3/3b/Peppa_Pig_character.png';
 
 interface ThermalLiveViewProps {
   base64Frame: string; // 768 bytes encoded (32x24)
@@ -164,12 +166,19 @@ export function ThermalLiveView({
           style={[
             styles.trackerLabel,
             {
-              left: (targetX - 2) * pixelSize,
-              top: (targetY + 2) * pixelSize + 4,
+              left: (targetX - 2) * pixelSize - 10,
+              top: (targetY - 4) * pixelSize - 20,
             },
           ]}
         >
-          <Text style={styles.trackerLabelText}>🎯 {identifiedPig}</Text>
+          <Image 
+            source={{ uri: PEPPA_ICON }} 
+            style={styles.peppaCursor} 
+            resizeMode="contain"
+          />
+          <View style={styles.bubble}>
+            <Text style={styles.trackerLabelText}>🎯 {identifiedPig}</Text>
+          </View>
         </View>
       )}
     </View>
@@ -186,14 +195,29 @@ const styles = StyleSheet.create({
   },
   trackerLabel: {
     position: 'absolute',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  peppaCursor: {
+    width: 50,
+    height: 50,
+    marginBottom: -5,
+  },
+  bubble: {
     backgroundColor: '#00D4AA',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#fff',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
   },
   trackerLabelText: {
-    color: '#0D0D1A',
-    fontSize: 10,
-    fontWeight: 'bold',
+    color: '#000', // High contrast black on cyan
+    fontSize: 12,
+    fontWeight: '900',
   },
 });
