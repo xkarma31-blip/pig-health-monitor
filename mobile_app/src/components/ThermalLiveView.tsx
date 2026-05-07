@@ -108,22 +108,17 @@ export function ThermalLiveView({
   const renderPixels = useMemo(() => {
     if (pixels.length < 768) return null;
     
-    // Apply 2x Upscale for Super Resolution effect
-    const upscaleFactor = 2;
-    const upscaled = getInterpolatedPixels(pixels, COLS, ROWS, upscaleFactor);
-    const scaledPixelSize = pixelSize / upscaleFactor;
-
     const rects = [];
-    for (let y = 0; y < upscaled.rows; y++) {
-      for (let x = 0; x < upscaled.cols; x++) {
-        const val = upscaled.pixels[y * upscaled.cols + x];
+    for (let y = 0; y < ROWS; y++) {
+      for (let x = 0; x < COLS; x++) {
+        const val = pixels[y * COLS + x];
         rects.push(
           <Rect
             key={`${x}-${y}`}
-            x={x * scaledPixelSize}
-            y={y * scaledPixelSize}
-            width={scaledPixelSize + 0.5} // slightly overlap to prevent anti-aliasing gaps
-            height={scaledPixelSize + 0.5}
+            x={x * pixelSize}
+            y={y * pixelSize}
+            width={pixelSize + 0.1} // Minimal overlap for performance
+            height={pixelSize + 0.1}
             fill={getHeatmapColor(val)}
           />
         );

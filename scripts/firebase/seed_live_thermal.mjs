@@ -13,7 +13,7 @@ const pigs = [
   // Third pig arrives at tick 20
 ];
 
-const USER_UID = process.env.TARGET_USER_UID || 'test_farmer_01';
+const USER_UID = process.env.TARGET_USER_UID || 'xgC6Hkq2a6XrNG5emkf5cuyjpiu2';
 const BASE_PATH = `users/${USER_UID}`;
 
 async function updatePigProfile(pig) {
