@@ -316,6 +316,8 @@
             <div class="hero-content gs-reveal">
                 <div class="badge"><span class="rickroll-trigger interactive" data-word="Sovereign">Sovereign</span> Aqua Protocol</div>
                 <h1 class="gradient-text"><span class="rickroll-trigger interactive" data-word="Edge">Edge</span> Intelligence for <br><span class="rickroll-trigger interactive" data-word="Swine">Swine</span> Health</h1>
+                <p style="font-size: 1rem; color: #aaa; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 12px; font-family: 'Fira Code', monospace;">Research Title</p>
+                <p style="font-size: 1.15rem; color: #fff; font-style: italic; margin-bottom: 24px; line-height: 1.6; max-width: 700px;">"Multimodal TinyML Acoustic Safeguard for Open-Air Swine Farming"</p>
                 <p class="hero-desc">
                     Fusing MLX90640 thermal arrays and I2S acoustic spectral analysis. 
                     A zero-contact, real-time telemetry pipeline detecting respiratory distress before physical symptoms manifest.
@@ -422,6 +424,7 @@
                         <button class="sim-btn interactive" onclick="toggleFullscreen()" id="fs-btn">⛶ Fullscreen</button>
                         <button class="sim-btn env-btn interactive" onclick="toggleEnvironment()">🔄 Switch Environment</button>
                         <button class="sim-btn interactive" onclick="triggerSimulation()">▶ Run Simulation</button>
+                        <button class="sim-btn interactive" onclick="resetChipView()">🎯 Reset View</button>
                     </div>
 
                     <div id="chip-3d"></div>
@@ -665,8 +668,9 @@
             container.appendChild(chipRenderer.domElement);
 
             chipControls = new THREE.OrbitControls(chipCamera, chipRenderer.domElement);
-            chipControls.enableDamping = true; chipControls.dampingFactor = 0.05;
-            chipControls.enablePan = false; chipControls.minDistance = 3; chipControls.maxDistance = 15;
+            chipControls.enableDamping = true; chipControls.dampingFactor = 0.08;
+            chipControls.enablePan = true; chipControls.minDistance = 3; chipControls.maxDistance = 18;
+            chipControls.autoRotate = true; chipControls.autoRotateSpeed = 1.2;
 
             const assemblyGroup = new THREE.Group();
 
@@ -844,7 +848,7 @@
             const light2 = new THREE.DirectionalLight(0xFF0055, 1.0); light2.position.set(-5, 5, -5); chipScene.add(light2);
             chipScene.add(new THREE.AmbientLight(0x444444));
 
-            chipCamera.position.set(0, 8, 10); chipCamera.lookAt(0, 0, 0);
+            chipCamera.position.set(6, 5, 8); chipCamera.lookAt(0, 0, 0);
 
             // Handle resize for fullscreen toggles
             window.addEventListener('resize', () => {
@@ -859,9 +863,6 @@
                 chipControls.update();
                 
                 const dist = chipCamera.position.length();
-                if(!chipControls.state && dist > 7 && assemblyGroup.rotation.y < Math.PI*2) {
-                    assemblyGroup.rotation.y += 0.003;
-                }
 
                 const canvasRect = chipRenderer.domElement.getBoundingClientRect();
                 
@@ -879,7 +880,7 @@
                     pin.element.style.left = `${x}px`; pin.element.style.top = `${y}px`;
 
                     const isVisibleGroup = pin.mesh.parent ? pin.mesh.parent.visible : true;
-                    if(isVisibleGroup && dist < 5.5 && vector.z < 1) pin.element.style.opacity = '1';
+                    if(isVisibleGroup && dist < 7 && vector.z < 1) pin.element.style.opacity = '1';
                     else pin.element.style.opacity = '0';
                 });
 
@@ -893,7 +894,7 @@
                     const y = (vector.y * -.5 + .5) * canvasRect.height;
                     ml.element.style.left = `${x}px`; ml.element.style.top = `${y}px`;
 
-                    if(ml.group.visible && dist > 4 && vector.z < 1) ml.element.style.opacity = '1';
+                    if(ml.group.visible && vector.z < 1) ml.element.style.opacity = '1';
                     else ml.element.style.opacity = '0';
                 });
 
@@ -925,6 +926,14 @@
             ctx.stroke(); return new THREE.CanvasTexture(canvas);
         }
         initChip();
+
+        function resetChipView() {
+            playClick();
+            chipCamera.position.set(6, 5, 8);
+            chipCamera.lookAt(0, 0, 0);
+            chipControls.target.set(0, 0, 0);
+            chipControls.update();
+        }
 
         // ENVIRONMENT TOGGLER WITH PROPER HARDWARE LOGIC
         let currentEnv = 0; // 0 = Neutral, 1 = Top-Down Thermal, 2 = Close-Up Barn
