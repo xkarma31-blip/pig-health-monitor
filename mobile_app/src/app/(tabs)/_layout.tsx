@@ -55,43 +55,52 @@ export default function TabLayout() {
       <Tabs.Screen
         name="dashboard"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => (
-            <TabIcon emoji="🏠" color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="sensors"
-        options={{
-          title: 'Nodes',
+          title: 'Monitor',
           tabBarIcon: ({ color }) => (
             <TabIcon emoji="📡" color={color} />
           ),
         }}
       />
       <Tabs.Screen
+        name="roster"
+        options={{
+          title: 'Roster',
+          tabBarIcon: ({ color }) => (
+            <TabIcon emoji="🐷" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="advisor"
+        options={{
+          title: 'Advisor',
+          tabBarIcon: ({ color }) => (
+            <TabIcon emoji="🤖" color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="alerts"
         options={{
-          title: 'Events',
+          title: 'Alerts',
           tabBarIcon: ({ color }) => (
             <TabIcon emoji="🔔" color={color} />
           ),
         }}
       />
       <Tabs.Screen
-        name="roster"
+        name="sensors"
         options={{
-          title: 'Analytics',
+          title: 'Sensors',
           tabBarIcon: ({ color }) => (
-            <TabIcon emoji="📈" color={color} />
+            <TabIcon emoji="🌡️" color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="auth"
         options={{
-          href: null, // Hide from tab bar but keep accessible via direct link
+          href: null,
         }}
       />
     </Tabs>

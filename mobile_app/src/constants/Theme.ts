@@ -23,7 +23,8 @@ export const Theme = {
     info: '#5599FF',             
     tabBar: '#12121F',           
     tabActive: '#00FFE0',        
-    tabInactive: '#8080A0',      
+    tabInactive: '#8080A0',
+    accent: '#00FFE0',            // Alias for primary — used by Advisor
   },
 
   typography: {
