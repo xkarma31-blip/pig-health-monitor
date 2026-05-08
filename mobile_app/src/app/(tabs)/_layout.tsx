@@ -10,14 +10,15 @@
  *   3. That's it! The tab appears automatically.
  */
 
-import { Tabs } from 'expo-router';
-import { useWindowDimensions } from 'react-native';
+import { Tabs, useRouter } from 'expo-router';
+import { useWindowDimensions, View, TouchableOpacity, Text } from 'react-native';
 import { Theme } from '../../constants/Theme';
 import { ResponsiveLayout } from '../../components/Layout/ResponsiveLayout';
 
 export default function TabLayout() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
+  const router = useRouter();
 
   return (
     <Tabs
@@ -50,6 +51,16 @@ export default function TabLayout() {
         sceneStyle: {
           backgroundColor: Theme.colors.background,
         },
+        headerRight: () => (
+          <View style={{ flexDirection: 'row', gap: 20, marginRight: 20 }}>
+            <TouchableOpacity onPress={() => router.push('/sensors')}>
+              <Text style={{ fontSize: 22 }}>🌡️</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push('/alerts')}>
+              <Text style={{ fontSize: 22 }}>🔔</Text>
+            </TouchableOpacity>
+          </View>
+        ),
       }}
     >
       <Tabs.Screen

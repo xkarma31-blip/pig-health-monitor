@@ -249,9 +249,6 @@ export default function DashboardScreen() {
         <View style={isDesktop ? styles.gridCol : {}}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: T.spacing.sm }}>
             <Text style={[styles.sectionTitle, { fontSize: T.typography.h3, marginBottom: 0 }]}>Recent Events</Text>
-            <TouchableOpacity onPress={() => router.push('/alerts')}>
-              <Text style={{ color: Theme.colors.primary, fontWeight: 'bold', fontSize: 12 }}>VIEW ALL →</Text>
-            </TouchableOpacity>
           </View>
           {recentAlerts.length === 0 ? (
             <Text style={{color: Theme.colors.textMuted}}>No recent incidents.</Text>
@@ -266,9 +263,6 @@ export default function DashboardScreen() {
         <View style={isDesktop ? styles.gridCol : {}}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: T.spacing.sm }}>
             <Text style={[styles.sectionTitle, { fontSize: T.typography.h3, marginBottom: 0 }]}>Node Heartbeat</Text>
-            <TouchableOpacity onPress={() => router.push('/sensors')}>
-              <Text style={{ color: Theme.colors.primary, fontWeight: 'bold', fontSize: 12 }}>VIEW ALL →</Text>
-            </TouchableOpacity>
           </View>
           {sensors.map((sensor) => (
             <SensorCard key={sensor.id} sensor={sensor} compact />
