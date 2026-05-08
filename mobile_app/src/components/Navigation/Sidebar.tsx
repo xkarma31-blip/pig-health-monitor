@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Pressable, useWindowDimensions, Platform, TouchableOpacity } from 'react-native';
 import { useRouter, usePathname } from 'expo-router';
+import { getAuth, signOut } from 'firebase/auth';
 import { Theme } from '../../constants/Theme';
 
 /**
@@ -11,11 +12,11 @@ import { Theme } from '../../constants/Theme';
  */
 
 const NAV_ITEMS = [
-  { label: 'Dashboard', path: '/dashboard', emoji: '📊' },
-  { label: 'Sensors', path: '/sensors', emoji: '🌡️' },
+  { label: 'Monitor', path: '/dashboard', emoji: '📡' },
   { label: 'Alerts', path: '/alerts', emoji: '🔔' },
-  { label: 'Roster', path: '/roster', emoji: '🐗' },
-  { label: 'Session', path: '/auth', emoji: '🛡️' },
+  { label: 'Roster', path: '/roster', emoji: '🐷' },
+  { label: 'Sensors', path: '/sensors', emoji: '🌡️' },
+  { label: 'Advisor', path: '/advisor', emoji: '🤖' },
 ];
 
 export function Sidebar() {
@@ -23,6 +24,12 @@ export function Sidebar() {
   const pathname = usePathname();
   const { width } = useWindowDimensions();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
+  const [isAuth, setIsAuth] = React.useState(false);
+
+  React.useEffect(() => {
+    const unsub = getAuth().onAuthStateChanged((user) => setIsAuth(!!user));
+    return () => unsub();
+  }, []);
 
   if (width < 768) return null;
 
@@ -33,11 +40,11 @@ export function Sidebar() {
         onPress={() => setIsCollapsed(!isCollapsed)}
         style={[styles.header, isCollapsed && { alignItems: 'center', paddingHorizontal: 0 }]}
       >
-        <Text style={styles.logoEmoji}>🐖</Text>
+        <Text style={styles.logoEmoji}>🐗</Text>
         {!isCollapsed && (
           <View style={{ marginLeft: 8 }}>
-            <Text style={styles.logoText}>PIG WATCH</Text>
-            <Text style={styles.logoSub}>v1.0.4</Text>
+            <Text style={styles.logoText}>HUSH HOG</Text>
+            <Text style={styles.logoSub}>v2.0.0-Strategic</Text>
           </View>
         )}
       </TouchableOpacity>
@@ -73,15 +80,34 @@ export function Sidebar() {
         })}
       </View>
 
-      {/* Footer Info */}
-      {!isCollapsed && (
-        <View style={styles.footer}>
+      {/* Footer: Auth Status */}
+      <View style={styles.footer}>
+        {!isCollapsed && (
+          <>
+            {isAuth ? (
+              <TouchableOpacity 
+                style={styles.authButton}
+                onPress={() => { signOut(getAuth()); }}
+              >
+                <Text style={styles.authButtonText}>🔓 Sign Out</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity 
+                style={[styles.authButton, styles.authButtonLogin]}
+                onPress={() => router.push('/login')}
+              >
+                <Text style={[styles.authButtonText, { color: '#000' }]}>🛡️ Sign In</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
+        {!isCollapsed && (
           <View style={styles.statusBadge}>
-            <View style={styles.statusDot} />
-            <Text style={styles.statusText}>SYS_READY</Text>
+            <View style={[styles.statusDot, isAuth && { backgroundColor: Theme.colors.success }, !isAuth && { backgroundColor: Theme.colors.warning }]} />
+            <Text style={styles.statusText}>{isAuth ? 'AUTHENTICATED' : 'GUEST MODE'}</Text>
           </View>
-        </View>
-      )}
+        )}
+      </View>
     </View>
   );
 }
@@ -169,6 +195,25 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderTopWidth: 1,
     borderTopColor: Theme.colors.cardBorder,
+    gap: 8,
+  },
+  authButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Theme.colors.cardBorder,
+    backgroundColor: Theme.colors.surface,
+    alignItems: 'center',
+  },
+  authButtonLogin: {
+    backgroundColor: Theme.colors.primary,
+    borderColor: Theme.colors.primary,
+  },
+  authButtonText: {
+    color: Theme.colors.text,
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   statusBadge: {
     flexDirection: 'row',

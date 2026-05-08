@@ -75,6 +75,29 @@ export default function RosterScreen() {
         />
       </View>
 
+      {/* === Roster Stats === */}
+      <View style={styles.statsRow}>
+        <View style={styles.statItem}>
+          <Text style={styles.statNum}>{roster.length}</Text>
+          <Text style={styles.statLabel}>Total</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={[styles.statNum, {color: Theme.colors.success}]}>
+            {roster.filter(p => {
+              const lastSeenMs = typeof p.lastSeen === 'number' ? p.lastSeen : new Date(p.lastSeen).getTime();
+              return new Date().getTime() - lastSeenMs <= 300000;
+            }).length}
+          </Text>
+          <Text style={styles.statLabel}>Active</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={[styles.statNum, {color: Theme.colors.danger}]}>
+            {roster.filter(p => p.temperature != null && p.temperature > 39.5).length}
+          </Text>
+          <Text style={styles.statLabel}>Fevers</Text>
+        </View>
+      </View>
+
       {/* === Actions === */}
       <TouchableOpacity style={styles.enrollBtn} onPress={handleQuickEnroll}>
         <Text style={styles.enrollBtnText}>✨ QUICK ENROLL TEMPORARY PIG</Text>
@@ -252,5 +275,32 @@ const styles = StyleSheet.create({
     fontSize: 10,
     marginTop: 12,
     fontStyle: 'italic',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: Theme.spacing.lg,
+    gap: 12,
+  },
+  statItem: {
+    flex: 1,
+    backgroundColor: Theme.colors.surface,
+    padding: Theme.spacing.md,
+    borderRadius: Theme.borderRadius.md,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Theme.colors.cardBorder,
+  },
+  statNum: {
+    color: Theme.colors.primary,
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  statLabel: {
+    color: Theme.colors.textMuted,
+    fontSize: 12,
+    marginTop: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
 });

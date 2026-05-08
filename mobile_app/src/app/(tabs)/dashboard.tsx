@@ -6,12 +6,13 @@
  */
 
 import { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions, Platform, Modal, Dimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { onAuthStateChanged } from 'firebase/auth';
 import { Theme, getResponsiveTheme } from '../../constants/Theme';
 import { SensorCard } from '../../components/SensorCard';
 import { AlertRow } from '../../components/AlertRow';
+import { ThermalLiveView } from '../../components/ThermalLiveView';
 import { ResponsiveLayout } from '../../components/Layout/ResponsiveLayout';
 import { auth, subscribeSensors, subscribeAlerts, subscribeTelemetry, subscribeRoster } from '../../utils/firebase';
 import type { SensorReading } from '../../data/mockSensors';
@@ -29,6 +30,7 @@ export default function DashboardScreen() {
   const [currentTemp, setCurrentTemp] = useState<string>('—');
   const [healthStatus, setHealthStatus] = useState<string>('NORMAL');
   const [roster, setRoster] = useState<any[]>([]);
+  const [telemetry, setTelemetry] = useState<any>(null);
   const [presMode, setPresMode] = useState(false);
 
   // Keyboard listener for TV Mode (Escape to exit)
@@ -77,6 +79,7 @@ export default function DashboardScreen() {
 
     const unsubTele = subscribeTelemetry('esp32-s3-01', (data) => {
       if (data) {
+        setTelemetry(data);
         if (data.identifiedPigs) {
           setIdentifiedPigs(data.identifiedPigs);
         } else if (data.identifiedPig) {
@@ -112,13 +115,51 @@ export default function DashboardScreen() {
       style={styles.container}
       contentContainerStyle={[styles.content, { padding: T.spacing.lg, paddingBottom: T.spacing.xxl }]}
     >
+      {/* === TV MODE FULLSCREEN MODAL === */}
       {presMode && (
-        <View style={styles.presOverlay}>
-             <Text style={styles.presTitle}>🐗 SOVEREIGN AQUA PROTOCOL — LIVE MONITOR</Text>
-             <TouchableOpacity onPress={() => setPresMode(false)} style={styles.presClose}>
-                 <Text style={{color: '#000', fontWeight: 'bold'}}>CLOSE TV MODE</Text>
-             </TouchableOpacity>
-        </View>
+        <Modal
+          animationType="fade"
+          transparent={false}
+          visible={presMode}
+          onRequestClose={() => setPresMode(false)}
+        >
+          <View style={styles.tvContainer}>
+            <View style={styles.tvHeader}>
+              <Text style={styles.tvTitle}>🐗 SOVEREIGN AQUA PROTOCOL — LIVE MONITOR</Text>
+              <TouchableOpacity onPress={() => setPresMode(false)} style={styles.tvCloseBtn}>
+                <Text style={{color: '#000', fontWeight: 'bold', fontSize: 14}}>✕ EXIT TV MODE</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.tvHeroRow}>
+              <View style={styles.tvHeroPanel}>
+                <Text style={styles.tvHeroLabel}>IDENTIFIED PIGS</Text>
+                <Text style={styles.tvHeroValue}>{identifiedPigs.join(', ')}</Text>
+              </View>
+              <View style={[styles.tvHeroPanel, { borderLeftWidth: 1, borderLeftColor: Theme.colors.primary + '44' }]}>
+                <Text style={styles.tvHeroLabel}>TEMPERATURE</Text>
+                <Text style={[styles.tvHeroValue, { color: statusColor }]}>{currentTemp}</Text>
+              </View>
+              <View style={[styles.tvHeroPanel, { borderLeftWidth: 1, borderLeftColor: Theme.colors.primary + '44' }]}>
+                <Text style={styles.tvHeroLabel}>STATUS</Text>
+                <Text style={[styles.tvHeroValue, { color: statusColor }]}>{healthStatus}</Text>
+              </View>
+            </View>
+            <View style={styles.tvThermal}>
+              <ThermalLiveView 
+                base64Frame={telemetry?.thermalFrame}
+                targetX={telemetry?.targetX}
+                targetY={telemetry?.targetY}
+                identifiedPig={telemetry?.identifiedPig}
+                width={Math.min(Dimensions.get('window').width - 40, 1000)}
+              />
+            </View>
+            <View style={styles.tvFooter}>
+              <Text style={styles.tvFooterText}>
+                {isLive ? '🔴 LIVE — Firebase Realtime Database' : '☁️ Awaiting ESP32 signal...'}
+              </Text>
+            </View>
+          </View>
+        </Modal>
       )}
       {/* === Header === */}
       <View style={{ marginBottom: T.spacing.lg }}>
@@ -185,78 +226,42 @@ export default function DashboardScreen() {
         </View>
       </View>
 
-      {/* === Quick Stats Row === */}
-      <View style={[styles.statsRow, { gap: T.spacing.sm, marginBottom: T.spacing.lg }]}>
-        <View style={[styles.statBox, { padding: T.spacing.sm, borderColor: Theme.colors.info }]}>
-          <Text style={[styles.statValue, { color: Theme.colors.info, fontSize: T.typography.h2 }]}>{coughCount}</Text>
-          <Text style={[styles.statLabel, { fontSize: T.typography.caption }]}>Coughs</Text>
+      {/* === Thermal Section (Main Centerpiece) === */}
+      <View style={{ marginBottom: T.spacing.lg }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: T.spacing.xs }}>
+          <Text style={[styles.sectionTitle, { fontSize: T.typography.h3, marginTop: 0 }]}>📡 Live Thermal Feed</Text>
+          <View style={styles.liveBadge}>
+            <Text style={styles.liveBadgeText}>🔴 LIVE</Text>
+          </View>
         </View>
-        <View style={[styles.statBox, { padding: T.spacing.sm, borderColor: Theme.colors.success }]}>
-          <Text style={[styles.statValue, { color: Theme.colors.success, fontSize: T.typography.h2 }]}>{sensors.length}</Text>
-          <Text style={[styles.statLabel, { fontSize: T.typography.caption }]}>Sensors</Text>
-        </View>
-        <View style={[styles.statBox, { padding: T.spacing.sm, borderColor: Theme.colors.warning }]}>
-          <Text style={[styles.statValue, { color: Theme.colors.warning, fontSize: T.typography.h2 }]}>{warningCount}</Text>
-          <Text style={[styles.statLabel, { fontSize: T.typography.caption }]}>Warnings</Text>
-        </View>
-        <View style={[styles.statBox, { padding: T.spacing.sm, borderColor: Theme.colors.danger }]}>
-          <Text style={[styles.statValue, { color: Theme.colors.danger, fontSize: T.typography.h2 }]}>{dangerCount}</Text>
-          <Text style={[styles.statLabel, { fontSize: T.typography.caption }]}>Critical</Text>
-        </View>
+        <ThermalLiveView 
+          base64Frame={telemetry?.thermalFrame}
+          targetX={telemetry?.targetX}
+          targetY={telemetry?.targetY}
+          identifiedPig={telemetry?.identifiedPig}
+          width={isDesktop ? Math.min(width * 0.7, 800) : undefined}
+        />
       </View>
 
-      {/* === Grid Section (Responsive) === */}
+      {/* === Grid Section === */}
       <View style={isDesktop ? styles.desktopGrid : {}}>
-        
-        {/* Left Column: Sensors */}
+        {/* Left Col: Alerts */}
         <View style={isDesktop ? styles.gridCol : {}}>
-          <Text style={[styles.sectionTitle, { fontSize: T.typography.h3, marginBottom: T.spacing.sm }]}>Sensor Overview</Text>
-          {sensors.map((sensor) => (
-            <SensorCard key={sensor.id} sensor={sensor} compact />
-          ))}
+          <Text style={[styles.sectionTitle, { fontSize: T.typography.h3, marginBottom: T.spacing.sm }]}>Recent Events</Text>
+          {recentAlerts.length === 0 ? (
+            <Text style={{color: Theme.colors.textMuted}}>No recent incidents.</Text>
+          ) : (
+            recentAlerts.map((alert) => (
+              <AlertRow key={alert.id} alert={alert} />
+            ))
+          )}
         </View>
 
-        {/* Right Column: Roster & Alerts */}
+        {/* Right Col: Node Health */}
         <View style={isDesktop ? styles.gridCol : {}}>
-          <Text style={[styles.sectionTitle, { fontSize: T.typography.h3, marginBottom: T.spacing.sm }]}>Active Pig Roster</Text>
-          {roster.length === 0 ? (
-              <Text style={{color: Theme.colors.textMuted, fontSize: T.typography.body}}>No pigs currently tracked.</Text>
-          ) : (
-              roster.map((pig) => (
-                <View key={pig.id} style={[
-                    styles.rosterCard, { padding: T.spacing.sm, marginBottom: T.spacing.xs },
-                    pig.status === 'INACTIVE' && { borderColor: Theme.colors.warning },
-                    pig.tags?.includes('FEVER') && { borderColor: Theme.colors.danger },
-                    pig.tags?.includes('RESPIRATORY_DISTRESS') && { borderColor: Theme.colors.danger }
-                ]}>
-                  <View style={[styles.rosterHeader, { marginBottom: T.spacing.xs }]}>
-                    <Text style={[styles.rosterName, { fontSize: T.typography.body, flexShrink: 1, marginRight: 8 }]} numberOfLines={1}>{pig.name}</Text>
-                    <Text style={[styles.rosterTemp, { fontSize: T.typography.body }, (pig.temperature != null && pig.temperature > 39.5) ? {color: Theme.colors.danger} : {color: Theme.colors.success}]}>
-                        {pig.temperature != null ? `${pig.temperature.toFixed(1)}°C` : '--'}
-                    </Text>
-                  </View>
-                  <View style={styles.tagsContainer}>
-                      <Text style={[styles.tag, {backgroundColor: Theme.colors.surface}]}>
-                          Status: {pig.status || 'NORMAL'}
-                      </Text>
-                      {pig.tags && pig.tags.map((tag: string, idx: number) => (
-                          <Text key={idx} style={[
-                              styles.tag,
-                              tag === 'FEVER' ? styles.tagDanger : 
-                              tag === 'RESPIRATORY_DISTRESS' ? styles.tagDanger : 
-                              tag === 'LETHARGIC' ? styles.tagWarning : styles.tagInfo
-                          ]}>
-                              {tag}
-                          </Text>
-                      ))}
-                  </View>
-                </View>
-              ))
-          )}
-
-          <Text style={[styles.sectionTitle, { fontSize: T.typography.h3, marginBottom: T.spacing.sm }]}>Recent Alerts</Text>
-          {recentAlerts.map((alert) => (
-            <AlertRow key={alert.id} alert={alert} />
+          <Text style={[styles.sectionTitle, { fontSize: T.typography.h3, marginBottom: T.spacing.sm }]}>Node Heartbeat</Text>
+          {sensors.map((sensor) => (
+            <SensorCard key={sensor.id} sensor={sensor} compact />
           ))}
         </View>
       </View>
@@ -520,5 +525,75 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 4,
-  }
+  },
+  // === TV Mode Fullscreen Styles ===
+  tvContainer: {
+    flex: 1,
+    backgroundColor: Theme.colors.background,
+    padding: 20,
+  },
+  tvHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: Theme.colors.surface,
+    borderRadius: Theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: Theme.colors.primary + '44',
+    marginBottom: 16,
+  },
+  tvTitle: {
+    color: Theme.colors.primary,
+    fontWeight: 'bold',
+    fontSize: 18,
+    letterSpacing: 2,
+  },
+  tvCloseBtn: {
+    backgroundColor: Theme.colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  tvHeroRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: Theme.colors.surface,
+    borderRadius: Theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: Theme.colors.primary + '44',
+    padding: 16,
+    marginBottom: 16,
+  },
+  tvHeroPanel: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  tvHeroLabel: {
+    color: Theme.colors.textMuted,
+    fontSize: 12,
+    letterSpacing: 2,
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
+  tvHeroValue: {
+    color: Theme.colors.primary,
+    fontSize: 28,
+    fontWeight: 'bold',
+  },
+  tvThermal: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tvFooter: {
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  tvFooterText: {
+    color: Theme.colors.textMuted,
+    fontSize: 14,
+    letterSpacing: 1,
+  },
 });
