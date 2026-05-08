@@ -128,11 +128,12 @@ export function ThermalLiveView({
   }, [pixels, pixelSize]);
 
   // Is this the pig we are actively tracking?
+  // If selectedPigToTrack is provided (like in Sensors), we only track if it matches.
+  // If it's NOT provided (like in Dashboard), we track whatever pig is currently identified.
   const isTracking =
-    selectedPigToTrack &&
-    identifiedPig === selectedPigToTrack &&
     targetX !== undefined &&
-    targetY !== undefined;
+    targetY !== undefined &&
+    (selectedPigToTrack ? identifiedPig === selectedPigToTrack : !!identifiedPig);
 
   return (
     <View style={[styles.container, { width, height }]}>
