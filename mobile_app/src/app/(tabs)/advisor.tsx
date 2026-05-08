@@ -38,7 +38,7 @@ export default function AdvisorScreen() {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (inputText.trim() === '') return;
 
     const userMsg: Message = {
@@ -48,21 +48,57 @@ export default function AdvisorScreen() {
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMsg]);
+    const currentMessages = [...messages, userMsg];
+    setMessages(currentMessages);
     setInputText('');
     setIsTyping(true);
 
-    // Simulation of AI Response (In production, this would hit Groq/OpenRouter)
-    setTimeout(() => {
-      const advisorMsg: Message = {
+    try {
+      // Map conversation history for the AI
+      const apiMessages = currentMessages.map(msg => ({
+        role: msg.sender === 'user' ? 'user' : 'assistant',
+        content: msg.text
+      }));
+
+      // Determine API URL based on platform
+      const apiUrl = Platform.OS === 'web' 
+        ? '/api/chat' 
+        : 'https://pig-health-monitor.vercel.app/api/chat';
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          messages: apiMessages,
+          context: { status: "Monitoring active. Please provide advice based on user input." }
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.reply) {
+        const advisorMsg: Message = {
+          id: (Date.now() + 1).toString(),
+          text: data.reply,
+          sender: 'advisor',
+          timestamp: new Date(),
+        };
+        setMessages(prev => [...prev, advisorMsg]);
+      } else {
+        throw new Error(data.error || 'Unknown error');
+      }
+    } catch (error) {
+      console.error('Chat error:', error);
+      const errorMsg: Message = {
         id: (Date.now() + 1).toString(),
-        text: "I am processing your request through the Sentinel Soul core... [SIMULATION] Acoustic analysis shows no significant cough clusters in the last 2 hours. The thermal spike seems localized. Recommendation: Monitor hydration levels in Pen 1.",
+        text: "⚠️ Connection to Sentinel Soul interrupted. The AI backend may be offline or unreachable.",
         sender: 'advisor',
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, advisorMsg]);
+      setMessages(prev => [...prev, errorMsg]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   return (
