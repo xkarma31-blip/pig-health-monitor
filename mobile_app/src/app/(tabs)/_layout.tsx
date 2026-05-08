@@ -53,18 +53,10 @@ export default function TabLayout() {
           backgroundColor: Theme.colors.background,
         },
         headerRight: () => (
-          <View style={{ flexDirection: 'row', gap: 20, marginRight: 20, alignItems: 'center' }}>
-            <TouchableOpacity onPress={() => router.push('/sensors')}>
-              <Text style={{ fontSize: 22 }}>🌡️</Text>
+          <View style={{ marginRight: 20 }}>
+            <TouchableOpacity onPress={() => router.push('/more')} style={{ padding: 8 }}>
+              <Text style={{ fontSize: 28, color: Theme.colors.text }}>≡</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => router.push('/alerts')}>
-              <Text style={{ fontSize: 22 }}>🔔</Text>
-            </TouchableOpacity>
-            {getAuth().currentUser && (
-              <TouchableOpacity onPress={() => signOut(getAuth())}>
-                <Text style={{ fontSize: 22 }}>🚪</Text>
-              </TouchableOpacity>
-            )}
           </View>
         ),
       }}
