@@ -12,6 +12,7 @@
 
 import { Tabs, useRouter } from 'expo-router';
 import { useWindowDimensions, View, TouchableOpacity, Text } from 'react-native';
+import { getAuth, signOut } from 'firebase/auth';
 import { Theme } from '../../constants/Theme';
 import { ResponsiveLayout } from '../../components/Layout/ResponsiveLayout';
 
@@ -52,13 +53,18 @@ export default function TabLayout() {
           backgroundColor: Theme.colors.background,
         },
         headerRight: () => (
-          <View style={{ flexDirection: 'row', gap: 20, marginRight: 20 }}>
+          <View style={{ flexDirection: 'row', gap: 20, marginRight: 20, alignItems: 'center' }}>
             <TouchableOpacity onPress={() => router.push('/sensors')}>
               <Text style={{ fontSize: 22 }}>🌡️</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => router.push('/alerts')}>
               <Text style={{ fontSize: 22 }}>🔔</Text>
             </TouchableOpacity>
+            {getAuth().currentUser && (
+              <TouchableOpacity onPress={() => signOut(getAuth())}>
+                <Text style={{ fontSize: 22 }}>🚪</Text>
+              </TouchableOpacity>
+            )}
           </View>
         ),
       }}
