@@ -31,17 +31,6 @@ export default function DashboardScreen() {
   const [healthStatus, setHealthStatus] = useState<string>('NORMAL');
   const [roster, setRoster] = useState<any[]>([]);
   const [telemetry, setTelemetry] = useState<any>(null);
-  const [presMode, setPresMode] = useState(false);
-
-  // Keyboard listener for TV Mode (Escape to exit)
-  useEffect(() => {
-    if (Platform.OS !== 'web') return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setPresMode(false);
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
 
   // Listen to auth state
   useEffect(() => {
@@ -115,52 +104,6 @@ export default function DashboardScreen() {
       style={styles.container}
       contentContainerStyle={[styles.content, { padding: T.spacing.lg, paddingBottom: T.spacing.xxl }]}
     >
-      {/* === TV MODE FULLSCREEN MODAL === */}
-      {presMode && (
-        <Modal
-          animationType="fade"
-          transparent={false}
-          visible={presMode}
-          onRequestClose={() => setPresMode(false)}
-        >
-          <View style={styles.tvContainer}>
-            <View style={styles.tvHeader}>
-              <Text style={styles.tvTitle}>🐗 SOVEREIGN AQUA PROTOCOL — LIVE MONITOR</Text>
-              <TouchableOpacity onPress={() => setPresMode(false)} style={styles.tvCloseBtn}>
-                <Text style={{color: '#000', fontWeight: 'bold', fontSize: 14}}>✕ EXIT TV MODE</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.tvHeroRow}>
-              <View style={styles.tvHeroPanel}>
-                <Text style={styles.tvHeroLabel}>IDENTIFIED PIGS</Text>
-                <Text style={styles.tvHeroValue}>{identifiedPigs.join(', ')}</Text>
-              </View>
-              <View style={[styles.tvHeroPanel, { borderLeftWidth: 1, borderLeftColor: Theme.colors.primary + '44' }]}>
-                <Text style={styles.tvHeroLabel}>TEMPERATURE</Text>
-                <Text style={[styles.tvHeroValue, { color: statusColor }]}>{currentTemp}</Text>
-              </View>
-              <View style={[styles.tvHeroPanel, { borderLeftWidth: 1, borderLeftColor: Theme.colors.primary + '44' }]}>
-                <Text style={styles.tvHeroLabel}>STATUS</Text>
-                <Text style={[styles.tvHeroValue, { color: statusColor }]}>{healthStatus}</Text>
-              </View>
-            </View>
-            <View style={styles.tvThermal}>
-              <ThermalLiveView 
-                base64Frame={telemetry?.thermalFrame}
-                targetX={telemetry?.targetX}
-                targetY={telemetry?.targetY}
-                identifiedPig={telemetry?.identifiedPig}
-                width={Math.min(Dimensions.get('window').width - 40, 1000)}
-              />
-            </View>
-            <View style={styles.tvFooter}>
-              <Text style={styles.tvFooterText}>
-                {isLive ? '🔴 LIVE — Firebase Realtime Database' : '☁️ Awaiting ESP32 signal...'}
-              </Text>
-            </View>
-          </View>
-        </Modal>
-      )}
       {/* === Header === */}
       <View style={{ marginBottom: T.spacing.lg }}>
         <View style={styles.headerTop}>
@@ -170,14 +113,6 @@ export default function DashboardScreen() {
           </View>
           {isAuthenticated && (
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-              <TouchableOpacity 
-                style={[styles.presButton, presMode && styles.presButtonActive]}
-                onPress={() => setPresMode(!presMode)}
-              >
-                <Text style={[styles.presButtonText, presMode && { color: '#000' }]}>
-                  {presMode ? '📺 TV ON' : '📺 TV MODE'}
-                </Text>
-              </TouchableOpacity>
               {isLive && (
                 <View style={styles.liveBadge}>
                   <Text style={[styles.liveBadgeText, { fontSize: T.typography.caption }]}>🔴 LIVE</Text>
@@ -504,100 +439,5 @@ const styles = StyleSheet.create({
   gridCol: {
     flex: 1,
     minWidth: 300,
-  },
-  presOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 50,
-    backgroundColor: Theme.colors.primary,
-    zIndex: 1000,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-  },
-  presTitle: {
-    color: '#000',
-    fontWeight: 'bold',
-    fontSize: 14,
-    letterSpacing: 2,
-  },
-  presClose: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  // === TV Mode Fullscreen Styles ===
-  tvContainer: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-    padding: 20,
-  },
-  tvHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: Theme.colors.surface,
-    borderRadius: Theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.primary + '44',
-    marginBottom: 16,
-  },
-  tvTitle: {
-    color: Theme.colors.primary,
-    fontWeight: 'bold',
-    fontSize: 18,
-    letterSpacing: 2,
-  },
-  tvCloseBtn: {
-    backgroundColor: Theme.colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-  },
-  tvHeroRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: Theme.colors.surface,
-    borderRadius: Theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.primary + '44',
-    padding: 16,
-    marginBottom: 16,
-  },
-  tvHeroPanel: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  tvHeroLabel: {
-    color: Theme.colors.textMuted,
-    fontSize: 12,
-    letterSpacing: 2,
-    marginBottom: 4,
-    textTransform: 'uppercase',
-  },
-  tvHeroValue: {
-    color: Theme.colors.primary,
-    fontSize: 28,
-    fontWeight: 'bold',
-  },
-  tvThermal: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  tvFooter: {
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  tvFooterText: {
-    color: Theme.colors.textMuted,
-    fontSize: 14,
-    letterSpacing: 1,
   },
 });
