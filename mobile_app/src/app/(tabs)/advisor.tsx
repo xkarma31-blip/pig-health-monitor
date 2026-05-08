@@ -5,10 +5,11 @@ import {
   StyleSheet, 
   TextInput, 
   TouchableOpacity, 
-  ScrollView, 
   KeyboardAvoidingView, 
   Platform,
-  ActivityIndicator
+  ActivityIndicator,
+  Modal,
+  useWindowDimensions
 } from 'react-native';
 import { Theme } from '../../constants/Theme';
 import { GlassCard } from '../../components/UI/GlassCard';
@@ -32,7 +33,10 @@ export default function AdvisorScreen() {
   ]);
   const [inputText, setInputText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [showSessions, setShowSessions] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+  const { width } = useWindowDimensions();
+  const isDesktop = width >= 768;
 
   const sendMessage = () => {
     if (inputText.trim() === '') return;
@@ -70,12 +74,45 @@ export default function AdvisorScreen() {
     >
       {/* Header */}
       <View style={styles.headerBar}>
-        <Text style={styles.headerEmoji}>🤖</Text>
-        <Text style={styles.headerTitle}>HUSH HOG ADVISOR</Text>
-        <View style={styles.headerBadge}>
-          <Text style={styles.headerBadgeText}>SIMULATION</Text>
+        <View style={styles.headerLeft}>
+          <Text style={styles.headerEmoji}>🤖</Text>
+          <Text style={styles.headerTitle}>HUSH HOG ADVISOR</Text>
+          <View style={styles.headerBadge}>
+            <Text style={styles.headerBadgeText}>SIMULATION</Text>
+          </View>
         </View>
+        <TouchableOpacity style={styles.sessionsButton} onPress={() => setShowSessions(true)}>
+          <Text style={styles.sessionsButtonText}>SESSIONS</Text>
+        </TouchableOpacity>
       </View>
+
+      {/* Sessions Modal */}
+      <Modal visible={showSessions} animationType="fade" transparent={true} onRequestClose={() => setShowSessions(false)}>
+        <View style={[styles.modalOverlay, isDesktop && { justifyContent: 'center', alignItems: 'center' }]}>
+          <View style={[styles.modalContent, isDesktop && { width: 500, borderRadius: 20, maxHeight: '60%' }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Past Sessions</Text>
+              <TouchableOpacity onPress={() => setShowSessions(false)}>
+                <Text style={styles.modalCloseText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView>
+              <TouchableOpacity style={styles.sessionItem} onPress={() => setShowSessions(false)}>
+                <Text style={styles.sessionTitle}>Today: Cough Analysis (Peppa)</Text>
+                <Text style={styles.sessionDate}>Just now</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.sessionItem} onPress={() => setShowSessions(false)}>
+                <Text style={styles.sessionTitle}>Yesterday: Weekly Health Review</Text>
+                <Text style={styles.sessionDate}>May 7, 2026</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.sessionItem} onPress={() => setShowSessions(false)}>
+                <Text style={styles.sessionTitle}>Roster Config & Node 2 Status</Text>
+                <Text style={styles.sessionDate}>May 5, 2026</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       <ScrollView 
         ref={scrollViewRef}
@@ -138,10 +175,15 @@ const styles = StyleSheet.create({
   headerBar: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     padding: 12,
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.cardBorder,
     backgroundColor: Theme.colors.surface,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
   },
   headerEmoji: {
@@ -165,6 +207,66 @@ const styles = StyleSheet.create({
     color: Theme.colors.warning,
     fontSize: 10,
     fontWeight: 'bold',
+  },
+  sessionsButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    backgroundColor: Theme.colors.primary + '22',
+    borderWidth: 1,
+    borderColor: Theme.colors.primary,
+  },
+  sessionsButtonText: {
+    color: Theme.colors.primary,
+    fontSize: 10,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: Theme.colors.surface,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    minHeight: '50%',
+    maxHeight: '80%',
+    padding: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.cardBorder,
+    paddingBottom: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Theme.colors.text,
+  },
+  modalCloseText: {
+    fontSize: 20,
+    color: Theme.colors.textMuted,
+  },
+  sessionItem: {
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.cardBorder + '66',
+  },
+  sessionTitle: {
+    color: Theme.colors.text,
+    fontSize: 16,
+    fontWeight: '500',
+    marginBottom: 4,
+  },
+  sessionDate: {
+    color: Theme.colors.textMuted,
+    fontSize: 12,
   },
   chatContainer: {
     flex: 1,
