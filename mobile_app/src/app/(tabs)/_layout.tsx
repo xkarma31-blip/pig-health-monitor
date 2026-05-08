@@ -82,19 +82,13 @@ export default function TabLayout() {
       <Tabs.Screen
         name="alerts"
         options={{
-          title: 'Alerts',
-          tabBarIcon: ({ color }) => (
-            <TabIcon emoji="🔔" color={color} />
-          ),
+          href: null,
         }}
       />
       <Tabs.Screen
         name="sensors"
         options={{
-          title: 'Sensors',
-          tabBarIcon: ({ color }) => (
-            <TabIcon emoji="🌡️" color={color} />
-          ),
+          href: null,
         }}
       />
       <Tabs.Screen

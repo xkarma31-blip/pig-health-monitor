@@ -247,7 +247,12 @@ export default function DashboardScreen() {
       <View style={isDesktop ? styles.desktopGrid : {}}>
         {/* Left Col: Alerts */}
         <View style={isDesktop ? styles.gridCol : {}}>
-          <Text style={[styles.sectionTitle, { fontSize: T.typography.h3, marginBottom: T.spacing.sm }]}>Recent Events</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: T.spacing.sm }}>
+            <Text style={[styles.sectionTitle, { fontSize: T.typography.h3, marginBottom: 0 }]}>Recent Events</Text>
+            <TouchableOpacity onPress={() => router.push('/alerts')}>
+              <Text style={{ color: Theme.colors.primary, fontWeight: 'bold', fontSize: 12 }}>VIEW ALL →</Text>
+            </TouchableOpacity>
+          </View>
           {recentAlerts.length === 0 ? (
             <Text style={{color: Theme.colors.textMuted}}>No recent incidents.</Text>
           ) : (
@@ -259,7 +264,12 @@ export default function DashboardScreen() {
 
         {/* Right Col: Node Health */}
         <View style={isDesktop ? styles.gridCol : {}}>
-          <Text style={[styles.sectionTitle, { fontSize: T.typography.h3, marginBottom: T.spacing.sm }]}>Node Heartbeat</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: T.spacing.sm }}>
+            <Text style={[styles.sectionTitle, { fontSize: T.typography.h3, marginBottom: 0 }]}>Node Heartbeat</Text>
+            <TouchableOpacity onPress={() => router.push('/sensors')}>
+              <Text style={{ color: Theme.colors.primary, fontWeight: 'bold', fontSize: 12 }}>VIEW ALL →</Text>
+            </TouchableOpacity>
+          </View>
           {sensors.map((sensor) => (
             <SensorCard key={sensor.id} sensor={sensor} compact />
           ))}
