@@ -114,7 +114,6 @@ export default function TabLayout() {
  * Simple emoji-based tab icon.
  * We use this instead of installing @expo/vector-icons to keep deps minimal.
  */
-import { Text } from 'react-native';
 
 function TabIcon({ emoji, color }: { emoji: string; color: string }) {
   return <Text style={{ fontSize: 22, opacity: color === Theme.colors.tabActive ? 1 : 0.5 }}>{emoji}</Text>;
