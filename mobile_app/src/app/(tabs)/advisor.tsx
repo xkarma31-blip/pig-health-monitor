@@ -9,8 +9,10 @@ import {
   Platform,
   ActivityIndicator,
   Modal,
-  useWindowDimensions
+  useWindowDimensions,
+  ScrollView
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Theme } from '../../constants/Theme';
 import { GlassCard } from '../../components/UI/GlassCard';
 import { ResponsiveLayout } from '../../components/Layout/ResponsiveLayout';
@@ -22,11 +24,18 @@ interface Message {
   timestamp: Date;
 }
 
+const LOCAL_FAQS = [
+  { q: "Optimal Pig Temp?", a: "The normal rectal temperature for a pig is around 38.5°C to 39.5°C (101.5°F - 103°F). Over 40°C is considered a fever." },
+  { q: "Coughing Signs?", a: "Occasional coughing is normal, but clusters of 3+ coughs in 1 minute suggest respiratory issues like Swine Flu or Mycoplasma." },
+  { q: "Offline Mode?", a: "You can view FAQs and recent data offline. Full AI analysis requires internet for OpenRouter connectivity." }
+];
+
 export default function AdvisorScreen() {
+  const router = useRouter();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      text: "Hello Master. I am the HUSH HOG Advisor. I have analyzed the current telemetry. Peppa's temperature is slightly elevated (39.5°C). Would you like me to check the acoustic logs for cough patterns?",
+      text: "Hello Master. I am the HUSH HOG Advisor. I am ready to help with telemetry analysis and health advice.",
       sender: 'advisor',
       timestamp: new Date(),
     }
@@ -37,6 +46,22 @@ export default function AdvisorScreen() {
   const scrollViewRef = useRef<ScrollView>(null);
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
+
+  const handleFAQ = (faq: typeof LOCAL_FAQS[0]) => {
+    const userMsg: Message = {
+      id: Date.now().toString(),
+      text: faq.q,
+      sender: 'user',
+      timestamp: new Date(),
+    };
+    const advisorMsg: Message = {
+      id: (Date.now() + 1).toString(),
+      text: faq.a,
+      sender: 'advisor',
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, userMsg, advisorMsg]);
+  };
 
   const sendMessage = async () => {
     if (inputText.trim() === '') return;
@@ -91,7 +116,7 @@ export default function AdvisorScreen() {
       console.error('Chat error:', error);
       const errorMsg: Message = {
         id: (Date.now() + 1).toString(),
-        text: "⚠️ Connection to Sentinel Soul interrupted. The AI backend may be offline or unreachable.",
+        text: "⚠️ Connection to Sentinel Soul interrupted. Note: Full AI analysis requires an active internet connection for OpenRouter access.",
         sender: 'advisor',
         timestamp: new Date(),
       };
@@ -111,15 +136,38 @@ export default function AdvisorScreen() {
       {/* Header */}
       <View style={styles.headerBar}>
         <View style={styles.headerLeft}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Text style={styles.backButtonText}>←</Text>
+          </TouchableOpacity>
           <Text style={styles.headerEmoji}>🤖</Text>
-          <Text style={styles.headerTitle}>HUSH HOG ADVISOR</Text>
-          <View style={styles.headerBadge}>
-            <Text style={styles.headerBadgeText}>SIMULATION</Text>
-          </View>
+          <Text style={styles.headerTitle}>ADVISOR</Text>
         </View>
-        <TouchableOpacity style={styles.sessionsButton} onPress={() => setShowSessions(true)}>
-          <Text style={styles.sessionsButtonText}>SESSIONS</Text>
-        </TouchableOpacity>
+        <View style={styles.headerRight}>
+          <View style={[styles.headerBadge, { backgroundColor: Theme.colors.success + '33', borderColor: Theme.colors.success }]}>
+            <Text style={[styles.headerBadgeText, { color: Theme.colors.success }]}>ONLINE</Text>
+          </View>
+          <TouchableOpacity style={styles.sessionsButton} onPress={() => setShowSessions(true)}>
+            <Text style={styles.sessionsButtonText}>SESSIONS</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.connectionNotice}>
+        <Text style={styles.connectionNoticeText}>
+          🌐 Connected to OpenRouter. Online required for Live Brain.
+        </Text>
+      </View>
+
+      {/* Local Knowledge / FAQ Bar */}
+      <View style={styles.faqBar}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.faqContent}>
+          <Text style={styles.faqLabel}>Local Knowledge:</Text>
+          {LOCAL_FAQS.map((faq, i) => (
+            <TouchableOpacity key={i} style={styles.faqChip} onPress={() => handleFAQ(faq)}>
+              <Text style={styles.faqChipText}>{faq.q}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
       {/* Sessions Modal */}
@@ -220,7 +268,16 @@ const styles = StyleSheet.create({
   headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
+  },
+  backButton: {
+    padding: 4,
+    marginRight: 4,
+  },
+  backButtonText: {
+    fontSize: 24,
+    color: Theme.colors.text,
+    fontWeight: 'bold',
   },
   headerEmoji: {
     fontSize: 20,
@@ -231,22 +288,62 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     letterSpacing: 1,
   },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
   headerBadge: {
-    backgroundColor: Theme.colors.warning + '33',
     borderWidth: 1,
-    borderColor: Theme.colors.warning,
-    paddingHorizontal: 8,
+    paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
   },
   headerBadgeText: {
-    color: Theme.colors.warning,
     fontSize: 10,
     fontWeight: 'bold',
   },
-  sessionsButton: {
+  connectionNotice: {
+    backgroundColor: Theme.colors.accent + '22',
+    padding: 8,
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.accent + '44',
+  },
+  connectionNoticeText: {
+    color: Theme.colors.textSecondary,
+    fontSize: 11,
+    fontStyle: 'italic',
+  },
+  faqBar: {
+    backgroundColor: Theme.colors.surface,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.cardBorder,
+  },
+  faqContent: {
     paddingHorizontal: 12,
-    paddingVertical: 6,
+    alignItems: 'center',
+  },
+  faqLabel: {
+    color: Theme.colors.textMuted,
+    fontSize: 12,
+    marginRight: 8,
+  },
+  faqChip: {
+    backgroundColor: Theme.colors.cardBorder,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  faqChipText: {
+    color: Theme.colors.text,
+    fontSize: 12,
+  },
+  sessionsButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 6,
     backgroundColor: Theme.colors.primary + '22',
     borderWidth: 1,
