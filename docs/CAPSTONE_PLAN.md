@@ -1,7 +1,7 @@
 # Capstone Master Plan — Pig Health Monitor
 
 **Last updated:** 2026-05-22  
-**Production URL:** https://mobileapp-lyart.vercel.app  
+**Production URL:** https://pig-health-monitor.vercel.app  
 **Stack:** ESP32-S3 firmware → Firebase RTDB → Expo web/mobile
 
 ---

@@ -5,7 +5,7 @@ Static marketing site (3D chip tour, sensory architecture, citations). **Not** t
 | Surface | URL |
 |--------|-----|
 | **This landing** | https://pig-health-research-portfolio.vercel.app |
-| **Live app (Expo web)** | https://mobileapp-lyart.vercel.app |
+| **Live app (Expo web)** | https://pig-health-monitor.vercel.app |
 | Legacy app alias | https://pig-health-monitor.vercel.app (same Expo build) |
 
 ## Config

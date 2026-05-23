@@ -9,7 +9,7 @@ window.PIGPULSE_CONFIG = {
   researchTitle: 'Multimodal TinyML Acoustic Safeguard for Open-Air Swine Farming',
 
   /** Canonical production app (Expo web) */
-  appUrl: 'https://mobileapp-lyart.vercel.app',
+  appUrl: 'https://pig-health-monitor.vercel.app',
 
   /**
    * Marketing / portfolio host (this HTML landing).
@@ -18,7 +18,7 @@ window.PIGPULSE_CONFIG = {
   landingUrl: 'https://pig-health-research-portfolio.vercel.app',
 
   /** Legacy alias — redirects mentally to appUrl; do not use for new links */
-  legacyAppUrl: 'https://pig-health-monitor.vercel.app',
+  legacyAppUrl: 'https://mobileapp-lyart.vercel.app',
 
   repoUrl: 'https://codeberg.org/Solrahk/pig-health-monitor',
   docsPath: '/docs/PLAN_INDEX.md',

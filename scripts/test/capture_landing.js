@@ -2,7 +2,7 @@ const puppeteer = require('puppeteer');
 const path = require('path');
 
 const ARTIFACTS_DIR = '/home/solrahk/.gemini/antigravity/brain/371372f5-1e4f-444f-ab18-c15eae6bddc0';
-const BASE_URL = 'https://mobileapp-lyart.vercel.app';
+const BASE_URL = 'https://pig-health-monitor.vercel.app';
 
 (async () => {
   const browser = await puppeteer.launch({ 

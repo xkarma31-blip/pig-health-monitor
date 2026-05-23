@@ -11,6 +11,6 @@ echo "Deploying PigPulse Expo web (mobile_app)..."
 npx -y vercel link --project pig-health-monitor --yes >/dev/null 2>&1 || true
 npx -y vercel --prod --yes
 
-echo "App (canonical): https://mobileapp-lyart.vercel.app"
-echo "App (legacy alias): https://pig-health-monitor.vercel.app"
+echo "App (canonical): https://pig-health-monitor.vercel.app"
+echo "App (legacy alias): https://mobileapp-lyart.vercel.app"
 echo "Research landing: run ./scripts/deploy-landing.sh → https://pig-health-research-portfolio.vercel.app"

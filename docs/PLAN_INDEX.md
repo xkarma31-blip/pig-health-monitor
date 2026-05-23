@@ -30,7 +30,7 @@
 | Hermes model profile | `~/.hermes/sentinel_models.yaml` + `PROVIDER_STATUS.md` |
 | Secrets | `~/.config/environment.d/sentinel.conf` (never git) |
 | NVIDIA / Cloudflare LLM | `~/.hermes/docs/SKIPPED_PROVIDERS.md` |
-| Production URL | **https://mobileapp-lyart.vercel.app** (canonical) |
+| Production URL | **https://pig-health-monitor.vercel.app** (canonical) |
 
 ---
 
