@@ -113,7 +113,7 @@ void AudioTask(void *pvParameters) {
         ? "Infectious cough signature detected (600Hz band dominant). Veterinary check advised."
         : "Non-infectious cough detected (1600Hz band dominant). Monitor for pattern changes.";
 
-      String alertPath = "/alerts";
+      String alertPath = String("/users/") + FARM_USER_UID + "/alerts";
       FirebaseJson alertJson;
       alertJson.set("deviceId", deviceId);
       alertJson.set("type", coughLabel);
@@ -139,7 +139,8 @@ void ThermalTask(void *pvParameters) {
     
     if (Firebase.ready()) {
       // 2. Command & Identification Ritual (Zero-Shot)
-      if (Firebase.RTDB.getJSON(&fbdo, "/commands/esp32-s3-01")) {
+      String commandPath = String("/users/") + FARM_USER_UID + "/commands/esp32-s3-01";
+      if (Firebase.RTDB.getJSON(&fbdo, commandPath.c_str())) {
         FirebaseJson &json = fbdo.jsonObject();
         FirebaseJsonData cmdData;
         json.get(cmdData, "command");
@@ -158,9 +159,10 @@ void ThermalTask(void *pvParameters) {
             alertJson.set("severity", "WARNING");
             alertJson.set("message", "Pig roster limit reached (50).");
             alertJson.set("timestamp/.sv", "timestamp");
-            Firebase.RTDB.pushJSON(&fbdo, "/alerts", &alertJson);
+            String alertPath = String("/users/") + FARM_USER_UID + "/alerts";
+            Firebase.RTDB.pushJSON(&fbdo, alertPath.c_str(), &alertJson);
           }
-          Firebase.RTDB.deleteNode(&fbdo, "/commands/esp32-s3-01");
+          Firebase.RTDB.deleteNode(&fbdo, commandPath.c_str());
         }
       }
 
@@ -202,7 +204,7 @@ void ThermalTask(void *pvParameters) {
         base64Str[olen] = '\0'; 
         String b64Frame = String((char*)base64Str);
 
-        String telePath = "/telemetry/" + deviceId;
+        String telePath = String("/users/") + FARM_USER_UID + "/telemetry/" + deviceId;
         FirebaseJson teleJson;
         teleJson.set("temperature", currentTemp);
         teleJson.set("status", healthStatus);
