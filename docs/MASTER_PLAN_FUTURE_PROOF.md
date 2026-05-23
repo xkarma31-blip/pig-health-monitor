@@ -220,12 +220,12 @@ Offline: ESP32 AP `http://192.168.4.1/data` OR cached mocks.
 
 ## 7. Definition of done (project)
 
-- [ ] Phase S security complete
-- [ ] Phase A pushed to Codeberg
-- [ ] Phase B firmware/mobile paths aligned
+- [x] Phase S security complete
+- [ ] Phase A pushed to Codeberg (Committed locally, pending push)
+- [x] Phase B firmware/mobile paths aligned
 - [ ] Phase C Vercel live with telemetry
 - [ ] Phase D Events/Analytics wired
-- [ ] Phase E smoke + tsc + CodeRabbit clean on staged diff
+- [x] Phase E smoke + tsc + CodeRabbit clean on staged diff
 - [ ] Phase F docs accurate
 - [ ] Phase G defense artifacts (optional date)
 - [ ] Phase H Sentinel probes green + docs synced

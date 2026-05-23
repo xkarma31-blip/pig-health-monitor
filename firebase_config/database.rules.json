@@ -9,33 +9,6 @@
         "sensors": { ".indexOn": ["lastUpdated"] },
         "telemetry": { ".indexOn": ["timestamp"] }
       }
-    },
-    "sensors": {
-      ".read": "auth != null",
-      ".write": "auth != null",
-      ".indexOn": ["lastUpdated"]
-    },
-    "alerts": {
-      ".read": "auth != null",
-      ".write": "auth != null",
-      ".indexOn": ["timestamp", "severity"]
-    },
-    "roster": {
-      ".read": "auth != null",
-      ".write": "auth != null",
-      ".indexOn": ["lastSeen"]
-    },
-    "telemetry": {
-      ".read": "auth != null",
-      ".write": "auth != null"
-    },
-    "commands": {
-      ".read": "auth != null",
-      ".write": "auth != null"
-    },
-    "pushTokens": {
-      ".read": "auth != null",
-      ".write": "auth != null"
     }
   }
 }

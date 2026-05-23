@@ -22,4 +22,7 @@
 #define FIREBASE_USER_EMAIL "pigmonitor@internal.dev"
 #define FIREBASE_USER_PASSWORD "PigMonitor2026!"
 
+// Multi-tenant sandboxing ID (Align with mobile app user UID)
+#define FARM_USER_UID "FARMER_UID_HERE"
+
 #endif
