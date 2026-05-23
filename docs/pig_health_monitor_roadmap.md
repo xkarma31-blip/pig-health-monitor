@@ -7,7 +7,7 @@
 | **1. The Vague Spark** | Months 1–2 | Literature Review + Conceptual Framework | Concept Paper, Scope/Delimitations, BOM |
 | **2. Breadboard Purgatory** | Months 3–4 | Hardware Assembly + First TinyML Test | Working I2S Mic + 85% accuracy on MFE |
 | **3. The Barn Odyssey** | Months 5–6 | Field Data Collection (500+ samples) | "Golden Dataset" of real pig coughs |
-| **4. The Digital Bridge** | Months 7–8 | Supabase + Expo Dashboard Integration | Real-time phone vibration on cough detect |
+| **4. The Digital Bridge** | Months 7–8 | Firebase RTDB + Expo Dashboard Integration | Real-time phone vibration on cough detect |
 | **5. The Paper War** | Months 9–10 | Statistical Validation + Chapter 1–5 | Confusion Matrix + F1 Score results |
 | **6. Defense & Legacy** | Months 11–12 | Panel Presentation + Publication | Final Prototype + Defense PPT |
 
@@ -45,12 +45,12 @@
     *   [ ] Train MobileNetV2 (0.1 alpha) — target >90% accuracy
     *   [ ] Export as C++ Arduino Library (`.zip`)
     *   [ ] Import into PlatformIO firmware
-*   **Supabase:**
-    *   [ ] Create project on supabase.com
+*   **Firebase RTDB:**
+    *   [ ] Create project on Firebase RTDB.com
     *   [ ] Run SQL schema (see PIG_HEALTH_MONITOR_COMPLETE_RESEARCH.md §IX)
     *   [ ] Enable Realtime on `health_events` table
 *   **Expo App:**
-    *   [ ] Connect app to Supabase via `@supabase/supabase-js`
+    *   [ ] Connect app to Firebase RTDB via `@Firebase RTDB/Firebase RTDB-js`
     *   [ ] Build Dashboard with real-time alerts + vibration
     *   [ ] Deploy web via EAS Hosting / Vercel
 

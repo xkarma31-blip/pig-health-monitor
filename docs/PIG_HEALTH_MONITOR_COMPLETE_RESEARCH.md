@@ -10,9 +10,9 @@
 
 ## I. Project Abstract
 
-Pig Health Monitor is an autonomous, non-contact precision livestock farming (PLF) ecosystem designed to bridge the **48-hour diagnostic gap** in open-air Philippine pig farms. By fusing auditory intelligence (Acoustic TinyML) with spatiotemporal thermal awareness (MLX90640 Heatmapping), the system identifies respiratory distress (coughs) and febrile states (fever) at the individual pig level **without physical ear tags**. Utilizing an ESP32-S3 edge node with custom spectral subtraction logic, Pig Health Monitor filters extreme tropical noise (80dB+ rain on tin roofs) to deliver **96.99% diagnostic accuracy**. Data is synchronized via Supabase Realtime to a cross-platform Expo hub, providing farmers with actionable ROI insights and early warning biosecurity alerts.
+Pig Health Monitor is an autonomous, non-contact precision livestock farming (PLF) ecosystem designed to bridge the **48-hour diagnostic gap** in open-air Philippine pig farms. By fusing auditory intelligence (Acoustic TinyML) with spatiotemporal thermal awareness (MLX90640 Heatmapping), the system identifies respiratory distress (coughs) and febrile states (fever) at the individual pig level **without physical ear tags**. Utilizing an ESP32-S3 edge node with custom spectral subtraction logic, Pig Health Monitor filters extreme tropical noise (80dB+ rain on tin roofs) to deliver **96.99% diagnostic accuracy**. Data is synchronized via Firebase RTDB to a cross-platform Expo hub, providing farmers with actionable ROI insights and early warning biosecurity alerts.
 
-**Keywords:** TinyML, Precision Livestock Farming, ESP32-S3, Acoustic Classification, Thermal Imaging, Pig Health, MFCC, Edge AI, Non-Contact Monitoring, Supabase
+**Keywords:** TinyML, Precision Livestock Farming, ESP32-S3, Acoustic Classification, Thermal Imaging, Pig Health, MFCC, Edge AI, Non-Contact Monitoring, Firebase RTDB
 
 ---
 
@@ -82,7 +82,7 @@ graph TD
     end
     
     subgraph "☁️ The Cloud & User"
-    I --> J["Supabase<br/>(PostgreSQL + Realtime)"]
+    I --> J["Firebase RTDB<br/>(PostgreSQL + Realtime)"]
     J --> K["Expo Dashboard<br/>(Web + Mobile)"]
     K --> L["📱 Alert: Vibration + Push"]
     end
@@ -95,7 +95,7 @@ graph TD
 | **I. The Ear** | Acoustic Processing | ESP32-S3 + 2× INMP441 + Spectral Subtraction |
 | **II. The Brain** | TinyML Model | Edge Impulse + MFE Features + MobileNetV2 |
 | **III. The Eye** | Thermal Sensing | MLX90640 (32×24) + Differential Heat Mapping |
-| **IV. The Hub** | Connectivity | Supabase Realtime + Expo (React Native) App/Web |
+| **IV. The Hub** | Connectivity | Firebase RTDB + Expo (React Native) App/Web |
 
 ---
 
@@ -301,7 +301,7 @@ enum State {
     LISTEN,     // Filling the audio buffer (Deep Sleep / Light Sleep)
     ANALYZE,    // Running DSP + TinyML Inference
     THERMAL,    // Capturing MLX90640 snapshot (triggered by cough)
-    REPORT,     // Sending JSON to Supabase via WiFi
+    REPORT,     // Sending JSON to Firebase RTDB via WiFi
     COOLDOWN    // Waiting to avoid spamming alerts
 };
 ```
@@ -339,8 +339,8 @@ enum State {
 
 ## XI. Cloud & Mobile App Architecture
 
-### Backend: Supabase (PostgreSQL + Realtime)
-- **Why Supabase:** Relational data (link events to pig IDs), SQL queries for research, long-term trend analysis. Free tier sufficient for MVP.
+### Backend: Firebase RTDB
+- **Why Firebase RTDB:** Relational data (link events to pig IDs), SQL queries for research, long-term trend analysis. Free tier sufficient for MVP.
 
 ### Database Schema
 ```sql
@@ -367,14 +367,14 @@ CREATE TABLE health_events (
   recorded_at TIMESTAMPTZ DEFAULT now()
 );
 
-ALTER PUBLICATION supabase_realtime ADD TABLE health_events;
+ALTER PUBLICATION Firebase RTDB_realtime ADD TABLE health_events;
 ```
 
 ### Security: Row-Level Security (RLS)
 - **RLS Enabled** on all tables — no unauthenticated access.
 - **ESP32 Auth:** Uses unique device UUID linked to `auth.uid()`. Authorized via the `anon` key with precise policies.
 - **Service Role Key:** NEVER embedded in firmware. Used only in secure backend admin scripts.
-- **TLS:** Supabase enforces TLS for all connections. ESP32 verifies SSL certificates.
+- **TLS:** Firebase RTDB enforces TLS for all connections. ESP32 verifies SSL certificates.
 
 #### Actual RLS Policy SQL
 ```sql
@@ -488,7 +488,7 @@ CREATE POLICY "admin_manage_pigs" ON pigs
 ### Theoretical Pillars
 1. **Signal Detection Theory (SDT)** — Green & Swets (1966): Pig Health Monitor's classification logic (COUGH vs NOISE vs SILENCE) is fundamentally a signal detection problem. The confidence threshold (>0.8) and debounce logic (3 consecutive windows) directly implement SDT's optimization of sensitivity vs. specificity, minimizing false alarms while maximizing true positives.
 2. **Technology Acceptance Model (TAM)** — Davis (1989): Pig Health Monitor's success depends on farmer adoption. The system maximizes **Perceived Usefulness** (₱800 ROI per pig saved, push alerts) and **Perceived Ease of Use** (zero-learning mobile app, autonomous operation) to overcome resistance to new technology among smallhold farmers.
-3. **IoT Reference Architecture (ISO/IEC 30141:2018)** — Pig Health Monitor implements the standard 3-tier IoT architecture: (1) Perception Layer (sensors), (2) Network Layer (WiFi/Supabase), (3) Application Layer (Expo dashboard).
+3. **IoT Reference Architecture (ISO/IEC 30141:2018)** — Pig Health Monitor implements the standard 3-tier IoT architecture: (1) Perception Layer (sensors), (2) Network Layer (WiFi/Firebase RTDB), (3) Application Layer (Expo dashboard).
 4. **Precision Livestock Farming (PLF) Framework** — Berckmans (2014): Continuous, automated monitoring of individual animals using sensors and AI to improve welfare, health, and productivity — the foundational paradigm Pig Health Monitor operates within.
 
 ### Conceptual Framework
@@ -543,7 +543,7 @@ graph LR
 ### System-Level Metrics
 - **End-to-End Latency:** Measured from cough onset to mobile vibration (target: <3 seconds).
 - **Uptime:** Hours of continuous operation on dual 18650 batteries (target: 72+ hours).
-- **Data Integrity:** Percentage of events successfully synced to Supabase (target: 99%+).
+- **Data Integrity:** Percentage of events successfully synced to Firebase RTDB (target: 99%+).
 
 ---
 
@@ -591,7 +591,7 @@ Pig Health Monitor is designed as a **Non-Invasive Surveillance Tool**.
 | **1. The Spark** | Months 1–2 | Literature Review + Conceptual Framework | Defining "Sensor Fusion" logic | MLX90640 is sufficient for head-area blobs |
 | **2. Purgatory** | Months 3–4 | Prototype Alpha (I2S mic + TinyML) | INMP441 ↔ ESP32-S3 I2S + DMA | MFE features boost accuracy 40%→85% |
 | **3. The Odyssey** | Months 5–6 | Field Data Collection (1000+ samples) | Farm WiFi drops, pig bites wires | SD Card buffer + IP65 enclosure |
-| **4. The Bridge** | Months 7–8 | Supabase + Expo Dashboard integration | Real-time sync latency | Batch upload + Realtime websockets |
+| **4. The Bridge** | Months 7–8 | Firebase RTDB + Expo Dashboard integration | Real-time sync latency | Batch upload + Realtime websockets |
 | **5. Paper War** | Months 9–10 | Confusion Matrix + Chapter 4 Results | Proving 48-hour early warning window | Compare Pig Health Monitor vs manual vet checks |
 | **6. Legacy** | Months 11–12 | Oral Defense + Paper Publication | Panel "Kill Questions" | Multimodal Validation + Economic ROI |
 
@@ -600,7 +600,7 @@ Pig Health Monitor is designed as a **Non-Invasive Surveillance Tool**.
 |--------|------|-------------|
 | **Member 1** | Hardware / Power | ESP32-S3 wiring, IP65 housing, battery UPS, conformal coating |
 | **Member 2** | AI / Data Science | Edge Impulse model training, confusion matrix, MFE parameters |
-| **Member 3** | Software / Lead | Supabase schema, Expo dashboard, Chapter 1-5 drafting, defense prep |
+| **Member 3** | Software / Lead | Firebase RTDB rules, Expo dashboard, Chapter 1-5 drafting, defense prep |
 
 ---
 
@@ -621,7 +621,7 @@ Pig Health Monitor is designed as a **Non-Invasive Surveillance Tool**.
 - **Hardware:** Dual-Mic I2S Array + MLX90640 + BME280.
 - **DSP/AI Pipeline:** Spectral Subtraction → MFCC+Δ Extraction → MobileNetV2.
 - **Tracking:** Spatiotemporal Thermal Bloom + Quadrant Mapping.
-- **Cloud:** Supabase Realtime + Expo Cross-Platform Hub.
+- **Cloud:** Firebase RTDB + Expo Cross-Platform Hub.
 
 ### Chapter 4: Results & Discussion
 - **Accuracy Matrix:** CNN Classification vs. Human Vet (targeting 96%+).

@@ -13,7 +13,7 @@ graph LR
     MicB[INMP441 Mic B] -->|I2S Stream| DSP
     DSP -->|MFE Spectrogram| AI[TinyML: MobileNetV2]
     AI -->|Inference Result| Logic[Application Logic]
-    Logic -->|Realtime Alert| Supabase[Cloud: Supabase]
+    Logic -->|Realtime Alert| Firebase RTDB[Cloud: Firebase RTDB]
     Therm[MLX90640 Thermal] -->|I2C 32x24| Tracking[Spatiotemporal Tracking]
     Tracking -->|Individual ID| Logic
 ```
@@ -118,8 +118,8 @@ The MLX90640 IR Array provides high-resolution non-contact tracking and fever de
 
 ---
 
-## 6. Cloud Infrastructure (Supabase)
-Instead of a simple database, we use **Supabase Realtime** for persistent logs and push notifications.
+## 6. Cloud Infrastructure (Firebase RTDB)
+Instead of a simple database, we use **Firebase RTDB** for persistent logs and push notifications.
 - **Backend:** PostgreSQL with Realtime Extensions.
 - **Protocol:** WebSockets for <1s latency from Barn to Phone.
 
