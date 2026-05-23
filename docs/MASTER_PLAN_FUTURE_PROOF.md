@@ -37,9 +37,9 @@
 |------|--------|
 | Codeberg (public) | https://codeberg.org/Solrahk/pig-health-monitor |
 | Local repo | `/home/solrahk/Projects/pig-health-monitor` |
-| Production (**canonical**) | https://mobileapp-lyart.vercel.app |
+| Production (**canonical**) | https://pig-health-monitor.vercel.app |
 | Research landing | https://pig-health-research-portfolio.vercel.app (`landing_page/`, `config.js`) |
-| Live app (canonical) | https://mobileapp-lyart.vercel.app |
+| Live app (canonical) | https://pig-health-monitor.vercel.app |
 | Legacy app alias | https://pig-health-monitor.vercel.app — same Expo build; prefer canonical in new links |
 | Sentinel hub | `~/.cursor/` (`MANIFEST.json`, `FUTURE_PROOF.md`) |
 | Hermes | `~/.hermes/` (`sentinel_models.yaml`, `PROVIDER_STATUS.md`) |
@@ -114,7 +114,7 @@ npx expo export -p web
 # Vercel: root vercel.json → build + dist output
 ```
 
-**Done when:** https://mobileapp-lyart.vercel.app shows new bundle; login → Home has **live** Firebase data.
+**Done when:** https://pig-health-monitor.vercel.app shows new bundle; login → Home has **live** Firebase data.
 
 **Future:** If you need `api/chat.js` server routes on Vercel, migrate to `web.output: server` + Expo server adapter ([docs](https://docs.expo.dev/router/web/api-routes/)).
 

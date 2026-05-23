@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 
 const OUTDIR = '/home/solrahk/.gemini/antigravity/brain/3fb71982-c17f-448f-b330-828f77169f7b/artifacts/demo_screenshots';
-const URL = 'https://mobileapp-lyart.vercel.app';
+const URL = 'https://pig-health-monitor.vercel.app';
 
 (async () => {
   if (!fs.existsSync(OUTDIR)) fs.mkdirSync(OUTDIR, { recursive: true });

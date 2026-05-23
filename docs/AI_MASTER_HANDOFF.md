@@ -31,7 +31,7 @@ Human must say **“commit and push”** explicitly before assuming anything is 
 |------|--------|
 | Codeberg | https://codeberg.org/Solrahk/pig-health-monitor |
 | Local path | `/home/solrahk/Projects/pig-health-monitor` |
-| Production web | https://mobileapp-lyart.vercel.app |
+| Production web | https://pig-health-monitor.vercel.app |
 | Firebase | RTDB (not Supabase) — paths under `/users/$uid/` |
 
 ---

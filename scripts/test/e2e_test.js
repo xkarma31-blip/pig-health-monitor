@@ -9,7 +9,7 @@ const puppeteer = require('puppeteer');
   page.on('pageerror', error => console.log('PAGE ERROR:', error.message));
 
   console.log("Navigating to production dashboard...");
-  await page.goto('https://mobileapp-lyart.vercel.app', { waitUntil: 'networkidle2' });
+  await page.goto('https://pig-health-monitor.vercel.app', { waitUntil: 'networkidle2' });
 
   // TEST 1: Check Guest Mode
   console.log("\n=== TEST 1: GUEST MODE ===");
@@ -29,7 +29,7 @@ const puppeteer = require('puppeteer');
   // TEST 2: Login
   console.log("\n=== TEST 2: AUTHENTICATING ===");
   console.log("Navigating to Session tab...");
-  await page.goto('https://mobileapp-lyart.vercel.app/login', { waitUntil: 'networkidle2' });
+  await page.goto('https://pig-health-monitor.vercel.app/login', { waitUntil: 'networkidle2' });
   
   console.log("Waiting for SIGN IN button...");
   await page.evaluate(() => {

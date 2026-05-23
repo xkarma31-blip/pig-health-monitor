@@ -51,7 +51,7 @@ rg -q "subscribeAlerts" "$ROOT/mobile_app/src/app/(tabs)/events.tsx" 2>/dev/null
 rg -q "subscribeRoster" "$ROOT/mobile_app/src/app/(tabs)/analytics.tsx" 2>/dev/null && ok "analytics.tsx uses subscribeRoster" || fail "analytics.tsx roster not wired"
 
 # 6 — Production URL reachability
-code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://mobileapp-lyart.vercel.app/ || echo "000")
+code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 https://pig-health-monitor.vercel.app/ || echo "000")
 test "$code" = "200" && ok "Vercel app HTTP $code" || warn "Vercel app HTTP $code"
 
 # 7 — Tab routes (no stale paths in test scripts)
