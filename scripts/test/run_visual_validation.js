@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ARTIFACTS_DIR = '/home/solrahk/.gemini/antigravity/brain/371372f5-1e4f-444f-ab18-c15eae6bddc0';
-const BASE_URL = 'https://pig-health-monitor.vercel.app';
+const BASE_URL = 'https://mobileapp-lyart.vercel.app';
 
 (async () => {
   const browser = await puppeteer.launch({ 
@@ -18,7 +18,7 @@ const BASE_URL = 'https://pig-health-monitor.vercel.app';
     // 1. Log In
     await page.setViewport({ width: 1280, height: 800 });
     console.log("🔑 Navigating to Login...");
-    await page.goto(`${BASE_URL}/(auth)/login`, { waitUntil: 'networkidle2' });
+    await page.goto(`${BASE_URL}/login`, { waitUntil: 'networkidle2' });
     
     await page.waitForSelector('input', { timeout: 10000 });
 
@@ -53,11 +53,11 @@ const BASE_URL = 'https://pig-health-monitor.vercel.app';
     await new Promise(r => setTimeout(r, 4000));
     await page.screenshot({ path: path.join(ARTIFACTS_DIR, 'desktop_dashboard.png'), fullPage: true });
 
-    // === TEST 2: DESKTOP SENSORS ===
-    console.log("🌡️ Capturing Desktop Sensors...");
-    await page.goto(`${BASE_URL}/sensors`, { waitUntil: 'networkidle2' });
+    // === TEST 2: DESKTOP EVENTS ===
+    console.log("🔔 Capturing Desktop Events...");
+    await page.goto(`${BASE_URL}/events`, { waitUntil: 'networkidle2' });
     await new Promise(r => setTimeout(r, 4000));
-    await page.screenshot({ path: path.join(ARTIFACTS_DIR, 'desktop_sensors.png'), fullPage: true });
+    await page.screenshot({ path: path.join(ARTIFACTS_DIR, 'desktop_events.png'), fullPage: true });
 
     // === TEST 3: MOBILE DASHBOARD ===
     console.log("📱 Capturing Mobile Dashboard...");

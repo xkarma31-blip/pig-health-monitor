@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 
 const OUTDIR = '/home/solrahk/.gemini/antigravity/brain/3fb71982-c17f-448f-b330-828f77169f7b/artifacts/demo_screenshots';
-const URL = 'https://pig-health-monitor.vercel.app';
+const URL = 'https://mobileapp-lyart.vercel.app';
 
 (async () => {
   if (!fs.existsSync(OUTDIR)) fs.mkdirSync(OUTDIR, { recursive: true });
@@ -35,7 +35,7 @@ const URL = 'https://pig-health-monitor.vercel.app';
 
   // === STEP 2: Navigate to Login ===
   console.log("\n=== STEP 2: Login Page ===");
-  await page.goto(URL + '/auth', { waitUntil: 'networkidle2', timeout: 15000 });
+  await page.goto(URL + '/login', { waitUntil: 'networkidle2', timeout: 15000 });
   await snap('02_login_page', 2000);
 
   // === STEP 3: Enter Credentials ===
@@ -76,24 +76,24 @@ const URL = 'https://pig-health-monitor.vercel.app';
   await page.goto(URL, { waitUntil: 'networkidle2', timeout: 15000 });
   await snap('05_live_dashboard', 5000);
 
-  // === STEP 5: Sensors Tab ===
-  console.log("\n=== STEP 5: Sensors Tab ===");
-  await page.goto(URL + '/sensors', { waitUntil: 'networkidle2', timeout: 15000 });
-  await snap('06_sensors_tab', 3000);
+  // === STEP 5: Events Tab (alerts) ===
+  console.log("\n=== STEP 5: Events Tab ===");
+  await page.goto(URL + '/events', { waitUntil: 'networkidle2', timeout: 15000 });
+  await snap('06_events_tab', 3000);
 
-  // === STEP 6: Alerts Tab ===
-  console.log("\n=== STEP 6: Alerts Tab ===");
-  await page.goto(URL + '/alerts', { waitUntil: 'networkidle2', timeout: 15000 });
-  await snap('07_alerts_tab', 3000);
+  // === STEP 6: Analytics Tab (metrics + roster) ===
+  console.log("\n=== STEP 6: Analytics Tab ===");
+  await page.goto(URL + '/analytics', { waitUntil: 'networkidle2', timeout: 15000 });
+  await snap('07_analytics_tab', 3000);
 
-  // === STEP 7: Roster Tab ===
-  console.log("\n=== STEP 7: Roster Tab ===");
-  await page.goto(URL + '/roster', { waitUntil: 'networkidle2', timeout: 15000 });
-  await snap('08_roster_tab', 3000);
+  // === STEP 7: Nodes Tab ===
+  console.log("\n=== STEP 7: Nodes Tab ===");
+  await page.goto(URL + '/nodes', { waitUntil: 'networkidle2', timeout: 15000 });
+  await snap('08_nodes_tab', 3000);
 
   // === STEP 8: Sign Out ===
   console.log("\n=== STEP 8: Sign Out ===");
-  await page.goto(URL + '/auth', { waitUntil: 'networkidle2', timeout: 15000 });
+  await page.goto(URL + '/login', { waitUntil: 'networkidle2', timeout: 15000 });
   await snap('09_session_before_logout', 2000);
   
   try {

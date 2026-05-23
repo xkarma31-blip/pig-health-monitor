@@ -21,12 +21,18 @@ export default async function handler(req, res) {
     const { messages, context } = req.body;
     
     // Check for API keys
-    const GROQ_API_KEY = process.env.GROQ_API_KEY;
+    const GROQ_API_KEY =
+      process.env.GROQ_API_KEY_PIGPULSE ||
+      process.env.GROQ_API_KEY;
     const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+    const GEMINI_API_KEY =
+      process.env.GEMINI_API_KEY ||
+      process.env.GEMINI_API_KEY_1;
+    const SILICONFLOW_API_KEY = process.env.SILICONFLOW_API_KEY;
 
-    if (!GROQ_API_KEY && !OPENROUTER_API_KEY) {
+    if (!GROQ_API_KEY && !OPENROUTER_API_KEY && !GEMINI_API_KEY && !SILICONFLOW_API_KEY) {
       return res.status(200).json({ 
-        reply: "System Notice: I am operating in Mock Mode because the Master has not yet injected the GROQ_API_KEY or OPENROUTER_API_KEY into the Vercel environment. My logic circuits are standing by for live integration."
+        reply: "System Notice: I am operating in Mock Mode because the Master has not yet injected GROQ_API_KEY_PIGPULSE, GROQ_API_KEY, GEMINI_API_KEY, or OPENROUTER_API_KEY into the Vercel environment. My logic circuits are standing by for live integration."
       });
     }
 
@@ -42,11 +48,19 @@ export default async function handler(req, res) {
     if (GROQ_API_KEY) {
       apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
       apiKey = GROQ_API_KEY;
-      model = 'llama3-70b-8192'; // Using LLaMA-3 70B on Groq
+      model = 'llama-3.3-70b-versatile';
+    } else if (GEMINI_API_KEY) {
+      apiUrl = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+      apiKey = GEMINI_API_KEY;
+      model = 'gemini-2.5-flash';
+    } else if (SILICONFLOW_API_KEY) {
+      apiUrl = 'https://api.siliconflow.com/v1/chat/completions';
+      apiKey = SILICONFLOW_API_KEY;
+      model = 'deepseek-ai/DeepSeek-V4-Flash';
     } else {
       apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
       apiKey = OPENROUTER_API_KEY;
-      model = 'meta-llama/llama-3-70b-instruct'; // Equivalent on OpenRouter
+      model = 'meta-llama/llama-3.3-70b-instruct:free';
     }
 
     const response = await fetch(apiUrl, {

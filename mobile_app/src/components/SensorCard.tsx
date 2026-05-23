@@ -15,37 +15,30 @@
  *   - The card color automatically matches the sensor status
  */
 
-import { View, Text, StyleSheet, useWindowDimensions } from 'react-native';
-import { Theme, getResponsiveTheme, getStatusColor } from '../constants/Theme';
+import { View, Text, StyleSheet } from 'react-native';
+import { Theme, getStatusColor } from '../constants/Theme';
 import { StatusBadge } from './StatusBadge';
 import type { SensorReading } from '../data/mockSensors';
 
 type Props = {
   sensor: SensorReading;
-  compact?: boolean;  
+  compact?: boolean;  // If true, shows a smaller card (for dashboard grid)
 };
 
 export function SensorCard({ sensor, compact = false }: Props) {
-  const { width } = useWindowDimensions();
-  const isDesktop = width >= 768;
-  const T = getResponsiveTheme(isDesktop);
   const accentColor = getStatusColor(sensor.status);
 
   return (
-    <View style={[styles.card, { borderLeftColor: accentColor }, isDesktop && styles.cardDesktop]}>
+    <View style={[styles.card, { borderLeftColor: accentColor }]}>
       {/* Header Row: Icon + Label + Badge */}
       <View style={styles.headerRow}>
         <Text style={styles.icon}>{sensor.icon}</Text>
-        <Text style={[styles.label, { fontSize: T.typography.h3 }]} numberOfLines={1}>{sensor.label}</Text>
+        <Text style={styles.label} numberOfLines={1}>{sensor.label}</Text>
         <StatusBadge status={sensor.status} />
       </View>
 
       {/* Value Display */}
-      <Text 
-        style={[styles.value, { color: accentColor, fontSize: T.typography.huge }]}
-        numberOfLines={1}
-        adjustsFontSizeToFit
-      >
+      <Text style={[styles.value, { color: accentColor }]}>
         {sensor.value}{sensor.unit}
       </Text>
 
@@ -80,10 +73,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 6,
     elevation: 8,
-  },
-  cardDesktop: {
-    padding: 12,
-    marginBottom: 8,
   },
   headerRow: {
     flexDirection: 'row',

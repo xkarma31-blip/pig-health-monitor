@@ -12,11 +12,10 @@ import { Theme } from '../../constants/Theme';
  */
 
 const NAV_ITEMS = [
-  { label: 'Monitor', path: '/dashboard', emoji: '📡' },
-  { label: 'Alerts', path: '/alerts', emoji: '🔔' },
-  { label: 'Roster', path: '/roster', emoji: '🐷' },
-  { label: 'Sensors', path: '/sensors', emoji: '🌡️' },
-  { label: 'Advisor', path: '/advisor', emoji: '🤖' },
+  { label: 'Home', path: '/', emoji: '🏠' },
+  { label: 'Events', path: '/events', emoji: '🔔' },
+  { label: 'Analytics', path: '/analytics', emoji: '📈' },
+  { label: 'Nodes', path: '/nodes', emoji: '📡' },
 ];
 
 export function Sidebar() {
@@ -53,7 +52,7 @@ export function Sidebar() {
       <View style={styles.navLinks}>
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.path || 
-            (item.path === '/dashboard' && (pathname === '/(tabs)' || pathname === '/(tabs)/dashboard'));
+            (item.path === '/' && (pathname === '/(tabs)' || pathname === '/(tabs)/index' || pathname === '/'));
           
           return (
             <Pressable

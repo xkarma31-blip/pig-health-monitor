@@ -2,7 +2,7 @@
  * 📊 Mock Sensor Data
  * 
  * This file contains FAKE data used for development/testing.
- * Later, we will replace this with real-time Firebase RTDB subscriptions.
+ * Later, we will replace this with real API calls to PocketBase/Pockethost.io.
  * 
  * HOW TO ADD A NEW SENSOR:
  *   1. Add a new object to the `mockSensors` array below
@@ -81,28 +81,19 @@ export const mockSensors: SensorReading[] = [
     status: 'normal',
     lastUpdated: '2026-04-07 09:10',
     minRange: 0,
-    maxRange: 100,
-  },
-];
-
-export const mockRoster = [
-  {
-    id: 'pig-01',
-    name: 'Bacon-A1',
-    isTemporary: false,
-    tags: ['FEVER'],
-    healthStatus: 'WARNING',
-    lastSeen: new Date().toISOString(),
-    enrolledAt: '2026-04-01T10:00:00Z',
+    maxRange: 60,
   },
   {
-    id: 'pig-02',
-    name: 'TEMP-8821',
-    isTemporary: true,
-    tags: ['UNIDENTIFIED', 'COUGH'],
-    healthStatus: 'CRITICAL',
-    lastSeen: new Date(Date.now() - 600000).toISOString(), // 10 mins ago
-    enrolledAt: new Date().toISOString(),
+    id: 'acoustic-02',
+    type: 'acoustic',
+    label: 'Squeal Detection',
+    icon: '🔊',
+    value: 12,
+    unit: 'dB above',
+    status: 'normal',
+    lastUpdated: '2026-04-07 09:10',
+    minRange: 0,
+    maxRange: 60,
   },
 ];
 

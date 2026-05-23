@@ -1,4 +1,7 @@
 {
   "buildCommand": "cd mobile_app && npm install && npm run build",
-  "outputDirectory": "mobile_app/dist"
+  "outputDirectory": "mobile_app/dist",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

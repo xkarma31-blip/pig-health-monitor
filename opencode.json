@@ -1,0 +1,8 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    "/home/solrahk/.hermes/SOUL.md",
+    "/home/solrahk/.gemini/antigravity/scratch/shikigami_memory/skills/opencode_top5_workflow/SKILL.md",
+    "Project: Pig Health Monitor capstone at this repository root."
+  ]
+}

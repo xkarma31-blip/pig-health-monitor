@@ -14,7 +14,12 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSAppTransportSecurity": {
+          "NSAllowsArbitraryLoads": true
+        }
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -23,7 +28,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.solrahk.pighealthmonitor"
+      "usesCleartextTraffic": true,
+      "package": "com.anonymous.pighealthmonitor"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -36,6 +42,7 @@
       "eas": {
         "projectId": "95debbb9-d07a-467e-9d79-eb5decab2967"
       }
-    }
+    },
+    "owner": "solrahk"
   }
 }
