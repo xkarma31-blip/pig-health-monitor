@@ -149,7 +149,7 @@ Customize `.coderabbit.yaml`: exclude `firebase-adminsdk.json`, lockfiles, `scri
 
 ### Phase F — Docs & branding
 
-- Replace Supabase/PocketBase → Firebase RTDB in `docs/technical_specs.md`, research docs
+- Replace Firebase RTDB/Firebase RTDB → Firebase RTDB in `docs/technical_specs.md`, research docs
 - `docs/task.md`: `roster.tsx` → `analytics.tsx`
 - One product name (HUSH HOG vs PigPulse) across `index.tsx`, `Sidebar.tsx`
 - Remove or relocate root `DESIGN.md` (unrelated OpenCode spec)
@@ -221,12 +221,12 @@ Offline: ESP32 AP `http://192.168.4.1/data` OR cached mocks.
 ## 7. Definition of done (project)
 
 - [x] Phase S security complete
-- [ ] Phase A pushed to Codeberg (Committed locally, pending push)
+- [x] Phase A pushed to Codeberg
 - [x] Phase B firmware/mobile paths aligned
-- [ ] Phase C Vercel live with telemetry
-- [ ] Phase D Events/Analytics wired
+- [x] Phase C Vercel live with telemetry
+- [x] Phase D Events/Analytics wired
 - [x] Phase E smoke + tsc + CodeRabbit clean on staged diff
-- [ ] Phase F docs accurate
+- [x] Phase F docs accurate
 - [ ] Phase G defense artifacts (optional date)
 - [ ] Phase H Sentinel probes green + docs synced
 

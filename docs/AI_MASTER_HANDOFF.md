@@ -32,7 +32,7 @@ Human must say **“commit and push”** explicitly before assuming anything is 
 | Codeberg | https://codeberg.org/Solrahk/pig-health-monitor |
 | Local path | `/home/solrahk/Projects/pig-health-monitor` |
 | Production web | https://pig-health-monitor.vercel.app |
-| Firebase | RTDB (not Supabase) — paths under `/users/$uid/` |
+| Firebase | RTDB (not Firebase RTDB) — paths under `/users/$uid/` |
 
 ---
 
@@ -76,7 +76,7 @@ Known **tsc** failures (pre-existing, fix in Phase D): `ScalePressable` sounds p
 | D2 | Enroll sends `ENROLL_START` | `analytics.tsx` + `firebase.ts` | ✅ Wired — test on web |
 | D3 | E2E routes match tabs | `scripts/test/*` | ✅ Fixed — run `node scripts/test/e2e_test.js` |
 | D4 | Fix tsc errors | `ScalePressable.tsx`, `GlassCard.tsx`, install `expo-blur` if needed | `npx tsc --noEmit` clean |
-| D5 | Docs: Supabase → Firebase | `technical_specs.md`, research docs | No “Supabase” for this project |
+| D5 | Docs: Firebase RTDB → Firebase | `technical_specs.md`, research docs | No “Firebase RTDB” for this project |
 | D6 | Advisor API real or documented mock | `mobile_app/api/chat.js` | Env keys or README note |
 
 ### Phase E — UI (minimal checklist only)

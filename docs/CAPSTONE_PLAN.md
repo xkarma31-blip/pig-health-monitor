@@ -12,7 +12,7 @@
 |-------|--------|-------|
 | Firmware / Siamese sim | ✅ Done | Phase 1 complete per `docs/task.md` |
 | Web deploy (Vercel) | ✅ Live | `npx expo export -p web` |
-| Firebase RTDB + rules | ✅ | Not Supabase (docs drift — fix below) |
+| Firebase RTDB + rules | ✅ | Not Firebase RTDB (docs drift — fix below) |
 | Mobile live telemetry | ✅ | `useOfflineTelemetry` → Firebase when online + authed |
 | Events / Analytics | ✅ | `subscribeAlerts` / `subscribeRoster` live |
 | E2E / demo scripts | ✅ | Routes: `/`, `/events`, `/analytics`, `/nodes`, `/login` |
@@ -79,7 +79,7 @@ chmod +x scripts/test/capstone_smoke.sh
 
 ### P1 — Data & docs
 
-- [ ] Align docs: replace Supabase references in `technical_specs.md`, `PIG_HEALTH_MONITOR_COMPLETE_RESEARCH.md` with Firebase RTDB paths (`/users/$uid/...`).
+- [ ] Align docs: replace Firebase RTDB references in `technical_specs.md`, `PIG_HEALTH_MONITOR_COMPLETE_RESEARCH.md` with Firebase RTDB paths (`/users/$uid/...`).
 - [ ] Update `docs/task.md` roster tab line → `analytics.tsx`.
 - [ ] Refresh `~/.cursor/brain.md` / `current_projects.md` capstone dates.
 
