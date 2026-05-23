@@ -1,147 +1,193 @@
 /**
- * 📱 Tab Navigator Layout
+ * 📱 Tab Navigator Layout — Sovereign Aqua Protocol
  * 
- * This creates the bottom tab bar with 3 screens.
- * Expo Router uses FILE-BASED routing — each file in (tabs)/ = one tab.
- * 
- * TO ADD A NEW TAB:
- *   1. Create a new file in app/(tabs)/ (e.g., settings.tsx)
- *   2. Add a new <Tabs.Screen> entry below
- *   3. That's it! The tab appears automatically.
+ * 4-tab bottom navigation with sound feedback on tab switch.
+ * Expo Router file-based routing: each file in (tabs)/ = one tab.
  */
 
-import { Tabs, useRouter, usePathname } from 'expo-router';
-import { useWindowDimensions, View, TouchableOpacity, Text } from 'react-native';
-import { getAuth, signOut } from 'firebase/auth';
+import { Tabs, router } from 'expo-router';
 import { Theme } from '../../constants/Theme';
-import { ResponsiveLayout } from '../../components/Layout/ResponsiveLayout';
+import { View, Text, TouchableOpacity, Alert, Platform } from 'react-native';
+import { useAuth, setAuthUser } from '../../utils/auth';
+import { playSound } from '../../utils/sounds';
 
 export default function TabLayout() {
-  const { width } = useWindowDimensions();
-  const isDesktop = width >= 768;
-  const router = useRouter();
-  const pathname = usePathname();
+  const user = useAuth();
+
+  const handleAuthAction = () => {
+    if (user) {
+      const performLogout = () => {
+        playSound('warning');
+        setAuthUser(null);
+        if (Platform.OS === 'web') {
+          alert('Disconnected. You are now browsing as a Guest.');
+        } else {
+          Alert.alert('Disconnected', 'You are now browsing as a Guest.');
+        }
+      };
+
+      if (Platform.OS === 'web') {
+        if (window.confirm('Log Out\n\nAre you sure you want to disconnect from the Cloud?')) {
+          performLogout();
+        }
+      } else {
+        Alert.alert('Log Out', 'Are you sure you want to disconnect from the Cloud?', [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Log Out', style: 'destructive', onPress: performLogout }
+        ]);
+      }
+    } else {
+      playSound('navigate');
+      router.push('/login');
+    }
+  };
 
   return (
-    <View style={{ flex: 1 }}>
-      <Tabs
-        screenOptions={{
-          // Tab bar styling
-          tabBarStyle: {
-            backgroundColor: Theme.colors.tabBar,
-            borderTopColor: Theme.colors.cardBorder,
-            height: 64,
-            paddingBottom: 8,
-            paddingTop: 8,
-            display: isDesktop ? 'none' : 'flex',
-          },
-          tabBarActiveTintColor: Theme.colors.tabActive,
-          tabBarInactiveTintColor: Theme.colors.tabInactive,
-          tabBarLabelStyle: {
-            fontSize: 12,
-            fontWeight: '600',
-          },
-          // Screen header styling
-          headerShown: !isDesktop,
-          headerStyle: {
-            backgroundColor: Theme.colors.background,
-          },
-          headerTintColor: Theme.colors.text,
-          headerTitleStyle: {
-            fontWeight: 'bold',
-            fontSize: Theme.typography.h2,
-          },
-          sceneStyle: {
-            backgroundColor: Theme.colors.background,
-          },
-          headerRight: () => (
-            <View style={{ marginRight: 20 }}>
-              <TouchableOpacity onPress={() => router.push('/more')} style={{ padding: 8 }}>
-                <Text style={{ fontSize: 28, color: Theme.colors.text }}>≡</Text>
-              </TouchableOpacity>
-            </View>
+    <Tabs
+      screenListeners={{
+        tabPress: () => playSound('tap'),
+      }}
+      screenOptions={{
+        tabBarShowLabel: false,
+        tabBarStyle: {
+          backgroundColor: Theme.colors.tabBar,
+          borderTopColor: Theme.colors.cardBorder,
+          borderTopWidth: 1.5,
+          height: Platform.OS === 'ios' ? 88 : 74,
+          paddingBottom: Platform.OS === 'ios' ? 24 : 12,
+          paddingTop: 12,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -4 },
+          shadowOpacity: 0.3,
+          shadowRadius: 8,
+          elevation: 10,
+        },
+        tabBarActiveTintColor: Theme.colors.tabActive,
+        tabBarInactiveTintColor: Theme.colors.tabInactive,
+        headerStyle: {
+          backgroundColor: Theme.colors.background,
+          borderBottomWidth: 1,
+          borderBottomColor: Theme.colors.cardBorder,
+        },
+        headerTintColor: Theme.colors.text,
+        headerTitleStyle: {
+          fontWeight: 'bold',
+          fontSize: Theme.typography.h2,
+          letterSpacing: 1,
+        },
+        sceneStyle: {
+          backgroundColor: Theme.colors.background,
+        },
+        headerRight: () => (
+          <TouchableOpacity 
+            style={{ 
+              marginRight: 16, 
+              padding: 8, 
+              paddingHorizontal: 14,
+              backgroundColor: user ? Theme.colors.danger + '22' : Theme.colors.primary + '22', 
+              borderRadius: Theme.borderRadius.sm, 
+              borderWidth: 1.5, 
+              borderColor: user ? Theme.colors.danger : Theme.colors.primary 
+            }}
+            onPress={handleAuthAction}
+          >
+            <Text style={{ 
+              color: user ? Theme.colors.danger : Theme.colors.primary, 
+              fontWeight: '900', 
+              fontSize: 11,
+              letterSpacing: 1.5,
+            }}>
+              {user ? '⏻ LOGOUT' : '⏻ LOGIN'}
+            </Text>
+          </TouchableOpacity>
+        ),
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: 'Home',
+          tabBarIcon: ({ focused }) => (
+            <TabIcon emoji="📊" label="Home" focused={focused} />
           ),
         }}
-      >
-        <Tabs.Screen
-          name="dashboard"
-          options={{
-            title: 'Monitor',
-            tabBarIcon: ({ color }) => (
-              <TabIcon emoji="📡" color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="roster"
-          options={{
-            title: 'Roster',
-            tabBarIcon: ({ color }) => (
-              <TabIcon emoji="🐷" color={color} />
-            ),
-          }}
-        />
-        <Tabs.Screen
-          name="advisor"
-          options={{
-            href: null,
-            headerShown: false,
-          }}
-        />
-        <Tabs.Screen
-          name="alerts"
-          options={{
-            href: null,
-          }}
-        />
-        <Tabs.Screen
-          name="sensors"
-          options={{
-            href: null,
-          }}
-        />
-        <Tabs.Screen
-          name="auth"
-          options={{
-            href: null,
-          }}
-        />
-      </Tabs>
-
-      {/* 🤖 Global Floating Advisor Icon (Hidden when already in Advisor) */}
-      {pathname !== '/advisor' && (
-        <TouchableOpacity 
-          onPress={() => router.push('/advisor')}
-          style={{
-            position: 'absolute',
-            bottom: isDesktop ? 40 : 80,
-            right: isDesktop ? 40 : 20,
-            backgroundColor: Theme.colors.accent,
-            width: 56,
-            height: 56,
-            borderRadius: 28,
-            justifyContent: 'center',
-            alignItems: 'center',
-            elevation: 5,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.3,
-            shadowRadius: 4,
-            zIndex: 9999,
-          }}
-        >
-          <Text style={{ fontSize: 30 }}>🤖</Text>
-        </TouchableOpacity>
-      )}
-    </View>
+      />
+      <Tabs.Screen
+        name="events"
+        options={{
+          title: 'Events',
+          tabBarIcon: ({ focused }) => (
+            <TabIcon emoji="🔔" label="Events" focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="analytics"
+        options={{
+          title: 'Analytics',
+          tabBarIcon: ({ focused }) => (
+            <TabIcon emoji="📈" label="Metrics" focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="nodes"
+        options={{
+          title: 'Nodes',
+          tabBarIcon: ({ focused }) => (
+            <TabIcon emoji="📡" label="Nodes" focused={focused} />
+          ),
+        }}
+      />
+    </Tabs>
   );
 }
 
-/**
- * Simple emoji-based tab icon.
- * We use this instead of installing @expo/vector-icons to keep deps minimal.
- */
+interface TabIconProps {
+  emoji: string;
+  label: string;
+  focused: boolean;
+}
 
-function TabIcon({ emoji, color }: { emoji: string; color: string }) {
-  return <Text style={{ fontSize: 22, opacity: color === Theme.colors.tabActive ? 1 : 0.5 }}>{emoji}</Text>;
+function TabIcon({ emoji, label, focused }: TabIconProps) {
+  if (focused) {
+    return (
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: Theme.colors.primary + '18', // ~10% opacity cyan
+        borderWidth: 1.5,
+        borderColor: Theme.colors.primary,
+        borderRadius: 20,
+        paddingHorizontal: 14,
+        paddingVertical: 6,
+        shadowColor: Theme.colors.primary,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.4,
+        shadowRadius: 5,
+        elevation: 4,
+      }}>
+        <Text style={{ fontSize: 20 }}>{emoji}</Text>
+        <Text style={{
+          color: Theme.colors.primary,
+          fontWeight: '900',
+          fontSize: 11,
+          marginLeft: 6,
+          letterSpacing: 1,
+          textTransform: 'uppercase',
+        }}>{label}</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={{
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: 44,
+      height: 44,
+    }}>
+      <Text style={{ fontSize: 22, opacity: 0.55 }}>{emoji}</Text>
+    </View>
+  );
 }

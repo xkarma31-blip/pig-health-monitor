@@ -1,0 +1,99 @@
+# Machine-readable provider registry — NO SECRETS (env var names only)
+# Values: ~/.config/environment.d/sentinel.conf
+# Apply routing: sentinel_models.yaml + sync-models-config.py
+
+schema_version: 1
+
+roles:
+  hermes_main:
+    env_primary: GROQ_API_KEY
+    env_fallbacks: [OPENROUTER_API_KEY]
+    min_context_tokens: 64000
+    profile: groq
+
+  hermes_compression:
+    env_primary: GROQ_API_KEY
+    model: llama-3.1-8b-instant
+
+  pigpulse_advisor:
+    env_primary: GROQ_API_KEY_PIGPULSE
+    env_fallbacks: [GEMINI_API_KEY_1, GEMINI_API_KEY_2, GEMINI_API_KEY_3, OPENROUTER_API_KEY]
+    note: "Use separate Groq key or Gemini project for Vercel api/chat.js"
+
+  experiments:
+    env_primary: HF_TOKEN
+    env_fallbacks: [LLM7_API_KEY, SILICONFLOW_API_KEY, CEREBRAS_API_KEY]
+
+providers:
+  groq:
+    console: https://console.groq.com/keys
+    base_url: https://api.groq.com/openai/v1
+    env: GROQ_API_KEY
+    free_tier: true
+
+  groq_pigpulse:
+    console: https://console.groq.com/keys
+    base_url: https://api.groq.com/openai/v1
+    env: GROQ_API_KEY_PIGPULSE
+    free_tier: true
+
+  openrouter:
+    console: https://openrouter.ai/settings/keys
+    base_url: https://openrouter.ai/api/v1
+    env: OPENROUTER_API_KEY
+    free_suffix: ":free"
+
+  gemini:
+    console: https://aistudio.google.com/apikey
+    env_keys: [GEMINI_API_KEY_1, GEMINI_API_KEY_2, GEMINI_API_KEY_3]
+    quota_note: same_gcp_project_shares_quota
+
+  huggingface:
+    console: https://huggingface.co/settings/tokens
+    env: HF_TOKEN
+    provider_mode: auto
+    free_credits_usd_month: 0.10
+
+  cerebras:
+    console: https://cloud.cerebras.ai/
+    base_url: https://api.cerebras.ai/v1
+    env: CEREBRAS_API_KEY
+
+  cloudflare_workers_ai:
+    console: https://dash.cloudflare.com/ → Workers AI
+    env: [CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID]
+
+  nvidia_nim:
+    console: https://build.nvidia.com/settings/api-keys
+    env: NVIDIA_API_KEY
+
+  siliconflow:
+    console: https://cloud.siliconflow.com/
+    base_url: https://api.siliconflow.cn/v1
+    env: SILICONFLOW_API_KEY
+
+  llm7:
+    console: https://llm7.io/
+    base_url: https://api.llm7.io/v1
+    env: LLM7_API_KEY
+
+  kilo:
+    console: https://app.kilo.ai
+    env: KILO_API_KEY
+
+  github_models:
+    console: https://github.com/settings/models
+    base_url: https://models.inference.ai.azure.com
+    env: GITHUB_TOKEN
+
+  ollama:
+    base_url: http://127.0.0.1:11434/v1
+    env: OLLAMA_HOST
+    free_tier: true
+
+failover_chain_default:
+  - groq:llama-3.3-70b-versatile
+  - groq:llama-3.1-8b-instant
+  - ollama:phi4-mini:latest
+  - openrouter:meta-llama/llama-3.3-70b-instruct:free
+  - openrouter:deepseek/deepseek-v4-flash:free

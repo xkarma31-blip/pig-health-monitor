@@ -6,6 +6,13 @@
 
 # === Environment Files ===
 .env*.local
+.env
+
+# === Secrets (never commit) ===
+firebase_config/firebase-adminsdk.json
+**/firebase-adminsdk*.json
+**/serviceAccount*.json
+sentinel.conf
 
 # === Training Datasets (Large Binary Files) ===
 datasets/
@@ -21,3 +28,7 @@ scripts/venv/
 docs/*.mp4
 docs/*.webm
 docs/*.webp
+
+# === Editor Specific ===
+.cursor/
+.cursorignore

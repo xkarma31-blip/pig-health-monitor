@@ -4,17 +4,13 @@
 
 set -e
 
-cd /home/solrahk/.gemini/antigravity/scratch/shikigami_memory/capstone_pig_health_monitor
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT/mobile_app"
 
-echo "🐷 Initiating Sovereign Aqua Protocol Deployment..."
-echo "Linking to predefined 'mobile_app' project..."
-
-# Ensure we are linking exactly to the correct capstone project
-npx -y vercel link --project pig-health-monitor --yes > /dev/null 2>&1 || true
-
-echo "Pushing code to Vercel Production..."
-# Run the Vercel production deployment
+echo "Deploying PigPulse Expo web (mobile_app)..."
+npx -y vercel link --project pig-health-monitor --yes >/dev/null 2>&1 || true
 npx -y vercel --prod --yes
 
-echo "✅ Deployment Triggered Successfully."
-echo "Your changes will be live at: https://pig-health-monitor.vercel.app"
+echo "App (canonical): https://mobileapp-lyart.vercel.app"
+echo "App (legacy alias): https://pig-health-monitor.vercel.app"
+echo "Research landing: run ./scripts/deploy-landing.sh → https://pig-health-research-portfolio.vercel.app"

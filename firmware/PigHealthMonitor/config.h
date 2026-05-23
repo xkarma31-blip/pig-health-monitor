@@ -9,10 +9,9 @@
 #define WIFI_SSID "YOUR_SSID"
 #define WIFI_PASS "YOUR_PASSWORD"
 
-// 🌩️ PocketBase Backend
-// Ensure the URL matches your server EXACTLY. Do not add a trailing slash.
-#define PB_URL "https://sol-pig-monitor.pockethost.io"
-#define PB_COLLECTION "sensors" // The name of the collection we created
+// 🌩️ Firebase Realtime Database Backend
+// Ensure the URL matches your Firebase Database URL. Do not add a trailing slash.
+#define FIREBASE_URL "https://studio-1248778633-99f62-default-rtdb.firebaseio.com"
 
 // 🔌 ESP32-S3 Pin Definitions
 // Modify these if your physical wiring changes

@@ -2,7 +2,7 @@ const puppeteer = require('puppeteer');
 const path = require('path');
 
 const DIR = '/home/solrahk/.gemini/antigravity/brain/371372f5-1e4f-444f-ab18-c15eae6bddc0';
-const BASE = 'https://pig-health-monitor.vercel.app';
+const BASE = 'https://mobileapp-lyart.vercel.app';
 
 (async () => {
   const browser = await puppeteer.launch({ 
@@ -21,23 +21,23 @@ const BASE = 'https://pig-health-monitor.vercel.app';
   await page.screenshot({ path: path.join(DIR, 'mobile_landing.png'), fullPage: true });
   console.log("  ✓ Landing");
 
-  // Dashboard
-  await page.goto(`${BASE}/dashboard`, { waitUntil: 'networkidle2' });
+  // Events (alerts)
+  await page.goto(`${BASE}/events`, { waitUntil: 'networkidle2' });
   await new Promise(r => setTimeout(r, 3000));
-  await page.screenshot({ path: path.join(DIR, 'mobile_dashboard.png'), fullPage: true });
-  console.log("  ✓ Dashboard");
+  await page.screenshot({ path: path.join(DIR, 'mobile_events.png'), fullPage: true });
+  console.log("  ✓ Events");
 
-  // Sensors
-  await page.goto(`${BASE}/sensors`, { waitUntil: 'networkidle2' });
+  // Analytics (roster / metrics)
+  await page.goto(`${BASE}/analytics`, { waitUntil: 'networkidle2' });
   await new Promise(r => setTimeout(r, 3000));
-  await page.screenshot({ path: path.join(DIR, 'mobile_sensors.png'), fullPage: true });
-  console.log("  ✓ Sensors");
+  await page.screenshot({ path: path.join(DIR, 'mobile_analytics.png'), fullPage: true });
+  console.log("  ✓ Analytics");
 
-  // Alerts
-  await page.goto(`${BASE}/alerts`, { waitUntil: 'networkidle2' });
+  // Nodes
+  await page.goto(`${BASE}/nodes`, { waitUntil: 'networkidle2' });
   await new Promise(r => setTimeout(r, 3000));
-  await page.screenshot({ path: path.join(DIR, 'mobile_alerts.png'), fullPage: true });
-  console.log("  ✓ Alerts");
+  await page.screenshot({ path: path.join(DIR, 'mobile_nodes.png'), fullPage: true });
+  console.log("  ✓ Nodes");
 
   // === DESKTOP LANDSCAPE (1440x900) ===
   console.log("\n🖥️ Capturing Desktop Landscape...");
@@ -49,17 +49,17 @@ const BASE = 'https://pig-health-monitor.vercel.app';
   await page.screenshot({ path: path.join(DIR, 'desktop_landing.png'), fullPage: true });
   console.log("  ✓ Landing");
 
-  // Dashboard  
-  await page.goto(`${BASE}/dashboard`, { waitUntil: 'networkidle2' });
+  // Analytics
+  await page.goto(`${BASE}/analytics`, { waitUntil: 'networkidle2' });
   await new Promise(r => setTimeout(r, 3000));
-  await page.screenshot({ path: path.join(DIR, 'desktop_dashboard.png'), fullPage: true });
-  console.log("  ✓ Dashboard");
+  await page.screenshot({ path: path.join(DIR, 'desktop_analytics.png'), fullPage: true });
+  console.log("  ✓ Analytics");
 
-  // Sensors
-  await page.goto(`${BASE}/sensors`, { waitUntil: 'networkidle2' });
+  // Events
+  await page.goto(`${BASE}/events`, { waitUntil: 'networkidle2' });
   await new Promise(r => setTimeout(r, 3000));
-  await page.screenshot({ path: path.join(DIR, 'desktop_sensors.png'), fullPage: true });
-  console.log("  ✓ Sensors");
+  await page.screenshot({ path: path.join(DIR, 'desktop_events.png'), fullPage: true });
+  console.log("  ✓ Events");
 
   console.log("\n✅ All captures complete!");
   await browser.close();

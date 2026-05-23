@@ -3,7 +3,7 @@
 ## Phase 1: Dynamic Identification (Siamese Logic)
 - [x] **Simulation**: Successfully ran a Python-based Siamese simulation proving that 32x24 thermal embeddings can distinguish pigs with >99% confidence.
 - [x] **Firmware Embedding**: `ThermalIdentification.h` stores enrollment vectors in SPIFFS memory (saveEnrollment/identifyPig with Cosine Similarity). Firmware compiles (22.9% RAM, 33.3% Flash).
-- [x] **Dashboard Enrollment**: "Enroll Pig" UI added to `roster.tsx` tab with Quick Enroll button and Firebase command dispatch.
+- [x] **Dashboard Enrollment**: "Enroll Pig" UI on `analytics.tsx` tab with Firebase `enrollPig()` + `ENROLL_START` command.
 
 ## Phase 2: Web Deployment & Vercel
 - [x] **Build Optimization**: `npx expo export -p web` — Successful. Output: `dist/` (1.49 MB JS bundle, `index.html`, `favicon.ico`).

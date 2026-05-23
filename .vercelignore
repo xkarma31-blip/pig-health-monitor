@@ -3,3 +3,9 @@ node_modules
 firmware/.pio
 mobile_app/node_modules
 mobile_app/.expo
+mobile_app/android
+mobile_app/dist
+.venv
+.git
+training_data
+firebase-debug.log

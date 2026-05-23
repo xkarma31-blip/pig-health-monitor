@@ -3,8 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pig Health Monitor | Sovereign Aqua</title>
-    
+    <title>HUSH HOG | Sovereign Aqua Protocol</title>
+    <meta name="description" content="Multimodal TinyML acoustic safeguard for open-air swine farming — MLX90640 thermal + I2S bioacoustics on ESP32-S3, synced to Firebase RTDB via PigPulse.">
+    <meta name="theme-color" content="#02040A">
+    <meta name="color-scheme" content="dark">
+    <link rel="canonical" href="https://pig-health-research-portfolio.vercel.app">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="HUSH HOG — Sovereign Aqua Protocol">
+    <meta property="og:description" content="Edge intelligence for swine health: thermal matrix, acoustic spectral analysis, and cloud telemetry.">
+    <meta property="og:url" content="https://pig-health-research-portfolio.vercel.app">
+    <meta name="twitter:card" content="summary_large_image">
+    <script src="./config.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
@@ -18,8 +29,26 @@
             --text: #F8FAFC; --text-muted: #94A3B8;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        @media (pointer: fine) {
+            * { cursor: none; }
+            a, button, .interactive, .wp-dot, .sim-btn { cursor: none; }
+        }
         body { background-color: var(--bg); color: var(--text); font-family: 'Outfit', sans-serif; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+        .skip-link { position: absolute; left: -9999px; top: auto; z-index: 30000; padding: 12px 20px; background: var(--primary); color: #000; font-weight: 700; border-radius: 8px; text-decoration: none; }
+        .skip-link:focus { left: 16px; top: 16px; cursor: pointer; }
+        #site-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 8000; display: flex; align-items: center; justify-content: space-between; padding: 14px 5vw; background: linear-gradient(to bottom, rgba(2,4,10,0.95), transparent); backdrop-filter: blur(8px); }
+        #site-nav .nav-brand { font-weight: 800; letter-spacing: 0.08em; color: var(--primary); text-decoration: none; font-size: 0.95rem; }
+        #site-nav .nav-links { display: flex; gap: 20px; flex-wrap: wrap; }
+        #site-nav .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+        #site-nav .nav-links a:hover { color: var(--primary); }
+        html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+        }
+        html.reduce-motion #canvas-container { display: none; }
+        html.reduce-motion #cursor-dot, html.reduce-motion #cursor-ring { display: none; }
 
         /* CURSOR */
         #cursor-dot { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; position: fixed; pointer-events: none; z-index: 10000; transform: translate(-50%, -50%); box-shadow: 0 0 10px var(--primary); }
@@ -37,8 +66,8 @@
         #audio-toggle.muted { border-color: var(--text-muted); color: var(--text-muted); }
 
         #canvas-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 0 5vw; }
-        section { min-height: 100vh; display: flex; align-items: center; padding: 100px 0; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 5vw; }
+        section { min-height: 100vh; display: flex; align-items: center; padding: 100px 0; content-visibility: auto; contain-intrinsic-size: 1000px; }
 
         .badge { display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px; background: rgba(157, 78, 221, 0.1); border: 1px solid rgba(157, 78, 221, 0.3); border-radius: 30px; color: var(--tertiary); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.85rem; margin-bottom: 30px; }
         h1 { font-size: clamp(3rem, 7vw, 6.5rem); font-weight: 900; line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 30px; }
@@ -142,6 +171,24 @@
         .term-hover { transition: 0.2s; border-radius: 4px; padding: 0 4px; cursor: none; }
         .term-hover:hover { background: rgba(255,255,255,0.1); color: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
 
+        /* WAYPOINT NAVIGATION STYLES */
+        #nav-waypoints { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; z-index: 40; }
+        .wp-dot { width: 14px; height: 14px; border: 2px solid var(--primary); border-radius: 50%; cursor: pointer; position: relative; transition: 0.3s; }
+        .wp-dot::after { content: attr(data-label); position: absolute; right: 25px; top: 50%; transform: translateY(-50%); opacity: 0; font-size: 10px; font-family: 'Fira Code'; color: var(--primary); white-space: nowrap; pointer-events: none; transition: 0.3s; }
+        .wp-dot:hover { background: var(--primary); transform: scale(1.3); }
+        .wp-dot:hover::after { opacity: 1; right: 30px; }
+        .wp-dot.active { background: var(--primary); box-shadow: 0 0 15px var(--primary); }
+
+        /* INFO OVERLAY */
+        #chip-info-panel { position: absolute; top: 20px; left: 20px; width: 300px; background: rgba(10, 15, 30, 0.85); border: 1px solid var(--primary); border-radius: 16px; padding: 25px; backdrop-filter: blur(10px); z-index: 50; transform: translateX(-120%); transition: transform 0.5s cubic-bezier(0.7, 0, 0.2, 1); pointer-events: none; }
+        #chip-info-panel.visible { transform: translateX(0); pointer-events: auto; }
+        #chip-info-panel h4 { font-size: 1.2rem; font-weight: 800; margin-bottom: 10px; color: var(--primary); }
+        #chip-info-panel p { font-size: 0.9rem; line-height: 1.5; color: var(--text-muted); }
+        .pin-table { margin-top: 15px; font-family: 'Fira Code'; font-size: 0.8rem; color: #fff; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+
+        #toast { position: fixed; top: 30px; left: 50%; transform: translateX(-50%) translateY(-20px); background: var(--primary); color: #000; padding: 12px 24px; border-radius: 100px; font-weight: 800; font-size: 1rem; z-index: 21000; pointer-events: none; opacity: 0; transition: 0.4s; box-shadow: 0 10px 30px rgba(0, 229, 255, 0.4); }
+        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
         .references-list { display: flex; flex-direction: column; gap: 15px; max-width: 900px; margin: 0 auto; width: 100%; }
         .ref-item { padding: 20px; background: rgba(255,255,255,0.02); border-left: 3px solid var(--tertiary); border-radius: 0 8px 8px 0; transition: background 0.3s; }
         .ref-item:hover { background: rgba(157, 78, 221, 0.1); }
@@ -149,7 +196,10 @@
         .ref-desc { font-size: 0.95rem; color: var(--text-muted); }
         .ref-link { color: var(--primary); text-decoration: none; font-size: 0.9rem; margin-top: 5px; display: inline-block; font-family: 'Fira Code', monospace; }
         
-        footer { text-align: center; padding: 60px 0; border-top: 1px solid rgba(255,255,255,0.05); color: var(--text-muted); margin-top: 50px; }
+        footer { text-align: center; padding: 60px 0 80px; border-top: 1px solid rgba(255,255,255,0.05); color: var(--text-muted); margin-top: 50px; font-size: 0.95rem; line-height: 1.8; }
+        footer a { color: var(--primary); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+        .footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 24px; margin-bottom: 16px; }
         
         .rickroll-trigger.active-seq { color: #00E5FF; text-shadow: 0 0 15px #00E5FF; border-bottom: 1px solid #00E5FF; }
 
@@ -170,8 +220,18 @@
     </style>
 </head>
 <body>
+    <a class="skip-link" href="#main-content">Skip to content</a>
+    <nav id="site-nav" aria-label="Primary">
+        <a class="nav-brand interactive" href="#main-content">HUSH HOG</a>
+        <div class="nav-links">
+            <a href="#methodology">Architecture</a>
+            <a href="#firmware">Firmware</a>
+            <a href="#references">References</a>
+            <a data-config-href="appUrl" href="#">Live app</a>
+        </div>
+    </nav>
 
-    <div id="audio-banner" onclick="startAudioEngine()">
+    <div id="audio-banner" role="dialog" aria-modal="true" aria-label="Audio Initialization" onclick="startAudioEngine()">
         <h1 style="margin:0;">Initialize Sensory Array</h1>
         <p class="hero-desc" style="text-align: center; margin-top: 10px;">Click anywhere to enable the full audio-visual experience.</p>
         <button class="banner-btn">SYSTEM BOOT</button>
@@ -304,13 +364,13 @@
         }
     </script>
 
-    <div id="audio-toggle" class="interactive" onclick="toggleAmbient()">🔊</div>
+    <button id="audio-toggle" class="interactive" onclick="toggleAmbient()" aria-label="Toggle Background Audio" aria-pressed="false">🔊</button>
     <div id="global-tooltip"></div>
     <div id="cursor-dot"></div>
     <div id="cursor-ring"></div>
     <div id="canvas-container"></div>
 
-    <main class="container">
+    <main id="main-content" class="container">
         <!-- HERO -->
         <section class="hero">
             <div class="hero-content gs-reveal">
@@ -323,38 +383,16 @@
                     A zero-contact, real-time telemetry pipeline detecting respiratory distress before physical symptoms manifest.
                 </p>
                 <div class="btn-row">
-                    <a href="javascript:void(0)" onclick="launchAppOrWeb()" class="magnetic-btn btn-primary interactive">
-                        <span class="text">Launch Monitor</span>
+                    <a data-config-href="appUrl" href="https://mobileapp-lyart.vercel.app" target="_blank" rel="noopener noreferrer" class="magnetic-btn btn-primary interactive">
+                        <span class="text">🌐 View Live Dashboard</span>
                     </a>
-                    
-                    <script>
-                        function launchAppOrWeb() {
-                            const appUrl = "soulexpoapp://";
-                            const webUrl = "https://pig-health-monitor.vercel.app/";
-                            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                            
-                            playClick();
-                            
-                            if (isMobile) {
-                                // Try to open the native app on mobile
-                                window.location.href = appUrl;
-                                
-                                // Fallback to web after 2 seconds
-                                setTimeout(() => {
-                                    if (document.hasFocus()) {
-                                        window.location.href = webUrl;
-                                    }
-                                }, 2000);
-                            } else {
-                                // Desktop: Go straight to the web dashboard
-                                window.location.href = webUrl;
-                            }
-                        }
-                    </script>
-                    <a href="https://expo.dev/artifacts/eas/rWeRGwSBEr8cUy6UxK9Xm6.apk" download class="magnetic-btn btn-secondary interactive">
-                        <span class="text">Download Nodes v2.0 APK</span>
+                    <a href="javascript:void(0)" onclick="launchAppOrWeb()" class="magnetic-btn btn-secondary interactive" role="button">
+                        <span class="text">📱 Launch Mobile Hub</span>
                     </a>
-                    <a href="https://codeberg.org/solrahk/pig-health-monitor" target="_blank" class="magnetic-btn btn-secondary interactive">
+                    <a data-config-download="apkFilename" href="./app-release.apk" download class="magnetic-btn btn-secondary interactive">
+                        <span class="text">Download PigPulse APK</span>
+                    </a>
+                    <a data-config-href="repoUrl" href="https://codeberg.org/Solrahk/pig-health-monitor" target="_blank" rel="noopener noreferrer" class="magnetic-btn btn-secondary interactive">
                         <span class="text">Source Code</span>
                     </a>
                 </div>
@@ -421,6 +459,7 @@
                     </div>
                     
                     <div class="sim-controls">
+                        <button class="sim-btn interactive" id="toggle-wires" onclick="toggleWires()">🔌 Hide Wires</button>
                         <button class="sim-btn interactive" onclick="toggleFullscreen()" id="fs-btn">⛶ Fullscreen</button>
                         <button class="sim-btn env-btn interactive" onclick="toggleEnvironment()">🔄 Switch Environment</button>
                         <button class="sim-btn interactive" onclick="triggerSimulation()">▶ Run Simulation</button>
@@ -430,6 +469,24 @@
                     <div id="chip-3d"></div>
                     <!-- Pin Labels Container -->
                     <div id="pin-labels-container"></div>
+
+                    <!-- NEW WAYPOINT NAVIGATION -->
+                    <div id="nav-waypoints">
+                        <div class="wp-dot active interactive" data-label="OVERVIEW" onclick="flyToWP(0)"></div>
+                        <div class="wp-dot interactive" data-label="ESP32-S3 CORE" onclick="flyToWP(1)"></div>
+                        <div class="wp-dot interactive" data-label="THERMAL ARRAY" onclick="flyToWP(2)"></div>
+                        <div class="wp-dot interactive" data-label="ACOUSTIC MIC" onclick="flyToWP(3)"></div>
+                        <div class="wp-dot interactive" data-label="POWER SYSTEM" onclick="flyToWP(4)"></div>
+                    </div>
+
+                    <!-- NEW INFO PANEL -->
+                    <div id="chip-info-panel">
+                        <h4 id="wp-title">System Overview</h4>
+                        <p id="wp-desc">The edge node orchestrates multiple sensors to monitor swine health in real-time.</p>
+                        <div id="wp-pin-table" class="pin-table" style="display:none;"></div>
+                    </div>
+
+                    <div id="toast">✅ Action Successful</div>
                 </div>
 
                 <!-- Terminal -->
@@ -475,7 +532,7 @@
                         <rect x="250" y="60" width="100" height="80" class="svg-node" style="stroke: var(--tertiary); transform-origin: center;"/>
                         <text x="300" y="95" class="svg-text">ESP32-S3</text>
                     </g>
-                    <g class="svg-node-group has-tooltip" data-tooltip="Google Firebase RTDB\n• Security: JWT Auth Rules\n• Path: /swine_telemetry/id\n• Arch: NoSQL JSON Tree">
+                    <g class="svg-node-group has-tooltip" data-firebase-node="true" data-tooltip="Google Firebase RTDB\n• Security: JWT Auth Rules\n• Path: /users/{uid}/telemetry/{deviceId}\n• Arch: NoSQL JSON Tree">
                         <rect x="550" y="70" width="100" height="60" class="svg-node" style="stroke: #FFCA28; transform-origin: center;"/>
                         <text x="600" y="100" class="svg-text">Firebase</text>
                     </g>
@@ -489,12 +546,12 @@
                 <div class="ref-item interactive">
                     <div class="ref-title">1. Automated Detection of Porcine Respiratory Distress (2025)</div>
                     <div class="ref-desc">Acoustic biomarkers and thermal gradients provide 72-hour early warning for PRRSV outbreaks in open-air farming.</div>
-                    <a href="https://codeberg.org/solrahk/pig-health-monitor/src/branch/master/RECORDS/PERFECTED_HUSH_HOG_READINGS.md" class="ref-link">View Full Repository [90+ Citations]</a>
+                    <a href="https://codeberg.org/solrahk/pig-health-monitor/src/branch/master/RECORDS/PERFECTED_PIGPULSE_READINGS.md" class="ref-link">View Full Repository [90+ Citations]</a>
                 </div>
                 <div class="ref-item interactive">
                     <div class="ref-title">2. MLX90640 Calibration in Tropical Environments (2026)</div>
                     <div class="ref-desc">Establishing ε = 0.965 emissivity for swine skin in high-humidity Philippine climates to ensure absolute fever accuracy.</div>
-                    <a href="#" class="ref-link">Hush Hog Supplemental Docs</a>
+                    <a href="#" class="ref-link">PigPulse Supplemental Docs</a>
                 </div>
                 <div class="ref-item interactive">
                     <div class="ref-title">3. TinyML CNN for Real-Time Bioacoustics (2024)</div>
@@ -506,6 +563,19 @@
 
     </main>
 
+    <footer id="site-footer" class="container" role="contentinfo">
+        <div class="footer-links">
+            <a data-config-href="appUrl" href="https://mobileapp-lyart.vercel.app" target="_blank" rel="noopener noreferrer">Dashboard</a>
+            <a data-config-href="repoUrl" href="https://codeberg.org/Solrahk/pig-health-monitor" target="_blank" rel="noopener noreferrer">Source</a>
+            <a data-config-download="apkFilename" href="./app-release.apk" download>APK</a>
+            <a href="#methodology">Architecture</a>
+        </div>
+        <p><strong>HUSH HOG</strong> · Sovereign Aqua Protocol · <span id="footer-version">v2.1.0</span></p>
+        <p>App: <a id="footer-app-link" href="https://mobileapp-lyart.vercel.app">mobileapp-lyart.vercel.app</a> · Portfolio: <a id="footer-landing-link" href="https://pig-health-research-portfolio.vercel.app">pig-health-research-portfolio.vercel.app</a></p>
+        <p style="font-size: 0.85rem; margin-top: 12px;">Capstone research — multimodal TinyML for open-air swine farming. URLs centralized in <code>config.js</code>.</p>
+    </footer>
+
+    <script src="./bootstrap.js"></script>
     <script>
         // TOOLTIP & CURSOR & EASTER EGGS
         const tooltip = document.getElementById('global-tooltip');
@@ -657,6 +727,8 @@
         let mlxWires = [], inmpWires = []; 
         const pins = []; 
         const mainLabels = [];
+        let wiresVisible = true;
+        let arrows = [];
         
         const initChip = () => {
             const container = document.getElementById('chip-3d');
@@ -675,137 +747,155 @@
             const assemblyGroup = new THREE.Group();
 
             // ==========================================
-            // 1. ESP32-S3 WROOM-1 (Accurate Model)
+            // 0. BREADBOARD (The Foundation)
+            // ==========================================
+            const bbGroup = new THREE.Group();
+            const bbGeo = new THREE.BoxGeometry(12, 0.5, 8);
+            const bbMat = new THREE.MeshPhongMaterial({ color: 0xf0f0f0, specular: 0x111111 });
+            const bb = new THREE.Mesh(bbGeo, bbMat);
+            bb.position.y = -0.5;
+            bbGroup.add(bb);
+
+            // Add holes to breadboard
+            const holeGeo = new THREE.CylinderGeometry(0.03, 0.03, 0.05, 8);
+            const holeMat = new THREE.MeshBasicMaterial({ color: 0x333333 });
+            for(let x = -5.5; x <= 5.5; x += 0.4) {
+                for(let z = -3.5; z <= 3.5; z += 0.4) {
+                    const h = new THREE.Mesh(holeGeo, holeMat);
+                    h.position.set(x, -0.24, z);
+                    bbGroup.add(h);
+                }
+            }
+            assemblyGroup.add(bbGroup);
+
+            // ==========================================
+            // 1. ESP32-S3 DevKitC-1 (Realistic Model)
             // ==========================================
             const espGroup = new THREE.Group();
+            espGroup.position.set(0, 0, 0);
             
-            // Base PCB (Black/Greenish)
-            const pcbGeo = new THREE.BoxGeometry(3.5, 0.1, 5);
-            const pcbMat = new THREE.MeshPhongMaterial({ color: 0x1A1C1A, specular: 0x333333, shininess: 10 });
+            // Black PCB with rounded edges feel
+            const pcbGeo = new THREE.BoxGeometry(3.2, 0.12, 5.5);
+            const pcbMat = new THREE.MeshPhongMaterial({ color: 0x0a0a0a, specular: 0x222222, shininess: 15 });
             const pcb = new THREE.Mesh(pcbGeo, pcbMat);
             espGroup.add(pcb);
 
-            // Metallic Shielding Box
-            const shieldGeo = new THREE.BoxGeometry(3, 0.4, 3.5);
-            const shieldMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.3, metalness: 0.8 });
+            // Metallic RF Shielding Box (the iconic silver can)
+            const shieldGeo = new THREE.BoxGeometry(2.6, 0.35, 3.2);
+            const shieldMat = new THREE.MeshStandardMaterial({ color: 0xc8c8c8, roughness: 0.25, metalness: 0.9 });
             const shield = new THREE.Mesh(shieldGeo, shieldMat);
-            shield.position.set(0, 0.25, 0.5); // Offset to bottom
+            shield.position.set(0, 0.24, 0.3);
             espGroup.add(shield);
 
-            // "Glowing" Core indicator (for simulation) inside/on top of shield
-            const coreGeo = new THREE.BoxGeometry(1.5, 0.45, 1.5);
-            chipCoreMaterial = new THREE.MeshBasicMaterial({ color: 0x9D4EDD, wireframe: true });
-            const core = new THREE.Mesh(coreGeo, chipCoreMaterial);
-            core.position.set(0, 0.25, 0.5);
-            espGroup.add(core);
+            // USB-C Port (silver rectangle at bottom)
+            const usbGeo = new THREE.BoxGeometry(0.9, 0.25, 0.5);
+            const usbMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.95, roughness: 0.15 });
+            const usb = new THREE.Mesh(usbGeo, usbMat);
+            usb.position.set(0, 0.15, 2.65);
+            espGroup.add(usb);
 
-            // Antenna Trace Area (Gold zig-zag top)
-            const antGeo = new THREE.PlaneGeometry(3, 0.8);
-            const antMat = new THREE.MeshBasicMaterial({ color: 0xD4AF37, side: THREE.DoubleSide, map: createZigZagTexture() });
-            const antenna = new THREE.Mesh(antGeo, antMat);
-            antenna.rotation.x = -Math.PI / 2;
-            antenna.position.set(0, 0.06, -1.8);
-            espGroup.add(antenna);
+            // Status LED (small green dot)
+            const ledGeo = new THREE.BoxGeometry(0.12, 0.06, 0.12);
+            const ledMat = new THREE.MeshBasicMaterial({ color: 0x00ff44 });
+            const led = new THREE.Mesh(ledGeo, ledMat);
+            led.position.set(1.2, 0.1, 2.0);
+            espGroup.add(led);
 
-            // Black Headers with Silver Pins
-            const headerGeo = new THREE.BoxGeometry(0.3, 0.3, 4.5);
-            const headerMat = new THREE.MeshPhongMaterial({ color: 0x050505 });
-            const leftHeader = new THREE.Mesh(headerGeo, headerMat); leftHeader.position.set(-1.6, 0.2, 0); espGroup.add(leftHeader);
-            const rightHeader = new THREE.Mesh(headerGeo, headerMat); rightHeader.position.set(1.6, 0.2, 0); espGroup.add(rightHeader);
-
-            const pinGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.6, 8);
-            const pinMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.9, roughness: 0.2 });
+            // Pin Headers (Silver pins going into breadboard)
+            const pinGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.7, 6);
+            const pinMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.9, roughness: 0.15 });
             
-            const pinNamesLeft = ["3V3", "EN", "IO4", "IO5", "IO6", "IO7", "IO15", "IO16"]; 
-            const pinNamesRight = ["GND", "IO18", "IO19", "IO21", "RX", "TX", "IO22", "IO23"];
+            const pinNamesLeft = ["3V3", "EN", "IO4", "IO5", "IO10", "IO11", "IO12", "IO15"]; 
+            const pinNamesRight = ["GND", "IO18", "IO19", "IO21", "IO22", "RX", "TX", "5V"];
 
-            let pinIO22, pinIO21, pinIO15, pinIO4, pinIO6;
+            let pinIO22, pinIO21, pinIO10, pinIO11, pinIO12;
 
             for(let i=0; i<8; i++) {
-                const lp = new THREE.Mesh(pinGeo, pinMat); lp.position.set(-1.6, -0.1, -1.5 + (i * 0.43)); espGroup.add(lp);
+                const lp = new THREE.Mesh(pinGeo, pinMat); lp.position.set(-1.45, -0.2, -1.8 + (i * 0.52)); espGroup.add(lp);
                 createPinLabel(lp, pinNamesLeft[i], labelContainer, assemblyGroup);
-                if(pinNamesLeft[i] === "IO15") pinIO15 = lp;
-                if(pinNamesLeft[i] === "IO4") pinIO4 = lp;
-                if(pinNamesLeft[i] === "IO6") pinIO6 = lp;
+                if(pinNamesLeft[i] === "IO12") pinIO12 = lp;
+                if(pinNamesLeft[i] === "IO10") pinIO10 = lp;
+                if(pinNamesLeft[i] === "IO11") pinIO11 = lp;
 
-                const rp = new THREE.Mesh(pinGeo, pinMat); rp.position.set(1.6, -0.1, -1.5 + (i * 0.43)); espGroup.add(rp);
+                const rp = new THREE.Mesh(pinGeo, pinMat); rp.position.set(1.45, -0.2, -1.8 + (i * 0.52)); espGroup.add(rp);
                 createPinLabel(rp, pinNamesRight[i], labelContainer, assemblyGroup);
                 if(pinNamesRight[i] === "IO22") pinIO22 = rp;
                 if(pinNamesRight[i] === "IO21") pinIO21 = rp;
             }
             
-            createMainLabel(espGroup, "ESP32-S3 WROOM-1", labelContainer);
+            createMainLabel(espGroup, "ESP32-S3 CORE", labelContainer);
             assemblyGroup.add(espGroup);
 
             // ==========================================
             // 2. MLX90640 THERMAL CAMERA (Accurate Model)
             // ==========================================
             mlxGroup = new THREE.Group();
-            mlxGroup.position.set(5, 0, -1);
+            mlxGroup.position.set(4, 0, -1);
             
-            // Purple/Dark Blue PCB
             const mlxBoardGeo = new THREE.BoxGeometry(1.8, 0.1, 1.8);
-            const mlxBoardMat = new THREE.MeshPhongMaterial({ color: 0x2A1B38, specular: 0x111111 });
+            const mlxBoardMat = new THREE.MeshPhongMaterial({ color: 0x2A1B38 });
             mlxGroup.add(new THREE.Mesh(mlxBoardGeo, mlxBoardMat));
 
-            // Silver Can / Lens Housing
             const mlxLensGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.6, 32);
-            mlxLensMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.3 });
+            mlxLensMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9 });
             const mlxLens = new THREE.Mesh(mlxLensGeo, mlxLensMat);
             mlxLens.position.y = 0.35;
             mlxGroup.add(mlxLens);
-            
-            // Dark Silicon Window
-            const mlxInnerGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.61, 32);
-            const mlxInnerMat = new THREE.MeshPhongMaterial({ color: 0x111111, shininess: 100, specular: 0x555555 });
-            const mlxInner = new THREE.Mesh(mlxInnerGeo, mlxInnerMat);
-            mlxInner.position.y = 0.35;
-            mlxGroup.add(mlxInner);
 
-            // 4 Pins
-            const mlxPinGrp = new THREE.Group();
-            for(let i=0; i<4; i++) {
-                const mp = new THREE.Mesh(pinGeo, pinMat); mp.position.set(-0.6 + (i*0.4), -0.2, 0.7); mlxGroup.add(mp);
-            }
-
-            createMainLabel(mlxGroup, "MLX90640 ARRAY", labelContainer);
+            createMainLabel(mlxGroup, "MLX90640 THERMAL", labelContainer);
             assemblyGroup.add(mlxGroup);
 
             // ==========================================
             // 3. INMP441 ACOUSTIC MIC (Accurate Model)
             // ==========================================
             inmpGroup = new THREE.Group();
-            inmpGroup.position.set(-5, 0, 1);
+            inmpGroup.position.set(-4, 0, 1);
             
-            // Circular Board with flat edge
-            const inmpShape = new THREE.Shape();
-            inmpShape.arc(0, 0, 1.2, 0, Math.PI * 2, false);
-            const inmpBoardGeo = new THREE.CylinderGeometry(1.2, 1.2, 0.1, 32);
-            const inmpBoardMat = new THREE.MeshPhongMaterial({ color: 0x111111, specular: 0x222222 });
+            const inmpBoardGeo = new THREE.CylinderGeometry(0.8, 0.8, 0.1, 32);
+            const inmpBoardMat = new THREE.MeshPhongMaterial({ color: 0x111111 });
             const inmpBoard = new THREE.Mesh(inmpBoardGeo, inmpBoardMat);
             inmpGroup.add(inmpBoard);
 
-            // Metallic Mic Port
             const inmpMicGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.15, 32);
-            inmpCoreMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.8, roughness: 0.4 });
+            inmpCoreMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.8 });
             const inmpMic = new THREE.Mesh(inmpMicGeo, inmpCoreMat);
             inmpMic.position.y = 0.1;
             inmpGroup.add(inmpMic);
 
-            // Mic Hole
-            const holeGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.16, 16);
-            const holeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-            const hole = new THREE.Mesh(holeGeo, holeMat);
-            hole.position.y = 0.1;
-            inmpGroup.add(hole);
-
-            // 6 Pins on edge
-            for(let i=0; i<6; i++) {
-                const ip = new THREE.Mesh(pinGeo, pinMat); ip.position.set(-0.8 + (i*0.32), -0.2, 0.9); inmpGroup.add(ip);
-            }
-
-            createMainLabel(inmpGroup, "INMP441 I2S MIC", labelContainer);
+            createMainLabel(inmpGroup, "INMP441 MIC", labelContainer);
             assemblyGroup.add(inmpGroup);
+
+            // ==========================================
+            // 4. BATTERY & CHARGER (Missing Context Added)
+            // ==========================================
+            const powerGroup = new THREE.Group();
+            powerGroup.position.set(0, 0, -5);
+
+            // 18650 Battery
+            const battGeo = new THREE.CylinderGeometry(0.6, 0.6, 3.5, 32);
+            const battMat = new THREE.MeshStandardMaterial({ color: 0x0055ff, roughness: 0.3 });
+            const battery = new THREE.Mesh(battGeo, battMat);
+            battery.rotation.z = Math.PI / 2;
+            battery.position.set(0, 0.3, 0);
+            powerGroup.add(battery);
+
+            // TP4056 Charger Module
+            const chargerGeo = new THREE.BoxGeometry(1.5, 0.1, 2.2);
+            const chargerMat = new THREE.MeshPhongMaterial({ color: 0x0044aa });
+            const charger = new THREE.Mesh(chargerGeo, chargerMat);
+            charger.position.set(0, 0, 3.2);
+            powerGroup.add(charger);
+
+            // Charger Port
+            const cPortGeo = new THREE.BoxGeometry(0.6, 0.2, 0.4);
+            const cPortMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9 });
+            const cPort = new THREE.Mesh(cPortGeo, cPortMat);
+            cPort.position.set(0, 0.1, 4.3);
+            powerGroup.add(cPort);
+
+            createMainLabel(powerGroup, "POWER: 18650 + TP4056", labelContainer);
+            assemblyGroup.add(powerGroup);
+
 
             // ==========================================
             // 4. WIRING (I2C & I2S Lines)
@@ -835,10 +925,10 @@
             mlxWires.push(createWire(pinIO21, mlxGroup, 0xFF0055, false)); // SDA
             mlxWires.forEach(w => wireGroup.add(w));
             
-            // INMP wires (I2S) - Left side
-            inmpWires.push(createWire(pinIO15, inmpGroup, 0x9D4EDD, true)); // WS
-            inmpWires.push(createWire(pinIO4, inmpGroup, 0x00E5FF, true)); // DIN
-            inmpWires.push(createWire(pinIO6, inmpGroup, 0x00E5FF, true)); // SCK
+            // INMP wires (I2S) - Left side (IO10=SD, IO11=WS, IO12=SCK)
+            inmpWires.push(createWire(pinIO11, inmpGroup, 0x9D4EDD, true)); // WS
+            inmpWires.push(createWire(pinIO10, inmpGroup, 0x00E5FF, true)); // SD
+            inmpWires.push(createWire(pinIO12, inmpGroup, 0x00E5FF, true)); // SCK
             inmpWires.forEach(w => wireGroup.add(w));
 
             assemblyGroup.add(wireGroup);
@@ -863,8 +953,14 @@
                 chipControls.update();
                 
                 const dist = chipCamera.position.length();
-
                 const canvasRect = chipRenderer.domElement.getBoundingClientRect();
+                const time = Date.now() * 0.002;
+
+                // Animate Arrows
+                arrows.forEach((a, i) => {
+                    a.position.y = 1.2 + Math.sin(time + i) * 0.15;
+                    a.rotation.y += 0.02;
+                });
                 
                 // Update Pin Labels
                 pins.forEach(pin => {
@@ -887,7 +983,7 @@
                 // Update Main Component Labels
                 mainLabels.forEach(ml => {
                     const vector = ml.group.position.clone();
-                    vector.y += 1.5; // Hover above component
+                    vector.y += 1.5; 
                     vector.applyMatrix4(assemblyGroup.matrixWorld); 
                     vector.project(chipCamera); 
                     const x = (vector.x * .5 + .5) * canvasRect.width;
@@ -902,6 +998,13 @@
                 requestAnimationFrame(tick);
             };
             tick();
+        };
+
+        window.toggleWires = () => {
+            wiresVisible = !wiresVisible;
+            if(wireGroup) wireGroup.visible = wiresVisible;
+            const btn = document.getElementById('toggle-wires');
+            btn.innerHTML = wiresVisible ? '🔌 Hide Wires' : '🔌 Show Wires';
         };
 
         function createPinLabel(mesh, text, container, parentGroup) {
@@ -1023,9 +1126,106 @@
             playTelemetryPing();
         }
 
-        gsap.registerPlugin(ScrollTrigger);
-        gsap.utils.toArray('.gs-fade').forEach(el => gsap.from(el, { scrollTrigger: { trigger: el, start: "top 85%" }, y: 50, opacity: 0, duration: 1, ease: "power3.out" }));
-        gsap.from('.gs-reveal', { y: 30, opacity: 0, duration: 1, stagger: 0.2, ease: "power3.out" });
+        // === PREMIUM NAVIGATION & WAYPOINTS ===
+        const chipWaypoints = [
+            { pos: {x: 6, y: 5, z: 8}, target: {x: 0, y: 0, z: 0}, title: "System Overview", desc: "A multimodal edge node fusing thermal and acoustic intelligence for proactive swine health management.", pins: null },
+            { pos: {x: 0, y: 3, z: 4}, target: {x: 0, y: 0, z: 0}, title: "ESP32-S3 Core", desc: "Dual-core processor managing DSP (Acoustic) and Cloud Telemetry (WiFi) in parallel. Pinned tasks ensure zero-latency audio processing.", pins: "IO21: SDA | IO22: SCL\nIO10: SD | IO11: WS | IO12: SCK" },
+            { pos: {x: 5, y: 3, z: -1}, target: {x: 4, y: 0, z: -1}, title: "MLX90640 Thermal", desc: "32x24 IR array detecting surface temperatures. Calibrated for 0.96 emissivity to identify fever markers >39.5°C.", pins: "VCC: 3.3V | GND: GND\nSDA: IO21 | SCL: IO22" },
+            { pos: {x: -5, y: 2, z: 2}, target: {x: -4, y: 0, z: 1}, title: "INMP441 Acoustic", desc: "High-SNR omnidirectional microphone capturing respiratory distress sounds. Features a 60Hz-15kHz frequency response.", pins: "VDD: 3.3V | L/R: GND\nWS: IO11 | SCK: IO12 | SD: IO10" },
+            { pos: {x: 0, y: 2, z: -6}, target: {x: 0, y: 0, z: -5}, title: "Power Management", desc: "High-capacity 18650 Li-ion cell paired with a TP4056 charging circuit for autonomous long-term deployment.", pins: "B+: Batt Pos | B-: Batt Neg\nOUT: 3.7V - 4.2V Regulated" }
+        ];
+
+        let activeWP = 0;
+        function flyToWP(idx) {
+            activeWP = idx;
+            const wp = chipWaypoints[idx];
+            playClick();
+
+            // UI Updates
+            document.querySelectorAll('.wp-dot').forEach((dot, i) => dot.classList.toggle('active', i === idx));
+            const panel = document.getElementById('chip-info-panel');
+            panel.classList.remove('visible');
+
+            setTimeout(() => {
+                document.getElementById('wp-title').innerText = wp.title;
+                document.getElementById('wp-desc').innerText = wp.desc;
+                const pinT = document.getElementById('wp-pin-table');
+                if(wp.pins) { pinT.innerText = wp.pins; pinT.style.display = 'block'; }
+                else pinT.style.display = 'none';
+                panel.classList.add('visible');
+            }, 300);
+
+            // Camera Motion
+            gsap.to(chipCamera.position, { x: wp.pos.x, y: wp.pos.y, z: wp.pos.z, duration: 1.5, ease: "power3.inOut" });
+            gsap.to(chipControls.target, { x: wp.target.x, y: wp.target.y, z: wp.target.z, duration: 1.5, ease: "power3.inOut", onUpdate: () => chipControls.update() });
+            
+            showToast(`Navigating to ${wp.title}`);
+        }
+        window.flyToWP = flyToWP;
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg; t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        // 3D ARROWS (CONES)
+        function createArrows() {
+            const arrowGeo = new THREE.ConeGeometry(0.15, 0.4, 16);
+            const arrowMat = new THREE.MeshPhongMaterial({ color: 0x00E5FF, transparent: true, opacity: 0.8 });
+            
+            const targets = [
+                { pos: [0, 1.2, 0], label: "ESP32-S3" },
+                { pos: [4, 1.2, -1], label: "MLX90640" },
+                { pos: [-4, 1.2, 1], label: "INMP441" },
+                { pos: [0, 1.2, -5], label: "POWER" }
+            ];
+
+            targets.forEach(t => {
+                const arrowGroup = new THREE.Group();
+                const arrow = new THREE.Mesh(arrowGeo, arrowMat);
+                arrow.rotation.x = Math.PI; 
+                arrowGroup.add(arrow);
+                arrowGroup.position.set(t.pos[0], t.pos[1], t.pos[2]);
+                chipScene.add(arrowGroup);
+                arrows.push(arrowGroup);
+            });
+        }
+        createArrows();
+
+        // GUIDED TOUR
+        let tourActive = false;
+        function startGuidedTour() {
+            if(tourActive) return;
+            tourActive = true;
+            showToast("🚀 Starting Guided Technical Tour...");
+            
+            let current = 0;
+            const tourInterval = setInterval(() => {
+                if(current >= chipWaypoints.length) {
+                    clearInterval(tourInterval);
+                    tourActive = false;
+                    showToast("✅ Tour Complete");
+                    flyToWP(0);
+                    return;
+                }
+                flyToWP(current);
+                current++;
+            }, 6000);
+        }
+        window.startGuidedTour = startGuidedTour;
+
+        // Update Sim Controls to include Tour
+        const simControls = document.querySelector('.sim-controls');
+        const tourBtn = document.createElement('button');
+        tourBtn.className = 'sim-btn interactive';
+        tourBtn.style.borderColor = 'var(--tertiary)';
+        tourBtn.style.color = 'var(--tertiary)';
+        tourBtn.innerHTML = '🗺 Guided Tour';
+        tourBtn.onclick = startGuidedTour;
+        simControls.insertBefore(tourBtn, simControls.firstChild);
+
+        // Animate Arrows in main loop is handled directly inside the main tick function.
     </script>
 </body>
 </html>
