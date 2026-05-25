@@ -120,7 +120,6 @@ export function ThermalLiveView({
             if (dist < pig.size) {
               // Body heat decay from center (hottest) to edges (cooler)
               const heatFactor = (1 - dist / pig.size);
-              const thermalContribution = heatFactor * 180; // Scale range
               
               // Scale to match the actual temp value
               const pigVal = (pig.baseTemp - 30.0) / 11.0 * 255;

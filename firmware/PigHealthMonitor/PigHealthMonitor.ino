@@ -1,6 +1,8 @@
+// ⚠️ DEPRECATED — PocketBase v1 firmware. Superseded by firmware/src/main.cpp (Firebase RTDB).
+// Kept for reference only. Will not compile without /PigHealthMonitor/config.h.
 #include <WiFi.h>
 #include <HTTPClient.h>
-#include <ArduinoJson.h> // Ensure v7.x is installed
+#include <ArduinoJson.h>
 #include <Ticker.h>
 #include "config.h"
 

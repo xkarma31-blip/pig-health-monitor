@@ -41,9 +41,10 @@ export async function registerForPushNotificationsAsync() {
     try {
       const projectId =
         Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
-        
+
       if (!projectId) {
         console.warn('Project ID not found. Ensure you have eas.projectId in app.json');
+        return;
       }
 
       token = (
@@ -76,8 +77,8 @@ async function saveTokenToDatabase(token: string) {
     // For capstone simplicity, we'll push. A small Cloud Function or Node script will read these.
     const tokensRef = ref(db, 'pushTokens');
     // Using push to append. If it already exists, the server script can deduplicate when sending.
-    // However, it's better to store by sanitized token key to prevent duplicates:
-    const sanitizedToken = token.replace(/[.#$[\]]/g, '_');
+    // Note: could store by sanitized token key to prevent duplicates:
+    // const tokenKey = token.replace(/[.#$[\]]/g, '_');
     
     // Instead of push, let's use the React Native's unique device or just generic push
     await push(tokensRef, {

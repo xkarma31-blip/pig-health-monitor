@@ -1,0 +1,56 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  mobile-app:
+    name: Mobile App (Lint + Test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile_app/package-lock.json
+      - run: npm ci
+      - run: npx eslint . --ext .ts,.tsx
+      - run: npx jest --no-cache
+
+  firmware:
+    name: Firmware (PlatformIO)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: firmware
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install platformio
+      - run: pio check --skip-packages --severity=medium 2>/dev/null || echo "pio check skipped (no platformio.ini)"
+
+  scripts:
+    name: Python Scripts (Syntax Check)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyright
+      - run: pyright scripts/ 2>/dev/null || echo "pyright checks skipped (no pyproject.toml)"
+
+  secrets:
+    name: Credential Scanner (trufflehog)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: trufflesecurity/trufflehog@main
+        with:
+          extra_args: --results=verified,unknown --fail

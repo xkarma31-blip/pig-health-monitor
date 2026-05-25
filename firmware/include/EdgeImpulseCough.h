@@ -1,4 +1,4 @@
-]]]0#ifndef EDGE_IMPULSE_COUGH_H
+#ifndef EDGE_IMPULSE_COUGH_H
 #define EDGE_IMPULSE_COUGH_H
 
 // ==========================================

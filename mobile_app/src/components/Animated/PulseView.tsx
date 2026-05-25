@@ -50,7 +50,8 @@ export function PulseView({
 
     pulse.start();
     return () => pulse.stop();
-  }, [active]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, duration, maxScale, minScale]);
 
   return (
     <Animated.View style={[{ transform: [{ scale }] }, style]}>

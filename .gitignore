@@ -12,6 +12,7 @@
 firebase_config/firebase-adminsdk.json
 **/firebase-adminsdk*.json
 **/serviceAccount*.json
+**/secrets.h
 sentinel.conf
 
 # === Training Datasets (Large Binary Files) ===
@@ -29,6 +30,16 @@ docs/*.mp4
 docs/*.webm
 docs/*.webp
 
+# === Node.js ===
+node_modules/
+scripts/test/node_modules/
+
+# === Large Binaries (APK, firmware builds) ===
+*.apk
+
 # === Editor Specific ===
 .cursor/
 .cursorignore
+
+# Husky git hooks
+.husky/_/

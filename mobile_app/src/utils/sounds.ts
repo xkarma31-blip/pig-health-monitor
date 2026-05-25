@@ -17,7 +17,7 @@ function getAudioContext(): AudioContext | null {
   if (Platform.OS !== 'web') return null;
   if (!audioCtx) {
     try {
-      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     } catch {
       return null;
     }

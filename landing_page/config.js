@@ -1,10 +1,10 @@
 /**
- * HUSH HOG / Pig Health Monitor — landing page config (single source of truth)
+ * PigPulse / Pig Health Monitor — landing page config (single source of truth)
  * Update URLs here; index.html loads this before other scripts.
  */
 window.PIGPULSE_CONFIG = {
   version: '2.1.0',
-  productName: 'HUSH HOG',
+  productName: 'PigPulse',
   protocolName: 'Sovereign Aqua Protocol',
   researchTitle: 'Multimodal TinyML Acoustic Safeguard for Open-Air Swine Farming',
 
@@ -26,7 +26,8 @@ window.PIGPULSE_CONFIG = {
   /** Deep link scheme for native Expo build */
   appDeepLink: 'soulexpoapp://',
 
-  apkFilename: './app-release.apk',
+  /** APK distributed via EAS builds (see mobile_app/eas.json) */
+  apkBuildCommand: 'cd mobile_app && npx eas build --platform android --profile preview',
 
   firebase: {
     backend: 'Firebase Realtime Database',

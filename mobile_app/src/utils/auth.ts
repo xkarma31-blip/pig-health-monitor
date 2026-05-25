@@ -11,7 +11,7 @@ onAuthStateChanged(auth, (user) => {
   listeners.forEach(l => l());
 });
 
-export const setAuthUser = async (user: any) => {
+export const setAuthUser = async (user: User | null) => {
   if (user === null) {
     await fbSignOut(auth);
   }

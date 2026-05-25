@@ -45,8 +45,9 @@
         }
       }
     });
+    // APK no longer tracked in git — build via EAS: cd mobile_app && npx eas build --platform android --profile preview
     const apk = document.querySelector('[data-config-download="apkFilename"]');
-    if (apk && c.apkFilename) apk.setAttribute('href', c.apkFilename);
+    if (apk) apk.style.display = 'none';
 
     const fp = c.firebase?.pathPattern || '/users/{uid}/telemetry/{deviceId}';
     const fbTip = `Google Firebase RTDB\n• Security: JWT Auth Rules\n• Path: ${fp}\n• Arch: NoSQL JSON Tree`;

@@ -27,7 +27,6 @@ export function useOfflineTelemetry(): TelemetryData {
 
   useEffect(() => {
     let isMounted = true;
-    let pollInterval: ReturnType<typeof setInterval> | undefined;
     let unsubSensors: (() => void) | undefined;
     let unsubAlerts: (() => void) | undefined;
 
@@ -174,12 +173,12 @@ export function useOfflineTelemetry(): TelemetryData {
     };
 
     checkNetworkAndFetch();
-    pollInterval = setInterval(checkNetworkAndFetch, 5000);
+    const pollInterval = setInterval(checkNetworkAndFetch, 5000);
 
     return () => {
       isMounted = false;
       clearFirebaseListeners();
-      if (pollInterval) clearInterval(pollInterval);
+      clearInterval(pollInterval);
     };
   }, [user]);
 

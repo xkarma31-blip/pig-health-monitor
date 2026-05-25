@@ -1,4 +1,4 @@
-# HUSH HOG / Pig Health Monitor — Research Landing
+# PigPulse / Pig Health Monitor — Research Landing
 
 Static marketing site (3D chip tour, sensory architecture, citations). **Not** the Expo dashboard.
 

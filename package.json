@@ -1,0 +1,22 @@
+{
+  "name": "pig-health-monitor",
+  "private": true,
+  "scripts": {
+    "lint": "cd mobile_app && npx eslint . --ext .ts,.tsx",
+    "test": "cd mobile_app && npx jest",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.4.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0",
+    "typescript-eslint": "^8.59.4"
+  },
+  "lint-staged": {
+    "mobile_app/src/**/*.{ts,tsx}": [
+      "npx eslint --config mobile_app/eslint.config.mjs --fix --no-warn-ignored"
+    ]
+  }
+}

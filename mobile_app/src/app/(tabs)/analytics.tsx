@@ -7,7 +7,7 @@ import { enrollPig, subscribeRoster } from '../../utils/firebase';
 
 export default function AnalyticsScreen() {
   const user = useAuth();
-  const [roster, setRoster] = useState<any[]>([]);
+  const [roster, setRoster] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

@@ -2,8 +2,8 @@
  * 📊 Mock Sensor Data
  * 
  * This file contains FAKE data used for development/testing.
- * Later, we will replace this with real API calls to PocketBase/Pockethost.io.
- * 
+ * FIREBASE BACKEND: Real data flows from Firebase RTDB /users/{uid}/sensors
+ *
  * HOW TO ADD A NEW SENSOR:
  *   1. Add a new object to the `mockSensors` array below
  *   2. Follow the SensorReading type structure
@@ -70,18 +70,6 @@ export const mockSensors: SensorReading[] = [
     lastUpdated: '2026-04-07 09:10',
     minRange: 0,
     maxRange: 100,
-  },
-  {
-    id: 'acoustic-02',
-    type: 'acoustic',
-    label: 'Squeal Detection',
-    icon: '🔊',
-    value: 12,
-    unit: 'dB above',
-    status: 'normal',
-    lastUpdated: '2026-04-07 09:10',
-    minRange: 0,
-    maxRange: 60,
   },
   {
     id: 'acoustic-02',
