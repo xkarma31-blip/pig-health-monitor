@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { router } from 'expo-router';
 import { Theme } from '../constants/Theme';
-import { setAuthUser } from '../utils/auth';
+
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -22,8 +22,8 @@ export default function LoginScreen() {
       await signInWithEmailAndPassword(auth, email.trim(), password);
       Alert.alert('Success', 'Connected to Sovereign Aqua Protocol.');
       router.back();
-    } catch (err: any) {
-      Alert.alert('Authentication Failed', err.message || 'Invalid credentials or API keys missing.');
+    } catch (err: unknown) {
+      Alert.alert('Authentication Failed', err instanceof Error ? err.message : 'Invalid credentials or API keys missing.');
     } finally {
       setLoading(false);
     }

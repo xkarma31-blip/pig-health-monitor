@@ -8,17 +8,18 @@
  * Backend: Firebase RTDB (replaces legacy Supabase)
  */
 
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getDatabase, ref, onValue, query, orderByChild, limitToLast, push, set } from 'firebase/database';
-import { getAuth, initializeAuth } from 'firebase/auth';
-// @ts-ignore - type definitions are missing in this version but runtime export exists
+import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { getDatabase, ref, onValue, query, orderByChild, limitToLast, push, set, update } from 'firebase/database';
+import { getAuth, initializeAuth, Auth } from 'firebase/auth';
+// @ts-expect-error - type definitions are missing in this version but runtime export exists
 import { getReactNativePersistence } from 'firebase/auth';
 import { Platform } from 'react-native';
 import type { SensorReading } from '../data/mockSensors';
 
 // Conditionally import AsyncStorage only on native to avoid web bundle issues
-let AsyncStorage: any = null;
+let AsyncStorage: Record<string, unknown> | null = null;
 if (Platform.OS !== 'web') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   AsyncStorage = require('@react-native-async-storage/async-storage').default;
 }
 
@@ -36,8 +37,8 @@ const firebaseConfig = {
 // Initialize Firebase securely with persistence (avoiding double-init on Fast Refresh)
 // Web: getAuth() auto-persists to localStorage
 // Native: initializeAuth() + AsyncStorage for disk persistence
-let app: any;
-let auth: any;
+let app: FirebaseApp;
+let auth: Auth;
 if (getApps().length === 0) {
   app = initializeApp(firebaseConfig);
   if (Platform.OS === 'web') {
@@ -66,13 +67,28 @@ export function getUserPath(): string | null {
   return user ? `users/${user.uid}` : null;
 }
 
-// NOTE: Static refs like 'sensorsRef' are deprecated in favor of dynamic path generation 
-// to support multi-tenancy. We keep them here but with a warning or update them.
-export const sensorsRef = () => ref(db, `${getUserPath()}/sensors`);
-export const alertsRef = () => ref(db, `${getUserPath()}/alerts`);
-export const telemetryRef = () => ref(db, `${getUserPath()}/telemetry`);
-export const commandsRef = () => ref(db, `${getUserPath()}/commands`);
-export const rosterRef = () => ref(db, `${getUserPath()}/roster`);
+// Dynamic refs — return null when user is not authenticated to prevent
+// Firebase errors on invalid paths like 'null/sensors'.
+export const sensorsRef = () => {
+  const base = getUserPath();
+  return base ? ref(db, `${base}/sensors`) : null;
+};
+export const alertsRef = () => {
+  const base = getUserPath();
+  return base ? ref(db, `${base}/alerts`) : null;
+};
+export const telemetryRef = () => {
+  const base = getUserPath();
+  return base ? ref(db, `${base}/telemetry`) : null;
+};
+export const commandsRef = () => {
+  const base = getUserPath();
+  return base ? ref(db, `${base}/commands`) : null;
+};
+export const rosterRef = () => {
+  const base = getUserPath();
+  return base ? ref(db, `${base}/roster`) : null;
+};
 
 // === Listener Helpers ===
 
@@ -85,14 +101,19 @@ export const rosterRef = () => ref(db, `${getUserPath()}/roster`);
  *   // Later: unsub();
  */
 export function subscribeSensors(callback: (sensors: SensorReading[]) => void) {
-  const q = query(sensorsRef(), orderByChild('lastUpdated'), limitToLast(20));
+  const sRef = sensorsRef();
+  if (!sRef) {
+    callback([]);
+    return () => {}; // noop unsubscribe
+  }
+  const q = query(sRef, orderByChild('lastUpdated'), limitToLast(20));
   return onValue(q, (snapshot) => {
     const data = snapshot.val();
     if (!data) {
       callback([]);
       return;
     }
-    const sensors: SensorReading[] = Object.entries(data).map(([id, val]: [string, any]) => ({
+    const sensors: SensorReading[] = Object.entries(data).map(([id, val]: [string, Record<string, unknown>]) => ({
       id,
       type: val.type || 'thermal',
       label: val.label || id,
@@ -112,15 +133,20 @@ export function subscribeSensors(callback: (sensors: SensorReading[]) => void) {
  * Subscribe to real-time alert updates.
  * Returns an unsubscribe function.
  */
-export function subscribeAlerts(callback: (alerts: any[]) => void) {
-  const q = query(alertsRef(), orderByChild('timestamp'), limitToLast(50));
+export function subscribeAlerts(callback: (alerts: Record<string, unknown>[]) => void) {
+  const aRef = alertsRef();
+  if (!aRef) {
+    callback([]);
+    return () => {}; // noop unsubscribe
+  }
+  const q = query(aRef, orderByChild('timestamp'), limitToLast(50));
   return onValue(q, (snapshot) => {
     const data = snapshot.val();
     if (!data) {
       callback([]);
       return;
     }
-    const alerts = Object.entries(data).map(([id, val]: [string, any]) => ({
+    const alerts = Object.entries(data).map(([id, val]: [string, Record<string, unknown>]) => ({
       id,
       ...val,
     }));
@@ -132,9 +158,11 @@ export function subscribeAlerts(callback: (alerts: any[]) => void) {
  * Send a command to the ESP32 (e.g., trigger enrollment or calibration)
  */
 export async function sendCommand(command: string, pigName: string = '', deviceId: string = 'esp32-s3-01') {
-  const commandPath = `${getUserPath()}/commands/${deviceId}`;
-  const commandRef = ref(db, commandPath);
-  return set(commandRef, {
+  const base = getUserPath();
+  if (!base) throw new Error('Not authenticated');
+  const commandPath = `${base}/commands/${deviceId}`;
+  const cmdRef = ref(db, commandPath);
+  return set(cmdRef, {
     command,
     pigName, // For enrollment naming
     executed: false,
@@ -150,7 +178,9 @@ export async function enrollPig(name: string, isTemporary: boolean = false, devi
   await sendCommand('ENROLL_START', name, deviceId);
   
   // 2. Create the record in the roster
-  const newPigRef = push(rosterRef());
+  const rRef = rosterRef();
+  if (!rRef) throw new Error('Not authenticated');
+  const newPigRef = push(rRef);
   return set(newPigRef, {
     name,
     isTemporary,
@@ -166,10 +196,10 @@ export async function enrollPig(name: string, isTemporary: boolean = false, devi
 /**
  * Update a pig's health tags (e.g., Fever, Cough)
  */
-export async function updatePigHealth(pigId: string, tags: string[], healthStatus: string = 'NORMAL') {
-  const pigRef = ref(db, `${getUserPath()}/roster/${pigId}`);
-  // Use update to avoid overwriting other fields like name/deviceId
-  const { update } = await import('firebase/database');
+export function updatePigHealth(pigId: string, tags: string[], healthStatus: string = 'NORMAL') {
+  const base = getUserPath();
+  if (!base) throw new Error('Not authenticated');
+  const pigRef = ref(db, `${base}/roster/${pigId}`);
   return update(pigRef, {
     tags,
     healthStatus,
@@ -180,14 +210,19 @@ export async function updatePigHealth(pigId: string, tags: string[], healthStatu
 /**
  * Subscribe to the pig roster
  */
-export function subscribeRoster(callback: (roster: any[]) => void) {
-  return onValue(rosterRef(), (snapshot) => {
+export function subscribeRoster(callback: (roster: Record<string, unknown>[]) => void) {
+  const rRef = rosterRef();
+  if (!rRef) {
+    callback([]);
+    return () => {}; // noop unsubscribe
+  }
+  return onValue(rRef, (snapshot) => {
     const data = snapshot.val();
     if (!data) {
       callback([]);
       return;
     }
-    const roster = Object.entries(data).map(([id, val]: [string, any]) => ({
+    const roster = Object.entries(data).map(([id, val]: [string, Record<string, unknown>]) => ({
       id,
       ...val,
       tags: val.tags || [],
@@ -200,8 +235,13 @@ export function subscribeRoster(callback: (roster: any[]) => void) {
 /**
  * Subscribe to telemetry for a specific device
  */
-export function subscribeTelemetry(deviceId: string, callback: (telemetry: any) => void) {
-  const deviceTeleRef = ref(db, `${getUserPath()}/telemetry/${deviceId}`);
+export function subscribeTelemetry(deviceId: string, callback: (telemetry: Record<string, unknown> | null) => void) {
+  const base = getUserPath();
+  if (!base) {
+    callback(null);
+    return () => {}; // noop unsubscribe
+  }
+  const deviceTeleRef = ref(db, `${base}/telemetry/${deviceId}`);
   return onValue(deviceTeleRef, (snapshot) => {
     callback(snapshot.val());
   });

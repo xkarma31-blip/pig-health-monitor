@@ -38,11 +38,17 @@ String deviceId = "esp32-s3-01";
 void setupWiFi() {
   Serial.printf("Connecting to WiFi: %s\n", WIFI_SSID);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  while (WiFi.status() != WL_CONNECTED) {
+  int timeout = 20;
+  while (WiFi.status() != WL_CONNECTED && timeout > 0) {
     Serial.print(".");
-    delay(300);
+    delay(1000);
+    timeout--;
   }
-  Serial.println("\nWiFi Connected!");
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("\nWiFi Connected!");
+  } else {
+    Serial.println("\nWiFi Timed Out — continuing in offline mode.");
+  }
 }
 
 void setupFirebase() {
@@ -95,7 +101,11 @@ TaskHandle_t ThermalTaskHandle;
 
 // ── TASK 1: AUDIO PERCEPTION (Pinned to Core 0 - High Priority) ───────────
 void AudioTask(void *pvParameters) {
-  int16_t stereoBuffer[SAMPLES * 2]; // Dual Mic (L+R)
+  int16_t* stereoBuffer = (int16_t*)heap_caps_malloc(SAMPLES * 2 * sizeof(int16_t), MALLOC_CAP_8BIT);
+  if (!stereoBuffer) {
+    Serial.println("FATAL: Audio heap allocation failed — restarting.");
+    esp_restart();
+  }
   size_t bytesRead = 0;
 
   for (;;) {
@@ -134,8 +144,8 @@ void ThermalTask(void *pvParameters) {
 
   for (;;) {
     // 1. Thermal Read (Slow I2C block)
-    // Assuming thermal.readFrame() exists in ThermalCamera.h
-    // thermal.readFrame(); // Uncomment when library is fully integrated
+    // ThermalCamera.h MUST provide thermal.readFrame() to refresh frame data
+    thermal.readFrame();
     
     if (Firebase.ready()) {
       // 2. Command & Identification Ritual (Zero-Shot)
@@ -244,5 +254,5 @@ void setup() {
 
 void loop() {
   // Empty. RTOS Tasks handle execution.
-  vTaskDelete(NULL); 
+  vTaskDelay(portMAX_DELAY);
 }

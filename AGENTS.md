@@ -4,9 +4,9 @@ Capstone: TinyML acoustic monitoring for swine respiratory distress.
 
 ## Workspace
 
-- **Root**: `/home/solrahk/Projects/pig-health-monitor`
+- **Root**: `/home/solrahk/PigHealthMonitor/v2-firebase` (symlink → `~/.gemini/antigravity/scratch/shikigami_memory/capstone_pig_health_monitor`)
 - **Soul**: `~/.hermes/SOUL.md` (Sentinel Soul — accessibility + Wei Wu Wei)
-- **Cursor rules**: `~/.cursor/rules/capstone-pig-health.mdc`
+- **OpenCode agent**: `~/.config/opencode/agents/sentinel-soul.md`
 
 ## Layout
 
@@ -43,7 +43,7 @@ node scripts/test/e2e_test.js
 4. `~/.hermes/API_PROVIDER_REGISTRY.md` — LLM keys (not repo stub)
 
 ```bash
-bash ~/.cursor/scripts/health-check-all.sh
+bash ~/.gemini/antigravity/scratch/shikigami_memory/scripts/health_pulse.sh
 ```
 
 ## Indexing

@@ -42,7 +42,7 @@ export function Sidebar() {
         <Text style={styles.logoEmoji}>🐗</Text>
         {!isCollapsed && (
           <View style={{ marginLeft: 8 }}>
-            <Text style={styles.logoText}>HUSH HOG</Text>
+            <Text style={styles.logoText}>PigPulse</Text>
             <Text style={styles.logoSub}>v2.0.0-Strategic</Text>
           </View>
         )}
@@ -58,12 +58,12 @@ export function Sidebar() {
             <Pressable
               key={item.path}
               onPress={() => router.push(item.path)}
-              style={({ hovered, pressed }: any) => [
+              style={({ hovered, pressed }: { hovered: boolean; pressed: boolean }) => [
                 styles.navItem,
                 (hovered || pressed) && styles.navItemHover,
                 isActive && styles.navItemActive,
                 isCollapsed && { justifyContent: 'center', paddingHorizontal: 0 },
-                // @ts-ignore
+                // @ts-expect-error — cursor is valid on web Pressable
                 Platform.OS === 'web' && { cursor: 'pointer' }
               ]}
             >
@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
     borderRightColor: Theme.colors.cardBorder,
     paddingTop: 16,
     paddingHorizontal: 10,
-    // @ts-ignore — web transition
+    // @ts-expect-error — web transition is valid CSS
     transitionProperty: 'width',
     transitionDuration: '0.2s',
   },

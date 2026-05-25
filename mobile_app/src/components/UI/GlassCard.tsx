@@ -1,7 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle, Platform } from 'react-native';
 import { BlurView } from 'expo-blur';
-import { Theme } from '../../constants/Theme';
 
 interface GlassCardProps {
   children: React.ReactNode;

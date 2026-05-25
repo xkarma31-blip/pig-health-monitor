@@ -49,7 +49,7 @@ public:
         Serial.println("---END THERMAL FRAME---");
     }
 
-    #define MAX_ENROLLMENTS 50
+    static constexpr int MAX_ENROLLMENTS = 50;
 
     bool saveEnrollment(String name, float* frame) {
         if(!SPIFFS.begin(true)) return false;

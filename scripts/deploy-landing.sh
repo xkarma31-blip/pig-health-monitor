@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT/landing_page"
 
-echo "Deploying HUSH HOG research landing to Vercel production..."
+echo "Deploying PigPulse research landing to Vercel production..."
 npx -y vercel link --yes >/dev/null 2>&1 || true
 npx -y vercel --prod --yes
 

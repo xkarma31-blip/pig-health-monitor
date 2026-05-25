@@ -151,7 +151,7 @@ Customize `.coderabbit.yaml`: exclude `firebase-adminsdk.json`, lockfiles, `scri
 
 - Replace Firebase RTDB/Firebase RTDB → Firebase RTDB in `docs/technical_specs.md`, research docs
 - `docs/task.md`: `roster.tsx` → `analytics.tsx`
-- One product name (HUSH HOG vs PigPulse) across `index.tsx`, `Sidebar.tsx`
+- One product name (PigPulse vs PigPulse) across `index.tsx`, `Sidebar.tsx`
 - Remove or relocate root `DESIGN.md` (unrelated OpenCode spec)
 
 ### Phase G — Defense & research (when ready)

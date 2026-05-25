@@ -7,7 +7,7 @@ import { subscribeAlerts } from '../../utils/firebase';
 
 export default function EventsScreen() {
   const user = useAuth();
-  const [alerts, setAlerts] = useState<any[]>([]);
+  const [alerts, setAlerts] = useState<Record<string, unknown>[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

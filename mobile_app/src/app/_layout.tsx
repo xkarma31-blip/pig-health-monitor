@@ -10,7 +10,7 @@
 import { Slot } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
 import { Theme } from '../constants/Theme';
 import AdvisorModal from '../components/AdvisorModal';
 import { PulseView } from '../components/Animated/PulseView';
@@ -42,11 +42,11 @@ export default function RootLayout() {
           marginVertical: Theme.spacing.lg, 
           borderRadius: 24, 
           overflow: 'hidden' as const, 
-          elevation: 20, 
+          elevation: 12, 
           shadowColor: '#000', 
-          shadowOffset: { width: 0, height: 10 }, 
-          shadowOpacity: 0.5, 
-          shadowRadius: 30 
+          shadowOffset: { width: 0, height: 8 }, 
+          shadowOpacity: 0.25, 
+          shadowRadius: 15 
         }
       ]}>
         <Slot />

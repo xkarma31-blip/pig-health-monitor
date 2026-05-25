@@ -1,10 +1,10 @@
-# CodeRabbit repo config template — copy to project root as .coderabbit.yaml
+# CodeRabbit repo config — Pig Health Monitor
 # Docs: https://docs.coderabbit.ai/guides/configure-coderabbit
 language: en-US
 early_access: false
 reviews:
-  profile: chill
-  request_changes_workflow: false
+  profile: assertive
+  request_changes_workflow: true
   high_level_summary: true
   poem: false
   review_status: true
@@ -28,18 +28,24 @@ reviews:
     - "!**/dist/**"
     - "!**/build/**"
     - "!**/.expo/**"
+    - "!**/training_data/**"
   path_instructions:
     - path: "**/*.{ts,tsx,js,jsx}"
       instructions: >
         React Native / Expo project. Check hooks deps, navigation types,
         accessibility (labels, contrast), and avoid blocking the JS thread.
+        Flag duplicate code, stale comments, and any types without documentation.
     - path: "**/*.py"
       instructions: >
         Python ML / backend. Check error handling, type hints on public APIs,
-        and memory use on 8GB dev machine.
+        and memory use on 8GB dev machine. Flag missing try/except around IO.
     - path: "**/*.{sh,bash}"
       instructions: >
         Use set -euo pipefail for production scripts; quote variables;
         prefer idempotent operations.
+    - path: "**/*.test.{ts,tsx,js}"
+      instructions: >
+        Jest / Testing Library tests. Check that tests cover edge cases,
+        not just happy paths. Flag tests without assertions.
 chat:
   auto_reply: true
