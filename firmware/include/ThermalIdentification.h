@@ -52,7 +52,6 @@ public:
     static constexpr int MAX_ENROLLMENTS = 50;
 
     bool saveEnrollment(String name, float* frame) {
-        if(!SPIFFS.begin(true)) return false;
         
         // Count existing records
         File countFile = SPIFFS.open("/roster.bin", FILE_READ);
@@ -83,7 +82,6 @@ public:
     }
 
     String identifyPig(float* currentFrame, float& outBestScore) {
-        if(!SPIFFS.begin(true)) return "UNKNOWN";
         
         File file = SPIFFS.open("/roster.bin", FILE_READ);
         if(!file) return "NO_ROSTER";
