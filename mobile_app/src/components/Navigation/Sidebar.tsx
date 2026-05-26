@@ -66,7 +66,6 @@ export function Sidebar() {
                 (hoveredPath === item.path || pressed) && styles.navItemHover,
                 isActive && styles.navItemActive,
                 isCollapsed && { justifyContent: 'center', paddingHorizontal: 0 },
-                // @ts-expect-error — cursor is valid on web Pressable
                 Platform.OS === 'web' && { cursor: 'pointer' },
               ]}
             >
