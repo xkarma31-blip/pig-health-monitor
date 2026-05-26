@@ -29,7 +29,8 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "usesCleartextTraffic": true,
-      "package": "com.anonymous.pighealthmonitor"
+      "package": "com.solrahk.pighealthmonitor",
+      "versionCode": 10
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -40,9 +41,9 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "95debbb9-d07a-467e-9d79-eb5decab2967"
+        "projectId": "61fdeb08-405f-4878-8ad7-ec3767746466"
       }
     },
-    "owner": "solrahk"
+    "owner": "13solrak"
   }
 }

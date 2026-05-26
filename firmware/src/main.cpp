@@ -3,6 +3,7 @@
 #include <Firebase_ESP_Client.h>
 #include <driver/i2s.h>
 #include <Wire.h>
+#include <SPIFFS.h>
 
 // Provide the token generation process info.
 #include "addons/TokenHelper.h"
@@ -110,7 +111,7 @@ void AudioTask(void *pvParameters) {
 
   for (;;) {
     // 1. Read Stereo Audio Data
-    i2s_read(I2S_PORT, &stereoBuffer, sizeof(stereoBuffer), &bytesRead, portMAX_DELAY);
+    i2s_read(I2S_PORT, stereoBuffer, SAMPLES * 2 * sizeof(int16_t), &bytesRead, portMAX_DELAY);
 
     // 2. Perform Spectral Subtraction & Classification
     CoughType coughType = acoustic.classifyCough(stereoBuffer, bytesRead / 2); // div 2 because int16_t is 2 bytes
@@ -239,6 +240,13 @@ void setup() {
   delay(1000);
   
   Serial.println("🐷 Pig Health Monitor: Initializing Intelligence...");
+  
+  // Initialize SPIFFS globally
+  if (!SPIFFS.begin(true)) {
+    Serial.println("⚠️ SPIFFS Mount Failed! Local Roster will be unavailable.");
+  } else {
+    Serial.println("✅ SPIFFS Mounted Successfully.");
+  }
   
   setupWiFi();
   setupFirebase();

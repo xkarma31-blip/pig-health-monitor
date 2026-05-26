@@ -24,7 +24,7 @@ const severityConfig: Record<AlertSeverity, { icon: string; color: string }> = {
 };
 
 export function AlertRow({ alert }: Props) {
-  const config = severityConfig[alert.severity];
+  const config = severityConfig[alert.severity] || severityConfig.info;
 
   return (
     <View style={[styles.row, { borderLeftColor: config.color }]}>
