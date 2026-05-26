@@ -7,7 +7,7 @@
  */
 
 import React, { useRef } from 'react';
-import { Animated, Pressable, ViewStyle, StyleProp } from 'react-native';
+import { Animated, Pressable, ViewStyle, StyleProp, Platform } from 'react-native';
 import { playSound } from '../../utils/sounds';
 
 interface ScalePressableProps {
@@ -32,7 +32,7 @@ export function ScalePressable({
   const handlePressIn = () => {
     Animated.spring(scale, {
       toValue: scaleDown,
-      useNativeDriver: true,
+      useNativeDriver: Platform.OS !== 'web',
       speed: 50,
       bounciness: 0,
     }).start();

@@ -6,7 +6,7 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import { Animated, ViewStyle } from 'react-native';
+import { Animated, ViewStyle, Platform } from 'react-native';
 
 interface PulseViewProps {
   children: React.ReactNode;
@@ -38,7 +38,7 @@ export function PulseView({
         Animated.timing(scale, {
           toValue: maxScale,
           duration: duration / 2,
-          useNativeDriver: true,
+          useNativeDriver: Platform.OS !== 'web',
         }),
         Animated.timing(scale, {
           toValue: minScale,
