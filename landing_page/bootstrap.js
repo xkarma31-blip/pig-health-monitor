@@ -25,13 +25,8 @@
   function applyReducedMotion() {
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     document.documentElement.classList.add('reduce-motion');
-    const banner = document.getElementById('audio-banner');
-    if (banner) {
-      banner.style.display = 'none';
-      banner.setAttribute('aria-hidden', 'true');
-      // Failsafe: if banner is hidden by OS preference, trigger engine manually
-      if (typeof window.startAudioEngine === 'function') window.startAudioEngine();
-    }
+    // Reduced motion: auto-init audio silently bypasses the old banner overlay
+    if (typeof window.startAudioEngine === 'function') window.startAudioEngine();
   }
 
   function wireLinks() {
