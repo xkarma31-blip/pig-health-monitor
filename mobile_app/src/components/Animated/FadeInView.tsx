@@ -6,7 +6,7 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import { Animated, ViewStyle } from 'react-native';
+import { Animated, ViewStyle, Platform } from 'react-native';
 
 interface FadeInViewProps {
   children: React.ReactNode;
@@ -32,7 +32,7 @@ export function FadeInView({
         toValue: 1,
         duration,
         delay,
-        useNativeDriver: true,
+        useNativeDriver: Platform.OS !== 'web',
       }),
       Animated.timing(translateY, {
         toValue: 0,
