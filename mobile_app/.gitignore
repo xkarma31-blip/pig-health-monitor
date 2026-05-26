@@ -42,3 +42,4 @@ credentials.txt
 /ios
 /android
 .vercel
+.env*
