@@ -76,8 +76,8 @@ export default function AdvisorModal({ visible, onClose }: { visible: boolean; o
     }
 
     const unsubSensors = subscribeSensors((s) => setLiveSensors(s));
-    const unsubAlerts = subscribeAlerts((a) => setLiveAlerts(a));
-    const unsubRoster = subscribeRoster((r) => setLiveRoster(r));
+    const unsubAlerts = subscribeAlerts((a) => setLiveAlerts(a as unknown as LiveAlert[]));
+    const unsubRoster = subscribeRoster((r) => setLiveRoster(r as unknown as LiveRosterEntry[]));
 
     return () => {
       unsubSensors();

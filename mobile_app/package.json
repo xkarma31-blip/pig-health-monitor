@@ -10,7 +10,7 @@
     "build": "npx expo export -p web",
     "lint": "eslint . --ext .ts,.tsx",
     "test": "jest",
-    "prepare": "husky"
+    "prepare": "test -f node_modules/.bin/husky && husky || true"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
@@ -41,6 +41,7 @@
   "devDependencies": {
     "@eslint/js": "^9.0.0",
     "@testing-library/react-native": "^12.4.0",
+    "@types/jest": "^30.0.0",
     "@types/react": "~19.1.0",
     "eslint": "^9.0.0",
     "eslint-plugin-react-hooks": "^5.0.0",

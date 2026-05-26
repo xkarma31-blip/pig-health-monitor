@@ -5,9 +5,24 @@ import { useAuth } from '../../utils/auth';
 import { router } from 'expo-router';
 import { enrollPig, subscribeRoster } from '../../utils/firebase';
 
+interface RosterPig {
+  id: string;
+  name?: string;
+  breed?: string;
+  weight?: number;
+  birthDate?: string;
+  tags?: string[];
+  status?: string;
+  healthStatus?: string;
+  lastTemp?: number | string;
+  enrolledAt?: string;
+  penNumber?: string;
+  notes?: string;
+}
+
 export default function AnalyticsScreen() {
   const user = useAuth();
-  const [roster, setRoster] = useState<Record<string, unknown>[]>([]);
+  const [roster, setRoster] = useState<RosterPig[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,7 +33,7 @@ export default function AnalyticsScreen() {
     }
     setLoading(true);
     const unsub = subscribeRoster((rows) => {
-      setRoster(rows);
+      setRoster(rows as unknown as RosterPig[]);
       setLoading(false);
     });
     return () => unsub();

@@ -29,6 +29,8 @@
     if (banner) {
       banner.style.display = 'none';
       banner.setAttribute('aria-hidden', 'true');
+      // Failsafe: if banner is hidden by OS preference, trigger engine manually
+      if (typeof window.startAudioEngine === 'function') window.startAudioEngine();
     }
   }
 
@@ -39,15 +41,21 @@
       const url = c[key];
       if (url) {
         el.setAttribute('href', url);
-        if (key === 'appUrl' || key === 'repoUrl') {
+        if (key === 'appUrl' || key === 'repoUrl' || key === 'apkUrl') {
           el.setAttribute('rel', 'noopener noreferrer');
           if (!el.getAttribute('target')) el.setAttribute('target', '_blank');
         }
       }
     });
-    // APK no longer tracked in git — build via EAS: cd mobile_app && npx eas build --platform android --profile preview
+
+    // Restore APK buttons with direct EAS link
     document.querySelectorAll('[data-config-download="apkFilename"]').forEach((el) => {
-      el.style.display = 'none';
+      if (c.apkUrl) {
+        el.style.display = 'flex';
+        el.setAttribute('href', c.apkUrl);
+      } else {
+        el.style.display = 'none';
+      }
     });
 
     const fp = c.firebase?.pathPattern || '/users/{uid}/telemetry/{deviceId}';

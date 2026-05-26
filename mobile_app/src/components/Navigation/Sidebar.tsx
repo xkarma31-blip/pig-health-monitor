@@ -24,6 +24,7 @@ export function Sidebar() {
   const { width } = useWindowDimensions();
   const [isCollapsed, setIsCollapsed] = React.useState(false);
   const [isAuth, setIsAuth] = React.useState(false);
+  const [hoveredPath, setHoveredPath] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const unsub = getAuth().onAuthStateChanged((user) => setIsAuth(!!user));
@@ -58,13 +59,15 @@ export function Sidebar() {
             <Pressable
               key={item.path}
               onPress={() => router.push(item.path)}
-              style={({ hovered, pressed }: { hovered: boolean; pressed: boolean }) => [
+              onHoverIn={() => setHoveredPath(item.path)}
+              onHoverOut={() => setHoveredPath(null)}
+              style={({ pressed }) => [
                 styles.navItem,
-                (hovered || pressed) && styles.navItemHover,
+                (hoveredPath === item.path || pressed) && styles.navItemHover,
                 isActive && styles.navItemActive,
                 isCollapsed && { justifyContent: 'center', paddingHorizontal: 0 },
                 // @ts-expect-error — cursor is valid on web Pressable
-                Platform.OS === 'web' && { cursor: 'pointer' }
+                Platform.OS === 'web' && { cursor: 'pointer' },
               ]}
             >
               <Text style={[styles.navEmoji, isActive && { opacity: 1 }, isCollapsed && { marginRight: 0 }]}>{item.emoji}</Text>
