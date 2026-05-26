@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Theme } from '../constants/Theme';
 import { ThermalLiveView } from '../components/ThermalLiveView';
 import { useAuth } from '../utils/auth';
+import { subscribeTelemetry } from '../utils/firebase';
 
 // Simulated roster — IDs must match ThermalLiveView's pigs.current[].id exactly
 const ROSTER = [
@@ -24,6 +25,26 @@ export default function FeedScreen() {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const [isTvMode, setIsTvMode] = useState(false);
   const [selectedPig, setSelectedPig] = useState<string | undefined>(undefined);
+
+  const [telemetryFrame, setTelemetryFrame] = useState<string | undefined>(undefined);
+  const [trackerCoords, setTrackerCoords] = useState<{ x?: number; y?: number; pig?: string; temp?: number } | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    // Listen to live telemetry from Core 1 of the ESP32 (esp32-s3-01)
+    const unsub = subscribeTelemetry('esp32-s3-01', (telemetry) => {
+      if (telemetry) {
+        setTelemetryFrame(telemetry.thermalFrame as string | undefined);
+        setTrackerCoords({
+          x: telemetry.targetX as number | undefined,
+          y: telemetry.targetY as number | undefined,
+          pig: telemetry.identifiedPig as string | undefined,
+          temp: telemetry.temperature as number | undefined,
+        });
+      }
+    });
+    return () => unsub();
+  }, [user]);
 
   // Gated Gating Shield: If unauthenticated guest, block view completely!
   if (!user) {
@@ -76,6 +97,11 @@ export default function FeedScreen() {
             height={windowHeight} 
             isFullscreen={true}
             selectedPigToTrack={selectedPig}
+            base64Frame={telemetryFrame}
+            targetX={trackerCoords?.x}
+            targetY={trackerCoords?.y}
+            identifiedPig={trackerCoords?.pig}
+            liveTemp={trackerCoords?.temp}
           />
           
           {/* Floating Exit Button */}
@@ -117,6 +143,11 @@ export default function FeedScreen() {
                 width={standardWidth - 4} 
                 height={standardHeight - 4}
                 selectedPigToTrack={selectedPig}
+                base64Frame={telemetryFrame}
+                targetX={trackerCoords?.x}
+                targetY={trackerCoords?.y}
+                identifiedPig={trackerCoords?.pig}
+                liveTemp={trackerCoords?.temp}
               />
               
               {/* Redundant float close button for extreme clarity */}

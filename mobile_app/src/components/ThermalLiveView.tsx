@@ -1,6 +1,44 @@
 import React, { useMemo, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, Platform, Image } from 'react-native';
 import { Theme } from '../constants/Theme';
+import Svg, { Rect } from 'react-native-svg';
+
+// Custom lightweight base64 decoder to bypass node polyfill differences across native / web runtimes
+function decodeBase64(b64: string): Uint8Array {
+  const sanitized = b64.replace(/[^A-Za-z0-9+/]/g, '');
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  const lookup = new Uint8Array(256);
+  for (let i = 0; i < chars.length; i++) {
+    lookup[chars.charCodeAt(i)] = i;
+  }
+  
+  const len = sanitized.length;
+  let bufferLength = Math.floor(len * 0.75);
+  if (sanitized[len - 1] === '=') {
+    bufferLength--;
+    if (sanitized[len - 2] === '=') {
+      bufferLength--;
+    }
+  }
+  
+  const bytes = new Uint8Array(bufferLength);
+  let p = 0;
+  for (let i = 0; i < len; i += 4) {
+    const base641 = lookup[sanitized.charCodeAt(i)];
+    const base642 = lookup[sanitized.charCodeAt(i + 1)];
+    const base643 = lookup[sanitized.charCodeAt(i + 2)];
+    const base644 = lookup[sanitized.charCodeAt(i + 3)];
+    
+    bytes[p++] = (base641 << 2) | (base642 >> 4);
+    if (p < bufferLength) {
+      bytes[p++] = ((base642 & 15) << 4) | (base643 >> 2);
+    }
+    if (p < bufferLength) {
+      bytes[p++] = ((base643 & 3) << 6) | base644;
+    }
+  }
+  return bytes;
+}
 
 const PEPPA_ICON = 'https://upload.wikimedia.org/wikipedia/en/3/3b/Peppa_Pig_character.png';
 
@@ -9,6 +47,7 @@ interface ThermalLiveViewProps {
   targetX?: number;
   targetY?: number;
   identifiedPig?: string;
+  liveTemp?: number;
   selectedPigToTrack?: string;
   width?: number;
   height?: number;
@@ -54,6 +93,7 @@ export function ThermalLiveView({
   targetX,
   targetY,
   identifiedPig,
+  liveTemp,
   selectedPigToTrack,
   width = Dimensions.get('window').width - 32,
   height = (width / COLS) * ROWS,
@@ -154,7 +194,7 @@ export function ThermalLiveView({
     };
 
     // Run simulation loop 15 times a second (matches real MLX90640 frame rates perfectly!)
-    const interval = setInterval(runSimulation, 66);
+    const interval = setInterval(runSimulation, Platform.OS === 'web' ? 66 : 250);
     return () => clearInterval(interval);
   }, [base64Frame]);
 
@@ -162,12 +202,7 @@ export function ThermalLiveView({
   const pixels = useMemo(() => {
     if (base64Frame) {
       try {
-        const raw = atob(base64Frame);
-        const uint8 = new Uint8Array(raw.length);
-        for (let i = 0; i < raw.length; i++) {
-          uint8[i] = raw.charCodeAt(i);
-        }
-        return uint8;
+        return decodeBase64(base64Frame);
       } catch (e) {
         console.error('Failed to decode base64 thermal feed', e);
         return simulatedFrame;
@@ -244,7 +279,8 @@ export function ThermalLiveView({
   const activePig = identifiedPig !== undefined ? identifiedPig 
     : selectedPigData ? selectedPigData.id 
     : closestPig.id;
-  const activeTemp = targetX !== undefined ? trackerPos.temp 
+  const activeTemp = liveTemp !== undefined ? liveTemp
+    : targetX !== undefined ? trackerPos.temp 
     : selectedPigData ? selectedPigData.baseTemp 
     : (closestPig.id === 'Pig C (Fever)' ? 39.9 : trackerPos.temp);
 
@@ -261,25 +297,25 @@ export function ThermalLiveView({
           style={{ display: 'block', borderRadius: 8 }}
         />
       ) : (
-        // Mobile fallback block grid
+        // High-performance SVG grid rendering to avoid creating 768 native Views
         <View style={styles.mobileGrid}>
-          {Array.from({ length: ROWS }).map((_, y) => (
-            <View key={y} style={styles.mobileRow}>
-              {Array.from({ length: COLS }).map((_, x) => {
+          <Svg width={width} height={height} viewBox="0 0 32 24">
+            {Array.from({ length: ROWS }).map((_, y) =>
+              Array.from({ length: COLS }).map((_, x) => {
                 const val = pixels[y * COLS + x];
                 return (
-                  <View
-                    key={x}
-                    style={{
-                      flex: 1,
-                      aspectRatio: 1,
-                      backgroundColor: getHeatmapColor(val),
-                    }}
+                  <Rect
+                    key={`${x}-${y}`}
+                    x={x}
+                    y={y}
+                    width={1}
+                    height={1}
+                    fill={getHeatmapColor(val)}
                   />
                 );
-              })}
-            </View>
-          ))}
+              })
+            )}
+          </Svg>
         </View>
       )}
 

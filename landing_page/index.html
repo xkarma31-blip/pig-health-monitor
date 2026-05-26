@@ -1,4 +1,4 @@
-<!-- Build: 2026-05-25-v2 -->
+<!-- Build: 2026-05-26-v3 | Award-Winning Polish -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27,8 +27,11 @@
     <style>
         :root {
             --bg: #02040A; --surface: rgba(13, 17, 28, 0.6);
-            --primary: #00E5FF; --secondary: #FF0055; --tertiary: #9D4EDD;
-            --text: #F8FAFC; --text-muted: #94A3B8;
+            --primary: #00E5FF; --secondary: #FF0055; --tertiary: #C77DFF;
+            --text: #F8FAFC; --text-muted: #CBD5E1;
+            --glow-primary: rgba(0, 229, 255, 0.4);
+            --glow-secondary: rgba(255, 0, 85, 0.4);
+            --glow-tertiary: rgba(199, 125, 255, 0.4);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -36,14 +39,28 @@
             * { cursor: none; }
             a, button, .interactive, .wp-dot, .sim-btn { cursor: none; }
         }
-        body { background-color: var(--bg); color: var(--text); font-family: 'Outfit', sans-serif; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
+        body { background-color: var(--bg); color: var(--text); font-family: 'Outfit', sans-serif; font-size: 17.5px; line-height: 1.7; overflow-x: hidden; -webkit-font-smoothing: antialiased; }
         .skip-link { position: absolute; left: -9999px; top: auto; z-index: 30000; padding: 12px 20px; background: var(--primary); color: #000; font-weight: 700; border-radius: 8px; text-decoration: none; }
         .skip-link:focus { left: 16px; top: 16px; cursor: pointer; }
-        #site-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 8000; display: flex; align-items: center; justify-content: space-between; padding: 14px 5vw; background: linear-gradient(to bottom, rgba(2,4,10,0.95), transparent); backdrop-filter: blur(8px); }
-        #site-nav .nav-brand { font-weight: 800; letter-spacing: 0.08em; color: var(--primary); text-decoration: none; font-size: 0.95rem; }
-        #site-nav .nav-links { display: flex; gap: 20px; flex-wrap: wrap; }
-        #site-nav .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
-        #site-nav .nav-links a:hover { color: var(--primary); }
+        #site-nav { position: fixed; top: 0; left: 0; right: 0; z-index: 8000; display: flex; align-items: center; justify-content: space-between; padding: 16px 5vw; background: linear-gradient(to bottom, rgba(2,4,10,0.95), transparent); backdrop-filter: blur(8px); }
+        #site-nav .nav-brand { font-weight: 900; letter-spacing: 0.1em; color: var(--primary); text-decoration: none; font-size: 1.1rem; text-transform: uppercase; }
+        #site-nav .nav-links { display: flex; gap: 24px; flex-wrap: wrap; }
+        #site-nav .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 1rem; font-weight: 700; transition: color 0.3s, text-shadow 0.3s; }
+        #site-nav .nav-links a:hover { color: var(--primary); text-shadow: 0 0 12px var(--glow-primary); }
+
+        /* SCROLL PROGRESS BAR */
+        #scroll-progress { position: fixed; top: 0; left: 0; height: 3px; width: 0%; background: linear-gradient(90deg, var(--primary), var(--tertiary), var(--secondary)); z-index: 10000; transition: width 0.1s linear; box-shadow: 0 0 10px var(--primary), 0 0 20px var(--glow-primary); }
+
+        /* LOADING CURTAIN */
+        #loading-curtain { position: fixed; inset: 0; z-index: 30000; background: var(--bg); display: flex; align-items: center; justify-content: center; flex-direction: column; transition: opacity 0.8s ease, visibility 0.8s; }
+        #loading-curtain.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .curtain-logo { font-size: 4rem; animation: curtainPulse 1.2s ease-in-out infinite; }
+        .curtain-text { font-family: 'Fira Code', monospace; color: var(--primary); font-size: 1rem; letter-spacing: 0.3em; margin-top: 20px; animation: curtainType 1.5s steps(20) forwards; overflow: hidden; white-space: nowrap; border-right: 2px solid var(--primary); }
+        @keyframes curtainPulse { 0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px var(--glow-primary)); } 50% { transform: scale(1.1); filter: drop-shadow(0 0 40px var(--primary)); } }
+        @keyframes curtainType { from { width: 0; } to { width: 22ch; } }
+
+        /* FILM GRAIN OVERLAY */
+        #grain-overlay { position: fixed; inset: 0; pointer-events: none; z-index: 7999; opacity: 0.04; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); background-repeat: repeat; mix-blend-mode: overlay; }
         html.reduce-motion *, html.reduce-motion *::before, html.reduce-motion *::after {
             animation-duration: 0.01ms !important;
             animation-iteration-count: 1 !important;
@@ -54,44 +71,74 @@
 
         /* CURSOR */
         #cursor-dot { width: 8px; height: 8px; background: var(--primary); border-radius: 50%; position: fixed; pointer-events: none; z-index: 10000; transform: translate(-50%, -50%); box-shadow: 0 0 10px var(--primary); }
-        #cursor-ring { width: 40px; height: 40px; border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); transition: all 0.3s; mix-blend-mode: difference; }
-        .hovering #cursor-ring { width: 60px; height: 60px; background: rgba(255, 255, 255, 0.1); border-color: var(--primary); }
+        #cursor-ring { width: 40px; height: 40px; border: 2px solid rgba(255, 255, 255, 0.3); border-radius: 50%; position: fixed; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); transition: all 0.3s; mix-blend-mode: difference; }
+        .hovering #cursor-ring { width: 60px; height: 60px; background: rgba(255, 255, 255, 0.15); border-color: var(--primary); }
 
         #audio-banner { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(2,4,10,0.9); z-index: 20000; display: flex; align-items: center; justify-content: center; flex-direction: column; cursor: pointer; transition: 0.5s; backdrop-filter: blur(10px); }
-        .banner-btn { padding: 15px 40px; background: var(--primary); color: #000; font-weight: 800; border-radius: 30px; font-size: 1.2rem; margin-top: 20px; border: none; box-shadow: 0 0 20px var(--primary); animation: pulse 2s infinite; }
+        .banner-btn { padding: 18px 48px; background: var(--primary); color: #000; font-weight: 900; border-radius: 30px; font-size: 1.3rem; margin-top: 20px; border: none; box-shadow: 0 0 25px var(--primary); animation: pulse 2s infinite; }
         
-        #global-tooltip { position: fixed; top: 0; left: 0; background: rgba(10, 15, 30, 0.95); border: 1px solid var(--primary); color: #fff; padding: 8px 14px; border-radius: 8px; font-family: 'Fira Code', monospace; font-size: 0.85rem; pointer-events: none; z-index: 10001; opacity: 0; transform: translate(15px, 15px) scale(0.9); box-shadow: 0 10px 20px rgba(0,0,0,0.5), 0 0 15px rgba(0, 229, 255, 0.2); transition: opacity 0.2s, transform 0.2s; white-space: pre-wrap; }
+        #global-tooltip { position: fixed; top: 0; left: 0; background: rgba(10, 15, 30, 0.98); border: 2px solid var(--primary); color: #fff; padding: 10px 18px; border-radius: 8px; font-family: 'Fira Code', monospace; font-size: 0.95rem; pointer-events: none; z-index: 10001; opacity: 0; transform: translate(15px, 15px) scale(0.9); box-shadow: 0 10px 25px rgba(0,0,0,0.7), 0 0 20px rgba(0, 229, 255, 0.3); transition: opacity 0.2s, transform 0.2s; white-space: pre-wrap; line-height: 1.5; }
         #global-tooltip.active { opacity: 1; transform: translate(15px, 15px) scale(1); }
 
-        #audio-toggle { position: fixed; bottom: 30px; right: 30px; z-index: 9000; background: rgba(10, 15, 30, 0.8); border: 1px solid var(--primary); color: var(--primary); border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); font-size: 20px; transition: 0.3s; }
-        #audio-toggle:hover { background: var(--primary); color: var(--bg); transform: scale(1.1); }
+        #audio-toggle { position: fixed; bottom: 30px; right: 30px; z-index: 9000; background: rgba(10, 15, 30, 0.95); border: 2px solid var(--primary); color: var(--primary); border-radius: 50%; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); font-size: 22px; transition: 0.3s; box-shadow: 0 0 15px rgba(0, 229, 255, 0.2); }
+        #audio-toggle:hover { background: var(--primary); color: var(--bg); transform: scale(1.15); }
         #audio-toggle.muted { border-color: var(--text-muted); color: var(--text-muted); }
 
         #canvas-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
         .container { max-width: 1200px; margin: 0 auto; padding: 0 5vw; }
         section { min-height: 100vh; display: flex; align-items: center; padding: 100px 0; content-visibility: auto; contain-intrinsic-size: 1000px; }
 
-        .badge { display: inline-flex; align-items: center; gap: 10px; padding: 8px 16px; background: rgba(157, 78, 221, 0.1); border: 1px solid rgba(157, 78, 221, 0.3); border-radius: 30px; color: var(--tertiary); font-weight: 600; text-transform: uppercase; letter-spacing: 2px; font-size: 0.85rem; margin-bottom: 30px; }
-        h1 { font-size: clamp(3rem, 7vw, 6.5rem); font-weight: 900; line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 30px; }
-        .gradient-text { background: linear-gradient(to right, #fff, #718096); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .gradient-text-accent { background: linear-gradient(135deg, var(--primary), var(--tertiary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .hero-desc { font-size: clamp(1.1rem, 2vw, 1.4rem); color: var(--text-muted); max-width: 600px; line-height: 1.6; margin-bottom: 50px; }
+        /* SECTION DIVIDERS — Animated glow lines */
+        .section-divider { width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--primary), var(--tertiary), var(--secondary), transparent); margin: 0 auto; position: relative; opacity: 0.6; }
+        .section-divider::after { content: ''; position: absolute; top: -4px; left: 0; width: 60px; height: 10px; background: var(--primary); border-radius: 50%; filter: blur(6px); animation: dividerPulseMove 4s ease-in-out infinite alternate; }
+        @keyframes dividerPulseMove { 0% { left: 0; } 100% { left: calc(100% - 60px); } }
+
+        .badge { display: inline-flex; align-items: center; gap: 10px; padding: 10px 20px; background: rgba(199, 125, 255, 0.15); border: 2px solid rgba(199, 125, 255, 0.4); border-radius: 30px; color: var(--tertiary); font-weight: 700; text-transform: uppercase; letter-spacing: 2.5px; font-size: 0.95rem; margin-bottom: 30px; animation: badgeGlow 3s ease-in-out infinite alternate; }
+        @keyframes badgeGlow { 0% { box-shadow: 0 0 8px var(--glow-tertiary); } 100% { box-shadow: 0 0 24px var(--glow-tertiary), 0 0 48px rgba(199, 125, 255, 0.15); } }
+        h1 { font-size: clamp(3.2rem, 7vw, 6.8rem); font-weight: 900; line-height: 1.1; letter-spacing: -0.02em; margin-bottom: 30px; }
+        .gradient-text { background: linear-gradient(to right, #fff, #CBD5E1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .gradient-text-accent { background: linear-gradient(135deg, var(--primary), var(--tertiary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-size: 200% 200%; animation: gradientShift 4s ease infinite; }
+        @keyframes gradientShift { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        .hero-desc { font-size: clamp(1.2rem, 2vw, 1.45rem); color: var(--text-muted); max-width: 650px; line-height: 1.7; margin-bottom: 50px; }
+
+        /* HERO CONTENT ANIMATED BORDER */
+        .hero-content { position: relative; }
+        .hero-content::before { content: ''; position: absolute; top: -2px; left: -30px; width: 4px; height: 0; background: linear-gradient(to bottom, var(--primary), var(--tertiary), var(--secondary)); border-radius: 4px; animation: heroLineGrow 2s ease-out 1.2s forwards; box-shadow: 0 0 15px var(--glow-primary); }
+        @keyframes heroLineGrow { 0% { height: 0; opacity: 0; } 100% { height: 80%; opacity: 1; } }
 
         .btn-row { display: flex; gap: 20px; flex-wrap: wrap; }
-        .magnetic-btn { position: relative; display: inline-flex; align-items: center; gap: 12px; padding: 18px 40px; border-radius: 100px; font-weight: 700; font-size: 1.1rem; text-decoration: none; overflow: hidden; border: 1px solid transparent; }
+        .magnetic-btn { position: relative; display: inline-flex; align-items: center; gap: 12px; padding: 20px 44px; border-radius: 100px; font-weight: 800; font-size: 1.15rem; text-decoration: none; overflow: hidden; border: 2px solid transparent; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
         .magnetic-btn .text, .magnetic-btn svg { z-index: 2; pointer-events: none; }
         .btn-primary { background: var(--text); color: var(--bg); }
         .btn-primary::before { content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 100%; background: linear-gradient(45deg, var(--primary), var(--tertiary)); transition: top 0.4s cubic-bezier(0.7, 0, 0.2, 1); z-index: 1; }
         .btn-primary:hover { color: #fff; } .btn-primary:hover::before { top: 0; }
-        .btn-secondary { background: rgba(255, 255, 255, 0.03); color: var(--text); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
-        .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255,255,255,0.3); }
+        .btn-secondary { background: rgba(255, 255, 255, 0.04); color: var(--text); border: 2px solid rgba(255,255,255,0.15); backdrop-filter: blur(10px); }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.12); border-color: rgba(255,255,255,0.4); }
 
-        .section-title { font-size: clamp(2.5rem, 5vw, 4rem); margin-bottom: 60px; text-align: center; }
-        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; width: 100%; }
-        .glass-card { background: var(--surface); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 24px; padding: 40px; backdrop-filter: blur(20px); transition: transform 0.5s; display: flex; flex-direction: column; }
-        .glass-card:hover { transform: translateY(-15px) scale(1.02); border-color: rgba(0, 229, 255, 0.3); box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        .section-title { font-size: clamp(2.8rem, 5vw, 4.2rem); margin-bottom: 60px; text-align: center; font-weight: 900; position: relative; }
+        .section-title::after { content: ''; display: block; width: 80px; height: 4px; background: linear-gradient(90deg, var(--primary), var(--tertiary)); margin: 16px auto 0; border-radius: 2px; box-shadow: 0 0 12px var(--glow-primary); }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 35px; width: 100%; }
         
-        .card-visual { height: 120px; width: 100%; background: rgba(0,0,0,0.3); border-radius: 12px; margin-bottom: 24px; overflow: hidden; position: relative; display: flex; align-items: flex-end; justify-content: center; gap: 4px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        .glass-card { background: var(--surface); border: 2px solid rgba(255, 255, 255, 0.06); border-radius: 24px; padding: 40px; backdrop-filter: blur(20px); transition: transform 0.5s, border-color 0.3s, box-shadow 0.5s; display: flex; flex-direction: column; border-left: 5px solid var(--primary); position: relative; overflow: hidden; }
+        .glass-card:nth-child(1) { border-left-color: var(--secondary); }
+        .glass-card:nth-child(2) { border-left-color: var(--tertiary); }
+        .glass-card:nth-child(3) { border-left-color: var(--primary); }
+        .glass-card:hover { transform: translateY(-15px) scale(1.02); border-color: rgba(0, 229, 255, 0.5); box-shadow: 0 20px 45px rgba(0,0,0,0.6), 0 0 30px var(--glow-primary); }
+
+        /* CYBERPUNK HUD CORNER ACCENTS */
+        .glass-card::before, .glass-card::after { content: ''; position: absolute; width: 24px; height: 24px; border-color: var(--primary); border-style: solid; border-width: 0; opacity: 0.6; transition: opacity 0.4s, width 0.4s, height 0.4s; pointer-events: none; }
+        .glass-card::before { top: 8px; right: 8px; border-top-width: 3px; border-right-width: 3px; border-radius: 0 8px 0 0; }
+        .glass-card::after { bottom: 8px; left: 8px; border-bottom-width: 3px; border-left-width: 3px; border-radius: 0 0 0 8px; }
+        .glass-card:nth-child(1)::before, .glass-card:nth-child(1)::after { border-color: var(--secondary); }
+        .glass-card:nth-child(2)::before, .glass-card:nth-child(2)::after { border-color: var(--tertiary); }
+        .glass-card:hover::before, .glass-card:hover::after { opacity: 1; width: 40px; height: 40px; }
+
+        /* CARD SCAN LINE EFFECT ON HOVER */
+        .glass-card .card-scan { position: absolute; top: -100%; left: 0; width: 100%; height: 30%; background: linear-gradient(to bottom, transparent, rgba(0, 229, 255, 0.06), transparent); pointer-events: none; transition: none; }
+        .glass-card:hover .card-scan { animation: cardScan 1.5s ease-in-out; }
+        @keyframes cardScan { 0% { top: -30%; } 100% { top: 130%; } }
+        
+        .card-visual { height: 120px; width: 100%; background: rgba(0,0,0,0.4); border-radius: 12px; margin-bottom: 24px; overflow: hidden; position: relative; display: flex; align-items: flex-end; justify-content: center; gap: 4px; padding: 20px; border: 1.5px solid rgba(255,255,255,0.08); }
         .thermal-grid { display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(4, 1fr); width: 100%; height: 100%; gap: 2px; }
         .t-cell { background: #1a1a2e; border-radius: 2px; transition: background 0.5s, transform 0.2s; }
         .t-cell:hover { transform: scale(1.2); z-index: 2; box-shadow: 0 0 10px currentColor; }
@@ -106,24 +153,24 @@
         .audio-bar:nth-child(6) { animation-duration: 1.1s; height: 70%; background: var(--tertiary); box-shadow: 0 0 10px var(--tertiary); }
         @keyframes eq { 0% { transform: scaleY(0.2); } 100% { transform: scaleY(1); } }
 
-        .telemetry-node { width: 20px; height: 20px; background: var(--primary); border-radius: 50%; position: absolute; left: 20px; top: 50%; transform: translateY(-50%); box-shadow: 0 0 15px var(--primary); animation: pulse 1.5s infinite; transition: 0.3s; }
+        .telemetry-node { width: 22px; height: 22px; background: var(--primary); border-radius: 50%; position: absolute; left: 20px; top: 50%; transform: translateY(-50%); box-shadow: 0 0 15px var(--primary); animation: pulse 1.5s infinite; transition: 0.3s; }
         .telemetry-node:hover { transform: translateY(-50%) scale(1.5); background: var(--secondary); box-shadow: 0 0 20px var(--secondary); }
-        .telemetry-line { width: calc(100% - 80px); height: 2px; background: rgba(0,229,255,0.2); position: absolute; left: 40px; top: 50%; transform: translateY(-50%); overflow: hidden; }
-        .telemetry-packet { width: 30px; height: 100%; background: var(--primary); position: absolute; left: 0; box-shadow: 0 0 10px var(--primary); animation: shoot 2s infinite linear; }
-        .telemetry-cloud { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 24px; animation: bounce 2s infinite; transition: 0.3s; }
-        .telemetry-cloud:hover { transform: translateY(-50%) scale(1.5) !important; filter: drop-shadow(0 0 15px var(--primary)) !important; }
+        .telemetry-line { width: calc(100% - 80px); height: 3px; background: rgba(0,229,255,0.25); position: absolute; left: 40px; top: 50%; transform: translateY(-50%); overflow: hidden; }
+        .telemetry-packet { width: 40px; height: 100%; background: var(--primary); position: absolute; left: 0; box-shadow: 0 0 10px var(--primary); animation: shoot 2s infinite linear; }
+        .telemetry-cloud { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); font-size: 28px; animation: bounce 2s infinite; transition: 0.3s; }
+        .telemetry-cloud:hover { transform: translateY(-50%) scale(1.5) !important; filter: drop-shadow(0 0 20px var(--primary)) !important; }
         
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0,229,255,0.7); } 70% { box-shadow: 0 0 0 15px rgba(0,229,255,0); } 100% { box-shadow: 0 0 0 0 rgba(0,229,255,0); } }
-        @keyframes shoot { 0% { left: -30px; } 100% { left: 100%; } }
-        @keyframes bounce { 0%, 100% { transform: translateY(-50%) scale(1); filter: drop-shadow(0 0 5px var(--primary)); } 50% { transform: translateY(-50%) scale(1.2); filter: drop-shadow(0 0 15px var(--secondary)); } }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(0,229,255,0.8); } 70% { box-shadow: 0 0 0 15px rgba(0,229,255,0); } 100% { box-shadow: 0 0 0 0 rgba(0,229,255,0); } }
+        @keyframes shoot { 0% { left: -40px; } 100% { left: 100%; } }
+        @keyframes bounce { 0%, 100% { transform: translateY(-50%) scale(1); filter: drop-shadow(0 0 8px var(--primary)); } 50% { transform: translateY(-50%) scale(1.2); filter: drop-shadow(0 0 18px var(--secondary)); } }
 
         #easter-egg-pig { position: fixed; bottom: 20px; left: -100px; font-size: 40px; filter: drop-shadow(0 0 10px var(--secondary)); z-index: 9998; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
         @keyframes walkAcross { 0% { left: -100px; transform: translateY(0); } 25% { transform: translateY(-10px) rotate(5deg); } 50% { transform: translateY(0) rotate(-5deg); } 75% { transform: translateY(-10px) rotate(5deg); } 100% { left: 100vw; transform: translateY(0); } }
         .walking { animation: walkAcross 4s linear forwards; opacity: 1 !important; }
 
-        .glass-card h3 { font-size: 1.8rem; margin-bottom: 15px; font-weight: 800; cursor: none; transition: 0.3s; display: inline-block; }
+        .glass-card h3 { font-size: 1.9rem; margin-bottom: 15px; font-weight: 900; cursor: none; transition: 0.3s; display: inline-block; }
         .glass-card h3:hover { color: var(--secondary); text-shadow: 0 0 10px var(--secondary); transform: scale(1.05); }
-        .glass-card p { color: var(--text-muted); line-height: 1.7; font-size: 1.05rem; }
+        .glass-card p { color: var(--text-muted); line-height: 1.7; font-size: 1.15rem; }
 
         /* FIRMWARE SECTION */
         .fw-container { display: flex; flex-direction: column; gap: 40px; width: 100%; margin-top: 50px; }
@@ -131,7 +178,7 @@
         .fw-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 40px; align-items: stretch; margin-top: 40px; }
         @media (max-width: 968px) { .fw-grid { grid-template-columns: 1fr; } }
         
-        .chip-container { width: 100%; min-height: 500px; background: rgba(10, 15, 30, 0.5); border: 1px solid rgba(157, 78, 221, 0.3); border-radius: 24px; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .chip-container { width: 100%; min-height: 500px; background: rgba(10, 15, 30, 0.6); border: 2px solid rgba(199, 125, 255, 0.4); border-radius: 24px; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         /* Fullscreen handling */
         .chip-container:fullscreen { border-radius: 0; background: #000; border: none; }
         .chip-container:fullscreen #chip-3d { height: 100vh; }
@@ -142,68 +189,88 @@
         #chip-3d { width: 100%; height: 500px; z-index: 5; position: relative; }
         
         .sim-controls { position: absolute; bottom: 20px; right: 20px; z-index: 30; display: flex; gap: 10px; flex-direction: row; flex-wrap: wrap; justify-content: flex-end; }
-        .sim-btn { background: rgba(0, 229, 255, 0.1); border: 1px solid var(--primary); color: var(--primary); padding: 8px 16px; border-radius: 20px; font-family: 'Fira Code', monospace; font-size: 12px; transition: 0.3s; }
+        .sim-btn { background: rgba(0, 229, 255, 0.1); border: 2px solid var(--primary); color: var(--primary); padding: 10px 20px; border-radius: 20px; font-family: 'Fira Code', monospace; font-size: 13px; font-weight: 600; transition: 0.3s; }
         .sim-btn:hover { background: var(--primary); color: #000; box-shadow: 0 0 15px var(--primary); }
-        .env-btn { background: rgba(255, 0, 85, 0.1); border: 1px solid var(--secondary); color: var(--secondary); }
+        .env-btn { background: rgba(255, 0, 85, 0.15); border: 2px solid var(--secondary); color: var(--secondary); }
         .env-btn:hover { background: var(--secondary); color: #000; box-shadow: 0 0 15px var(--secondary); }
 
-        .pin-label { position: absolute; font-family: 'Fira Code', monospace; font-size: 10px; color: #00E5FF; background: rgba(10,15,30,0.8); border: 1px solid #00E5FF; padding: 2px 4px; border-radius: 3px; pointer-events: none; opacity: 0; transition: opacity 0.3s; transform: translate(-50%, -50%); z-index: 15; white-space: nowrap; }
-        .main-label { position: absolute; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 18px; color: #02040A; background: #00E5FF; border: 2px solid #fff; padding: 8px 18px; border-radius: 12px; pointer-events: none; opacity: 0; transition: opacity 0.3s; transform: translate(-50%, -50%); z-index: 15; white-space: nowrap; box-shadow: 0 0 30px rgba(0, 229, 255, 0.9); animation: labelPop 1.5s ease-in-out infinite alternate; text-transform: uppercase; letter-spacing: 1px;}
+        .pin-label { position: absolute; font-family: 'Fira Code', monospace; font-size: 11px; font-weight: 600; color: #00E5FF; background: rgba(10,15,30,0.92); border: 1.5px solid #00E5FF; padding: 3px 6px; border-radius: 4px; pointer-events: none; opacity: 0; transition: opacity 0.3s; transform: translate(-50%, -50%); z-index: 15; white-space: nowrap; }
+        .main-label { position: absolute; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 19px; color: #02040A; background: #00E5FF; border: 2.5px solid #fff; padding: 9px 20px; border-radius: 12px; pointer-events: none; opacity: 0; transition: opacity 0.3s; transform: translate(-50%, -50%); z-index: 15; white-space: nowrap; box-shadow: 0 0 30px rgba(0, 229, 255, 0.95); animation: labelPop 1.5s ease-in-out infinite alternate; text-transform: uppercase; letter-spacing: 1.5px;}
         .main-label::after { content:''; position:absolute; bottom:-12px; left:50%; transform:translateX(-50%); border-width: 12px 12px 0; border-style: solid; border-color: #fff transparent transparent transparent; filter: drop-shadow(0 5px 5px rgba(0,229,255,0.5)); }
         @keyframes labelPop { 0% { transform: translate(-50%, -50%) translateY(0) scale(1); box-shadow: 0 0 20px rgba(0, 229, 255, 0.6); } 100% { transform: translate(-50%, -50%) translateY(-10px) scale(1.05); box-shadow: 0 0 40px rgba(0, 229, 255, 1); } }
 
-        .svg-flow-container { width: 100%; background: var(--surface); border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 24px; padding: 40px; display: flex; flex-direction: column; justify-content: center; }
+        .svg-flow-container { width: 100%; background: var(--surface); border: 2px solid rgba(0, 229, 255, 0.3); border-radius: 24px; padding: 40px; display: flex; flex-direction: column; justify-content: center; }
         .svg-diagram { width: 100%; height: auto; max-height: 400px; overflow: visible; }
-        .flow-path { stroke: rgba(255,255,255,0.1); stroke-width: 2; fill: none; }
-        .flow-active { stroke: var(--primary); stroke-width: 3; fill: none; filter: drop-shadow(0 0 8px var(--primary)); stroke-dasharray: 10; animation: dashMove 1s linear infinite; }
-        .flow-active-pink { stroke: var(--secondary); stroke-width: 3; fill: none; filter: drop-shadow(0 0 8px var(--secondary)); stroke-dasharray: 10; animation: dashMove 1s linear infinite; }
+        .flow-path { stroke: rgba(255,255,255,0.12); stroke-width: 2.5; fill: none; }
+        .flow-active { stroke: var(--primary); stroke-width: 3.5; fill: none; filter: drop-shadow(0 0 8px var(--primary)); stroke-dasharray: 10; animation: dashMove 1s linear infinite; }
+        .flow-active-pink { stroke: var(--secondary); stroke-width: 3.5; fill: none; filter: drop-shadow(0 0 8px var(--secondary)); stroke-dasharray: 10; animation: dashMove 1s linear infinite; }
         @keyframes dashMove { to { stroke-dashoffset: -20; } }
         
         .svg-node-group { cursor: none; }
-        .svg-node { fill: rgba(10,15,30,0.8); stroke: rgba(255,255,255,0.2); stroke-width: 2; rx: 8; transition: 0.3s; }
-        .svg-node-group:hover .svg-node { stroke: var(--primary); filter: drop-shadow(0 0 15px rgba(0,229,255,0.4)); transform: scale(1.05); }
+        .svg-node { fill: rgba(10,15,30,0.9); stroke: rgba(255,255,255,0.25); stroke-width: 2.5; rx: 8; transition: 0.3s; }
+        .svg-node-group:hover .svg-node { stroke: var(--primary); filter: drop-shadow(0 0 15px rgba(0,229,255,0.5)); transform: scale(1.05); }
         .svg-node-group:hover .svg-text { fill: var(--primary); }
-        .svg-text { fill: #fff; font-family: 'Fira Code', monospace; font-size: 14px; text-anchor: middle; transition: 0.3s; }
-        .svg-text-small { fill: var(--text-muted); font-family: 'Fira Code', monospace; font-size: 10px; text-anchor: middle; pointer-events: none;}
+        .svg-text { fill: #fff; font-family: 'Fira Code', monospace; font-size: 15px; font-weight: 600; text-anchor: middle; transition: 0.3s; }
+        .svg-text-small { fill: var(--text-muted); font-family: 'Fira Code', monospace; font-size: 11px; text-anchor: middle; pointer-events: none;}
         
-        .terminal { background: rgba(5, 5, 10, 0.9); border: 1px solid #333; border-radius: 16px; padding: 30px; font-family: 'Fira Code', monospace; font-size: 0.95rem; line-height: 1.8; color: #A0A0B0; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.5); position: relative; overflow: hidden; }
+        .terminal { background: rgba(5, 5, 10, 0.95); border: 2px solid #444; border-radius: 16px; padding: 30px; font-family: 'Fira Code', monospace; font-size: 1rem; line-height: 1.9; color: #CBD5E1; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.6); position: relative; overflow: hidden; }
         .terminal::after { content: ''; position: absolute; top: -100%; left: 0; width: 100%; height: 20%; background: linear-gradient(to bottom, transparent, rgba(0,229,255,0.1), transparent); animation: scanline 4s linear infinite; pointer-events: none; }
         @keyframes scanline { 0% { top: -20%; } 100% { top: 120%; } }
-        .term-cyan { color: var(--primary); } .term-pink { color: var(--secondary); } .term-green { color: #27C93F; }
-        .term-hover { transition: 0.2s; border-radius: 4px; padding: 0 4px; cursor: none; }
-        .term-hover:hover { background: rgba(255,255,255,0.1); color: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.2); }
+        .term-cyan { color: var(--primary); font-weight: 600; } .term-pink { color: var(--secondary); font-weight: 600; } .term-green { color: #30D158; font-weight: 600; }
+        .term-hover { transition: 0.2s; border-radius: 4px; padding: 0 4px; cursor: none; display: inline-block; }
+        .term-hover:hover { background: rgba(255,255,255,0.15); color: #fff; box-shadow: 0 0 10px rgba(255,255,255,0.3); }
 
         /* WAYPOINT NAVIGATION STYLES */
         #nav-waypoints { position: absolute; right: 20px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 15px; z-index: 40; }
-        .wp-dot { width: 14px; height: 14px; border: 2px solid var(--primary); border-radius: 50%; cursor: pointer; position: relative; transition: 0.3s; }
-        .wp-dot::after { content: attr(data-label); position: absolute; right: 25px; top: 50%; transform: translateY(-50%); opacity: 0; font-size: 10px; font-family: 'Fira Code'; color: var(--primary); white-space: nowrap; pointer-events: none; transition: 0.3s; }
-        .wp-dot:hover { background: var(--primary); transform: scale(1.3); }
-        .wp-dot:hover::after { opacity: 1; right: 30px; }
+        .wp-dot { width: 16px; height: 16px; border: 2.5px solid var(--primary); border-radius: 50%; cursor: pointer; position: relative; transition: 0.3s; }
+        .wp-dot::after { content: attr(data-label); position: absolute; right: 28px; top: 50%; transform: translateY(-50%); opacity: 0; font-size: 11px; font-weight: 700; font-family: 'Fira Code'; color: var(--primary); white-space: nowrap; pointer-events: none; transition: 0.3s; }
+        .wp-dot:hover { background: var(--primary); transform: scale(1.35); }
+        .wp-dot:hover::after { opacity: 1; right: 34px; }
         .wp-dot.active { background: var(--primary); box-shadow: 0 0 15px var(--primary); }
 
         /* INFO OVERLAY */
-        #chip-info-panel { position: absolute; top: 20px; left: 20px; width: 300px; background: rgba(10, 15, 30, 0.85); border: 1px solid var(--primary); border-radius: 16px; padding: 25px; backdrop-filter: blur(10px); z-index: 50; transform: translateX(-120%); transition: transform 0.5s cubic-bezier(0.7, 0, 0.2, 1); pointer-events: none; }
+        #chip-info-panel { position: absolute; top: 20px; left: 20px; width: 320px; background: rgba(10, 15, 30, 0.94); border: 2px solid var(--primary); border-radius: 16px; padding: 25px; backdrop-filter: blur(10px); z-index: 50; transform: translateX(-120%); transition: transform 0.5s cubic-bezier(0.7, 0, 0.2, 1); pointer-events: none; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         #chip-info-panel.visible { transform: translateX(0); pointer-events: auto; }
-        #chip-info-panel h4 { font-size: 1.2rem; font-weight: 800; margin-bottom: 10px; color: var(--primary); }
-        #chip-info-panel p { font-size: 0.9rem; line-height: 1.5; color: var(--text-muted); }
-        .pin-table { margin-top: 15px; font-family: 'Fira Code'; font-size: 0.8rem; color: #fff; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+        #chip-info-panel h4 { font-size: 1.3rem; font-weight: 900; margin-bottom: 12px; color: var(--primary); }
+        #chip-info-panel p { font-size: 1rem; line-height: 1.6; color: var(--text-muted); }
+        .pin-table { margin-top: 15px; font-family: 'Fira Code'; font-size: 0.85rem; color: #fff; background: rgba(255,255,255,0.06); padding: 12px; border-radius: 8px; border: 1.5px solid rgba(255,255,255,0.12); line-height: 1.5; }
 
-        #toast { position: fixed; top: 30px; left: 50%; transform: translateX(-50%) translateY(-20px); background: var(--primary); color: #000; padding: 12px 24px; border-radius: 100px; font-weight: 800; font-size: 1rem; z-index: 21000; pointer-events: none; opacity: 0; transition: 0.4s; box-shadow: 0 10px 30px rgba(0, 229, 255, 0.4); }
+        #toast { position: fixed; top: 30px; left: 50%; transform: translateX(-50%) translateY(-20px); background: var(--primary); color: #000; padding: 14px 28px; border-radius: 100px; font-weight: 900; font-size: 1.05rem; z-index: 21000; pointer-events: none; opacity: 0; transition: 0.4s; box-shadow: 0 10px 30px rgba(0, 229, 255, 0.5); }
         #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
+        /* SCROLL REVEAL ANIMATIONS */
+        .gs-reveal, .gs-fade { opacity: 0; transform: translateY(40px); transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .gs-reveal.revealed, .gs-fade.revealed { opacity: 1; transform: translateY(0); }
+
+        /* STAGGER — for the cards grid */
+        .grid-3 .glass-card:nth-child(1) { transition-delay: 0s; }
+        .grid-3 .glass-card:nth-child(2) { transition-delay: 0.15s; }
+        .grid-3 .glass-card:nth-child(3) { transition-delay: 0.3s; }
+
+        /* STATS COUNTER BAR */
+        .stats-bar { display: flex; justify-content: center; gap: clamp(30px, 6vw, 80px); padding: 40px 20px; flex-wrap: wrap; }
+        .stat-item { text-align: center; }
+        .stat-value { font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 900; color: var(--primary); font-family: 'Fira Code', monospace; }
+        .stat-label { font-size: 0.95rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.15em; font-weight: 700; margin-top: 4px; }
+
         .references-list { display: flex; flex-direction: column; gap: 15px; max-width: 900px; margin: 0 auto; width: 100%; }
-        .ref-item { padding: 20px; background: rgba(255,255,255,0.02); border-left: 3px solid var(--tertiary); border-radius: 0 8px 8px 0; transition: background 0.3s; }
-        .ref-item:hover { background: rgba(157, 78, 221, 0.1); }
-        .ref-title { font-weight: 700; color: #fff; margin-bottom: 5px; }
-        .ref-desc { font-size: 0.95rem; color: var(--text-muted); }
-        .ref-link { color: var(--primary); text-decoration: none; font-size: 0.9rem; margin-top: 5px; display: inline-block; font-family: 'Fira Code', monospace; }
+        .ref-item { padding: 22px; background: rgba(255,255,255,0.03); border-left: 4px solid var(--tertiary); border-radius: 0 8px 8px 0; transition: background 0.3s; }
+        .ref-item:hover { background: rgba(199, 125, 255, 0.15); }
+        .ref-title { font-size: 1.15rem; font-weight: 800; color: #fff; margin-bottom: 8px; }
+        .ref-desc { font-size: 1.05rem; color: var(--text-muted); line-height: 1.6; }
+        .ref-link { color: var(--primary); text-decoration: none; font-size: 0.95rem; margin-top: 8px; display: inline-block; font-family: 'Fira Code', monospace; font-weight: 600; }
         
-        footer { text-align: center; padding: 60px 0 80px; border-top: 1px solid rgba(255,255,255,0.05); color: var(--text-muted); margin-top: 50px; font-size: 0.95rem; line-height: 1.8; }
-        footer a { color: var(--primary); text-decoration: none; }
+        footer { text-align: center; padding: 60px 0 80px; border-top: 2px solid rgba(255,255,255,0.08); color: var(--text-muted); margin-top: 50px; font-size: 1.05rem; line-height: 1.9; }
+        footer a { color: var(--primary); text-decoration: none; font-weight: 600; }
         footer a:hover { text-decoration: underline; }
-        .footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 24px; margin-bottom: 16px; }
+        .footer-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 28px; margin-bottom: 18px; }
         
-        .rickroll-trigger.active-seq { color: #00E5FF; text-shadow: 0 0 15px #00E5FF; border-bottom: 1px solid #00E5FF; }
+        .rickroll-trigger.active-seq { color: #00E5FF; text-shadow: 0 0 15px #00E5FF; border-bottom: 2px solid #00E5FF; }
+
+        /* ANIMATED BACKGROUND MESH GRADIENT for hero */
+        .hero { position: relative; }
+        .hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 20% 50%, rgba(0, 229, 255, 0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 20%, rgba(199, 125, 255, 0.06) 0%, transparent 40%), radial-gradient(ellipse at 60% 80%, rgba(255, 0, 85, 0.05) 0%, transparent 40%); pointer-events: none; z-index: -1; animation: meshFloat 12s ease-in-out infinite alternate; }
+        @keyframes meshFloat { 0% { filter: blur(40px) brightness(1); } 50% { filter: blur(60px) brightness(1.2); } 100% { filter: blur(40px) brightness(1); } }
 
         @media (max-width: 768px) {
             .hero h1 { font-size: 2.8rem; }
@@ -213,7 +280,7 @@
                 width: 100%; 
                 gap: 15px; 
             }
-            .magnetic-btn { width: 100%; max-width: 320px; justify-content: center; padding: 15px 30px; font-size: 1rem; }
+            .magnetic-btn { width: 100%; max-width: 320px; justify-content: center; padding: 15px 30px; font-size: 1.05rem; }
             .hero-content { text-align: center; }
             .section-title { font-size: 2.2rem; }
             .glass-card { padding: 30px 20px; }
@@ -222,6 +289,15 @@
     </style>
 </head>
 <body>
+    <!-- LOADING CURTAIN -->
+    <div id="loading-curtain">
+        <div class="curtain-logo">🐗</div>
+        <div class="curtain-text">INITIALIZING PIGPULSE...</div>
+    </div>
+    <!-- SCROLL PROGRESS BAR -->
+    <div id="scroll-progress"></div>
+    <!-- FILM GRAIN OVERLAY -->
+    <div id="grain-overlay"></div>
     <a class="skip-link" href="#main-content">Skip to content</a>
     <nav id="site-nav" aria-label="Primary">
         <a class="nav-brand interactive" href="#main-content">PigPulse</a>
@@ -233,15 +309,6 @@
         </div>
     </nav>
 
-    <div id="audio-banner" role="dialog" aria-modal="true" aria-label="Audio Initialization" onclick="startAudioEngine()">
-        <div class="gs-reveal" style="text-align: center;">
-            <div style="font-size: 3rem; margin-bottom: 20px;">🔮</div>
-            <h2 style="color: var(--tertiary); margin-bottom: 10px;">SENTINEL BOOT SEQUENCE</h2>
-            <p style="color: #fff; opacity: 0.8; margin-bottom: 30px;">Click to initialize neural telemetry & audio gateway</p>
-            <button class="magnetic-btn btn-primary interactive" style="pointer-events: none;">🚀 INITIALIZE SYSTEM</button>
-        </div>
-    </div>
-
     <div id="easter-egg-pig">🐷</div>
 
     <script>
@@ -252,13 +319,6 @@
 
         function startAudioEngine() {
             console.log("Audio engine starting...");
-            const banner = document.getElementById('audio-banner');
-            if (banner) {
-                banner.style.opacity = '0';
-                banner.style.pointerEvents = 'none';
-                banner.style.display = 'none';
-            }
-            
             try {
                 if(actx) return;
                 actx = new AudioContext();
@@ -309,6 +369,41 @@
                 if(actx && ambientGain) ambientGain.gain.setTargetAtTime(0.1, actx.currentTime, 0.5);
                 btn.classList.remove('muted'); btn.innerHTML = '🔊';
             }
+        }
+
+        let speechSynth = window.speechSynthesis;
+        let speechMuted = true;
+        let currentUtterance = null;
+
+        function speak(text) {
+            if (speechMuted || !speechSynth) return;
+            try {
+                speechSynth.cancel();
+                currentUtterance = new SpeechSynthesisUtterance(text);
+                currentUtterance.rate = 1.1;
+                currentUtterance.pitch = 0.95;
+                const voices = speechSynth.getVoices();
+                const premiumVoice = voices.find(v => v.name.includes("Google") || v.name.includes("Natural") || v.name.includes("Premium") || v.lang.startsWith("en"));
+                if (premiumVoice) currentUtterance.voice = premiumVoice;
+                speechSynth.speak(currentUtterance);
+            } catch(e) {
+                console.warn("Speech Synthesis failed:", e);
+            }
+        }
+
+        function toggleSpeech() {
+            speechMuted = !speechMuted;
+            const btn = document.getElementById('speech-toggle');
+            if (speechMuted) {
+                if (speechSynth) speechSynth.cancel();
+                btn.classList.add('muted'); btn.innerHTML = '🔇🗣️';
+                showToast("Voice Guide: OFF");
+            } else {
+                btn.classList.remove('muted'); btn.innerHTML = '🔊🗣️';
+                showToast("Voice Guide: ACTIVE 🗣️");
+                speak("Voice guidance system online. Explore the dynamic sensory nodes and FreeRTOS tasks to monitor swine health.");
+            }
+            if (typeof playClick === 'function') playClick();
         }
 
         function playHover() {
@@ -384,6 +479,7 @@
         }
     </script>
 
+    <button id="speech-toggle" class="interactive muted" onclick="toggleSpeech()" aria-label="Toggle AI Voice Guide" aria-pressed="true" style="position: fixed; bottom: 96px; right: 30px; z-index: 9000; background: rgba(10, 15, 30, 0.95); border: 2px solid var(--tertiary); color: var(--tertiary); border-radius: 50%; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); font-size: 22px; transition: 0.3s; box-shadow: 0 0 15px rgba(199, 125, 255, 0.2);">🔇🗣️</button>
     <button id="audio-toggle" class="interactive" onclick="toggleAmbient()" aria-label="Toggle Background Audio" aria-pressed="false">🔊</button>
     <div id="global-tooltip"></div>
     <div id="cursor-dot"></div>
@@ -425,6 +521,7 @@
                 <h2 class="section-title gradient-text gs-fade"><span class="rickroll-trigger interactive" data-word="Sensory">Sensory</span> <span class="gradient-text-accent">Architecture</span></h2>
                 <div class="grid-3">
                     <div class="glass-card interactive gs-fade">
+                        <div class="card-scan"></div>
                         <div class="card-visual">
                             <div class="thermal-grid" id="thermalGrid"></div>
                         </div>
@@ -433,6 +530,7 @@
                     </div>
 
                     <div class="glass-card interactive gs-fade">
+                        <div class="card-scan"></div>
                         <div class="card-visual" style="align-items: flex-end;">
                             <div class="audio-bar has-tooltip" data-tooltip="Freq: 120 Hz\nAmp: -40dB"></div>
                             <div class="audio-bar has-tooltip" data-tooltip="Freq: 500 Hz\nAmp: -12dB\n[WARNING PEAK]"></div>
@@ -446,6 +544,7 @@
                     </div>
 
                     <div class="glass-card interactive gs-fade">
+                        <div class="card-scan"></div>
                         <div class="card-visual">
                             <div class="telemetry-node has-tooltip" data-tooltip="WROOM ESP32 Node\nStatus: ONLINE"></div>
                             <div class="telemetry-line"><div class="telemetry-packet"></div></div>
@@ -455,8 +554,31 @@
                         <p>Dual-node architecture (Acoustic & Thermal) communicating via peer-to-peer ESP-NOW protocol for zero-cable deployment.</p>
                     </div>
                 </div>
+
+                <!-- STATS COUNTER BAR -->
+                <div class="stats-bar gs-fade" style="margin-top: 50px;">
+                    <div class="stat-item">
+                        <div class="stat-value" data-target="768">0</div>
+                        <div class="stat-label">Thermal Pixels</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" data-target="16000">0</div>
+                        <div class="stat-label">Sample Rate Hz</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" data-target="85">0</div>
+                        <div class="stat-label">F1-Score %</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" data-target="42">0</div>
+                        <div class="stat-label">Latency ms</div>
+                    </div>
+                </div>
             </div>
         </section>
+
+        <!-- SECTION DIVIDER -->
+        <div class="section-divider" style="margin: -40px auto 0;"></div>
 
         <!-- ADVANCED FIRMWARE CONTENT -->
         <section id="firmware" style="display:block;">
@@ -601,15 +723,28 @@
         const tooltip = document.getElementById('global-tooltip');
         document.querySelectorAll('.has-tooltip').forEach(el => {
             el.addEventListener('mouseenter', (e) => {
-                tooltip.innerHTML = el.getAttribute('data-tooltip').replace(/\\n/g, '<br>');
+                const rawTip = el.getAttribute('data-tooltip') || "";
+                const cleanText = rawTip.replace(/\\n/g, '\n');
+                tooltip.innerHTML = rawTip.replace(/\\n/g, '<br>');
                 tooltip.classList.add('active'); document.body.classList.add('hovering');
                 if(el.classList.contains('t-cell')) playThermalBlip();
                 else if(el.classList.contains('audio-bar')) playAudioChord();
                 else if(el.classList.contains('telemetry-node') || el.classList.contains('telemetry-cloud')) playTelemetryPing();
                 else playHover(); 
+
+                // AI Voice Guide Narration
+                if (typeof speak === 'function') {
+                    const speakText = el.getAttribute('data-speak') || cleanText;
+                    if(speakText && speakText.trim()) speak(speakText);
+                }
             });
             el.addEventListener('mousemove', (e) => { tooltip.style.left = e.clientX + 'px'; tooltip.style.top = e.clientY + 'px'; });
-            el.addEventListener('mouseleave', () => { tooltip.classList.remove('active'); document.body.classList.remove('hovering'); });
+            el.addEventListener('mouseleave', () => { 
+                tooltip.classList.remove('active'); document.body.classList.remove('hovering'); 
+                if (typeof speechSynth !== 'undefined' && !speechMuted) {
+                    speechSynth.cancel();
+                }
+            });
         });
 
         const dot = document.getElementById('cursor-dot');
@@ -623,9 +758,18 @@
             const pig = document.getElementById('easter-egg-pig');
             pig.classList.remove('walking'); void pig.offsetWidth; pig.classList.add('walking');
         }
-        document.getElementById('thermal-title').addEventListener('mouseenter', () => { playHover(); spawnPig(); });
-        document.getElementById('acoustic-title').addEventListener('mouseenter', () => { playPigCough(); });
-        document.getElementById('telemetry-title').addEventListener('mouseenter', () => { playPigCough(); spawnPig(); });
+        document.getElementById('thermal-title').addEventListener('mouseenter', () => { 
+            playHover(); spawnPig(); 
+            if(typeof speak === 'function') speak("Thermal Matrix: High-resolution infrared arrays for fever monitoring.");
+        });
+        document.getElementById('acoustic-title').addEventListener('mouseenter', () => { 
+            playPigCough(); 
+            if(typeof speak === 'function') speak("Acoustic Analytics: MFCC feature extraction capturing respiratory swine cough distress.");
+        });
+        document.getElementById('telemetry-title').addEventListener('mouseenter', () => { 
+            playPigCough(); spawnPig(); 
+            if(typeof speak === 'function') speak("Sovereign Nodes: Multi-node peer-to-peer cloud telemetry sync.");
+        });
 
         // Rickroll Easter Egg Implementation (Sequence: Sensory -> Hardware -> Edge -> Citation)
         const rickrollTarget = ['Citation', 'Hardware', 'Edge', 'Sensory', 'Swine'];
@@ -749,6 +893,34 @@
         const mainLabels = [];
         let wiresVisible = true;
         let arrows = [];
+        let statusLed;
+        let dirLight1, dirLight2, ambientLight, spotLight;
+
+        function spawnSignalParticle(curve, colorVal) {
+            if(!curve || !chipScene) return;
+            const pGeo = new THREE.SphereGeometry(0.08, 8, 8);
+            const pMat = new THREE.MeshBasicMaterial({ color: colorVal, transparent: true, opacity: 0.95 });
+            const particle = new THREE.Mesh(pGeo, pMat);
+            chipScene.add(particle);
+            
+            const anim = { t: 0 };
+            gsap.to(anim, {
+                t: 1,
+                duration: 1.0,
+                ease: "none",
+                onUpdate: () => {
+                    if (curve && particle) {
+                        const point = curve.getPointAt(anim.t);
+                        particle.position.copy(point);
+                    }
+                },
+                onComplete: () => {
+                    if(chipScene) chipScene.remove(particle);
+                    pGeo.dispose();
+                    pMat.dispose();
+                }
+            });
+        }
         
         const initChip = () => {
             const container = document.getElementById('chip-3d');
@@ -820,6 +992,7 @@
             const led = new THREE.Mesh(ledGeo, ledMat);
             led.position.set(1.2, 0.1, 2.0);
             espGroup.add(led);
+            statusLed = led; // Global assignment for animations
 
             // Pin Headers (Silver pins going into breadboard)
             const pinGeo = new THREE.CylinderGeometry(0.04, 0.04, 0.7, 6);
@@ -935,7 +1108,9 @@
                 const curve = new THREE.CatmullRomCurve3([p1, p1_down, mid, p2_down, p2]);
                 const curvePoints = curve.getPoints(30);
                 const geometry = new THREE.BufferGeometry().setFromPoints(curvePoints);
-                return new THREE.Line(geometry, material);
+                const line = new THREE.Line(geometry, material);
+                line.curve = curve; // Attach curve reference for signal flow animation
+                return line;
             };
 
             assemblyGroup.updateMatrixWorld(true);
@@ -954,9 +1129,15 @@
             assemblyGroup.add(wireGroup);
             chipScene.add(assemblyGroup);
             
-            const light1 = new THREE.DirectionalLight(0x00E5FF, 1.5); light1.position.set(5, 5, 5); chipScene.add(light1);
-            const light2 = new THREE.DirectionalLight(0xFF0055, 1.0); light2.position.set(-5, 5, -5); chipScene.add(light2);
-            chipScene.add(new THREE.AmbientLight(0x444444));
+            dirLight1 = new THREE.DirectionalLight(0x00E5FF, 1.5); dirLight1.position.set(5, 5, 5); chipScene.add(dirLight1);
+            dirLight2 = new THREE.DirectionalLight(0xFF0055, 1.0); dirLight2.position.set(-5, 5, -5); chipScene.add(dirLight2);
+            ambientLight = new THREE.AmbientLight(0x444444); chipScene.add(ambientLight);
+            
+            // Premium dynamic spotlight centered above the breadboard
+            spotLight = new THREE.SpotLight(0x00E5FF, 2.5, 30, Math.PI / 4, 0.5, 1);
+            spotLight.position.set(0, 8, 0);
+            chipScene.add(spotLight);
+            chipScene.add(spotLight.target); // Make target position update work
 
             chipCamera.position.set(6, 5, 8); chipCamera.lookAt(0, 0, 0);
 
@@ -1076,6 +1257,11 @@
                 mlxWires.forEach(w => w.visible = true); inmpWires.forEach(w => w.visible = true);
                 
                 gsap.to(bgMat.color, { r: 0, g: 0.9, b: 1, duration: 2 }); 
+                if(spotLight) {
+                    gsap.to(spotLight.color, { r: 0, g: 0.9, b: 1, duration: 1.5 });
+                    gsap.to(spotLight.position, { x: 0, y: 8, z: 0, duration: 1.5 });
+                    gsap.to(spotLight.target.position, { x: 0, y: 0, z: 0, duration: 1.5 });
+                }
                 gsap.to(chipCamera.position, { x: 0, y: 8, z: 10, duration: 1.5, ease: "power2.inOut" });
             } 
             else if(currentEnv === 1) {
@@ -1087,6 +1273,11 @@
                 mlxWires.forEach(w => w.visible = true); inmpWires.forEach(w => w.visible = false);
 
                 gsap.to(bgMat.color, { r: 1, g: 0, b: 0.3, duration: 2 }); 
+                if(spotLight) {
+                    gsap.to(spotLight.color, { r: 1, g: 0, b: 0.3, duration: 1.5 });
+                    gsap.to(spotLight.position, { x: 4, y: 8, z: -1, duration: 1.5 });
+                    gsap.to(spotLight.target.position, { x: 4, y: 0, z: -1, duration: 1.5 });
+                }
                 gsap.to(chipCamera.position, { x: 2, y: 12, z: 0.1, duration: 1.5, ease: "power2.inOut" });
             }
             else if(currentEnv === 2) {
@@ -1098,8 +1289,14 @@
                 mlxWires.forEach(w => w.visible = false); inmpWires.forEach(w => w.visible = true);
 
                 gsap.to(bgMat.color, { r: 1, g: 0.6, b: 0, duration: 2 }); 
+                if(spotLight) {
+                    gsap.to(spotLight.color, { r: 1, g: 0.6, b: 0, duration: 1.5 });
+                    gsap.to(spotLight.position, { x: -4, y: 8, z: 1, duration: 1.5 });
+                    gsap.to(spotLight.target.position, { x: -4, y: 0, z: 1, duration: 1.5 });
+                }
                 gsap.to(chipCamera.position, { x: -4, y: 3, z: 6, duration: 1.5, ease: "power2.inOut" });
             }
+            if(typeof speak === 'function') speak("Environment changed to " + statusLabel.textContent);
         }
 
         // SIMULATION
@@ -1110,11 +1307,25 @@
             // Flash visible sensors
             if(mlxGroup.visible && mlxLensMat) gsap.to(mlxLensMat.color, { r: 1, g: 0, b: 0, duration: 0.2, yoyo: true, repeat: 3 });
             if(inmpGroup.visible && inmpCoreMat) gsap.to(inmpCoreMat.color, { r: 1, g: 0.3, b: 0.3, duration: 0.2, yoyo: true, repeat: 3 });
-            // Flash Wires
+            // Flash Wires & spawn signal particles
             if(wireGroup) {
                 wireGroup.children.forEach(wire => {
-                    if(wire.visible) gsap.to(wire.material, { opacity: 1, duration: 0.2, yoyo: true, repeat: 3 });
+                    if(wire.visible) {
+                        gsap.to(wire.material, { opacity: 1, duration: 0.2, yoyo: true, repeat: 3 });
+                        if(wire.curve) {
+                            for (let step = 0; step < 3; step++) {
+                                setTimeout(() => {
+                                    spawnSignalParticle(wire.curve, wire.material.color.getHex());
+                                }, step * 200);
+                            }
+                        }
+                    }
                 });
+            }
+
+            // Pulse the green Status LED
+            if(statusLed) {
+                gsap.to(statusLed.scale, { x: 2.5, y: 2.5, z: 2.5, duration: 0.1, yoyo: true, repeat: 5 });
             }
 
             const logs = document.getElementById('sim-logs');
@@ -1122,15 +1333,19 @@
             
             // Dynamic logs based on visible hardware
             let simText = "";
+            let temp = 37.0;
+            let isFever = false;
+            let isCough = false;
+
             if(mlxGroup.visible) {
-                const temp = (38.5 + Math.random() * 2.5).toFixed(1);
-                const isFever = temp >= 39.5;
+                temp = parseFloat((38.5 + Math.random() * 2.5).toFixed(1));
+                isFever = temp >= 39.5;
                 const tempColor = isFever ? "term-pink" : "term-green";
                 const tempLabel = isFever ? "[FEVER DETECTED]" : "[NORMAL]";
                 simText += `[MLX] Frame Captured ... <span class="${tempColor}">${temp}°C ${tempLabel}</span><br>`;
             }
             if(inmpGroup.visible) {
-                const isCough = Math.random() > 0.3;
+                isCough = Math.random() > 0.35;
                 const freq = (2.0 + Math.random() * 1.5).toFixed(1);
                 const msg = isCough ? `Cough Peak @ ${freq}kHz` : `Ambient @ 120Hz`;
                 const color = isCough ? "term-pink" : "term-cyan";
@@ -1144,6 +1359,19 @@
             const term = document.getElementById('fw-term');
             term.scrollTop = term.scrollHeight;
             playTelemetryPing();
+
+            // Voice Narration of Simulation results
+            if(typeof speak === 'function') {
+                let report = "Simulation Event: ";
+                if(mlxGroup.visible) {
+                    report += "MLX thermal scan reports " + (isFever ? "Fever detected at " + temp + " degrees. " : "Normal temperature of " + temp + " degrees. ");
+                }
+                if(inmpGroup.visible) {
+                    report += "Acoustic sensor reports " + (isCough ? "distress respiratory cough detected. " : "ambient clear. ");
+                }
+                report += "Edge telemetry successfully uploaded to Google Firebase.";
+                speak(report);
+            }
         }
 
         // === PREMIUM NAVIGATION & WAYPOINTS ===
@@ -1235,15 +1463,154 @@
 
         // Update Sim Controls to include Tour
         const simControls = document.querySelector('.sim-controls');
-        const tourBtn = document.createElement('button');
-        tourBtn.className = 'sim-btn interactive';
-        tourBtn.style.borderColor = 'var(--tertiary)';
-        tourBtn.style.color = 'var(--tertiary)';
-        tourBtn.innerHTML = '🗺 Guided Tour';
-        tourBtn.onclick = startGuidedTour;
-        simControls.insertBefore(tourBtn, simControls.firstChild);
+        if (simControls) {
+            const tourBtn = document.createElement('button');
+            tourBtn.className = 'sim-btn interactive';
+            tourBtn.style.borderColor = 'var(--tertiary)';
+            tourBtn.style.color = 'var(--tertiary)';
+            tourBtn.innerHTML = '🗺 Guided Tour';
+            tourBtn.onclick = startGuidedTour;
+            simControls.insertBefore(tourBtn, simControls.firstChild);
+        }
+
+        // ==========================================
+        // PREMIUM FEATURES (SCROLL PROGRESS, LOADING CURTAIN, REVEALS, STATS)
+        // ==========================================
+        
+        // 1. SCROLL PROGRESS
+        window.addEventListener('scroll', () => {
+            const winScroll = document.documentElement.scrollTop || document.body.scrollTop;
+            const height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const scrolled = height > 0 ? (winScroll / height) * 100 : 0;
+            const progBar = document.getElementById("scroll-progress");
+            if (progBar) progBar.style.width = scrolled + "%";
+        }, { passive: true });
+
+        // 2. DISMISS LOADING CURTAIN
+        window.addEventListener('load', () => {
+            const curtain = document.getElementById('loading-curtain');
+            if (curtain) {
+                // Smooth fade and slide out using GSAP
+                gsap.to(curtain, {
+                    opacity: 0,
+                    y: -50,
+                    duration: 0.8,
+                    ease: "power3.inOut",
+                    onComplete: () => {
+                        curtain.classList.add('hidden');
+                        showToast("🐗 PigPulse Ready");
+                        // Trigger initial reveal for hero elements
+                        document.querySelectorAll('.hero .gs-reveal').forEach(el => el.classList.add('revealed'));
+                    }
+                });
+            } else {
+                document.querySelectorAll('.hero .gs-reveal').forEach(el => el.classList.add('revealed'));
+            }
+        });
+
+        // Fallback curtain dismissal if load event takes too long
+        setTimeout(() => {
+            const curtain = document.getElementById('loading-curtain');
+            if (curtain && !curtain.classList.contains('hidden')) {
+                curtain.classList.add('hidden');
+                document.querySelectorAll('.hero .gs-reveal').forEach(el => el.classList.add('revealed'));
+            }
+        }, 3000);
+
+        // 3. INTERSECTION OBSERVER FOR SCROLL REVEALS
+        const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        
+        if (prefersReducedMotion) {
+            document.querySelectorAll('.gs-reveal, .gs-fade').forEach(el => el.classList.add('revealed'));
+        } else {
+            const revealObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('revealed');
+                        revealObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.12, rootMargin: "0px 0px -50px 0px" });
+
+            document.querySelectorAll('.gs-reveal, .gs-fade').forEach(el => {
+                revealObserver.observe(el);
+            });
+        }
+
+        // 4. STATS COUNTER BAR ANIMATION
+        const animateStats = () => {
+            document.querySelectorAll('.stat-value').forEach(stat => {
+                const target = parseInt(stat.getAttribute('data-target'), 10) || 0;
+                if (prefersReducedMotion) {
+                    stat.innerText = target.toLocaleString();
+                    return;
+                }
+                const obj = { val: 0 };
+                gsap.to(obj, {
+                    val: target,
+                    duration: 2.2,
+                    ease: "power2.out",
+                    snap: { val: 1 },
+                    onUpdate: () => {
+                        stat.innerText = obj.val.toLocaleString();
+                    }
+                });
+            });
+        };
+
+        const statsBar = document.querySelector('.stats-bar');
+        if (statsBar) {
+            const statsObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        animateStats();
+                        statsObserver.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.2 });
+            statsObserver.observe(statsBar);
+        }
+
+        // 5. CONTINUOUS IDLE SIGNAL PARTICLE FLOW
+        setInterval(() => {
+            if (!wireGroup || !wiresVisible || !chipScene) return;
+            wireGroup.children.forEach(wire => {
+                if (wire.visible && Math.random() > 0.55) {
+                    spawnSignalParticle(wire.curve, wire.material.color.getHex());
+                }
+            });
+        }, 1800);
+
+        // 6. IDLE LED HEARTBEAT
+        if (statusLed) {
+            gsap.to(statusLed.scale, {
+                x: 1.5, y: 1.5, z: 1.5,
+                duration: 0.9,
+                repeat: -1,
+                yoyo: true,
+                ease: "power1.inOut"
+            });
+        }
+
+        // 7. INTERACTIVE HOVER VOICE NARRATION AUTOWIRING (A11y Mandate)
+        document.querySelectorAll('a, button, .interactive').forEach(el => {
+            el.addEventListener('mouseenter', () => {
+                if (typeof speechSynth !== 'undefined' && !speechMuted && typeof speak === 'function') {
+                    // Avoid duplicating speak if it has a custom tooltip narration
+                    if (el.classList.contains('has-tooltip') || el.id.includes('title')) return;
+                    
+                    const label = el.getAttribute('aria-label') || el.innerText || el.textContent;
+                    if (label && label.trim().length > 0) {
+                        // Truncate if extremely long to avoid noise
+                        const cleanLabel = label.split('\n')[0].trim();
+                        if (cleanLabel) speak(cleanLabel);
+                    }
+                }
+            });
+        });
 
         window.startAudioEngine = startAudioEngine;
+        document.addEventListener('pointerdown', startAudioEngine, { once: true });
     </script>
 </body>
 </html>

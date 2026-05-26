@@ -13,6 +13,7 @@ import { Theme } from '../../constants/Theme';
 
 const NAV_ITEMS = [
   { label: 'Home', path: '/', emoji: '🏠' },
+  { label: 'Live Feed', path: '/feed', emoji: '🔴' },
   { label: 'Events', path: '/events', emoji: '🔔' },
   { label: 'Analytics', path: '/analytics', emoji: '📈' },
   { label: 'Nodes', path: '/nodes', emoji: '📡' },
@@ -66,7 +67,6 @@ export function Sidebar() {
                 (hoveredPath === item.path || pressed) && styles.navItemHover,
                 isActive && styles.navItemActive,
                 isCollapsed && { justifyContent: 'center', paddingHorizontal: 0 },
-                // @ts-expect-error — cursor is valid on web Pressable
                 Platform.OS === 'web' && { cursor: 'pointer' },
               ]}
             >
