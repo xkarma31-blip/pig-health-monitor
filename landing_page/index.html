@@ -233,15 +233,6 @@
         </div>
     </nav>
 
-    <div id="audio-banner" role="dialog" aria-modal="true" aria-label="Audio Initialization" onclick="startAudioEngine()">
-        <div class="gs-reveal" style="text-align: center;">
-            <div style="font-size: 3rem; margin-bottom: 20px;">🔮</div>
-            <h2 style="color: var(--tertiary); margin-bottom: 10px;">SENTINEL BOOT SEQUENCE</h2>
-            <p style="color: #fff; opacity: 0.8; margin-bottom: 30px;">Click to initialize neural telemetry & audio gateway</p>
-            <button class="magnetic-btn btn-primary interactive" style="pointer-events: none;">🚀 INITIALIZE SYSTEM</button>
-        </div>
-    </div>
-
     <div id="easter-egg-pig">🐷</div>
 
     <script>
@@ -252,13 +243,6 @@
 
         function startAudioEngine() {
             console.log("Audio engine starting...");
-            const banner = document.getElementById('audio-banner');
-            if (banner) {
-                banner.style.opacity = '0';
-                banner.style.pointerEvents = 'none';
-                banner.style.display = 'none';
-            }
-            
             try {
                 if(actx) return;
                 actx = new AudioContext();
@@ -1244,6 +1228,7 @@
         simControls.insertBefore(tourBtn, simControls.firstChild);
 
         window.startAudioEngine = startAudioEngine;
+        document.addEventListener('pointerdown', startAudioEngine, { once: true });
     </script>
 </body>
 </html>
