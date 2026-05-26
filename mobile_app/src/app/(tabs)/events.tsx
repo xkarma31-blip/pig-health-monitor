@@ -5,9 +5,22 @@ import { useAuth } from '../../utils/auth';
 import { router } from 'expo-router';
 import { subscribeAlerts } from '../../utils/firebase';
 
+interface AlertItem {
+  id: string;
+  timestamp?: string | number;
+  severity?: string;
+  level?: string;
+  title?: string;
+  type?: string;
+  pigName?: string;
+  message?: string;
+  description?: string;
+  deviceId?: string;
+}
+
 export default function EventsScreen() {
   const user = useAuth();
-  const [alerts, setAlerts] = useState<Record<string, unknown>[]>([]);
+  const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -18,7 +31,7 @@ export default function EventsScreen() {
     }
     setLoading(true);
     const unsub = subscribeAlerts((rows) => {
-      setAlerts(rows);
+      setAlerts(rows as unknown as AlertItem[]);
       setLoading(false);
     });
     return () => unsub();

@@ -27,6 +27,7 @@ window.PIGPULSE_CONFIG = {
   appDeepLink: 'soulexpoapp://',
 
   /** APK distributed via EAS builds (see mobile_app/eas.json) */
+  apkUrl: 'https://expo.dev/artifacts/eas/65R74fiDCqMQoizL4RZxAv.apk',
   apkBuildCommand: 'cd mobile_app && npx eas build --platform android --profile preview',
 
   firebase: {

@@ -1,3 +1,4 @@
+<!-- Build: 2026-05-25-v2 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -233,9 +234,12 @@
     </nav>
 
     <div id="audio-banner" role="dialog" aria-modal="true" aria-label="Audio Initialization" onclick="startAudioEngine()">
-        <h1 style="margin:0;">Initialize Sensory Array</h1>
-        <p class="hero-desc" style="text-align: center; margin-top: 10px;">Click anywhere to enable the full audio-visual experience.</p>
-        <button class="banner-btn">SYSTEM BOOT</button>
+        <div class="gs-reveal" style="text-align: center;">
+            <div style="font-size: 3rem; margin-bottom: 20px;">🔮</div>
+            <h2 style="color: var(--tertiary); margin-bottom: 10px;">SENTINEL BOOT SEQUENCE</h2>
+            <p style="color: #fff; opacity: 0.8; margin-bottom: 30px;">Click to initialize neural telemetry & audio gateway</p>
+            <button class="magnetic-btn btn-primary interactive" style="pointer-events: none;">🚀 INITIALIZE SYSTEM</button>
+        </div>
     </div>
 
     <div id="easter-egg-pig">🐷</div>
@@ -247,15 +251,28 @@
         let ambientOsc, ambientGain, lfo;
 
         function startAudioEngine() {
-            document.getElementById('audio-banner').style.opacity = '0';
-            setTimeout(() => document.getElementById('audio-banner').style.display = 'none', 500);
+            console.log("Audio engine starting...");
+            const banner = document.getElementById('audio-banner');
+            if (banner) {
+                banner.style.opacity = '0';
+                banner.style.pointerEvents = 'none';
+                banner.style.display = 'none';
+            }
             
-            if(actx) return;
-            actx = new AudioContext();
-            
-            ambientOsc = actx.createOscillator();
-            ambientGain = actx.createGain();
-            lfo = actx.createOscillator();
+            try {
+                if(actx) return;
+                actx = new AudioContext();
+                
+                // Mute by default if triggered via reduced motion (to avoid autoplay block)
+                if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                    isMuted = true;
+                    const btn = document.getElementById('audio-toggle');
+                    if(btn) { btn.classList.add('muted'); btn.innerHTML = '🔇'; }
+                }
+
+                ambientOsc = actx.createOscillator();
+                ambientGain = actx.createGain();
+                lfo = actx.createOscillator();
             
             ambientOsc.type = 'sine';
             ambientOsc.frequency.value = 55;
@@ -273,10 +290,12 @@
             ambientOsc.connect(ambientGain);
             ambientGain.connect(actx.destination);
             
-            ambientOsc.start();
-            lfo.start();
-
-            playTelemetryPing();
+                ambientOsc.start();
+                lfo.start();
+                playTelemetryPing();
+            } catch (e) {
+                console.warn("Audio Context blocked or failed:", e);
+            }
         }
 
         function toggleAmbient() {
@@ -1142,7 +1161,6 @@
             const wp = chipWaypoints[idx];
             playClick();
 
-            // UI Updates
             document.querySelectorAll('.wp-dot').forEach((dot, i) => dot.classList.toggle('active', i === idx));
             const panel = document.getElementById('chip-info-panel');
             panel.classList.remove('visible');
@@ -1156,7 +1174,6 @@
                 panel.classList.add('visible');
             }, 300);
 
-            // Camera Motion
             gsap.to(chipCamera.position, { x: wp.pos.x, y: wp.pos.y, z: wp.pos.z, duration: 1.5, ease: "power3.inOut" });
             gsap.to(chipControls.target, { x: wp.target.x, y: wp.target.y, z: wp.target.z, duration: 1.5, ease: "power3.inOut", onUpdate: () => chipControls.update() });
             
@@ -1226,7 +1243,7 @@
         tourBtn.onclick = startGuidedTour;
         simControls.insertBefore(tourBtn, simControls.firstChild);
 
-        // Animate Arrows in main loop is handled directly inside the main tick function.
+        window.startAudioEngine = startAudioEngine;
     </script>
 </body>
 </html>

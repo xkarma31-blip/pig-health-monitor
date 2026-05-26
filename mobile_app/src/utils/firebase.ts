@@ -108,23 +108,26 @@ export function subscribeSensors(callback: (sensors: SensorReading[]) => void) {
   }
   const q = query(sRef, orderByChild('lastUpdated'), limitToLast(20));
   return onValue(q, (snapshot) => {
-    const data = snapshot.val();
+    const data = snapshot.val() as Record<string, unknown> | null;
     if (!data) {
       callback([]);
       return;
     }
-    const sensors: SensorReading[] = Object.entries(data).map(([id, val]: [string, Record<string, unknown>]) => ({
-      id,
-      type: val.type || 'thermal',
-      label: val.label || id,
-      icon: val.icon || '📡',
-      value: val.value ?? 0,
-      unit: val.unit || '',
-      status: val.status || 'normal',
-      lastUpdated: val.lastUpdated || new Date().toISOString(),
-      minRange: val.minRange ?? 0,
-      maxRange: val.maxRange ?? 100,
-    }));
+    const sensors: SensorReading[] = Object.entries(data).map(([id, val]) => {
+      const v = val as Record<string, unknown>;
+      return {
+        id,
+        type: v.type || 'thermal',
+        label: v.label || id,
+        icon: v.icon || '📡',
+        value: v.value ?? 0,
+        unit: v.unit || '',
+        status: v.status || 'normal',
+        lastUpdated: v.lastUpdated || new Date().toISOString(),
+        minRange: v.minRange ?? 0,
+        maxRange: v.maxRange ?? 100,
+      } as SensorReading;
+    });
     callback(sensors);
   });
 }
@@ -141,14 +144,14 @@ export function subscribeAlerts(callback: (alerts: Record<string, unknown>[]) =>
   }
   const q = query(aRef, orderByChild('timestamp'), limitToLast(50));
   return onValue(q, (snapshot) => {
-    const data = snapshot.val();
+    const data = snapshot.val() as Record<string, unknown> | null;
     if (!data) {
       callback([]);
       return;
     }
-    const alerts = Object.entries(data).map(([id, val]: [string, Record<string, unknown>]) => ({
+    const alerts = Object.entries(data).map(([id, val]) => ({
       id,
-      ...val,
+      ...(val as Record<string, unknown>),
     }));
     callback(alerts);
   });
@@ -217,17 +220,20 @@ export function subscribeRoster(callback: (roster: Record<string, unknown>[]) =>
     return () => {}; // noop unsubscribe
   }
   return onValue(rRef, (snapshot) => {
-    const data = snapshot.val();
+    const data = snapshot.val() as Record<string, unknown> | null;
     if (!data) {
       callback([]);
       return;
     }
-    const roster = Object.entries(data).map(([id, val]: [string, Record<string, unknown>]) => ({
-      id,
-      ...val,
-      tags: val.tags || [],
-      healthStatus: val.healthStatus || 'NORMAL'
-    }));
+    const roster = Object.entries(data).map(([id, val]) => {
+      const v = val as Record<string, unknown>;
+      return {
+        id,
+        ...v,
+        tags: v.tags || [],
+        healthStatus: v.healthStatus || 'NORMAL',
+      };
+    });
     callback(roster);
   });
 }

@@ -21,6 +21,6 @@ describe('Theme', () => {
   });
 
   it('returns default text color for unknown status', () => {
-    expect(getStatusColor('unknown')).toBe(Theme.colors.text);
+    expect(getStatusColor('unknown' as 'normal')).toBe(Theme.colors.text);
   });
 });
