@@ -13,6 +13,7 @@ import { Theme } from '../../constants/Theme';
 
 const NAV_ITEMS = [
   { label: 'Home', path: '/', emoji: '🏠' },
+  { label: 'Live Feed', path: '/feed', emoji: '🔴' },
   { label: 'Events', path: '/events', emoji: '🔔' },
   { label: 'Analytics', path: '/analytics', emoji: '📈' },
   { label: 'Nodes', path: '/nodes', emoji: '📡' },
