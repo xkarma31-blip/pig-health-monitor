@@ -1,16 +1,35 @@
 /**
- * 🔊 Sound Feedback Utility — Sovereign Aqua Protocol
+ * 🔊 Sound Feedback Utility
  * 
- * Provides subtle, premium audio cues for interactions.
- * Uses Web Audio API on web, with native fallbacks via expo-av.
- * All sounds are procedurally generated — no asset files needed.
+ * Web:  Web Audio API (procedurally generated, zero assets)
+ * Native: expo-av with procedurally generated WAV files cached to disk
+ * 
+ * All sounds are short, premium tones designed for an IoT dashboard.
  */
 
 import { Platform } from 'react-native';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 
 type SoundType = 'tap' | 'success' | 'warning' | 'alert' | 'toggle' | 'navigate';
 
-// Web Audio context (singleton)
+// Expo Go (SDK 54+) no longer bundles the `expo-av` native module. Eagerly
+// importing it there throws `Cannot find native module 'ExponentAV'` while the
+// module factory runs, which can crash the whole bundle. Never touch it on
+// Expo Go / Snack; only use native audio in real builds (standalone/bare) where
+// the module actually exists.
+function canUseNativeAudio(): boolean {
+  if (Platform.OS === 'web') return false;
+  try {
+    return Constants.executionEnvironment !== ExecutionEnvironment.StoreClient;
+  } catch {
+    return false;
+  }
+}
+
+// ============================================================
+// WEB — Web Audio API
+// ============================================================
+
 let audioCtx: AudioContext | null = null;
 
 function getAudioContext(): AudioContext | null {
@@ -22,14 +41,13 @@ function getAudioContext(): AudioContext | null {
       return null;
     }
   }
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
   return audioCtx;
 }
 
-/**
- * Play a procedurally generated sound effect.
- * Each sound is a short, tasteful tone designed for an IoT dashboard.
- */
-export function playSound(type: SoundType): void {
+function playWebSound(type: SoundType): void {
   const ctx = getAudioContext();
   if (!ctx) return;
 
@@ -37,7 +55,6 @@ export function playSound(type: SoundType): void {
 
   switch (type) {
     case 'tap': {
-      // Short, crisp click — 1200Hz sine, 50ms
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
@@ -52,15 +69,14 @@ export function playSound(type: SoundType): void {
     }
 
     case 'success': {
-      // Two-tone ascending chime — C5 → E5
       const osc1 = ctx.createOscillator();
       const osc2 = ctx.createOscillator();
       const gain1 = ctx.createGain();
       const gain2 = ctx.createGain();
       osc1.type = 'sine';
       osc2.type = 'sine';
-      osc1.frequency.value = 523.25; // C5
-      osc2.frequency.value = 659.25; // E5
+      osc1.frequency.value = 523.25;
+      osc2.frequency.value = 659.25;
       gain1.gain.setValueAtTime(0.1, now);
       gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
       gain2.gain.setValueAtTime(0.1, now + 0.1);
@@ -75,7 +91,6 @@ export function playSound(type: SoundType): void {
     }
 
     case 'warning': {
-      // Descending two-tone — E5 → C5
       const osc1 = ctx.createOscillator();
       const osc2 = ctx.createOscillator();
       const gain1 = ctx.createGain();
@@ -98,7 +113,6 @@ export function playSound(type: SoundType): void {
     }
 
     case 'alert': {
-      // Urgent triple-beep
       for (let i = 0; i < 3; i++) {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
@@ -114,7 +128,6 @@ export function playSound(type: SoundType): void {
     }
 
     case 'toggle': {
-      // Soft pop — short sine burst
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
@@ -129,7 +142,6 @@ export function playSound(type: SoundType): void {
     }
 
     case 'navigate': {
-      // Smooth whoosh — filtered noise sweep
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = 'sine';
@@ -142,5 +154,178 @@ export function playSound(type: SoundType): void {
       osc.stop(now + 0.15);
       break;
     }
+  }
+}
+
+// ============================================================
+// NATIVE — expo-av with cached WAV files
+// ============================================================
+
+type SoundSpec = {
+  frequency: number;
+  durationMs: number;
+  waveType: 'sine' | 'square' | 'triangle';
+  envelope: 'short' | 'medium' | 'long';
+};
+
+const SOUND_SPECS: Record<SoundType, SoundSpec> = {
+  tap:      { frequency: 1200, durationMs: 50,  waveType: 'sine',     envelope: 'short' },
+  success:  { frequency: 523,  durationMs: 200, waveType: 'sine',     envelope: 'medium' },
+  warning:  { frequency: 659,  durationMs: 150, waveType: 'triangle', envelope: 'medium' },
+  alert:    { frequency: 880,  durationMs: 96,  waveType: 'square',   envelope: 'short' },
+  toggle:   { frequency: 600,  durationMs: 60,  waveType: 'sine',     envelope: 'short' },
+  navigate: { frequency: 400,  durationMs: 150, waveType: 'sine',     envelope: 'medium' },
+};
+
+function generateWavBuffer(spec: SoundSpec): ArrayBuffer {
+  const sampleRate = 44100;
+  const numSamples = Math.floor(sampleRate * (spec.durationMs / 1000));
+  const buffer = new ArrayBuffer(44 + numSamples * 2);
+  const view = new DataView(buffer);
+
+  const writeString = (offset: number, str: string) => {
+    for (let i = 0; i < str.length; i++) {
+      view.setUint8(offset + i, str.charCodeAt(i));
+    }
+  };
+
+  writeString(0, 'RIFF');
+  view.setUint32(4, 36 + numSamples * 2, true);
+  writeString(8, 'WAVE');
+  writeString(12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, 1, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * 2, true);
+  view.setUint16(32, 2, true);
+  view.setUint16(34, 16, true);
+  writeString(36, 'data');
+  view.setUint32(40, numSamples * 2, true);
+
+  const decayRate = spec.envelope === 'short' ? 20 : spec.envelope === 'medium' ? 8 : 4;
+
+  for (let i = 0; i < numSamples; i++) {
+    const t = i / sampleRate;
+    const phase = 2 * Math.PI * spec.frequency * t;
+
+    let sample = 0;
+    switch (spec.waveType) {
+      case 'sine':
+        sample = Math.sin(phase);
+        break;
+      case 'square':
+        sample = Math.sin(phase) > 0 ? 1 : -1;
+        break;
+      case 'triangle':
+        sample = (2 / Math.PI) * Math.asin(Math.sin(phase));
+        break;
+    }
+
+    const envelope = Math.exp(-t * decayRate);
+    const clamped = Math.max(-1, Math.min(1, sample * envelope * 0.3));
+    view.setInt16(44 + i * 2, clamped * 32767, true);
+  }
+
+  return buffer;
+}
+
+const wavCache = new Map<SoundType, string>();
+
+async function getNativeSoundUri(type: SoundType): Promise<string | null> {
+  if (wavCache.has(type)) return wavCache.get(type)!;
+  if (!canUseNativeAudio()) return null;
+
+  try {
+    const { Audio } = await import('expo-av');
+    const expoFS = await import('expo-file-system') as any;
+    const writeAsStringAsync = expoFS.writeAsStringAsync;
+    const documentDirectory = expoFS.documentDirectory;
+
+    const buffer = generateWavBuffer(SOUND_SPECS[type]);
+    const bytes = new Uint8Array(buffer);
+    let binary = '';
+    for (let i = 0; i < bytes.length; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    const base64 = btoa(binary);
+
+    const fileName = `sound_${type}.wav`;
+    const fileUri = `${documentDirectory}${fileName}`;
+
+    await writeAsStringAsync(fileUri, base64, { encoding: 'base64' });
+
+    const { sound: _sound } = await Audio.Sound.createAsync(
+      { uri: fileUri },
+      { shouldPlay: false }
+    );
+    await _sound.unloadAsync();
+
+    wavCache.set(type, fileUri);
+    return fileUri;
+  } catch {
+    return null;
+  }
+}
+
+let nativeAudioInitialized = false;
+
+async function playNativeSound(type: SoundType): Promise<void> {
+  if (!canUseNativeAudio()) return;
+
+  if (nativeAudioInitialized && wavCache.has(type)) {
+    try {
+      const { Audio } = await import('expo-av');
+      const { sound: activeSound } = await Audio.Sound.createAsync(
+        { uri: wavCache.get(type)! },
+        { shouldPlay: false }
+      );
+      await activeSound.setPositionAsync(0);
+      await activeSound.playAsync();
+      setTimeout(() => activeSound.unloadAsync(), 500);
+    } catch {
+      // Silently fail
+    }
+    return;
+  }
+
+  const uri = await getNativeSoundUri(type);
+  if (!uri) return;
+
+  try {
+    const { Audio } = await import('expo-av');
+    const { sound } = await Audio.Sound.createAsync(
+      { uri },
+      { shouldPlay: false }
+    );
+    await sound.setPositionAsync(0);
+    await sound.playAsync();
+    setTimeout(() => sound.unloadAsync(), 500);
+    nativeAudioInitialized = true;
+  } catch {
+    // Silently fail
+  }
+}
+
+// ============================================================
+// PUBLIC API
+// ============================================================
+
+export async function initSounds(): Promise<void> {
+  if (Platform.OS !== 'web' && canUseNativeAudio()) {
+    try {
+      await import('expo-av');
+      await import('expo-file-system');
+    } catch {
+      // Dependencies not available
+    }
+  }
+}
+
+export function playSound(type: SoundType): void {
+  if (Platform.OS === 'web') {
+    playWebSound(type);
+  } else {
+    playNativeSound(type).catch(() => {});
   }
 }

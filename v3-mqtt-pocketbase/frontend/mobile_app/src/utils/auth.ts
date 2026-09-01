@@ -25,7 +25,6 @@ export function useAuth() {
   useEffect(() => {
     const listener = () => setUser(currentUser);
     listeners.add(listener);
-    setUser(currentUser); // Sync initial state
     return () => { listeners.delete(listener); };
   }, []);
   

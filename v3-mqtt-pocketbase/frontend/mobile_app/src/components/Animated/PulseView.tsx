@@ -5,27 +5,29 @@
  * live data badges, and the Advisor FAB.
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Animated, ViewStyle, Platform } from 'react-native';
+
+const useNativeDriver = Platform.OS !== 'web';
 
 interface PulseViewProps {
   children: React.ReactNode;
   minScale?: number;
   maxScale?: number;
-  duration?: number;  // full cycle duration in ms
+  duration?: number;
   style?: ViewStyle;
-  active?: boolean;   // only pulse when active
+  active?: boolean;
 }
 
-export function PulseView({ 
-  children, 
-  minScale = 0.97, 
-  maxScale = 1.03, 
-  duration = 2000, 
+export function PulseView({
+  children,
+  minScale = 0.97,
+  maxScale = 1.03,
+  duration = 2000,
   style,
-  active = true 
+  active = true
 }: PulseViewProps) {
-  const scale = useRef(new Animated.Value(1)).current;
+  const [scale] = useState(() => new Animated.Value(1));
 
   useEffect(() => {
     if (!active) {
@@ -35,22 +37,13 @@ export function PulseView({
 
     const pulse = Animated.loop(
       Animated.sequence([
-        Animated.timing(scale, {
-          toValue: maxScale,
-          duration: duration / 2,
-          useNativeDriver: Platform.OS !== 'web',
-        }),
-        Animated.timing(scale, {
-          toValue: minScale,
-          duration: duration / 2,
-          useNativeDriver: true,
-        }),
+        Animated.timing(scale, { toValue: maxScale, duration: duration / 2, useNativeDriver }),
+        Animated.timing(scale, { toValue: minScale, duration: duration / 2, useNativeDriver }),
       ])
     );
 
     pulse.start();
     return () => pulse.stop();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [active, duration, maxScale, minScale]);
 
   return (

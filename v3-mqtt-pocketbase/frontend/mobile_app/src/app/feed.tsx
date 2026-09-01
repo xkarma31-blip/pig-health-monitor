@@ -1,28 +1,31 @@
 import { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
-import { Theme } from '../constants/Theme';
+import { useTheme } from '../theme';
 import { ThermalLiveView } from '../components/ThermalLiveView';
 import { useAuth } from '../utils/auth';
 import { subscribeTelemetry } from '../utils/firebase';
+import { AuthBanner } from '../components/shared/AuthBanner';
+import { playSound } from '../utils/sounds';
+import { haptic } from '../utils/haptics';
 
-// Simulated roster — IDs must match ThermalLiveView's pigs.current[].id exactly
 const ROSTER = [
-  { id: 'Pig A (Peppa)', tag: 'EAR-001', temp: 38.4, status: 'normal' as const, emoji: '🐷' },
-  { id: 'Pig B (Boss Hog)', tag: 'EAR-002', temp: 38.1, status: 'normal' as const, emoji: '🐗' },
-  { id: 'Pig C (Fever)', tag: 'EAR-003', temp: 39.9, status: 'danger' as const, emoji: '🔥' },
+  { id: 'Pig A (Peppa)', tag: 'EAR-001', temp: 38.4, status: 'healthy' as const, emoji: '🐷' },
+  { id: 'Pig B (Boss Hog)', tag: 'EAR-002', temp: 38.1, status: 'healthy' as const, emoji: '🐗' },
+  { id: 'Pig C (Fever)', tag: 'EAR-003', temp: 39.9, status: 'alert' as const, emoji: '🔥' },
 ];
 
 const STATUS_COLORS = {
-  normal: { label: 'HEALTHY', color: '#00D4AA' },
-  warning: { label: 'ELEVATED', color: '#FFD700' },
-  danger: { label: 'FEVER', color: '#FF3366' },
+  healthy: { label: 'HEALTHY', color: 'healthy' },
+  watch: { label: 'ELEVATED', color: 'watch' },
+  alert: { label: 'FEVER', color: 'alert' },
 };
 
 export default function FeedScreen() {
   const router = useRouter();
   const user = useAuth();
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const { colors, spacing } = useTheme();
   const [isTvMode, setIsTvMode] = useState(false);
   const [selectedPig, setSelectedPig] = useState<string | undefined>(undefined);
 
@@ -31,7 +34,6 @@ export default function FeedScreen() {
 
   useEffect(() => {
     if (!user) return;
-    // Listen to live telemetry from Core 1 of the ESP32 (esp32-s3-01)
     const unsub = subscribeTelemetry('esp32-s3-01', (telemetry) => {
       if (telemetry) {
         setTelemetryFrame(telemetry.thermalFrame as string | undefined);
@@ -46,55 +48,25 @@ export default function FeedScreen() {
     return () => unsub();
   }, [user]);
 
-  // Gated Gating Shield: If unauthenticated guest, block view completely!
-  if (!user) {
-    return (
-      <View style={styles.lockContainer}>
-        <View style={styles.lockCard}>
-          {/* 'X' Close Button to prevent getting stuck */}
-          <TouchableOpacity style={styles.closeBtn} onPress={() => router.back()}>
-            <Text style={styles.closeBtnText}>✕</Text>
-          </TouchableOpacity>
-
-          <Text style={styles.lockIcon}>🛡️</Text>
-          <Text style={styles.lockTitle}>AUTHENTICATION REQUIRED</Text>
-          <Text style={styles.lockText}>
-            Authorized Farmer or Veterinarian login is required to monitor live MLX90640 thermal feeds and pig identification metrics.
-          </Text>
-          <TouchableOpacity 
-            style={styles.authBtn} 
-            onPress={() => router.push('/login')}
-            activeOpacity={0.8}
-          >
-            <Text style={styles.authBtnText}>LOGIN AS FARMER / VET</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  }
-
-  // Compute responsive thermal bounds to guarantee it fits any screen size (even wide-short screens)
   const isShortScreen = windowHeight < 600;
   const headerAndControlsHeight = isShortScreen ? 140 : 180;
   const maxPossibleHeight = Math.max(160, windowHeight - headerAndControlsHeight);
-  const maxPossibleWidth = windowWidth - Theme.spacing.lg * 2;
-  
-  // Constrain standard height dynamically and calculate exact 32:24 (4:3) width
+  const maxPossibleWidth = windowWidth - spacing.lg * 2;
+
   const standardHeight = Math.min(
-    isShortScreen ? 260 : 360, 
-    maxPossibleHeight, 
+    isShortScreen ? 260 : 360,
+    maxPossibleHeight,
     Math.floor((maxPossibleWidth / 32) * 24)
   );
   const standardWidth = Math.floor((standardHeight / 24) * 32);
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.bg }]}>
       {isTvMode ? (
-        // === FULLSCREEN TV MODE OVERLAY ===
         <View style={[styles.fullscreenOverlay, { width: windowWidth, height: windowHeight }]}>
-          <ThermalLiveView 
-            width={windowWidth} 
-            height={windowHeight} 
+          <ThermalLiveView
+            width={windowWidth}
+            height={windowHeight}
             isFullscreen={true}
             selectedPigToTrack={selectedPig}
             base64Frame={telemetryFrame}
@@ -103,22 +75,38 @@ export default function FeedScreen() {
             identifiedPig={trackerCoords?.pig}
             liveTemp={trackerCoords?.temp}
           />
-          
-          {/* Floating Exit Button */}
-          <TouchableOpacity 
-            style={styles.exitTvButton} 
-            onPress={() => setIsTvMode(false)}
+
+          <TouchableOpacity
+            style={styles.exitTvButton}
+            onPress={() => {
+              haptic('light');
+              playSound('tap');
+              setIsTvMode(false);
+            }}
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Exit fullscreen TV mode"
           >
-            <Text style={styles.exitTvText}>📺 EXIT FULLSCREEN TV MODE</Text>
+            <Text style={[styles.exitTvText, { color: colors.onAccent }]}>📺 EXIT FULLSCREEN TV MODE</Text>
           </TouchableOpacity>
         </View>
       ) : (
-        // === STANDARD FEED PAGE ===
         <View style={styles.contentWrapper}>
-          {/* Top Bar */}
-          <View style={[styles.header, isShortScreen && styles.headerShort]}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          {!user && (
+            <AuthBanner
+              title="Not authenticated"
+              message="Log in to receive live thermal frames from Firebase"
+              buttonLabel="LOG IN"
+              onPress={() => router.push('/login')}
+            />
+          )}
+          <View style={[styles.header, isShortScreen && styles.headerShort, { borderBottomColor: colors.divider }]}>
+            <TouchableOpacity
+              onPress={() => { haptic('light'); playSound('tap'); router.back(); }}
+              style={styles.backButton}
+              accessibilityRole="button"
+              accessibilityLabel="Close feed"
+            >
               <Text style={styles.backButtonText}>✕ CLOSE FEED</Text>
             </TouchableOpacity>
             <Text style={[styles.title, isShortScreen && styles.titleShort]}>LIVE THERMAL ARRAY</Text>
@@ -128,7 +116,6 @@ export default function FeedScreen() {
             </View>
           </View>
 
-          {/* Main Feed Area */}
           <View style={[styles.feedArea, isShortScreen && styles.feedAreaShort]}>
             {!isShortScreen && (
               <>
@@ -136,11 +123,10 @@ export default function FeedScreen() {
                 <Text style={styles.feedSub}>Actively tracking high-temperature fever clusters</Text>
               </>
             )}
-            
-            {/* The Dynamic Heatmap Component */}
+
             <View style={[styles.heatmapContainer, { width: standardWidth, height: standardHeight }]}>
-              <ThermalLiveView 
-                width={standardWidth - 4} 
+              <ThermalLiveView
+                width={standardWidth - 4}
                 height={standardHeight - 4}
                 selectedPigToTrack={selectedPig}
                 base64Frame={telemetryFrame}
@@ -149,25 +135,24 @@ export default function FeedScreen() {
                 identifiedPig={trackerCoords?.pig}
                 liveTemp={trackerCoords?.temp}
               />
-              
-              {/* Redundant float close button for extreme clarity */}
-              <TouchableOpacity 
-                style={styles.floatCloseBtn} 
+
+              <TouchableOpacity
+                style={styles.floatCloseBtn}
                 onPress={() => router.back()}
                 activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel="Close thermal feed"
               >
                 <Text style={styles.floatCloseBtnText}>✕</Text>
               </TouchableOpacity>
             </View>
 
-            {/* === PIG ROSTER — Tap to Track === */}
             <View style={styles.rosterPanel}>
               <View style={styles.rosterHeader}>
                 <Text style={styles.rosterTitle}>🐷 PIG ROSTER</Text>
                 <Text style={styles.rosterSub}>{selectedPig ? `🎯 Tracking: ${selectedPig}` : 'Tap a pig to track on feed'}</Text>
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rosterScroll}>
-                {/* Show All button */}
                 <TouchableOpacity
                   style={[styles.rosterChip, !selectedPig && styles.rosterChipActive]}
                   onPress={() => setSelectedPig(undefined)}
@@ -190,8 +175,8 @@ export default function FeedScreen() {
                       <View>
                         <Text style={[styles.rosterChipName, isActive && styles.rosterChipNameActive]}>{pig.id}</Text>
                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                          <Text style={[styles.rosterChipTemp, { color: sc.color }]}>{pig.temp}°C</Text>
-                          <Text style={[styles.rosterChipBadge, { color: sc.color }]}>{sc.label}</Text>
+                        <Text style={[styles.rosterChipTemp, { color: pig.status === 'healthy' ? colors.healthy : colors.alert }]}>{pig.temp}°C</Text>
+                        <Text style={[styles.rosterChipBadge, { color: pig.status === 'healthy' ? colors.healthy : colors.alert }]}>{sc.label}</Text>
                         </View>
                       </View>
                       {isActive && <Text style={styles.rosterTrackDot}>●</Text>}
@@ -201,11 +186,12 @@ export default function FeedScreen() {
               </ScrollView>
             </View>
 
-            {/* Toggle TV Fullscreen Button */}
-            <TouchableOpacity 
-              style={styles.tvButton} 
+            <TouchableOpacity
+              style={styles.tvButton}
               onPress={() => setIsTvMode(true)}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Enter fullscreen TV mode"
             >
               <Text style={styles.tvButtonText}>📺 ENTER FULLSCREEN TV MODE</Text>
             </TouchableOpacity>
@@ -219,82 +205,23 @@ export default function FeedScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#05050A', // Deep space background
   },
   contentWrapper: {
     flex: 1,
     flexDirection: 'column',
   },
-  lockContainer: {
-    flex: 1,
-    backgroundColor: '#05050A',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Theme.spacing.xl,
-  },
-  lockCard: {
-    backgroundColor: Theme.colors.background,
-    padding: Theme.spacing.xl,
-    borderRadius: Theme.borderRadius.lg,
-    borderWidth: 2,
-    borderColor: Theme.colors.danger,
-    shadowColor: Theme.colors.danger,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.6,
-    shadowRadius: 15,
-    elevation: 10,
-    width: '100%',
-    maxWidth: 400,
-    alignItems: 'center',
-    position: 'relative',
-  },
-  lockIcon: {
-    fontSize: 48,
-    marginBottom: Theme.spacing.md,
-  },
-  lockTitle: {
-    color: Theme.colors.danger,
-    fontSize: Theme.typography.h2,
-    fontWeight: '900',
-    textAlign: 'center',
-    letterSpacing: 2,
-    marginBottom: Theme.spacing.md,
-  },
-  lockText: {
-    color: Theme.colors.textSecondary,
-    fontSize: Theme.typography.body,
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: Theme.spacing.xl,
-  },
-  authBtn: {
-    backgroundColor: Theme.colors.danger,
-    paddingHorizontal: Theme.spacing.xl,
-    paddingVertical: Theme.spacing.md,
-    borderRadius: Theme.borderRadius.md,
-    width: '100%',
-    alignItems: 'center',
-  },
-  authBtnText: {
-    color: '#fff',
-    fontSize: Theme.typography.body,
-    fontWeight: '900',
-    letterSpacing: 1,
-  },
   closeBtn: {
     position: 'absolute',
     top: 16,
     right: 16,
-    width: 32,
-    height: 32,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Theme.colors.surface,
-    borderRadius: 16,
+    borderRadius: 22,
     zIndex: 10,
   },
   closeBtnText: {
-    color: Theme.colors.textMuted,
     fontSize: 18,
     fontWeight: 'bold',
   },
@@ -302,34 +229,28 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 50, 
-    paddingHorizontal: Theme.spacing.lg,
-    paddingBottom: Theme.spacing.md,
+    paddingTop: 50,
+    paddingHorizontal: 16,
+    paddingBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.cardBorder,
-    backgroundColor: Theme.colors.background,
   },
   headerShort: {
     paddingTop: 16,
-    paddingBottom: Theme.spacing.xs,
+    paddingBottom: 4,
   },
   backButton: {
-    paddingVertical: Theme.spacing.xs,
-    paddingHorizontal: Theme.spacing.md,
-    backgroundColor: Theme.colors.danger + '33',
-    borderRadius: Theme.borderRadius.sm,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: Theme.colors.danger,
   },
   backButtonText: {
-    color: Theme.colors.danger,
     fontWeight: '900',
     fontSize: 11,
     letterSpacing: 1,
   },
   title: {
-    color: Theme.colors.text,
-    fontSize: Theme.typography.h3,
+    fontSize: 15,
     fontWeight: 'bold',
     letterSpacing: 2,
   },
@@ -340,92 +261,70 @@ const styles = StyleSheet.create({
   liveIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Theme.colors.success + '22',
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: Theme.borderRadius.pill,
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: Theme.colors.success,
   },
   liveDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Theme.colors.success,
     marginRight: 6,
   },
   liveText: {
-    color: Theme.colors.success,
-    fontWeight: 'bold',
-    fontSize: Theme.typography.caption,
+    fontSize: 12.5,
+    fontWeight: '600',
   },
   feedArea: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: Theme.spacing.lg,
+    padding: 16,
   },
   feedAreaShort: {
-    padding: Theme.spacing.sm,
+    padding: 8,
   },
   feedNotice: {
-    color: Theme.colors.primary,
-    fontSize: Theme.typography.h2,
-    fontWeight: 'bold',
-    marginBottom: Theme.spacing.xs,
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 4,
   },
   feedSub: {
-    color: Theme.colors.textSecondary,
-    fontSize: Theme.typography.body,
-    marginBottom: Theme.spacing.xl,
+    fontSize: 14,
+    marginBottom: 24,
     textAlign: 'center',
   },
   heatmapContainer: {
-    borderRadius: Theme.borderRadius.md,
+    borderRadius: 14,
     overflow: 'hidden',
     borderWidth: 2,
-    borderColor: Theme.colors.primary,
-    shadowColor: Theme.colors.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 15,
-    elevation: 10,
-    marginBottom: Theme.spacing.lg,
+    marginBottom: 16,
     position: 'relative',
   },
   floatCloseBtn: {
     position: 'absolute',
     top: 8,
     right: 8,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(5, 5, 10, 0.85)',
-    borderWidth: 1,
-    borderColor: Theme.colors.danger,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 10,
   },
   floatCloseBtnText: {
-    color: Theme.colors.danger,
-    fontSize: 14,
+    fontSize: 18,
     fontWeight: 'bold',
   },
   tvButton: {
-    backgroundColor: Theme.colors.primary,
-    paddingHorizontal: Theme.spacing.lg,
-    paddingVertical: Theme.spacing.md,
-    borderRadius: Theme.borderRadius.md,
-    shadowColor: Theme.colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 8,
-    elevation: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 14,
+    alignItems: 'center',
   },
   tvButtonText: {
-    color: '#05050A',
-    fontSize: Theme.typography.body,
+    fontSize: 14,
     fontWeight: '900',
     letterSpacing: 1,
   },
@@ -433,7 +332,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
-    backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 9999,
@@ -442,44 +340,34 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 30,
     alignSelf: 'center',
-    backgroundColor: 'rgba(255, 74, 74, 0.95)',
-    paddingHorizontal: Theme.spacing.lg,
-    paddingVertical: Theme.spacing.md,
-    borderRadius: Theme.borderRadius.pill,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 999,
     borderWidth: 2,
-    borderColor: '#fff',
     zIndex: 10000,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.8,
-    shadowRadius: 6,
   },
   exitTvText: {
-    color: '#fff',
     fontSize: 12,
     fontWeight: '900',
     letterSpacing: 1,
   },
-  // === Roster Styles ===
   rosterPanel: {
     width: '100%',
     maxWidth: 600,
-    marginBottom: Theme.spacing.md,
+    marginBottom: 16,
   },
   rosterHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Theme.spacing.xs,
+    marginBottom: 8,
   },
   rosterTitle: {
-    color: Theme.colors.text,
-    fontSize: Theme.typography.caption,
+    fontSize: 12.5,
     fontWeight: '900',
     letterSpacing: 2,
   },
   rosterSub: {
-    color: Theme.colors.textMuted,
     fontSize: 10,
     fontFamily: 'monospace',
   },
@@ -491,17 +379,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: Theme.colors.surface,
-    borderWidth: 1,
-    borderColor: Theme.colors.cardBorder,
-    borderRadius: Theme.borderRadius.md,
+    borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 10,
+    borderWidth: 1,
   },
   rosterChipActive: {
-    borderColor: Theme.colors.primary,
-    backgroundColor: Theme.colors.primary + '15',
-    shadowColor: Theme.colors.primary,
+    borderWidth: 1,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.4,
     shadowRadius: 8,
@@ -510,12 +394,11 @@ const styles = StyleSheet.create({
     fontSize: 22,
   },
   rosterChipName: {
-    color: Theme.colors.text,
     fontSize: 12,
     fontWeight: '700',
   },
   rosterChipNameActive: {
-    color: Theme.colors.primary,
+    fontWeight: '700',
   },
   rosterChipTemp: {
     fontSize: 11,
@@ -528,7 +411,6 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   rosterTrackDot: {
-    color: Theme.colors.primary,
     fontSize: 14,
     fontWeight: '900',
     marginLeft: 4,

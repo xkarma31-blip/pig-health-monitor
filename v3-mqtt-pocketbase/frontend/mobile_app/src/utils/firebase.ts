@@ -1,59 +1,41 @@
-/**
- * 🔥 Firebase Configuration — Sovereign Aqua Protocol
- *
- * Central Firebase client for the Pig Health Monitor.
- * Connects to Firebase Realtime Database for live sensor telemetry.
- *
- * Project: studio-1248778633-99f62
- * Backend: Firebase RTDB (replaces legacy Supabase)
- */
-
-import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
+import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getDatabase, ref, onValue, query, orderByChild, limitToLast, push, set, update } from 'firebase/database';
-import { getAuth, initializeAuth, Auth } from 'firebase/auth';
-// @ts-expect-error - type definitions are missing in this version but runtime export exists
-import { getReactNativePersistence } from 'firebase/auth';
+import { getAuth, initializeAuth, getReactNativePersistence, type Auth } from 'firebase/auth';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { SensorReading } from '../data/mockSensors';
 
-// Conditionally import AsyncStorage only on native to avoid web bundle issues
-let AsyncStorage: Record<string, unknown> | null = null;
-if (Platform.OS !== 'web') {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  AsyncStorage = require('@react-native-async-storage/async-storage').default;
-}
-
-// Firebase project configuration
 const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || '',
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || 'AIzaSyDGPyc_Yz5eGoiszQpj3YNB46G01xH_QDs',
   authDomain: 'studio-1248778633-99f62.firebaseapp.com',
   databaseURL: 'https://studio-1248778633-99f62-default-rtdb.firebaseio.com',
   projectId: 'studio-1248778633-99f62',
   storageBucket: 'studio-1248778633-99f62.firebasestorage.app',
-  messagingSenderId: '',
-  appId: '',
+  messagingSenderId: '362832626962',
+  appId: '1:362832626962:web:c56868d6c57516062e1fcb',
 };
 
-// Initialize Firebase securely with persistence (avoiding double-init on Fast Refresh)
-// Web: getAuth() auto-persists to localStorage
-// Native: initializeAuth() + AsyncStorage for disk persistence
-let app: FirebaseApp;
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
+
+// Auth initialization is platform-aware:
+// - Web: getAuth() uses Firebase's built-in browser localStorage persistence.
+// - Native: initializeAuth() with AsyncStorage persistence so sessions survive
+//   app restarts (getAuth() on RN would warn and fall back to memory-only).
+// initializeAuth is wrapped in try/catch so a Fast Refresh re-evaluation of this
+// module (which throws "auth/already-initialized") falls back to getAuth(), which
+// returns the existing AsyncStorage-backed instance.
 let auth: Auth;
-if (getApps().length === 0) {
-  app = initializeApp(firebaseConfig);
-  if (Platform.OS === 'web') {
-    // On web, getAuth() uses browserLocalPersistence by default
-    auth = getAuth(app);
-  } else {
-    // On native, explicitly set AsyncStorage for login persistence
-    auth = initializeAuth(app, {
-      persistence: getReactNativePersistence(AsyncStorage)
-    });
-  }
-} else {
-  app = getApp();
+if (Platform.OS === 'web') {
   auth = getAuth(app);
+} else {
+  try {
+    auth = initializeAuth(app, { persistence: getReactNativePersistence(AsyncStorage) });
+  } catch {
+    auth = getAuth(app);
+  }
 }
+
+
 const db = getDatabase(app);
 
 // === Path Helpers ===

@@ -1,109 +1,140 @@
-/**
- * 🏗️ Root Layout — Sovereign Aqua Protocol
- * 
- * Top-level layout with:
- * - Desktop centering (800px max-width with shadow)
- * - Floating Advisor FAB with breathing glow
- * - Global status bar
- */
-
-import { Slot } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, useWindowDimensions } from 'react-native';
-import { Theme } from '../constants/Theme';
+import { Slot } from 'expo-router';
+import { View, TouchableOpacity, Text, useWindowDimensions } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ThemeProvider, useTheme } from '../theme';
+import { WebThemeProvider } from '../theme/WebThemeContext';
+import { ToastProvider } from '../components/primitives/Toast';
+import { ErrorBoundary } from '../components/ErrorBoundary';
+import { LoadingFallback } from '../components/FallbackComponent';
+import { playSound, initSounds } from '../utils/sounds';
+import { haptic, initHaptics } from '../utils/haptics';
 import AdvisorModal from '../components/AdvisorModal';
 import { PulseView } from '../components/Animated/PulseView';
-import { playSound } from '../utils/sounds';
 
-export default function RootLayout() {
+function RootInner({ children }: { children: React.ReactNode }) {
   const [advisorVisible, setAdvisorVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const { colors, spacing, mode } = useTheme();
   const { width } = useWindowDimensions();
-
-  // Desktop threshold
   const isDesktop = width > 768;
-  const maxWidth = 800;
+
+  useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        await initSounds();
+        await initHaptics();
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Failed to initialize app:', error);
+        setIsLoading(false);
+      }
+    };
+
+    initializeApp();
+  }, []);
 
   const openAdvisor = () => {
     playSound('toggle');
+    haptic('light');
     setAdvisorVisible(true);
   };
 
-  return (
-    <View style={styles.outerBackground}>
-      <StatusBar style="light" />
-      
-      {/* Centered container for Desktop */}
-      <View style={[
-        styles.appContainer,
-        isDesktop && { 
-          width: maxWidth, 
-          alignSelf: 'center' as const, 
-          marginVertical: Theme.spacing.lg, 
-          borderRadius: 24, 
-          overflow: 'hidden' as const, 
-          elevation: 12, 
-          shadowColor: '#000', 
-          shadowOffset: { width: 0, height: 8 }, 
-          shadowOpacity: 0.25, 
-          shadowRadius: 15 
-        }
-      ]}>
-        <Slot />
-        
-        {/* Floating Advisor FAB with breathing pulse */}
-        <PulseView duration={3000} minScale={0.95} maxScale={1.05}>
-          <TouchableOpacity 
-            style={styles.fab} 
-            activeOpacity={0.7}
-            onPress={openAdvisor}
-          >
-            <Text style={styles.fabIcon}>💬</Text>
-          </TouchableOpacity>
-        </PulseView>
-      </View>
+  const closeAdvisor = () => {
+    playSound('tap');
+    haptic('light');
+    setAdvisorVisible(false);
+  };
 
-      <AdvisorModal 
-        visible={advisorVisible} 
-        onClose={() => {
-          playSound('tap');
-          setAdvisorVisible(false);
-        }} 
-      />
+  if (isLoading) {
+    return (
+      <ThemeProvider>
+        <LoadingFallback message="Initializing application..." />
+      </ThemeProvider>
+    );
+  }
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
+      <View
+        style={[
+          { flex: 1, width: '100%' },
+          isDesktop && {
+            width: 800,
+            alignSelf: 'center',
+            marginVertical: spacing.xxl,
+            borderRadius: 24,
+            overflow: 'hidden',
+            elevation: 12,
+            shadowColor: colors.shadow,
+            shadowOffset: { width: 0, height: 8 },
+            shadowOpacity: 0.25,
+            shadowRadius: 15,
+          },
+        ]}
+      >
+        {children}
+      </View>
+      <PulseView
+        duration={3000}
+        minScale={0.95}
+        maxScale={1.05}
+        style={{
+          position: 'absolute',
+          bottom: 80,
+          right: isDesktop ? Math.max(16, (width - 800) / 2 + 16) : 16,
+          zIndex: 999,
+        }}
+      >
+        <TouchableOpacity
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 28,
+            backgroundColor: colors.surface,
+            alignItems: 'center',
+            justifyContent: 'center',
+            shadowColor: colors.accent,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.6,
+            shadowRadius: 12,
+            elevation: 8,
+            borderWidth: 2,
+            borderColor: colors.accent,
+          }}
+          onPress={openAdvisor}
+          accessibilityLabel="Open advisor assistant"
+          accessibilityHint="Opens the AI advisor chat"
+          accessibilityRole="button"
+        >
+          <Text style={{ fontSize: 24 }}>💬</Text>
+        </TouchableOpacity>
+      </PulseView>
+      <AdvisorModal visible={advisorVisible} onClose={closeAdvisor} />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  outerBackground: {
-    flex: 1,
-    backgroundColor: '#05050A',
-    justifyContent: 'center',
-  },
-  appContainer: {
-    flex: 1,
-    backgroundColor: Theme.colors.background,
-    width: '100%',
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 95, 
-    right: 24,
-    width: 68,
-    height: 68,
-    borderRadius: 34,
-    backgroundColor: Theme.colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: Theme.colors.primary,
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 20,
-    elevation: 12,
-    borderWidth: 2,
-    borderColor: Theme.colors.primary,
-  },
-  fabIcon: {
-    fontSize: 32,
-  }
-});
+export default function RootLayout() {
+  return (
+    <SafeAreaProvider>
+      <WebThemeProvider>
+        <ThemeProvider>
+          <ToastProvider>
+            <ErrorBoundary
+              onError={(error, errorInfo) => {
+                console.error('Root layout error:', error, errorInfo);
+              }}
+            >
+              <RootInner>
+                <Slot />
+              </RootInner>
+            </ErrorBoundary>
+          </ToastProvider>
+        </ThemeProvider>
+      </WebThemeProvider>
+    </SafeAreaProvider>
+  );
+}
