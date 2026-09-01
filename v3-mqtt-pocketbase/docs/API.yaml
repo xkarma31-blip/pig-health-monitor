@@ -1,0 +1,225 @@
+openapi: 3.0.3
+info:
+  title: PigPulse API
+  version: 3.0.0
+  description: Pig Health Monitor IoT API
+  contact:
+    name: Kharl Angelo Capuno
+    email: solrahk@example.com
+
+servers:
+  - url: http://localhost:8090
+    description: Local development
+
+paths:
+  /api/health:
+    get:
+      summary: Health check
+      tags: [System]
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+
+  /api/collections/telemetry/records:
+    get:
+      summary: List telemetry records
+      tags: [Telemetry]
+      parameters:
+        - name: sort
+          in: query
+          schema:
+            type: string
+            default: '-timestamp'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: filter
+          in: query
+          schema:
+            type: string
+            example: "deviceId='esp32-001'"
+      responses:
+        '200':
+          description: List of telemetry records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemetryList'
+
+  /api/collections/alerts/records:
+    get:
+      summary: List alert records
+      tags: [Alerts]
+      parameters:
+        - name: sort
+          in: query
+          schema:
+            type: string
+            default: '-timestamp'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        '200':
+          description: List of alert records
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertList'
+
+  /api/collections/devices/records:
+    get:
+      summary: List registered devices
+      tags: [Devices]
+      responses:
+        '200':
+          description: List of devices
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceList'
+
+  /api/collections/pigs/records:
+    get:
+      summary: List pig roster
+      tags: [Pigs]
+      responses:
+        '200':
+          description: List of pigs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PigList'
+
+components:
+  schemas:
+    Telemetry:
+      type: object
+      properties:
+        id:
+          type: string
+        deviceId:
+          type: string
+        timestamp:
+          type: integer
+        temperature:
+          type: number
+        bodyTemp:
+          type: number
+        pigId:
+          type: string
+        status:
+          type: string
+          enum: [NORMAL, WARNING, CRITICAL]
+        batteryPct:
+          type: number
+        wifiRssi:
+          type: integer
+
+    Alert:
+      type: object
+      properties:
+        id:
+          type: string
+        deviceId:
+          type: string
+        type:
+          type: string
+          enum: [FEVER, COUGH_CLUSTER, LOW_BATTERY, WEAK_WIFI]
+        severity:
+          type: string
+          enum: [INFO, WARNING, CRITICAL]
+        message:
+          type: string
+        timestamp:
+          type: integer
+
+    Device:
+      type: object
+      properties:
+        id:
+          type: string
+        deviceId:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum: [esp32, webcam, luckfox]
+        status:
+          type: string
+          enum: [online, offline, hibernate]
+        batteryPct:
+          type: number
+
+    Pig:
+      type: object
+      properties:
+        id:
+          type: string
+        pigId:
+          type: string
+        name:
+          type: string
+        healthStatus:
+          type: string
+          enum: [NORMAL, FEVER, COUGH, SICK]
+        tags:
+          type: array
+          items:
+            type: string
+
+    TelemetryList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Telemetry'
+        totalItems:
+          type: integer
+
+    AlertList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Alert'
+        totalItems:
+          type: integer
+
+    DeviceList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Device'
+        totalItems:
+          type: integer
+
+    PigList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Pig'
+        totalItems:
+          type: integer

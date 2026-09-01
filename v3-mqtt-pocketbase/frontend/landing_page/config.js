@@ -1,0 +1,37 @@
+/**
+ * PigPulse / Pig Health Monitor — landing page config (single source of truth)
+ * Update URLs here; index.html loads this before other scripts.
+ */
+window.PIGPULSE_CONFIG = {
+  version: '2.1.0',
+  productName: 'PigPulse',
+  protocolName: 'Sovereign Aqua Protocol',
+  researchTitle: 'Multimodal TinyML Acoustic Safeguard for Open-Air Swine Farming',
+
+  /** Canonical production app (Expo web) */
+  appUrl: 'https://pig-health-monitor.vercel.app',
+
+  /**
+   * Marketing / portfolio host (this HTML landing).
+   * Set after `vercel --prod` from landing_page/ — e.g. pig-health-research-portfolio.vercel.app
+   */
+  landingUrl: 'https://pig-health-research-portfolio.vercel.app',
+
+  /** Legacy alias — redirects mentally to appUrl; do not use for new links */
+  legacyAppUrl: 'https://mobileapp-lyart.vercel.app',
+
+  repoUrl: 'https://codeberg.org/Solrahk/pig-health-monitor',
+  docsPath: '/docs/PLAN_INDEX.md',
+
+  /** Deep link scheme for native Expo build */
+  appDeepLink: 'soulexpoapp://',
+
+  /** APK distributed via EAS builds (see mobile_app/eas.json) */
+  apkUrl: 'https://expo.dev/artifacts/eas/65R74fiDCqMQoizL4RZxAv.apk',
+  apkBuildCommand: 'cd mobile_app && npx eas build --platform android --profile preview',
+
+  firebase: {
+    backend: 'Firebase Realtime Database',
+    pathPattern: '/users/{uid}/telemetry/{deviceId}',
+  },
+};

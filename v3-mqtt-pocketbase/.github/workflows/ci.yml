@@ -1,0 +1,56 @@
+name: PigPulse CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        working-directory: frontend/mobile_app
+        run: npm ci
+      - name: Lint
+        working-directory: frontend/mobile_app
+        run: npm run lint
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        working-directory: frontend/mobile_app
+        run: npm ci
+      - name: Test
+        working-directory: frontend/mobile_app
+        run: npm test
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker containers
+        working-directory: v3-mqtt-pocketbase/deploy/docker
+        run: docker compose build
+      - name: Start services
+        working-directory: v3-mqtt-pocketbase/deploy/docker
+        run: docker compose up -d
+      - name: Wait for services
+        run: sleep 10
+      - name: Check health
+        run: |
+          curl -f http://localhost/health || exit 1
+          curl -f http://localhost:8090/api/health || exit 1
+      - name: Stop services
+        working-directory: v3-mqtt-pocketbase/deploy/docker
+        run: docker compose down

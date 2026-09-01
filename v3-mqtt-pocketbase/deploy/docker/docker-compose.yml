@@ -1,0 +1,114 @@
+version: '3.8'
+
+# PigPulse v3 — Full Docker Stack
+# Deploy: docker compose up -d
+
+services:
+  # ── MQTT Broker ──────────────────────────────────────────────
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: pigpulse-mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto/config:/mosquitto/config
+      - mosquitto-data:/mosquitto/data
+    networks:
+      - pigpulse-net
+    healthcheck:
+      test: ["CMD", "mosquitto_sub", "-t", "$$SYS/#", "-C", "1", "-i", "healthcheck", "-W", "3"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Database + API ──────────────────────────────────────────
+  pocketbase:
+    image: pocketbase/pocketbase:latest
+    container_name: pigpulse-pocketbase
+    restart: unless-stopped
+    ports:
+      - "8090:8090"
+      - "8091:8091"
+    volumes:
+      - pocketbase-data:/pb/pb_data
+    command: serve --http=0.0.0.0:8090 --admin=0.0.0.0:8091
+    networks:
+      - pigpulse-net
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8090/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Cache + Buffer ─────────────────────────────────────────
+  valkey:
+    image: valkey/valkey:8
+    container_name: pigpulse-valkey
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: valkey-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - valkey-data:/data
+    networks:
+      - pigpulse-net
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── API Gateway (OpenResty) ────────────────────────────────
+  openresty:
+    image: openresty/openresty:alpine
+    container_name: pigpulse-openresty
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./openresty/conf/nginx.conf:/usr/local/openresty/nginx/conf/nginx.conf
+      - ./openresty/lua:/etc/nginx/lua
+      - openresty-logs:/usr/local/openresty/nginx/logs
+    depends_on:
+      - pocketbase
+    networks:
+      - pigpulse-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── MQTT → PocketBase Bridge ──────────────────────────────
+  mqtt-bridge:
+    build:
+      context: ../backend/bridge
+      dockerfile: Dockerfile
+    container_name: pigpulse-bridge
+    restart: unless-stopped
+    environment:
+      - MQTT_BROKER=mosquitto
+      - MQTT_PORT=1883
+      - POCKETBASE_URL=http://pocketbase:8090
+      - VALKEY_URL=redis://valkey:6379
+      - PB_EMAIL=${PB_EMAIL:-admin@pigpulse.local}
+      - PB_PASSWORD=${PB_PASSWORD:-admin123}
+    depends_on:
+      - mosquitto
+      - pocketbase
+      - valkey
+    networks:
+      - pigpulse-net
+
+networks:
+  pigpulse-net:
+    driver: bridge
+
+volumes:
+  mosquitto-data:
+  pocketbase-data:
+  valkey-data:
+  openresty-logs:
