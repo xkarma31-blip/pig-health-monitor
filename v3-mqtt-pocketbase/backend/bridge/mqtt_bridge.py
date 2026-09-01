@@ -26,6 +26,8 @@ from typing import Optional
 
 import paho.mqtt.client as mqtt
 import requests
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ── Configuration ────────────────────────────────────────────────
 
@@ -64,6 +66,7 @@ class PocketBaseClient:
                 f"{self.base_url}/api/admins/auth-with-password",
                 json={"identity": PB_EMAIL, "password": PB_PASSWORD},
                 timeout=10,
+                verify=False,
             )
             if resp.status_code == 200:
                 data = resp.json()
@@ -95,6 +98,7 @@ class PocketBaseClient:
                 headers=self._get_headers(),
                 json=data,
                 timeout=10,
+                verify=False,
             )
             if resp.status_code == 200:
                 log.info(f"✅ Created {collection} record")
@@ -107,6 +111,7 @@ class PocketBaseClient:
                     headers=self._get_headers(),
                     json=data,
                     timeout=10,
+                    verify=False,
                 )
                 if resp.status_code == 200:
                     log.info(f"✅ Created {collection} record (after re-auth)")
@@ -201,6 +206,7 @@ def handle_status(device_id: str, data: dict):
             headers=pb._get_headers(),
             params={"filter": f"deviceId='{device_id}'", "limit": 1},
             timeout=10,
+            verify=False,
         )
         if resp.status_code == 200:
             records = resp.json().get("items", [])
@@ -211,6 +217,7 @@ def handle_status(device_id: str, data: dict):
                     headers=pb._get_headers(),
                     json=data,
                     timeout=10,
+                    verify=False,
                 )
             else:
                 data["name"] = f"Device {device_id}"
