@@ -1,0 +1,10 @@
+{
+  "name": "thermal-ws",
+  "version": "1.0.0",
+  "description": "Thermal live view WebSocket broadcaster",
+  "main": "thermal-ws.js",
+  "dependencies": {
+    "mqtt": "^5.3.0",
+    "ws": "^8.16.0"
+  }
+}
