@@ -37,6 +37,15 @@
       ],
       "expo-status-bar"
     ],
-    "scheme": "pighealth"
+    "scheme": "pighealth",
+    "extra": {
+      "router": {
+        "root": "./src/app"
+      },
+      "eas": {
+        "projectId": "61fdeb08-405f-4878-8ad7-ec3767746466"
+      }
+    },
+    "owner": "13solrak"
   }
 }
