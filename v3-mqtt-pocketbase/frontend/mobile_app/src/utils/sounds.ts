@@ -18,12 +18,9 @@ type SoundType = 'tap' | 'success' | 'warning' | 'alert' | 'toggle' | 'navigate'
 // Expo Go / Snack; only use native audio in real builds (standalone/bare) where
 // the module actually exists.
 function canUseNativeAudio(): boolean {
-  if (Platform.OS === 'web') return false;
-  try {
-    return Constants.executionEnvironment !== ExecutionEnvironment.StoreClient;
-  } catch {
-    return false;
-  }
+  // Native audio disabled — expo-av has ABI issues with SDK 57
+  // All platforms fall through to Web Audio API or no-op
+  return false;
 }
 
 // ============================================================
