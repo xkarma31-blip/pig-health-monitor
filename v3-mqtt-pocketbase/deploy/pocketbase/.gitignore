@@ -1,0 +1,6 @@
+bin/pocketbase
+bin/pb_data/
+bin/pb_migrations/
+venv/
+__pycache__/
+*.pyc
