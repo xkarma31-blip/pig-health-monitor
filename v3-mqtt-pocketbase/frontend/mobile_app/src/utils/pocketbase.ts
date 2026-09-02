@@ -16,10 +16,16 @@
 
 import { Platform } from 'react-native';
 
-// Resolve base URL — native cannot use localhost correctly on some devices, so allow override
-export const PB_URL: string =
-  process.env.EXPO_PUBLIC_POCKETBASE_URL ||
-  (Platform.OS === 'web' ? 'http://localhost:8090' : 'http://127.0.0.1:8090');
+// Resolve base URL — ADB reverse (127.0.0.1:18090) is primary on native
+const PB_FALLBACKS: string[] = [
+  process.env.EXPO_PUBLIC_POCKETBASE_URL,
+  'http://127.0.0.1:18090', // adb reverse tcp:18090 tcp:8090
+  'http://127.0.0.1:8090',
+  'http://localhost:8090',
+].filter(Boolean) as string[];
+
+export const PB_URL: string = PB_FALLBACKS[0]!;
+export const PB_FALLBACK_URLS = PB_FALLBACKS.slice(1);
 
 let adminToken: string | null = null;
 let adminTokenExpiry = 0;
@@ -89,13 +95,25 @@ export async function pbList<T = Record<string, unknown>>(
   if (opts.page) params.set('page', String(opts.page));
   if (opts.expand) params.set('expand', opts.expand);
   if (opts.fields) params.set('fields', opts.fields);
-  // PocketBase public collections — omit Authorization if open
   const headers: Record<string,string> = {};
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  const url = `${PB_URL}/api/collections/${collection}/records?${params.toString()}`;
-  const res = await fetch(url, { headers });
-  if (!res.ok) throw new Error(`pbList ${collection} ${res.status}: ${await res.text()}`);
-  return (await res.json()) as PBListResult<T>;
+  // Try primary PB_URL then fallbacks (handles 192.168.1.101 unreachable via USB)
+  const urls = [PB_URL, ...PB_FALLBACK_URLS];
+  let lastErr: string = '';
+  for (const base of urls) {
+    const url = `${base}/api/collections/${collection}/records?${params.toString()}`;
+    try {
+      const res = await fetch(url, { headers });
+      if (!res.ok) throw new Error(`pbList ${collection} ${res.status}: ${await res.text()}`);
+      return (await res.json()) as PBListResult<T>;
+    } catch (e:any) {
+      lastErr = String(e.message || e);
+      // try next fallback on network failure
+      if (lastErr.includes('Failed to fetch') || lastErr.includes('Network') || lastErr.includes('Load failed')) continue;
+      throw e;
+    }
+  }
+  throw new Error(lastErr || `pbList ${collection} failed all PB URLs`);
 }
 
 export async function pbCreate<T = Record<string, unknown>>(
