@@ -3265,32 +3265,31 @@ xTaskCreatePinnedToCore(<br>
         const hl = document.getElementById('hotspot-layer'); if (hl) hl.style.display = showGLB ? 'none' : '';
         btnGLB.classList.toggle('active', showGLB);
         if (showGLB && !glbLoaded && !glbLoading) {
-          // Lazy-load GLTFLoader if not yet available
           function loadGLB() {
             glbLoading = true;
             btnGLB.textContent = 'Loading…';
             const loader = new THREE.GLTFLoader();
             loader.load('pigpulse-device.glb', (gltf) => {
               glbModel = gltf.scene;
+              // Auto-scale to fit ~2 unit bounding box, center on origin
               const box = new THREE.Box3().setFromObject(glbModel);
               const center = box.getCenter(new THREE.Vector3());
               const size = box.getSize(new THREE.Vector3());
               const maxDim = Math.max(size.x, size.y, size.z);
-              const scale = 2.0 / maxDim;
+              const scale = maxDim > 0 ? 2.0 / maxDim : 1;
               glbModel.scale.setScalar(scale);
-              glbModel.position.sub(center.multiplyScalar(scale));
-              glbModel.position.y += 0.1;
+              glbModel.position.sub(center.clone().multiplyScalar(scale));
+              glbModel.position.y += 0.05;
               scene.add(glbModel);
               glbLoaded = true;
               glbLoading = false;
               btnGLB.textContent = 'PCB View';
               controls.target.set(0, 0.15, 0);
               camera.position.set(2.5, 1.8, 2.5);
-            }, undefined, () => { btnGLB.textContent = '3D Model'; glbLoading = false; });
+            }, undefined, (err) => { console.error('GLB load error', err); btnGLB.textContent = '3D Model'; glbLoading = false; });
           }
           if (window.THREE && THREE.GLTFLoader) { loadGLB(); }
           else {
-            // Inject GLTFLoader CDN if not already loaded
             const s = document.createElement('script');
             s.src = 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js';
             s.onload = () => { if (window.THREE && THREE.GLTFLoader) loadGLB(); else btnGLB.textContent = '3D Model'; };
