@@ -1720,7 +1720,7 @@ xTaskCreatePinnedToCore(<br>
       const url = new URL(src, window.location.href).href;
       if(_preAudio){ try{ _preAudio.pause(); _preAudio.removeAttribute('src'); _preAudio.load(); }catch(e){} }
       _preAudio = new Audio(url);
-      _preAudio.volume = 0.84; _preAudio.playbackRate = 1.0;
+      _preAudio.volume = 0.84; _preAudio.playbackRate = 0.92; // slower, calmer AGUA narration
       _preAudio.preload = 'auto';
       let finished=false;
       const finish=()=>{ if(finished) return; finished=true; done(); };
@@ -1770,7 +1770,7 @@ xTaskCreatePinnedToCore(<br>
       try{
         const synth=window.speechSynthesis; if(!synth) return fin();
         const u=new SpeechSynthesisUtterance(text.slice(0,420));
-        u.lang='en-US'; u.volume=0.84; u.rate=0.96; u.pitch=1.0;
+        u.lang='en-US'; u.volume=0.84; u.rate=0.84; u.pitch=1.0; // 0.84 = noticeably slower, calmer narration
         const voices=synth.getVoices?synth.getVoices():[];
         const v=voices.find(x=>/Jenny|Aria|Natural|Google US English/i.test(x.name)) || voices.find(x=>/^en/i.test(x.lang)) || null;
         if(v) u.voice=v;
@@ -1795,8 +1795,9 @@ xTaskCreatePinnedToCore(<br>
 
   // synthesized pig cough — filtered noise burst(s)
   function pigCough(distress){
-    // FILE-LINKED — uses real recorded pig-cough WAVs (cough_healthy.wav / cough_distress.wav, from the capstone training set) at full volume; visual puff always; does NOT enable global sound
-    const file = distress ? 'cough_distress.wav' : 'cough_healthy.wav';
+    // FILE-LINKED — real recorded pig-cough files (cough_healthy.mp3 / cough_distress.mp3,
+    // from the capstone training set, re-encoded) at full volume; visual puff always; does NOT enable global sound
+    const file = distress ? 'cough_distress.mp3' : 'cough_healthy.mp3';
     _visualCough(distress);
     // HTMLAudio is most reliable in Firefox after a click — no AudioContext resume dance
     try{
@@ -1876,6 +1877,12 @@ xTaskCreatePinnedToCore(<br>
       soundOn = !soundOn;
       if (actx.state === 'suspended') actx.resume();
       try{ ambientGain.gain.setTargetAtTime(soundOn ? 0.05 : 0, actx.currentTime, 0.6); }catch(e){ ambientGain.gain.value = soundOn ? 0.05 : 0; }
+      if (!soundOn){
+        // mute cuts the CURRENT narration dead + clears everything queued (no fade-out tail)
+        try{ if (window.speechSynthesis) window.speechSynthesis.cancel(); }catch(e){}
+        try{ if (_preAudio){ _preAudio.pause(); _preAudio.removeAttribute('src'); _preAudio.load(); } }catch(e){}
+        _speakQueue.length = 0; _speakLock = false;
+      }
       soundBtn.classList.toggle('on', soundOn);
       soundBtn.setAttribute('aria-pressed', String(soundOn));
       soundBtn.title = soundOn ? 'Mute sound' : 'Enable sound';
