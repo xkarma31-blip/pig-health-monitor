@@ -36,7 +36,8 @@
           "root": "./src/app"
         }
       ],
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-audio"
     ],
     "scheme": "pighealth",
     "extra": {

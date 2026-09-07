@@ -39,3 +39,37 @@
 ## 10. Conservative Thresholds
 **Decision:** >39.5°C warning, >40°C critical
 **Rationale:** Safe defaults, manual override
+
+## 11. Mobile UI Copy — Farmer-Plain Language (2026-09-07)
+**Decision:** All farmer-facing screen strings come from a single EN/TL table
+(`frontend/mobile_app/src/utils/farmerText.ts`), Grade-4 reading level; no
+jargon ("MQTT", "telemetry", "dBm", "firmware") on screens.
+**Rationale:** Ported from fork branch `polish/farmer-setup`; user approved
+the "less jargon" improvement. Contract test asserts EN/TL key parity.
+
+## 12. Setup Wizard Targets PocketBase, NOT a Compute-Node Gateway (2026-09-07)
+**Decision:** The 3-step setup wizard ("Find your box") probes PocketBase
+`/api/health`; the box address a farmer enters is the PocketBase base URL.
+**Rationale:** Canon data path is ESP32 → MQTT → Bridge → PocketBase → app.
+A direct gateway connection bypasses PocketBase and breaks the data contract.
+
+## 13. REJECTED — Direct Compute-Node Gateway Client (gateway.ts) (2026-09-07)
+**Decision:** `gateway.ts` + `useOfflineTelemetry.ts` (fork branches
+`polish/farmer-setup` / `polish/app-readiness`) are NOT ported.
+**Rationale:** They fetch telemetry straight from the compute node on a
+private port, bypassing PocketBase — breaking the canonical contract above.
+If offline-edge telemetry is ever needed, it must be re-architected against
+PocketBase (e.g. a local cache of PB records), never a second data path.
+
+## 14. REJECTED — Fork Simulation Scripts (scripts/sim) (2026-09-07)
+**Decision:** `compute-node-sim.mjs` + its contract test are NOT ported.
+**Rationale:** They test the rejected fork gateway contract, not the canon
+ESP32 → MQTT → Bridge → PocketBase path. Canon has its own seed/sim tooling
+(`backend/setup/seed_mqtt.py`, `seed_pocketbase.py`).
+
+## 15. Setup Wizard Entry Points
+**Decision:** The wizard lives at `src/app/setup.tsx`, reachable from the
+Home DEMO banner (when setup not done) and Settings → "＋ Set up a device".
+**Rationale:** expo-router `Slot`-based routing auto-registers the route; no
+manual Stack registration needed. Setup state persists in AsyncStorage via
+`src/utils/setupStore.ts` (`@pigpulse/…` keys).

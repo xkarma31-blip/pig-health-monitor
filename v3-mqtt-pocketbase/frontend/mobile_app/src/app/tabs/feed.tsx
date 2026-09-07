@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '../../theme';
 import { useAuth } from '../../utils/auth';
-import { subscribeRoster, subscribeTelemetry } from '../../utils/firebase';
+import { subscribeRoster, subscribeTelemetry } from '../../utils/pocketbase-data';
 import { haptic } from '../../utils/haptics';
 import { router } from 'expo-router';
 

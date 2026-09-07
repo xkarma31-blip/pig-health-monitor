@@ -1,51 +1,71 @@
-import React, { useState } from 'react';
-import { Animated } from 'react-native';
+import React from 'react';
+import { View } from 'react-native';
 import { Tabs, TabSlot, TabList, TabTrigger } from 'expo-router/ui';
-import { router } from 'expo-router';
-import { BottomNav, type TabKey } from '../../components/primitives/BottomNav';
-import { playSound } from '../../utils/sounds';
-import { haptic } from '../../utils/haptics';
+import { StyleSheet } from 'react-native';
+import { BottomNav } from '../../components/primitives/BottomNav';
+import { SidebarNav } from '../../components/primitives/SidebarNav';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 
-const TAB_PATHS: Record<TabKey, string> = {
-  home: '/tabs',
-  events: '/tabs/events',
-  roster: '/tabs/roster',
-  settings: '/tabs/settings',
-};
+// Keep in sync with SidebarNav rail width.
+const SIDEBAR_WIDTH = 232;
 
 export default function TabLayout() {
-  const [fade] = useState(() => new Animated.Value(1));
-  const [activeTab, setActiveTab] = useState<TabKey>('home');
-  const [unreadEvents, setUnreadEvents] = useState(0);
-
-  const changeTab = (tab: TabKey) => {
-    if (tab === activeTab) return;
-    haptic('light');
-    playSound('tap');
-    Animated.timing(fade, { toValue: 0, duration: 120, useNativeDriver: true }).start(() => {
-      const path = TAB_PATHS[tab];
-      if (path) {
-        router.replace(path);
-        setActiveTab(tab);
-        if (tab === 'events') setUnreadEvents(0);
-      }
-      fade.setValue(0);
-      Animated.timing(fade, { toValue: 1, duration: 220, useNativeDriver: true }).start();
-    });
-  };
+  const tier = useBreakpoint();
+  const expanded = tier === 'expanded';
 
   return (
     <Tabs>
-      <Animated.View style={{ flex: 1, opacity: fade }}>
-        <TabSlot />
-      </Animated.View>
-      <TabList style={{ position: 'absolute', left: -9999, top: -9999 }}>
+      {expanded ? (
+        <View style={styles.expandedRow}>
+          <SidebarNav />
+          {/* Absolute insets give the slot a definite height in every engine
+              (Firefox resolves % heights against flex-grown boxes as auto,
+              which used to push the nav below the fold). flexShrink:1 keeps
+              the inner ScreenContainer bounded so ScrollViews can scroll. */}
+          <View style={[styles.slotArea, { left: SIDEBAR_WIDTH }]}>
+            <TabSlot style={styles.slotScroll} />
+          </View>
+        </View>
+      ) : (
+        <>
+          <View style={styles.slotArea}>
+            <TabSlot style={styles.slotScroll} />
+          </View>
+          <View style={styles.navArea}>
+            <BottomNav unreadEvents={0} />
+          </View>
+        </>
+      )}
+      {/* Defines the tab routes; the visible bars live above. */}
+      <TabList style={styles.hiddenTabList}>
         <TabTrigger name="home" href="/tabs" />
         <TabTrigger name="events" href="/tabs/events" />
         <TabTrigger name="roster" href="/tabs/roster" />
         <TabTrigger name="settings" href="/tabs/settings" />
       </TabList>
-      <BottomNav active={activeTab} onChange={changeTab} unreadEvents={unreadEvents} />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  expandedRow: { flex: 1 },
+  slotArea: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  },
+  // ScreenContainer ships flexShrink:0 (content-sized); allow it to shrink
+  // to the definite slot height or ScrollViews grow to content and never scroll.
+  slotScroll: { height: '100%', flexShrink: 1 },
+  navArea: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 10,
+    elevation: 10,
+  },
+  hiddenTabList: { display: 'none' },
+});

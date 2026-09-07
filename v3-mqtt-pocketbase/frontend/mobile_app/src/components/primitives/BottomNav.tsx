@@ -1,22 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { Animated, Text, TouchableOpacity, View, StyleSheet } from 'react-native';
+import { useTabTrigger } from 'expo-router/ui';
 import { useTheme } from '../../theme';
 import { HomeIcon, BellIcon, RosterIcon, SettingsIcon } from './Icons';
+import { playSound } from '../../utils/sounds';
+import { haptic } from '../../utils/haptics';
 
 export type TabKey = 'home' | 'events' | 'roster' | 'settings';
 
 type NavButtonProps = {
-  active: boolean;
+  name: TabKey;
   label: string;
   icon: (color: string) => React.ReactNode;
   badge?: number;
-  onPress: () => void;
 };
 
-function NavButton({ active, label, icon, badge, onPress }: NavButtonProps) {
+function NavButton({ name, label, icon, badge }: NavButtonProps) {
   const { colors, radius, typography } = useTheme();
   const [scale] = useState(() => new Animated.Value(1));
-  const [chipScale] = useState(() => new Animated.Value(active ? 1 : 0.8));
+  const [chipScale] = useState(() => new Animated.Value(0.8));
+  const { triggerProps } = useTabTrigger({
+    name,
+    onPress: () => {
+      haptic('light');
+      playSound('tap');
+    },
+  });
+
+  const active = triggerProps.isFocused;
+  const handlePress = triggerProps.onPress ?? undefined;
 
   useEffect(() => {
     Animated.spring(chipScale, {
@@ -25,15 +37,16 @@ function NavButton({ active, label, icon, badge, onPress }: NavButtonProps) {
       speed: 20,
       bounciness: active ? 10 : 0,
     }).start();
-  }, [active]);
+  }, [active, chipScale]);
 
   const color = active ? colors.accent : colors.textMuted;
+  const showBadge = name !== 'events' || !active ? (badge ?? 0) > 0 : false;
 
   return (
     <TouchableOpacity
       style={styles.tab}
       activeOpacity={1}
-      onPress={onPress}
+      onPress={handlePress}
       onPressIn={() => Animated.spring(scale, { toValue: 0.86, useNativeDriver: true, speed: 40 }).start()}
       onPressOut={() => Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 40 }).start()}
       accessibilityRole="tab"
@@ -52,7 +65,7 @@ function NavButton({ active, label, icon, badge, onPress }: NavButtonProps) {
           ]}
         >
           {icon(color)}
-          {badge && badge > 0 ? (
+          {showBadge ? (
             <View style={[styles.badge, { backgroundColor: colors.alert }]}>
               <Text style={styles.badgeText}>{badge}</Text>
             </View>
@@ -65,12 +78,10 @@ function NavButton({ active, label, icon, badge, onPress }: NavButtonProps) {
 }
 
 type BottomNavProps = {
-  active: TabKey;
-  onChange: (key: TabKey) => void;
   unreadEvents?: number;
 };
 
-export function BottomNav({ active, onChange, unreadEvents = 0 }: BottomNavProps) {
+export function BottomNav({ unreadEvents = 0 }: BottomNavProps) {
   const { colors, spacing } = useTheme();
 
   return (
@@ -80,16 +91,10 @@ export function BottomNav({ active, onChange, unreadEvents = 0 }: BottomNavProps
         { backgroundColor: colors.surface, borderTopColor: colors.divider, paddingTop: spacing.sm },
       ]}
     >
-      <NavButton active={active === 'home'} label="Home" icon={(c) => <HomeIcon color={c} />} onPress={() => onChange('home')} />
-      <NavButton
-        active={active === 'events'}
-        label="Events"
-        icon={(c) => <BellIcon color={c} />}
-        badge={active === 'events' ? 0 : unreadEvents}
-        onPress={() => onChange('events')}
-      />
-      <NavButton active={active === 'roster'} label="Roster" icon={(c) => <RosterIcon color={c} />} onPress={() => onChange('roster')} />
-      <NavButton active={active === 'settings'} label="Settings" icon={(c) => <SettingsIcon color={c} />} onPress={() => onChange('settings')} />
+      <NavButton name="home" label="Home" icon={(c) => <HomeIcon color={c} />} />
+      <NavButton name="events" label="Events" icon={(c) => <BellIcon color={c} />} badge={unreadEvents} />
+      <NavButton name="roster" label="Roster" icon={(c) => <RosterIcon color={c} />} />
+      <NavButton name="settings" label="Settings" icon={(c) => <SettingsIcon color={c} />} />
     </View>
   );
 }

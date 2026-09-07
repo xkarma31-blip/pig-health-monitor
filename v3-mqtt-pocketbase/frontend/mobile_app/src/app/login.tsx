@@ -1,46 +1,16 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Platform, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { router } from 'expo-router';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../utils/firebase';
 import { useTheme } from '../theme';
 import { haptic } from '../utils/haptics';
+import { loginWithEmail, loginAdmin } from '../utils/pocketbase-auth';
 
-function googleSignIn() {
-  if (Platform.OS !== 'web') {
-    return;
-  }
-  import('firebase/auth')
-    .then(({ signInWithRedirect, GoogleAuthProvider }) => {
-      const provider = new GoogleAuthProvider();
-      return signInWithRedirect(auth, provider);
-    })
-    .catch((err: unknown) => {
-      haptic('error');
-      const msg = err instanceof Error ? err.message : 'Google sign-in failed.';
-      Alert.alert('Google Sign-In Failed', msg);
-    });
-}
-
-function facebookSignIn() {
-  if (Platform.OS !== 'web') {
-    return;
-  }
-  import('firebase/auth')
-    .then(({ signInWithRedirect, FacebookAuthProvider }) => {
-      const provider = new FacebookAuthProvider();
-      return signInWithRedirect(auth, provider);
-    })
-    .catch((err: unknown) => {
-      haptic('error');
-      const msg = err instanceof Error ? err.message : 'Facebook sign-in failed.';
-      Alert.alert('Facebook Sign-In Failed', msg);
-    });
-}
+type Role = 'user' | 'admin';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<Role>('user');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -61,14 +31,18 @@ export default function LoginScreen() {
     setSuccess(false);
 
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
+      if (role === 'admin') {
+        await loginAdmin(email, password);
+      } else {
+        await loginWithEmail(email, password);
+      }
       haptic('success');
       setSuccess(true);
       setError(null);
-      setTimeout(() => router.replace('/web/dashboard'), 600);
+      setTimeout(() => router.replace('/tabs'), 600);
     } catch (err: unknown) {
       haptic('error');
-      const msg = err instanceof Error ? err.message : 'Invalid credentials or API keys missing.';
+      const msg = err instanceof Error ? err.message : 'Invalid credentials.';
       setError(msg);
       setSuccess(false);
     } finally {
@@ -80,14 +54,14 @@ export default function LoginScreen() {
     haptic('light');
     Alert.alert(
       'Guest Access',
-      'Guest access provides limited functionality. Sign in for full access to all features.',
+      'Guest access shows demo figures. Sign in as an end-user for live herd data, or as admin for the mock-data review view.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Continue as Guest', 
-          onPress: () => router.replace('/web/dashboard'),
-          style: 'default'
-        }
+        {
+          text: 'Continue as Guest',
+          onPress: () => router.replace('/tabs'),
+          style: 'default',
+        },
       ]
     );
   };
@@ -95,17 +69,17 @@ export default function LoginScreen() {
   return (
     <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <View style={[
-        styles.card, 
-        { 
-          backgroundColor: theme.colors.surface, 
+        styles.card,
+        {
+          backgroundColor: theme.colors.surface,
           borderColor: theme.colors.border,
           shadowColor: theme.colors.shadow,
-        }
+        },
       ]}>
         <TouchableOpacity
           style={[
-            styles.closeBtn, 
-            { backgroundColor: theme.colors.surfaceVariant }
+            styles.closeBtn,
+            { backgroundColor: theme.colors.surfaceVariant },
           ]}
           onPress={() => { haptic('light'); router.back(); }}
           accessibilityRole="button"
@@ -120,18 +94,51 @@ export default function LoginScreen() {
           Sign in to access your farm monitoring dashboard
         </Text>
 
+        {/* Role toggle — admin sees mock data & files (legacy demo), end-user sees live herd */}
+        <View style={styles.roleRow}>
+          {(['user', 'admin'] as Role[]).map((r) => (
+            <TouchableOpacity
+              key={r}
+              style={[
+                styles.roleBtn,
+                {
+                  backgroundColor: role === r ? theme.colors.primary : theme.colors.surfaceVariant,
+                },
+              ]}
+              onPress={() => { haptic('light'); setRole(r); }}
+              accessibilityRole="button"
+              accessibilityLabel={`${r === 'admin' ? 'Admin' : 'End-user'} sign-in`}
+              accessibilityState={{ selected: role === r }}
+            >
+              <Text
+                style={[
+                  styles.roleBtnText,
+                  { color: role === r ? theme.colors.onAccent : theme.colors.textSecondary },
+                ]}
+              >
+                {r === 'admin' ? 'ADMIN' : 'END-USER'}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <Text style={[styles.roleHint, { color: theme.colors.textMuted }]}>
+          {role === 'admin'
+            ? 'Admin — mock data & files, legacy-style demo review.'
+            : 'End-user — live herd data from the MQTT→PocketBase pipeline.'}
+        </Text>
+
         <View style={styles.inputContainer}>
           <Text style={[styles.label, { color: theme.colors.textSecondary }]}>EMAIL</Text>
           <TextInput
             style={[
-              styles.input, 
-              { 
+              styles.input,
+              {
                 backgroundColor: theme.colors.backgroundVariant,
                 borderColor: theme.colors.border,
                 color: theme.colors.textPrimary,
-              }
+              },
             ]}
-            placeholder="admin@farm.local"
+            placeholder={role === 'admin' ? 'admin@pigpulse.local' : 'farmer@farm.local'}
             placeholderTextColor={theme.colors.textDisabled}
             value={email}
             onChangeText={setEmail}
@@ -145,12 +152,12 @@ export default function LoginScreen() {
           <Text style={[styles.label, { color: theme.colors.textSecondary }]}>PASSWORD</Text>
           <TextInput
             style={[
-              styles.input, 
-              { 
+              styles.input,
+              {
                 backgroundColor: theme.colors.backgroundVariant,
                 borderColor: theme.colors.border,
                 color: theme.colors.textPrimary,
-              }
+              },
             ]}
             placeholder="••••••"
             placeholderTextColor={theme.colors.textDisabled}
@@ -163,8 +170,8 @@ export default function LoginScreen() {
 
         <TouchableOpacity
           style={[
-            styles.loginBtn, 
-            { backgroundColor: theme.colors.primary }
+            styles.loginBtn,
+            { backgroundColor: theme.colors.primary },
           ]}
           onPress={handleLogin}
           disabled={loading}
@@ -181,11 +188,11 @@ export default function LoginScreen() {
 
         {error && (
           <View style={[
-            styles.feedbackBox, 
-            { 
+            styles.feedbackBox,
+            {
               backgroundColor: theme.colors.errorContainer + '20',
               borderColor: theme.colors.error,
-            }
+            },
           ]}>
             <Text style={[styles.feedbackError, { color: theme.colors.error }]}>⚠️ {error}</Text>
           </View>
@@ -193,48 +200,20 @@ export default function LoginScreen() {
 
         {success && (
           <View style={[
-            styles.feedbackBox, 
-            { 
+            styles.feedbackBox,
+            {
               backgroundColor: theme.colors.successContainer + '20',
               borderColor: theme.colors.success,
-            }
+            },
           ]}>
             <Text style={[styles.feedbackSuccess, { color: theme.colors.success }]}>✅ Authentication successful!</Text>
           </View>
         )}
 
-        {isWeb && (
-          <>
-            <Text style={[styles.divider, { color: theme.colors.textSecondary }]}>OR CONTINUE WITH</Text>
-
-            <TouchableOpacity 
-              style={[
-                styles.socialBtn, 
-                { backgroundColor: theme.colors.surfaceVariant }
-              ]} 
-              onPress={googleSignIn}
-            >
-              <Text style={[styles.socialBtnIcon, { color: theme.colors.textSecondary }]}>G</Text>
-              <Text style={[styles.socialBtnText, { color: theme.colors.textPrimary }]}>Sign in with Google</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={[
-                styles.socialBtn, 
-                { backgroundColor: theme.colors.facebook }
-              ]} 
-              onPress={facebookSignIn}
-            >
-              <Text style={[styles.socialBtnIcon, { color: theme.colors.white }]}>f</Text>
-              <Text style={[styles.socialBtnText, { color: theme.colors.white }]}>Sign in with Facebook</Text>
-            </TouchableOpacity>
-          </>
-        )}
-
         {!isWeb && (
           <View style={{ marginTop: 24, alignItems: 'center' }}>
-            <Text style={[styles.socialBtnText, { color: theme.colors.textSecondary }]}>
-              Social login is available on web only.
+            <Text style={[styles.guestBtnText, { color: theme.colors.textSecondary }]}>
+              Self-hosted PocketBase auth.
             </Text>
           </View>
         )}
@@ -299,6 +278,30 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     lineHeight: 20,
   },
+  roleRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 8,
+  },
+  roleBtn: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    minHeight: 44,
+    justifyContent: 'center',
+  },
+  roleBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+  roleHint: {
+    fontSize: 12.5,
+    marginBottom: 20,
+    textAlign: 'center',
+    lineHeight: 17,
+  },
   inputContainer: {
     marginBottom: 20,
   },
@@ -345,35 +348,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     lineHeight: 20,
-  },
-  divider: {
-    textAlign: 'center',
-    marginVertical: 24,
-    fontSize: 14,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-  socialBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 12,
-    minHeight: 48,
-    borderWidth: 1,
-  },
-  socialBtnIcon: {
-    fontSize: 20,
-    fontWeight: '900',
-    marginRight: 12,
-    width: 24,
-    textAlign: 'center',
-  },
-  socialBtnText: {
-    fontSize: 16,
-    fontWeight: '600',
   },
   guestBtn: {
     padding: 16,

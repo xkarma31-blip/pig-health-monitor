@@ -83,6 +83,15 @@ export function ChevronRightIcon({ size = 16, color }: IconProps) {
   );
 }
 
+export function ChevronLeftIcon({ size = 16, color }: IconProps) {
+  const c = useIconColor(color);
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M15 6l-6 6 6 6" stroke={c} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
 export function PlusIcon({ size = 16, color }: IconProps) {
   const c = useIconColor(color);
   return (

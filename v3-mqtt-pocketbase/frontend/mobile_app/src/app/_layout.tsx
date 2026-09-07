@@ -58,23 +58,8 @@ function RootInner({ children }: { children: React.ReactNode }) {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
-      <View
-        style={[
-          { flex: 1, width: '100%' },
-          isDesktop && {
-            width: 800,
-            alignSelf: 'center',
-            marginVertical: spacing.xxl,
-            borderRadius: 24,
-            overflow: 'hidden',
-            elevation: 12,
-            shadowColor: colors.shadow,
-            shadowOffset: { width: 0, height: 8 },
-            shadowOpacity: 0.25,
-            shadowRadius: 15,
-          },
-        ]}
-      >
+      {/* Full-viewport shell — no desktop phone-card wrapper (matches deployed :8094) */}
+      <View style={{ flex: 1, width: '100%' }}>
         {children}
       </View>
       <PulseView
@@ -84,7 +69,7 @@ function RootInner({ children }: { children: React.ReactNode }) {
         style={{
           position: 'absolute',
           bottom: 80,
-          right: isDesktop ? Math.max(16, (width - 800) / 2 + 16) : 16,
+          right: 16,
           zIndex: 999,
         }}
       >

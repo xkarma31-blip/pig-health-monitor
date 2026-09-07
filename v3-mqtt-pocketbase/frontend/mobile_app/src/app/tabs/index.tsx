@@ -1,6 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, Text, TouchableOpacity, View, StyleSheet } from 'react-native';
-import { useTheme } from '../../theme';
+import { useRouter } from 'expo-router';
+import { useTheme, type Status } from '../../theme';
+import { useAuth } from '../../hooks/useAuth';
+import { subscribeRoster, subscribeAlerts } from '../../utils/pocketbase-data';
+import { useBreakpoint } from '../../hooks/useBreakpoint';
 import {
   LogoMark,
   Badge,
@@ -11,13 +15,14 @@ import {
   EmptyState,
   ThermalThumbnail,
   ThermometerIcon,
-  useToast,
 } from '../../components/primitives';
-import type { Status } from '../../theme';
+import { playSound } from '../../utils/sounds';
+import { haptic } from '../../utils/haptics';
 
 type Pen = { id: string; name: string; note: string; temp: string; status: Status; trend: number[] };
 
-// Replace with your Firebase RTDB /users/{uid}/pens/ listener.
+// Pens are a hardware concept the RTDB does not model yet — keep as demo
+// until /users/$uid/pens/ exists (see gap notes in .planning/).
 const PENS: Pen[] = [
   { id: 'pen-3', name: 'Pen 3', note: 'Fever detected, pig #04', temp: '38.9°', status: 'alert', trend: [38.0, 38.1, 38.3, 38.5, 38.7, 38.9] },
   { id: 'pen-5', name: 'Pen 5', note: 'Elevated coughing, monitor', temp: '38.4°', status: 'watch', trend: [38.0, 38.0, 38.1, 38.2, 38.3, 38.4] },
@@ -28,18 +33,60 @@ const PENS: Pen[] = [
 
 const FARM = { name: 'Sundown Farm', penCount: 5, pigCount: 110 };
 
+const DEMO_STATS = { healthy: 3, watch: 1, alert: 1 };
+
+function herdStatusFromRecords(
+  roster: Record<string, unknown>[],
+  alerts: Record<string, unknown>[],
+) {
+  let healthy = 0;
+  let watch = 0;
+  let alert = 0;
+  for (const pig of roster) {
+    const hs = String(pig.healthStatus || 'NORMAL').toUpperCase();
+    if (hs === 'NORMAL') healthy += 1;
+    else if (hs === 'ELEVATED' || hs === 'WATCH') watch += 1;
+    else alert += 1;
+  }
+  for (const a of alerts) {
+    const sev = String(a.severity || a.level || '').toUpperCase();
+    if (sev === 'CRITICAL' || sev === 'HIGH') alert += 1;
+    else if (sev === 'WARNING' || sev === 'ELEVATED') watch += 1;
+  }
+  return { healthy, watch, alert };
+}
+
 export default function HomeScreen() {
   const { colors, spacing, radius, typography } = useTheme();
-  const { showToast } = useToast();
+  const router = useRouter();
+  const { user } = useAuth();
+  const tier = useBreakpoint();
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [isOnline] = useState(true); // wire to real connectivity state
   const [statsKey, setStatsKey] = useState(0); // bump to replay the count-up
+  const [roster, setRoster] = useState<Record<string, unknown>[]>([]);
+  const [alerts, setAlerts] = useState<Record<string, unknown>[]>([]);
 
   useEffect(() => {
     const t = setTimeout(() => setLoading(false), 850);
     return () => clearTimeout(t);
   }, []);
+
+  useEffect(() => {
+    if (!user || user.admin) return;  // end-user → live; admin & guest → demo figures
+    const unsubRoster = subscribeRoster(setRoster);
+    const unsubAlerts = subscribeAlerts(setAlerts);
+    return () => {
+      unsubRoster();
+      unsubAlerts();
+    };
+  }, [user]);
+
+  const liveStats = useMemo(() => herdStatusFromRecords(roster, alerts), [roster, alerts]);
+  const hasLiveData = Boolean(user) && !user!.admin && roster.length + alerts.length > 0;
+  const stats = hasLiveData ? liveStats : DEMO_STATS;
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -50,11 +97,24 @@ export default function HomeScreen() {
   };
 
   const topAlert = PENS.find((p) => p.status === 'alert');
+  const contentMax = tier === 'expanded' ? 1100 : tier === 'medium' ? 720 : undefined;
+  const penColumns = tier === 'expanded' ? 3 : tier === 'medium' ? 2 : 1;
+
+  const penRows = useMemo(() => {
+    const rows: Pen[][] = [];
+    for (let i = 0; i < PENS.length; i += penColumns) {
+      rows.push(PENS.slice(i, i + penColumns));
+    }
+    return rows;
+  }, [penColumns]);
 
   return (
     <ScrollView
-      style={{ backgroundColor: colors.bg }}
-      contentContainerStyle={{ padding: spacing.lg, paddingBottom: spacing.xxl + 60 }}
+      style={{ backgroundColor: colors.bg, flex: 1 }}
+      contentContainerStyle={[
+        { padding: spacing.lg, paddingBottom: spacing.xxl + 60 },
+        contentMax ? { width: '100%', maxWidth: contentMax, alignSelf: 'center' } : null,
+      ]}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.accent} />
@@ -65,7 +125,7 @@ export default function HomeScreen() {
         <View style={{ flex: 1 }}>
           <View style={styles.brandRow}>
             <LogoMark />
-            <Text style={[typography.h1, { marginLeft: 9 }]}>
+            <Text style={[typography.h1, { marginLeft: 9, color: colors.textPrimary }]}>
               <Text style={{ color: colors.textPrimary }}>Pig</Text>
               <Text style={{ color: colors.accent }}>pulse</Text>
             </Text>
@@ -86,13 +146,37 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* Farm-wide status */}
-      <StatRow key={statsKey} healthy={3} watch={1} alert={1} />
+      {/* Farm-wide status — live from Firebase when signed in, demo otherwise */}
+      <View>
+        <StatRow key={`${statsKey}-${stats.healthy}-${stats.watch}-${stats.alert}`} {...stats} />
+        {!hasLiveData ? (
+          <TouchableOpacity
+            activeOpacity={0.6}
+            hitSlop={{ top: 12, bottom: 12, left: 24, right: 24 }}
+            onPress={() => {
+              playSound('tap');
+              haptic('light');
+              router.push('/login');
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Sign in to stream live herd status"
+            accessibilityHint="Opens the login screen"
+          >
+            <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm }]}>
+              Demo figures — sign in to stream live herd status
+            </Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
 
-      {/* Live thermal feed — tappable */}
+      {/* Live thermal feed — opens the fullscreen view */}
       <TouchableOpacity
         activeOpacity={0.85}
-        onPress={() => showToast('Opening live thermal view…')}
+        onPress={() => {
+          playSound('tap');
+          haptic('light');
+          router.push('/thermal');
+        }}
         style={[styles.feedCard, { backgroundColor: colors.surface, borderRadius: radius.lg, marginTop: spacing.lg }]}
         accessibilityRole="button"
         accessibilityLabel="Live thermal feed"
@@ -122,28 +206,51 @@ export default function HomeScreen() {
         </View>
       ) : null}
 
-      {/* Pens */}
+      {/* Pens — responsive grid */}
       <View style={{ marginTop: spacing.xl }}>
         <View style={styles.sectionHead}>
           <Text style={[typography.caption, { color: colors.textMuted }]}>Pens</Text>
           <Text style={[typography.bodySmall, { color: colors.textMuted, fontSize: 12.5 }]}>{FARM.penCount} total</Text>
         </View>
         {loading ? (
-          <Skeleton rows={5} />
+          <Skeleton rows={penColumns === 1 ? 5 : 3} />
         ) : PENS.length === 0 ? (
           <ListGroup>
             <EmptyState
               icon={<ThermometerIcon size={18} color={colors.accent} />}
-              title="No pens need attention"
-              message="Every sensor is reporting a normal temperature right now."
+              title="No pens registered"
+              message="Pens appear here once sensor nodes are assigned to them."
             />
           </ListGroup>
         ) : (
-          <ListGroup>
-            {PENS.map((pen, i) => (
-              <ListRow key={pen.id} title={pen.name} subtitle={pen.note} value={pen.temp} status={pen.status} trend={pen.trend} index={i} />
+          <View>
+            {penRows.map((row, rowIdx) => (
+              <View key={`row-${rowIdx}`} style={penColumns > 1 ? styles.gridRow : null}>
+                {row.map((pen) => (
+                  <View
+                    key={pen.id}
+                    style={penColumns > 1 ? { flex: 1, paddingHorizontal: spacing.sm / 2 } : null}
+                  >
+                    <ListGroup>
+                      <ListRow
+                        title={pen.name}
+                        subtitle={pen.note}
+                        value={pen.temp}
+                        status={pen.status}
+                        trend={pen.trend}
+                        index={rowIdx}
+                      />
+                    </ListGroup>
+                  </View>
+                ))}
+                {penColumns > 1 && row.length < penColumns
+                  ? Array.from({ length: penColumns - row.length }).map((_, i) => (
+                      <View key={`fill-${i}`} style={{ flex: 1, paddingHorizontal: spacing.sm / 2 }} />
+                    ))
+                  : null}
+              </View>
             ))}
-          </ListGroup>
+          </View>
         )}
       </View>
     </ScrollView>
@@ -156,4 +263,5 @@ const styles = StyleSheet.create({
   pill: { paddingVertical: 5, paddingHorizontal: 11 },
   feedCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14 },
   sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 8 },
+  gridRow: { flexDirection: 'row', marginHorizontal: -6, marginBottom: 12 },
 });
