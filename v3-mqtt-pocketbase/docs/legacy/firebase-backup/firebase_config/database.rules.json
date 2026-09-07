@@ -1,0 +1,68 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "users": {
+      "$uid": {
+        "alerts": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'pigmonitor@internal.dev')",
+          ".indexOn": ["timestamp", "severity"],
+          "$alertId": {
+            ".validate": "newData.hasChildren(['deviceId', 'type', 'severity', 'message', 'timestamp'])",
+            "deviceId": { ".validate": "newData.isString()" },
+            "type": { ".validate": "newData.isString()" },
+            "severity": { ".validate": "newData.isString() && (newData.val() === 'HIGH' || newData.val() === 'LOW' || newData.val() === 'WARNING' || newData.val() === 'INFO')" },
+            "message": { ".validate": "newData.isString() && newData.val().length <= 500" }
+          }
+        },
+        "roster": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && auth.uid === $uid",
+          ".indexOn": ["lastSeen"],
+          "$pigId": {
+            ".validate": "newData.hasChildren(['name', 'healthStatus'])",
+            "name": { ".validate": "newData.isString() && newData.val().length <= 32" },
+            "healthStatus": { ".validate": "newData.isString() && (newData.val() === 'NORMAL' || newData.val() === 'WARNING' || newData.val() === 'danger' || newData.val() === 'normal' || newData.val() === 'danger')" }
+          }
+        },
+        "sensors": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'pigmonitor@internal.dev')",
+          ".indexOn": ["lastUpdated"],
+          "$sensorId": {
+            ".validate": "newData.hasChildren(['id', 'label', 'value', 'unit', 'status'])",
+            "id": { ".validate": "newData.isString()" },
+            "label": { ".validate": "newData.isString()" },
+            "value": { ".validate": "newData.isNumber()" },
+            "unit": { ".validate": "newData.isString()" },
+            "status": { ".validate": "newData.isString()" }
+          }
+        },
+        "telemetry": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'pigmonitor@internal.dev')",
+          ".indexOn": ["timestamp"],
+          "$deviceId": {
+            ".validate": "newData.hasChildren(['temperature', 'status', 'identifiedPig', 'targetX', 'targetY', 'thermalFrame', 'timestamp'])",
+            "temperature": { ".validate": "newData.isNumber() && newData.val() >= 15 && newData.val() <= 45" },
+            "status": { ".validate": "newData.isString()" },
+            "identifiedPig": { ".validate": "newData.isString()" },
+            "targetX": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 31" },
+            "targetY": { ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 23" },
+            "thermalFrame": { ".validate": "newData.isString()" }
+          }
+        },
+        "commands": {
+          ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'pigmonitor@internal.dev')",
+          ".write": "auth != null && (auth.uid === $uid || auth.token.email === 'pigmonitor@internal.dev')",
+          "$deviceId": {
+            ".validate": "newData.hasChildren(['command'])",
+            "command": { ".validate": "newData.isString()" },
+            "pigName": { ".validate": "!newData.hasChild('pigName') || newData.child('pigName').isString()" }
+          }
+        }
+      }
+    }
+  }
+}

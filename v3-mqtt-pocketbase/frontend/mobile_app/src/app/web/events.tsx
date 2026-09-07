@@ -12,7 +12,7 @@ import {
 import { useTheme } from '../../theme';
 import { useAuth } from '../../utils/auth';
 import { router } from 'expo-router';
-import { subscribeAlerts } from '../../utils/firebase';
+import { subscribeAlerts } from '../../utils/pocketbase-data';
 
 import { ListGroup, EmptyState, SegmentedControl, Badge } from '../../components/primitives';
 import { AuthBanner } from '../../components/shared/AuthBanner';

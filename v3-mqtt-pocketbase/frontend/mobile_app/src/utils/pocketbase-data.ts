@@ -15,10 +15,37 @@ import {
   pbSubscribeRealtime,
   PB_URL,
 } from './pocketbase';
+import type { SensorReading as LiveSensorReading, SensorStatus } from '../data/mockSensors';
 
 export type SensorReading = Record<string, unknown> & { id?: string; name?: string; temp?: number };
 
-const noop = () => {};
+/** Maps a PB `devices` row to the v2 LiveSensor shape callers were built against. */
+function toLiveSensor(device: Record<string, unknown>): LiveSensorReading {
+  const id = String(device.id || device.deviceId || 'sensor');
+  const name = String(device.name || device.deviceId || id);
+  const value =
+    typeof device.lastValue === 'number' ? device.lastValue
+    : typeof device.temperature === 'number' ? device.temperature
+    : typeof device.temp === 'number' ? device.temp
+    : 0;
+  const lastUpdated = String(device.lastUpdated || device.lastSeen || new Date().toISOString());
+  let status: SensorStatus = 'normal';
+  const rawStatus = String(device.status || '');
+  if (rawStatus === 'warning' || rawStatus === 'danger') status = rawStatus;
+  else if (value > Number(device.maxRange ?? 40)) status = 'danger';
+  return {
+    id,
+    type: 'thermal',
+    label: name,
+    icon: String(device.icon || '📡'),
+    value,
+    unit: String(device.unit || '°C'),
+    status,
+    lastUpdated,
+    minRange: Number(device.minRange ?? 37.5),
+    maxRange: Number(device.maxRange ?? 40),
+  };
+}
 
 /**
  * subscribeRoster — live roster from the `pigs` collection.
@@ -26,21 +53,14 @@ const noop = () => {};
  */
 export function subscribeRoster(callback: (roster: Record<string, unknown>[]) => void) {
   let cancelled = false;
-  let done = false;
 
   const emit = () => {
     pbList('pigs', { sort: '-created', perPage: 200 })
       .then(({ items }) => {
-        if (!cancelled) {
-          callback(items);
-          done = true;
-        }
+        if (!cancelled) callback(items);
       })
       .catch(() => {
-        if (!cancelled) {
-          callback([]);
-          done = true;
-        }
+        if (!cancelled) callback([]);
       });
   };
 
@@ -85,13 +105,13 @@ export function subscribeAlerts(callback: (alerts: Record<string, unknown>[]) =>
 }
 
 /** subscribeSensors — live devices/sensor nodes from the `devices` collection. */
-export function subscribeSensors(callback: (sensors: SensorReading[]) => void) {
+export function subscribeSensors(callback: (sensors: LiveSensorReading[]) => void) {
   let cancelled = false;
 
   const emit = () => {
     pbList('devices', { sort: '-created', perPage: 200 })
       .then(({ items }) => {
-        if (!cancelled) callback(items as SensorReading[]);
+        if (!cancelled) callback(items.map(toLiveSensor));
       })
       .catch(() => {
         if (!cancelled) callback([]);

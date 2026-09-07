@@ -6,7 +6,7 @@ import {
 } from 'react-native';
 import { useTheme } from '../theme';
 import { useAuth } from '../utils/auth';
-import { subscribeSensors, subscribeAlerts, subscribeRoster } from '../utils/firebase';
+import { subscribeSensors, subscribeAlerts, subscribeRoster } from '../utils/pocketbase-data';
 import { haptic } from '../utils/haptics';
 
 interface LiveSensor {

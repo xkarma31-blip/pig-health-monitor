@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '../theme';
 import { ThermalLiveView } from '../components/ThermalLiveView';
 import { useAuth } from '../utils/auth';
-import { subscribeTelemetry } from '../utils/firebase';
+import { subscribeTelemetry } from '../utils/pocketbase-data';
 import { AuthBanner } from '../components/shared/AuthBanner';
 import { playSound } from '../utils/sounds';
 import { haptic } from '../utils/haptics';

@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 import { mockSensors, SensorReading } from '../data/mockSensors';
 import { mockAlerts, AlertEntry } from '../data/mockAlerts';
 import { useAuth } from './useAuth';
-import { subscribeSensors, subscribeAlerts } from '../utils/firebase';
+import { subscribeSensors, subscribeAlerts } from '../utils/pocketbase-data';
 
 export interface TelemetryData {
   sensors: SensorReading[];
