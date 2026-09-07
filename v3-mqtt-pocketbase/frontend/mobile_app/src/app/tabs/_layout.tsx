@@ -1,28 +1,61 @@
-import React from 'react';
-import { View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Platform, StyleSheet } from 'react-native';
 import { Tabs, TabSlot, TabList, TabTrigger } from 'expo-router/ui';
-import { StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BottomNav } from '../../components/primitives/BottomNav';
-import { SidebarNav } from '../../components/primitives/SidebarNav';
+import { SidebarNav, SIDEBAR_WIDTH, SIDEBAR_RAIL_WIDTH } from '../../components/primitives/SidebarNav';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
 
-// Keep in sync with SidebarNav rail width.
-const SIDEBAR_WIDTH = 232;
+const SIDEBAR_KEY = 'pigpulse.sidebar.collapsed';
 
 export default function TabLayout() {
   const tier = useBreakpoint();
   const expanded = tier === 'expanded';
+  const [collapsed, setCollapsed] = useState(false);
+
+  // Rehydrate the sidebar preference (localStorage on web, AsyncStorage on native).
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        let raw: string | null = null;
+        if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+          raw = localStorage.getItem(SIDEBAR_KEY);
+        } else {
+          raw = await AsyncStorage.getItem(SIDEBAR_KEY);
+        }
+        if (alive && raw === '1') setCollapsed(true);
+      } catch { /* preference is a nicety, never fatal */ }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  const toggleSidebar = () => {
+    setCollapsed((c) => {
+      const next = !c;
+      try {
+        if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+          localStorage.setItem(SIDEBAR_KEY, next ? '1' : '0');
+        } else {
+          AsyncStorage.setItem(SIDEBAR_KEY, next ? '1' : '0').catch(() => {});
+        }
+      } catch { /* ignore storage failures */ }
+      return next;
+    });
+  };
+
+  const railWidth = collapsed ? SIDEBAR_RAIL_WIDTH : SIDEBAR_WIDTH;
 
   return (
     <Tabs>
       {expanded ? (
         <View style={styles.expandedRow}>
-          <SidebarNav />
+          <SidebarNav collapsed={collapsed} onToggle={toggleSidebar} />
           {/* Absolute insets give the slot a definite height in every engine
               (Firefox resolves % heights against flex-grown boxes as auto,
               which used to push the nav below the fold). flexShrink:1 keeps
               the inner ScreenContainer bounded so ScrollViews can scroll. */}
-          <View style={[styles.slotArea, { left: SIDEBAR_WIDTH }]}>
+          <View style={[styles.slotArea, { left: railWidth }]}>
             <TabSlot style={styles.slotScroll} />
           </View>
         </View>
