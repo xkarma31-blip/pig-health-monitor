@@ -13,6 +13,7 @@
 
 import { Platform } from 'react-native';
 import { useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PB_FALLBACK_URLS, PB_URL } from './pocketbase';
 
 export type PBAuthUser = {
@@ -39,15 +40,27 @@ function persist(user: PBAuthUser) {
   if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
     if (user) localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     else localStorage.removeItem(STORAGE_KEY);
+  } else {
+    // Native: persist across app restarts (AsyncStorage). Fire-and-forget.
+    try {
+      if (user) AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+      else AsyncStorage.removeItem(STORAGE_KEY);
+    } catch {
+      /* fire-and-forget: losing a cached session is never fatal */
+    }
   }
   notify();
 }
 
-/** Rehydrate from localStorage on web (fire-and-forget). */
-export function initPBAuth() {
-  if (Platform.OS !== 'web' || typeof localStorage === 'undefined') return;
+/** Rehydrate the session from web localStorage / native AsyncStorage. */
+export async function initPBAuth(): Promise<void> {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    let raw: string | null = null;
+    if (Platform.OS === 'web' && typeof localStorage !== 'undefined') {
+      raw = localStorage.getItem(STORAGE_KEY);
+    } else {
+      raw = await AsyncStorage.getItem(STORAGE_KEY);
+    }
     if (raw) {
       const u = JSON.parse(raw) as PBAuthUser;
       if (u && u.token) {
@@ -55,7 +68,9 @@ export function initPBAuth() {
         notify();
       }
     }
-  } catch {}
+  } catch {
+    /* no cached session — cold start, signed out */
+  }
 }
 
 async function authRequest(endpoint: string, body: Record<string, unknown>): Promise<PBAuthUser> {
@@ -86,8 +101,8 @@ async function authRequest(endpoint: string, body: Record<string, unknown>): Pro
       };
       persist(user);
       return user;
-    } catch (e: any) {
-      lastErr = String(e.message || e);
+    } catch (e: unknown) {
+      lastErr = e instanceof Error ? String(e.message || e) : String(e);
       if (lastErr.includes('Failed to fetch') || lastErr.includes('Network') || lastErr.includes('Load failed')) continue;
       throw e;
     }

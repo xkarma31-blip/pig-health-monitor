@@ -22,15 +22,20 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    initPBAuth();
-    setUser(getAuthUser());
-    setLoading(false);
+    let alive = true;
+    (async () => {
+      await initPBAuth(); // rehydrate from localStorage (web) / AsyncStorage (native)
+      if (!alive) return;
+      setUser(getAuthUser());
+      setLoading(false);
+    })();
 
     // Re-read on storage/auth events (keeps multiple tabs in sync on web).
     const onStorage = () => setUser(getAuthUser());
     window.addEventListener?.('storage', onStorage);
     const interval = setInterval(() => setUser(getAuthUser()), 700);
     return () => {
+      alive = false;
       window.removeEventListener?.('storage', onStorage);
       clearInterval(interval);
     };
