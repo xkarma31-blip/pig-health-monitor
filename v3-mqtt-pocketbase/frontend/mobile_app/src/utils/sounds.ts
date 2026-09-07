@@ -1,27 +1,16 @@
 /**
  * 🔊 Sound Feedback Utility
- * 
+ *
  * Web:  Web Audio API (procedurally generated, zero assets)
- * Native: expo-av with procedurally generated WAV files cached to disk
- * 
+ * Native: expo-audio with procedurally generated WAV files cached to disk
+ *
  * All sounds are short, premium tones designed for an IoT dashboard.
+ * expo-audio is the SDK 57 replacement for expo-av (which had ABI crashes).
  */
 
 import { Platform } from 'react-native';
-import Constants, { ExecutionEnvironment } from 'expo-constants';
 
 type SoundType = 'tap' | 'success' | 'warning' | 'alert' | 'toggle' | 'navigate';
-
-// Expo Go (SDK 54+) no longer bundles the `expo-av` native module. Eagerly
-// importing it there throws `Cannot find native module 'ExponentAV'` while the
-// module factory runs, which can crash the whole bundle. Never touch it on
-// Expo Go / Snack; only use native audio in real builds (standalone/bare) where
-// the module actually exists.
-function canUseNativeAudio(): boolean {
-  // Native audio disabled — expo-av has ABI issues with SDK 57
-  // All platforms fall through to Web Audio API or no-op
-  return false;
-}
 
 // ============================================================
 // WEB — Web Audio API
@@ -155,7 +144,7 @@ function playWebSound(type: SoundType): void {
 }
 
 // ============================================================
-// NATIVE — expo-av with cached WAV files
+// NATIVE — expo-audio with cached WAV files
 // ============================================================
 
 type SoundSpec = {
@@ -227,37 +216,54 @@ function generateWavBuffer(spec: SoundSpec): ArrayBuffer {
   return buffer;
 }
 
+// Base64 encoder — RN Hermes has no `btoa`, and Buffer is unavailable.
+const B64_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+function bytesToBase64(bytes: Uint8Array): string {
+  let out = '';
+  for (let i = 0; i < bytes.length; i += 3) {
+    const b0 = bytes[i];
+    const b1 = i + 1 < bytes.length ? bytes[i + 1] : 0;
+    const b2 = i + 2 < bytes.length ? bytes[i + 2] : 0;
+    out += B64_CHARS[b0 >> 2];
+    out += B64_CHARS[((b0 & 3) << 4) | (b1 >> 4)];
+    out += i + 1 < bytes.length ? B64_CHARS[((b1 & 15) << 2) | (b2 >> 6)] : '=';
+    out += i + 2 < bytes.length ? B64_CHARS[b2 & 63] : '=';
+  }
+  return out;
+}
+
 const wavCache = new Map<SoundType, string>();
+let nativeAudioReady = false;
+
+/** Lazily initialize expo-audio + expo-file-system (bundled in Expo Go SDK 57). */
+async function ensureNativeAudio(): Promise<boolean> {
+  if (nativeAudioReady) return true;
+  try {
+    await import('expo-audio');
+    await import('expo-file-system');
+    nativeAudioReady = true;
+    return true;
+  } catch {
+    return false; // module absent — stay silent (no-op)
+  }
+}
 
 async function getNativeSoundUri(type: SoundType): Promise<string | null> {
   if (wavCache.has(type)) return wavCache.get(type)!;
-  if (!canUseNativeAudio()) return null;
+  if (!(await ensureNativeAudio())) return null;
 
   try {
-    const { Audio } = await import('expo-av');
-    const expoFS = await import('expo-file-system') as any;
-    const writeAsStringAsync = expoFS.writeAsStringAsync;
-    const documentDirectory = expoFS.documentDirectory;
+    const { Directory, File, Paths } = await import('expo-file-system');
 
     const buffer = generateWavBuffer(SOUND_SPECS[type]);
-    const bytes = new Uint8Array(buffer);
-    let binary = '';
-    for (let i = 0; i < bytes.length; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    const base64 = btoa(binary);
+    const base64 = bytesToBase64(new Uint8Array(buffer));
 
-    const fileName = `sound_${type}.wav`;
-    const fileUri = `${documentDirectory}${fileName}`;
+    const dir = new Directory(Paths.document, 'pigpulse-sounds');
+    if (!dir.exists) dir.create({ intermediates: true });
+    const file = new File(dir, `sound_${type}.wav`);
+    file.write(base64, { encoding: 'base64' });
 
-    await writeAsStringAsync(fileUri, base64, { encoding: 'base64' });
-
-    const { sound: _sound } = await Audio.Sound.createAsync(
-      { uri: fileUri },
-      { shouldPlay: false }
-    );
-    await _sound.unloadAsync();
-
+    const fileUri = file.uri;
     wavCache.set(type, fileUri);
     return fileUri;
   } catch {
@@ -265,40 +271,31 @@ async function getNativeSoundUri(type: SoundType): Promise<string | null> {
   }
 }
 
-let nativeAudioInitialized = false;
+let activePlayers: { remove: () => void }[] = [];
 
 async function playNativeSound(type: SoundType): Promise<void> {
-  if (!canUseNativeAudio()) return;
+  if (!(await ensureNativeAudio())) return;
 
-  if (nativeAudioInitialized && wavCache.has(type)) {
-    try {
-      const { Audio } = await import('expo-av');
-      const { sound: activeSound } = await Audio.Sound.createAsync(
-        { uri: wavCache.get(type)! },
-        { shouldPlay: false }
-      );
-      await activeSound.setPositionAsync(0);
-      await activeSound.playAsync();
-      setTimeout(() => activeSound.unloadAsync(), 500);
-    } catch {
-      // Silently fail
-    }
-    return;
+  // Reuse cached URI if present; else generate + cache.
+  let uri = wavCache.get(type) ?? null;
+  if (!uri) {
+    uri = await getNativeSoundUri(type);
+    if (!uri) return;
   }
 
-  const uri = await getNativeSoundUri(type);
-  if (!uri) return;
-
   try {
-    const { Audio } = await import('expo-av');
-    const { sound } = await Audio.Sound.createAsync(
-      { uri },
-      { shouldPlay: false }
-    );
-    await sound.setPositionAsync(0);
-    await sound.playAsync();
-    setTimeout(() => sound.unloadAsync(), 500);
-    nativeAudioInitialized = true;
+    const { createAudioPlayer } = await import('expo-audio');
+    const player = createAudioPlayer({ uri });
+    player.play();
+    // Tear down after the sound finishes (duration + small margin).
+    const ms = SOUND_SPECS[type].durationMs + 200;
+    setTimeout(() => {
+      try {
+        player.remove();
+      } catch { /* already disposed */ }
+    }, ms);
+    activePlayers = activePlayers.filter((p) => p !== player);
+    activePlayers.push(player as unknown as { remove: () => void });
   } catch {
     // Silently fail
   }
@@ -309,13 +306,8 @@ async function playNativeSound(type: SoundType): Promise<void> {
 // ============================================================
 
 export async function initSounds(): Promise<void> {
-  if (Platform.OS !== 'web' && canUseNativeAudio()) {
-    try {
-      await import('expo-av');
-      await import('expo-file-system');
-    } catch {
-      // Dependencies not available
-    }
+  if (Platform.OS !== 'web') {
+    await ensureNativeAudio();
   }
 }
 
