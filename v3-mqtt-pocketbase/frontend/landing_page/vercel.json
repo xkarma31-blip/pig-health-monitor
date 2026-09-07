@@ -1,10 +1,12 @@
 {
   "rewrites": [
-    { "source": "/app", "destination": "/app/index.html" },
-    { "source": "/app/:path*", "destination": "/app/:path*" },
+    { "source": "/favicon.ico", "destination": "/app/favicon.ico" },
     { "source": "/_expo/:path*", "destination": "/app/_expo/:path*" },
     { "source": "/assets/:path*", "destination": "/app/assets/:path*" },
-    { "source": "/favicon.ico", "destination": "/app/favicon.ico" }
+    { "source": "/app", "destination": "/app/index.html" },
+    { "source": "/app/tabs/:path*", "destination": "/app/index.html" },
+    { "source": "/app/tabs", "destination": "/app/index.html" },
+    { "source": "/app/:path*", "destination": "/app/:path*" }
   ],
   "headers": [
     {
