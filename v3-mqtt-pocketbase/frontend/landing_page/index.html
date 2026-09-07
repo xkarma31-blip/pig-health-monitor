@@ -1714,7 +1714,8 @@ xTaskCreatePinnedToCore(<br>
   let _speakLock = false;
   const _speakQueue = [];
   let _preAudio = null;
-  function _playPreGen(src, done){
+  function _playPreGen(src, done, onFail){
+    const fail=()=>{ if(typeof onFail==='function') onFail(); else done(); };
     try{
       const url = new URL(src, window.location.href).href;
       if(_preAudio){ try{ _preAudio.pause(); _preAudio.removeAttribute('src'); _preAudio.load(); }catch(e){} }
@@ -1723,20 +1724,20 @@ xTaskCreatePinnedToCore(<br>
       _preAudio.preload = 'auto';
       let finished=false;
       const finish=()=>{ if(finished) return; finished=true; done(); };
-      _preAudio.onended = finish; _preAudio.onerror = finish;
+      _preAudio.onended = finish; _preAudio.onerror = fail;
       _preAudio.oncanplaythrough = () => {
         const p = _preAudio.play();
-        if(p && p.catch) p.catch(finish);
+        if(p && p.catch) p.catch(fail);
       };
       // fallback if canplaythrough never fires
       setTimeout(()=>{
         if(_preAudio && _preAudio.paused && !_preAudio.ended){
           const p=_preAudio.play();
-          if(p&&p.catch) p.catch(finish);
+          if(p&&p.catch) p.catch(fail);
         }
       }, 400);
       setTimeout(finish, 20000);
-    }catch(e){ done(); }
+    }catch(e){ fail(); }
   }
   function _dequeue(){
     if(_speakQueue.length===0){ _speakLock=false; return; }
@@ -1762,18 +1763,24 @@ xTaskCreatePinnedToCore(<br>
         if(am){ const n=parseInt(am[1]||am[2],10); if(n>=1&&n<=6) src='alert_'+n+'.mp3'; }
       }
     }
-    if(src){ _playPreGen(src, done); return; }
-    try{
-      const synth=window.speechSynthesis; if(!synth) return done();
-      const u=new SpeechSynthesisUtterance(t.slice(0,420));
-      u.lang='en-US'; u.volume=0.84; u.rate=0.96; u.pitch=1.0;
-      const voices=synth.getVoices?synth.getVoices():[];
-      const v=voices.find(x=>/Jenny|Aria|Natural|Google US English/i.test(x.name)) || voices.find(x=>/^en/i.test(x.lang)) || null;
-      if(v) u.voice=v;
-      u.onend=done; u.onerror=done;
-      setTimeout(()=>{ try{ synth.speak(u); }catch(e){ done(); } }, 50);
-      setTimeout(done, Math.min(15000, Math.max(2400, t.length*62)));
-    }catch(e){ done(); }
+    // Pre-rendered voice files take priority; if one is missing (404) the
+    // queue falls back to the browser's speechSynthesis so narration never
+    // goes silent.
+    const synthSpeak=(text,fin)=>{
+      try{
+        const synth=window.speechSynthesis; if(!synth) return fin();
+        const u=new SpeechSynthesisUtterance(text.slice(0,420));
+        u.lang='en-US'; u.volume=0.84; u.rate=0.96; u.pitch=1.0;
+        const voices=synth.getVoices?synth.getVoices():[];
+        const v=voices.find(x=>/Jenny|Aria|Natural|Google US English/i.test(x.name)) || voices.find(x=>/^en/i.test(x.lang)) || null;
+        if(v) u.voice=v;
+        u.onend=fin; u.onerror=fin;
+        setTimeout(()=>{ try{ synth.speak(u); }catch(e){ fin(); } }, 50);
+        setTimeout(fin, Math.min(15000, Math.max(2400, text.length*62)));
+      }catch(e){ fin(); }
+    };
+    if(src){ _playPreGen(src, done, ()=>{ synthSpeak(t, done); }); return; }
+    synthSpeak(t, done);
   }
   function speakText(text){
     if(!soundOn || !text) return;

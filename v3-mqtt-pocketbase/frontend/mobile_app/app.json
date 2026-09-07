@@ -44,6 +44,9 @@
         "projectId": "61fdeb08-405f-4878-8ad7-ec3767746466"
       }
     },
+    "experiments": {
+      "baseUrl": "/app"
+    },
     "owner": "13solrak"
   }
 }
