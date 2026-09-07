@@ -36,7 +36,7 @@ export const DECAY_DURATION_MS = 200;
 export function createAdsrEnvelope(
   attackMs: number,
   decayMs: number,
-  durationMs: number,
+  _durationMs: number,
   sampleRate: number = DEFAULT_SAMPLE_RATE
 ): Float32Array {
   const length = Math.ceil((attackMs + decayMs) * sampleRate / 1000);
@@ -79,8 +79,7 @@ export function generateCoughBurst(
   const alpha = 2.0 * Math.cos(omega0) * Math.exp(-Math.PI * bandwidth * dt * sampleRate / sampleRate);
 
   // Biquad bandpole coefficients (simplified state-variable filter)
-  let x1 = 0, x2 = 0, y1 = 0, y2 = 0;
-  const b0 = alpha; // simplified
+  let y1 = 0, y2 = 0;
 
   // Generate white noise and shape via simple resonator
   const envelope = createAdsrEnvelope(ATTACK_DURATION_MS, DECAY_DURATION_MS, durationMs, sampleRate);

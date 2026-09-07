@@ -34,6 +34,8 @@ export const PROFILE_S3: VirtualNodeProfile = {
 
 export type FreeRtosState = 'BOOT' | 'IDLE' | 'SAMPLE' | 'TX' | 'HIBERNATE' | 'PANIC_WDT' | 'BROWNOUT';
 
+export type PowerState = 'NORMAL' | 'LOW' | 'CRITICAL' | 'HIBERNATE';
+
 export interface VirtualHardwareState {
   state: FreeRtosState;
   uptimeSeconds: number;
@@ -41,6 +43,7 @@ export interface VirtualHardwareState {
   minFreeHeapBytes: number;
   batteryMv: number;
   batteryPct: number;
+  powerState: PowerState;
   wifiRssiDbm: number;
   wifiConnected: boolean;
   mqttConnected: boolean;
