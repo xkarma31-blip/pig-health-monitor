@@ -308,6 +308,7 @@ export default function AdvisorModal({ visible, onClose }: { visible: boolean; o
           data-advisor-modal="true"
           style={[
             styles.modalContent,
+            { backgroundColor: colors.surface },
             isDesktop && {
               width: maxWidth,
               alignSelf: 'center',
