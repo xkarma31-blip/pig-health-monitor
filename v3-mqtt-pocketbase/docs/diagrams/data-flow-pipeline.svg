@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 460" font-family="system-ui, sans-serif">
+  <rect width="960" height="460" fill="#1a1a2e"/>
+  <text x="20" y="38" fill="#22d3ee" font-size="22" font-weight="bold">PigPulse v3 — Live Data Flow: Capture → Corpus → Model</text>
+  <text x="20" y="58" fill="#94a3b8" font-size="13">ML pipeline plan · [spec/sim] — validated in simulator (188 tests), phases A-C mapped to live deployment</text>
+
+  <!-- Stage 1 sensors -->
+  <g>
+    <rect x="20" y="120" width="170" height="140" rx="12" fill="#111827" stroke="#22d3ee" stroke-width="2"/>
+    <text x="40" y="150" fill="#22d3ee" font-size="15" font-weight="bold">1 · Barn sensors</text>
+    <text x="40" y="180" fill="#e2e8f0" font-size="13">mic 8 kHz</text>
+    <text x="40" y="200" fill="#e2e8f0" font-size="13">thermal 32×24</text>
+    <text x="40" y="220" fill="#e2e8f0" font-size="13">weather + clock</text>
+    <text x="40" y="244" fill="#94a3b8" font-size="12">2 nodes</text>
+  </g>
+
+  <!-- Stage 2 watchdog -->
+  <g>
+    <rect x="230" y="120" width="180" height="140" rx="12" fill="#111827" stroke="#22d3ee" stroke-width="2"/>
+    <text x="250" y="150" fill="#22d3ee" font-size="15" font-weight="bold">2 · Edge watchdog</text>
+    <text x="250" y="180" fill="#e2e8f0" font-size="13">cough ring</text>
+    <text x="250" y="200" fill="#e2e8f0" font-size="13">STFT → Mel</text>
+    <text x="250" y="220" fill="#e2e8f0" font-size="13">band: GREEN≥60 · YELLOW 40–59 · RED &lt;40</text>
+    <text x="250" y="244" fill="#94a3b8" font-size="12">ReHS semantics from SoundTalks research</text>
+  </g>
+
+  <!-- Stage 3 MQTT -->
+  <g>
+    <rect x="450" y="120" width="140" height="140" rx="12" fill="#111827" stroke="#22d3ee" stroke-width="2"/>
+    <text x="470" y="150" fill="#22d3ee" font-size="15" font-weight="bold">3 · MQTT</text>
+    <text x="470" y="180" fill="#e2e8f0" font-size="13">publish</text>
+    <text x="470" y="200" fill="#e2e8f0" font-size="13">pigpulse/#</text>
+    <text x="470" y="220" fill="#e2e8f0" font-size="13">wifi :1883</text>
+  </g>
+
+  <!-- Stage 4 corpus -->
+  <g>
+    <rect x="630" y="90" width="300" height="200" rx="12" fill="#111827" stroke="#f59e0b" stroke-width="2"/>
+    <text x="650" y="120" fill="#f59e0b" font-size="15" font-weight="bold">4 · PocketBase corpus</text>
+    <text x="650" y="150" fill="#e2e8f0" font-size="13">status NORMAL|WARNING|CRITICAL|INFO</text>
+    <text x="650" y="170" fill="#e2e8f0" font-size="13">vet labels + barn log</text>
+    <text x="650" y="190" fill="#e2e8f0" font-size="13">suspect flags (RSSI / saturation)</text>
+    <text x="650" y="214" fill="#94a3b8" font-size="12">retention evict job: age-first then capacity 20 k</text>
+    <text x="650" y="236" fill="#94a3b8" font-size="12">append-only — never edit labels</text>
+    <text x="650" y="272" fill="#e2e8f0" font-size="13">7-day window ≈ 160 k rows / 2 nodes</text>
+  </g>
+
+  <!-- Stage 5 export -->
+  <g>
+    <rect x="230" y="320" width="180" height="90" rx="12" fill="#111827" stroke="#22d3ee" stroke-width="2"/>
+    <text x="250" y="350" fill="#22d3ee" font-size="15" font-weight="bold">5 · Export</text>
+    <text x="250" y="376" fill="#e2e8f0" font-size="13">ndjson → Parquet</text>
+    <text x="250" y="396" fill="#e2e8f0" font-size="13">USB mirror</text>
+  </g>
+
+  <!-- Stage 6 training -->
+  <g>
+    <rect x="460" y="320" width="190" height="90" rx="12" fill="#111827" stroke="#22d3ee" stroke-width="2"/>
+    <text x="480" y="350" fill="#22d3ee" font-size="15" font-weight="bold">6 · Training</text>
+    <text x="480" y="376" fill="#e2e8f0" font-size="13">CNN-LSTM vs heuristic</text>
+    <text x="480" y="396" fill="#e2e8f0" font-size="13">KPI: ≥ baseline − 2 pts · ≤ 22 ms</text>
+  </g>
+
+  <!-- Arrows -->
+  <defs><marker id="b" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 z" fill="#22d3ee"/></marker></defs>
+  <line x1="190" y1="190" x2="222" y2="190" stroke="#22d3ee" stroke-width="2" marker-end="url(#b)"/>
+  <line x1="410" y1="190" x2="442" y2="190" stroke="#22d3ee" stroke-width="2" marker-end="url(#b)"/>
+  <line x1="590" y1="190" x2="622" y2="190" stroke="#22d3ee" stroke-width="2" marker-end="url(#b)"/>
+  <line x1="780" y1="290" x2="780" y2="330" stroke="#22d3ee" stroke-width="2" marker-dasharray="6 4"/>
+  <line x1="320" y1="410" x2="510" y2="410" stroke="#22d3ee" stroke-width="2" marker-end="url(#b)"/>
+  <line x1="650" y1="410" x2="640" y2="380" stroke="#f59e0b" stroke-width="2" marker-dasharray="4 4"/>
+  <text x="860" y="420" fill="#94a3b8" font-size="12">honest gate: &lt;2 wk labels → ship pipeline, not model</text>
+</svg>
