@@ -195,7 +195,19 @@ def handle_alert(device_id: str, data: dict):
 
 
 def handle_status(device_id: str, data: dict):
-    """Handle status message (LWT)."""
+    """Handle status message (LWT).
+    
+    Task 11 companion fix: Map incoming online: true → status: "online",
+    online: false → status: "offline". Preserve existing status when
+    the online key is absent.
+    """
+    # Map incoming online flag to PocketBase status field
+    if data.get("online") is True:
+        data["status"] = "online"
+    elif data.get("online") is False:
+        data["status"] = "offline"
+    # When online key is absent, do not overwrite the existing status
+
     data["deviceId"] = device_id
     if "timestamp" not in data:
         data["timestamp"] = int(time.time())
