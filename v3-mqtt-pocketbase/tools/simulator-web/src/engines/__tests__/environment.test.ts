@@ -74,15 +74,14 @@ describe('BarnEnvironment', () => {
   });
 
   it('keeps pigs inside the pen bounds', () => {
-    const env = new BarnEnvironment({ pigs: HERD.slice(0, 1), seed: 5, x: undefined as never });
-    // replaced below via explicit pig config position
-    void env;
-    const env2 = new BarnEnvironment({
-      pigs: [{ id: 'p1', x: 0.5, y: 0.5 }],
-      seed: 5
-    });
-    tickSec(env2, 120);
-    const p = env2.snapshot()[0];
+    const env = new BarnEnvironment({ pigs: [{ id: 'p1' }], seed: 5 });
+    const pig = env.pig('p1')!;
+    expect(pig.x).toBeGreaterThanOrEqual(0.05);
+    expect(pig.x).toBeLessThanOrEqual(0.95);
+    expect(pig.y).toBeGreaterThanOrEqual(0.05);
+    expect(pig.y).toBeLessThanOrEqual(0.95);
+    tickSec(env, 120);
+    const p = env.snapshot()[0];
     expect(p.x).toBeGreaterThanOrEqual(0.05);
     expect(p.x).toBeLessThanOrEqual(0.95);
     expect(p.y).toBeGreaterThanOrEqual(0.05);
