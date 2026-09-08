@@ -8,7 +8,10 @@
     const T = THREE;
     const bv = glb.bufferViews[accessor.bufferView];
     const bufferData = glb.buffers[bv.buffer];
-    const byteOffset = (bv.byteOffset || 0) + (accessor.byteOffset || 0);
+    /* bufferData is a Uint8Array view into the raw ArrayBuffer.
+       TypedArray constructors interpret byteOffset relative to the ArrayBuffer,
+       not the Uint8Array — so add bufferData.byteOffset (= binOffset). */
+    const byteOffset = bufferData.byteOffset + (bv.byteOffset || 0) + (accessor.byteOffset || 0);
     const comp = accessor.componentType;
     const count = accessor.count;
     const type = accessor.type;
