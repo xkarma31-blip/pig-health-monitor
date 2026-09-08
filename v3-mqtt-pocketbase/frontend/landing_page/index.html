@@ -3268,12 +3268,11 @@ xTaskCreatePinnedToCore(<br>
           btnGLB.textContent = 'Loading…';
           window._loadGLB('pigpulse-device.glb', (model) => {
             glbModel = model;
-            glbModel.scale.setScalar(0.5);
-            glbModel.position.y = 0.05;
+            /* Auto-centering handled by glb-loader.js */
             scene.add(glbModel);
             glbLoaded = true;
             btnGLB.textContent = 'PCB View';
-            controls.target.set(0, 0.15, 0);
+            controls.target.set(0, 0, 0);
             camera.position.copy(defaultCamPos);
             renderer.shadowMap.needsUpdate = true;
           });

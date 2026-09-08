@@ -51,8 +51,9 @@
     return m;
   }
 
-  function buildNode(node, glb, textures, materials) {
+  function buildNode(nodeIdx, glb, textures, materials, nodeMap) {
     const T = THREE;
+    const node = glb.nodes[nodeIdx];
     const obj = new T.Object3D();
     obj.name = node.name || '';
     if (node.mesh !== undefined) {
@@ -75,6 +76,8 @@
         } else {
           geom.setIndex(new Array(pos.count).fill(0).map(function (_, i) { return i; }));
         }
+        geom.computeBoundingSphere();
+        geom.computeBoundingBox();
         geom.computeVertexNormals();
         const mat = prim.material !== undefined
           ? buildMaterial(materials[prim.material], textures)
@@ -87,6 +90,12 @@
     if (node.rotation) obj.quaternion.set(node.rotation[0], node.rotation[1], node.rotation[2], node.rotation[3]);
     if (node.scale) obj.scale.set(node.scale[0], node.scale[1], node.scale[2]);
     if (node.translation) obj.position.set(node.translation[0], node.translation[1], node.translation[2]);
+    /* Recurse into children */
+    if (node.children) {
+      node.children.forEach(function (childIdx) {
+        obj.add(buildNode(childIdx, glb, textures, materials, nodeMap));
+      });
+    }
     return obj;
   }
 
@@ -98,17 +107,18 @@
         const magic = buf.slice(0, 4).toString();
         if (magic !== 'glTF') throw new Error('Not a GLB');
         const dv = new DataView(buf);
-        const jsonLen = dv.getUint32(12, true);
-        const jsonBytes = new Uint8Array(buf, 16, jsonLen);
+        /* GLB 2.0 layout: [header 12B] [chunk0_len 4B] [chunk0_type 4B] [jsonChunkData] [chunk1_len 4B] [chunk1_type 4B] [binChunkData] */
+        const jsonChunkLen = dv.getUint32(12, true);
+        const jsonBytes = new Uint8Array(buf, 20, jsonChunkLen);
         const text = new TextDecoder().decode(jsonBytes);
         const json = JSON.parse(text);
-        const binOffset = 16 + jsonLen;
+        /* Binary chunk starts after JSON chunk data + 8-byte binary chunk header */
+        const binOffset = 20 + jsonChunkLen + 8;
 
-        // Load buffer 0 directly from binary
-        const buffers = json.buffers.slice();
+        // Load buffer 0 directly from binary — the ENTIRE binary chunk is buffer 0
+        const buffers = json.buffers.map(function (b) { return { byteLength: b.byteLength }; });
         if (buffers.length > 0) {
-          const bv0 = json.bufferViews[0];
-          buffers[0] = new Uint8Array(buf, binOffset + (bv0.byteOffset || 0), bv0.byteLength);
+          buffers[0] = new Uint8Array(buf, binOffset, json.buffers[0].byteLength);
         }
 
         // Build textures from embedded images
@@ -130,11 +140,26 @@
         const sceneIdx = json.scene != null ? json.scene : 0;
         const rootNodes = (json.scenes[sceneIdx] && json.scenes[sceneIdx].nodes) || [];
         const root = new T.Group();
+
+        /* Build a flat glb context for buildNode */
+        const glbCtx = { buffers: buffers, accessors: json.accessors, bufferViews: json.bufferViews, meshes: json.meshes, materials: materials, nodes: json.nodes };
+
         rootNodes.forEach(function (ni) {
-          const node = json.nodes[ni];
-          const obj = buildNode(node, { buffers: buffers, accessors: json.accessors, bufferViews: json.bufferViews, meshes: json.meshes, materials: materials, nodes: json.nodes }, textures, materials);
-          root.add(obj);
+          root.add(buildNode(ni, glbCtx, textures, materials, json.nodes));
         });
+
+        /* Auto-center and scale: compute world bounding box */
+        root.updateMatrixWorld(true);
+        const box = new T.Box3().setFromObject(root);
+        const center = box.getCenter(new T.Vector3());
+        const size = box.getSize(new T.Vector3());
+        const maxDim = Math.max(size.x, size.y, size.z);
+        if (maxDim > 0) {
+          /* Center the model at origin */
+          root.position.sub(center);
+          /* Scale to fit within a ~2 unit cube */
+          root.scale.setScalar(2.0 / maxDim);
+        }
 
         onDone(root);
       })
