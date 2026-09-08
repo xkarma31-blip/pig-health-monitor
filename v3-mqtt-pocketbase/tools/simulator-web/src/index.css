@@ -1,0 +1,271 @@
+/* PigPulse v3 Simulation Cockpit — dark cockpit theme.
+   Accessible mode (top-nav toggle): ≥18px text, >7:1 contrast, visible focus. */
+
+:root {
+  --bg: #090d16;
+  --panel: #111827;
+  --panel-edge: #1f2937;
+  --ink: #d1d5db;
+  --ink-dim: #9ca3af;
+  --accent: #06b6d4;
+  --accent-ink: #0a0f1e;
+  --good: #22c55e;
+  --warn: #f59e0b;
+  --bad: #ef4444;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-size: 16px;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.app-shell {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+/* ---- accessible mode: larger, higher-contrast text ---------------------- */
+.app-shell.accessible {
+  font-size: 19px;
+}
+.app-shell.accessible .panel h2 {
+  font-size: 1.35rem;
+}
+.app-shell.accessible button,
+.app-shell.accessible select,
+.app-shell.accessible input {
+  font-size: 19px;
+}
+.app-shell.accessible .status-bar,
+.app-shell.accessible .alert-banner {
+  font-size: 18px;
+}
+.app-shell.accessible :focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---- top nav ------------------------------------------------------------- */
+.top-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  border-radius: 10px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.75rem;
+}
+.top-nav-left {
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.02em;
+}
+.top-nav-right button {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 0.35rem 0.9rem;
+  cursor: pointer;
+}
+.top-nav-right button[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+
+/* ---- status bar + alerts -------------------------------------------------- */
+.status-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.1rem;
+  align-items: center;
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  margin-bottom: 0.75rem;
+  color: var(--ink);
+}
+.badge {
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+.badge-simulated {
+  background: #0e7490;
+  color: #ecfeff;
+}
+.alert-banner {
+  background: #7f1d1d;
+  color: #fecaca;
+  border: 1px solid var(--bad);
+  border-radius: 10px;
+  padding: 0.6rem 1rem;
+  margin-bottom: 0.75rem;
+}
+.alert-banner b {
+  color: #fff;
+}
+
+/* ---- cockpit grid ---------------------------------------------------------- */
+.cockpit-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 0.75rem;
+}
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  border-radius: 10px;
+  padding: 0.9rem;
+}
+.panel h2 {
+  margin: 0 0 0.6rem;
+  font-size: 1.02rem;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.panel-arena {
+  grid-column: span 2;
+}
+
+/* ---- OTA overlay ----------------------------------------------------------- */
+.ota-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 7, 18, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+.ota-dialog {
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  border-radius: 12px;
+  padding: 1.4rem;
+  max-width: 420px;
+  width: 92%;
+}
+.ota-dialog-title {
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: #fff;
+}
+.ota-dialog-message {
+  color: var(--ink);
+}
+.ota-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+.ota-dialog-actions button {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 0.35rem 1rem;
+  cursor: pointer;
+}
+
+/* ---- component-internal styles (defensive defaults) ----------------------- */
+canvas {
+  background: #050810;
+  border-radius: 6px;
+}
+.latency-sections {
+  display: flex;
+  gap: 4px;
+  align-items: stretch;
+  min-height: 56px;
+  margin-top: 0.6rem;
+}
+.latency-section {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  border-radius: 4px;
+  color: #050810;
+  font-size: 0.8rem;
+  font-weight: 700;
+  min-width: 48px;
+  padding: 2px;
+}
+.latency-total {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #fff;
+}
+.latency-budget {
+  color: var(--ink-dim);
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+.latency-label-toggle {
+  margin-top: 0.7rem;
+  background: transparent;
+  border: 1px solid var(--panel-edge);
+  color: var(--accent);
+  border-radius: 6px;
+  padding: 0.25rem 0.8rem;
+  cursor: pointer;
+}
+.hardware-row {
+  margin: 0.45rem 0;
+}
+.chaos-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  margin: 0.6rem 0;
+}
+.chaos-row label,
+.adsr-row label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--ink);
+}
+.bioacoustics-studio select,
+.bioacoustics-studio input,
+.chaos-panel input {
+  accent-color: var(--accent);
+}
+.bioacoustics-studio select {
+  background: #1f2937;
+  color: var(--ink);
+  border: 1px solid var(--panel-edge);
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  margin-left: 0.5rem;
+}
+.bioacoustics-studio button {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  padding: 0.5rem 1.1rem;
+  cursor: pointer;
+}

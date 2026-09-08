@@ -43,3 +43,9 @@ scripts/test/node_modules/
 
 # Husky git hooks
 .husky/_/
+
+# === Python bytecode ===
+**/__pycache__/
+
+# === Build output (simulator-web) ===
+tools/simulator-web/dist/
