@@ -84,14 +84,15 @@ export function classifyFeatures(f: InferenceFeatures): {
   const countN = clamp01(f.coughCount / 10);
 
   // Raw (un-normalized) class scores — hand-tuned so:
-  //   silence            → STABLE dominates
-  //   sparse coughs      → STABLE (mild) wins; ELEVATED second
-  //   dense coughs       → CLUSTER dominates
+  //   silence / sparse coughs → STABLE dominates
+  //   loud, dense bursts      → CLUSTER dominates
+  //
+  // Cough COUNT is the primary cluster signal (PRRS surveillance is built on
+  // cough-rate windowing; the audio energy corroborates it, it is not a gate).
   const raw = {
-    stable: (1 - energy) + 0.8 * (1 - countN),
+    stable: 0.5 * (1 - energy) + 0.8 * (1 - countN),
     elevated: energy * 0.9 * 1.2 * countN,
-    // quadratic in count so a single lone cough can't read as an outbreak
-    cluster: countN * countN * energy * 3.0
+    cluster: countN * countN * (0.8 + 0.2 * energy) * 3.2
   };
 
   const total = raw.stable + raw.elevated + raw.cluster;
