@@ -24,8 +24,7 @@
         "EXPO_PUBLIC_PB_EMAIL": "admin@pigpulse.local",
         "EXPO_PUBLIC_PB_PASSWORD": "admin123",
         "EXPO_PUBLIC_API_URL": "http://192.168.1.101:80"
-      },
-      "prebuildCommand": "npx expo prebuild --platform android --clean"
+      }
     },
     "production": {}
   },
