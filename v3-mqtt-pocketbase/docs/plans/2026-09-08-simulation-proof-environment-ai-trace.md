@@ -40,9 +40,13 @@ It CANNOT prove ML accuracy on real pigs (needs real audio + trained model).
   `npm run build`; cockpit shows ClassifierPanel + PipelineTrace + scenario panel.
 - Honest limitations documented: linear readout ≠ trained CNN; audio is synthetic.
 
-## Commits
+## Commits (all done ✅)
 
-- `feat(sim): environment herd model with fever/cough dynamics (TDD GREEN)`
-- `feat(sim): visible AI layer - real STFT/Mel DSP + linear readout driving health trend (TDD GREEN)`
-- `feat(sim): pipeline trace + scenario runner with PASS/FAIL verdicts (TDD GREEN)`
-- `feat(sim): cockpit wiring - environment, classifier panel, trace, scenarios`
+- `417e918` `feat(sim): environment herd model - fever/cough dynamics per pig health state, deterministic, scenario-scriptable (TDD GREEN)`
+- `15433ef` `feat(sim): visible AI layer - real STFT/Mel DSP + fixed-weight classifier readout, environment->node runtime overrides (TDD GREEN)`
+- `c68a4a9` `feat(sim): pipeline trace + scenario runner - causal loop proven offline (sick pig -> fever -> CLUSTER -> CRITICAL); cough-count-led classifier (TDD GREEN)`
+- `6dff8f0` `feat(sim): cockpit AI panels - barn cattle + classifier readout + pipeline trace + scenario runner wired to live env->node loop (TDD GREEN)`
+
+## Result
+
+tsc clean · vitest **126/126 (19 files)** · `npm run build` OK · dev server 200 on `/` and all transformed modules. Cockpit now shows: Barn Environment (4 pigs, script-infection), AI Classifier (live Mel heatmap + score bars + trend), Pipeline Trace (SENSOR→DSP→ML→DECISION→MQTT→BRIDGE→DB journal), Scenario Runner (same engine as vitest → on-screen PASS/FAIL).
