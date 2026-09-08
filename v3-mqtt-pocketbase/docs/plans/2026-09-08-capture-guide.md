@@ -1,6 +1,6 @@
 # PigPulse v3 — Barn Data-Capture Guide
 
-> **Version:** 1.0 — September 8, 2026
+> **Version:** 1.1 — September 8, 2026 (v1.1: automated labeling is primary; vet optional; retention = capture-length then trim)
 > **Purpose:** run the capture phase (Plan §4) so the exported corpus is trainable.
 > **Companion:** `docs/plans/2026-09-08-live-capture-ml-pipeline.md`
 
@@ -20,8 +20,11 @@
      | jq -r '.items[].created' | head -1
    ```
    A gap > 5 min = investigate RSSI/mic saturation before anything else.
-3. **One barn log entry per alert episode** (vet-confirmed or not — mark which):
-   `time, node, alertType, pigId, confirmedBy: vet|self, notes`
+3. **Auto-labels are the primary ground truth** (v1.1 — no vet assumed). Every record carries a `labelConfidence`; check the count of high-confidence episodes each day:
+   ```bash
+   # ≥ 10 high-confidence episodes by week 3, else extend capture
+   curl -s "http://localhost:8090/api/collections/telemetry/records?perPage=200&filter=labelConfidence>=0.8"
+   ```
 
 ---
 
@@ -30,6 +33,7 @@
 | Field | Meaning | Used as |
 |---|---|---|
 | `status` | `NORMAL\|WARNING\|CRITICAL\|INFO` (exact enum) | label (weak) |
+| `labelConfidence` | auto-label score (high-confidence ≥ 0.8 subset trains) | train filter |
 | `band` | SoundTalks band: GREEN ≥ 60 / YELLOW 40–59 / RED < 40 (real ReHS semantics) | label (fine) |
 | `rdi` / `rehs` | rolling 24-bin day health + hourly baseline ReHS | feature |
 | `audioFrames` | 8 kHz cough ring | feature |
@@ -40,11 +44,11 @@
 
 ---
 
-## 3. Ground-truth hygiene rules
+## 3. Ground-truth hygiene rules (v1.1 — automated-first)
 
+- **Auto-label design:** weak labels come from the pipeline itself (band + `status` + weather/clock context + hygiene flags). Only `labelConfidence ≥ 0.8` records train; the rest stay in the corpus for later pruning. This is the "no-vet" path we committed to — vet confirmation later merely *strengthens* a subset, never blocks capture.
 - **Never edit labels after export.** Amend a new record instead — the corpus stays append-only.
 - **Down-weight flagged windows** (event keys `DOOR_OPEN`, `DRAFT`, `HEAT_SPIKE`) — same vocabulary the simulator uses.
-- **Vet-confirmed beats auto:** if one episode is vet-flagged and everything else is not, trust only the vet flags for the fine labels; keep weak labels for the coarse `NORMAL/WARNING` task.
 
 ---
 
@@ -64,7 +68,9 @@ print(df.shape, df['status'].value_counts().to_dict())
 EOF
 ```
 
-Expected shape after 14 days, 2 nodes: ~2 × 14 × 5760 ≈ **160k rows**, a few hundred `WARNING/CRITICAL`, handful of vet-confirmed.
+**After export → trim** (v1.1 decision): the PocketBase window drops from 30 d (capture length) to 7 d so the live DB stays bounded — training happens from the Parquet, not from PocketBase.
+
+Expected shape after 30 days, 2 nodes: ~2 × 30 × 5760 ≈ **345k rows**, several hundred `WARNING/CRITICAL`, high-confidence subset is the training fold.
 
 ---
 

@@ -1,8 +1,8 @@
 # PigPulse v3 — Live Deployment + ML Data Pipeline (Master Plan)
 
-> **Version:** 1.0 — September 8, 2026
+> **Version:** 1.1 — September 8, 2026 (Master answered the 6 open questions; spectral-subtraction A/B measured in-sim)
 > **Branches:** `feat/v3-mqtt-pocketbase` (canon) · `main` (GitHub mirror)
-> **Status:** Plan (simulator proof complete; live deployment is next)
+> **Status:** Plan v1.1 (simulator proof complete; live deployment is next)
 > **Honesty rule:** anything marked `[measured]` is grounded in a live readout; `[spec]` is datasheet/web-only and NOT verified against hardware. Nothing in this plan claims otherwise.
 
 ---
@@ -105,17 +105,18 @@ Exit criteria: 4/4 checks pass with the node physically mounted in the barn.
 | Weather + clock | env sensors / barn clock | 1 record/min | confounders |
 | Alerts (FEVER, RESP_DISTRESS…) | watchdog decision path | event-driven | outcome labels |
 
-### B2. Retention policy (matches the sim's `StorageRing` defaults)
+### B2. Retention policy (v1.1 — Master's decision: capture-length window, then trim)
 
-- **Window:** 7 accelerated sim-days in the sim → **7 real days** in production (PocketBase record TTL job).
-- **Capacity:** 20 000 records per node before oldest-first eviction — enforced by a PocketBase cron hook mirroring the tested `evict()` semantics.
-- **Why:** unbounded "24/7 piling-up" (the real problem this feature was built for) is bounded and honest; old data is evicted by age first, then capacity.
+- **Window during capture:** **30 real days** (StorageRing window = capture period, via `setRetentionSeconds`) — research depth while the corpus is being labeled.
+- **After export:** a **trim job** drops the window to **7 days** (C1 export → C2 training happen from Parquet, not from PocketBase) so the live DB stays bounded.
+- **Capacity:** 20 000 records per node before oldest-first eviction — PocketBase cron hook mirroring the tested `evict()` semantics (age-cutoff first, then capacity).
+- **Why:** unbounded "24/7 piling-up" is the problem StorageRing was built for; the "grab 30, trim to 7" pattern gives us capture depth without unbounded live storage.
 
-### B3. Labeling truth chain
+### B3. Labeling truth chain (v1.1 — automated-first, Master's decision)
 
-1. Veterinary confirmation of each alert episode (barn log entry per alert).
-2. Bridge stamps `receivedAt` + node id (provenance).
-3. `status` enum (`NORMAL | WARNING | CRITICAL | INFO`) — the exact enum the farm tests assert; no free-text health field.
+1. **Auto-labeling (primary):** weak labels generated from the pipeline itself — health band (RDI/ReHS) + weather/clock context + `suspect` hygiene flags. **Only high-confidence auto-labels train** (per-record confidence field, thresholded in C2 folds).
+2. Optional vet cross-check later: barn log per alert episode (confirms/overrides weak labels — becomes the "strong" subset).
+3. Bridge stamps `receivedAt` + node id (provenance); `status` enum (`NORMAL | WARNING | CRITICAL | INFO`) — the exact enum the farm tests assert; no free-text health field.
 
 ### B4. Data hygiene
 
@@ -154,9 +155,9 @@ If < 2 weeks of labeled audio: do NOT ship the model. Ship the labeled-corpus to
 
 | Week | Deliverable | Exit check |
 |---|---|---|
-| 1 | Pi baseline + 2 nodes flashed + mounted, MQTT→Bridge→PB→app loop | 4/4 A3 checks |
-| 2 | Capture confirmed: audio + labels + retention job | 24 h continuous corpus, no gaps > 5 min |
-| 3 | Vet-labeled episodes, data-hygiene flags, export tool | ≥ 10 vet-confirmed episodes |
+| 1 | **Bench** (home, v1.1 decision): Pi baseline + 2 nodes flashed + bench-mounted, MQTT→Bridge→PB→app loop | 4/4 A3 checks, desk deployment |
+| 2 | Capture confirmed on bench: audio + labels + 30 d retention + trim job | 24 h continuous corpus, no gaps > 5 min |
+| 3 | Auto-labeled episodes (high-confidence subset), data-hygiene flags, export tool | ≥ 10 high-confidence episodes |
 | 4 | Baseline vs CNN-LSTM on validation fold, latency measured | decision: ship model or ship pipeline |
 
 ---
@@ -170,19 +171,61 @@ If < 2 weeks of labeled audio: do NOT ship the model. Ship the labeled-corpus to
 
 ---
 
-## 8. Open questions (for the Master — answers steer Phase A/B)
+## 8. Master's decisions (v1.1 — answers to the 6 open questions)
 
-1. **Barn access:** is the target barn reachable within 7 days, or do we bench-mount at home first (same loop, no pigs) and move to the barn in Phase B?
-2. **Labeling:** will a vet be available during capture weeks, or should the barn log be our sole ground truth (weaker labels, train on `NORMAL`/`WARNING` only)?
-3. **Node count:** 2 nodes planned; budget for 4 (40 pigs → 4×10) or is 2 the ceiling?
-4. **Pi 5 location:** inside the barn (better RSSI, harsher env) or a dry room nearby (run Ethernet/AP)? Matters for the UFW/Docker rules and heat.
-5. **Data residency:** corpus stays on the Pi + a USB mirror, or is a cloud bucket acceptable (training on the laptop either way)?
-6. **Retention window:** 7 real days acceptable, or do you want 30 for research depth? (Storage math already supports any window via `setRetentionSeconds`.)
+| # | Question | Decision | Consequence |
+|---|---|---|---|
+| 1 | Barn vs home first | **Bench-mount at home first** (same loop, no pigs), barn in Phase B | Phase A1/A2 fully executable on the desk; barn move is a re-mount, not a redesign |
+| 2 | Vet labels vs barn log | **Automate labeling ourselves** (no vet); vet = optional later | B3 becomes weak-label design: auto-labels only, high-confidence subset trains (§4.1) |
+| 3 | 2 nodes vs 4 | "2 nodes" was the **sim fleet default** — the topology scales to N | See the topology matrix below; no budget change yet |
+| 4 | Pi 5 location | **Assumed dry room nearby** (unanswered explicitly) | Ethernet/AP to barn; UFW rules per §2 remain valid |
+| 5 | Data residency | **Pi + USB mirror default** (cloud optional, not required) | Export path in C1 is laptop-bound either way |
+| 6 | Retention window | **"Whatever works" → capture-length window**: grab 30 d during capture, **trim to 7 d after export** | StorageRing window = capture period; post-export trim job keeps the corpus bounded |
+
+### 8.1 Topology matrix (question 3, clarified)
+
+| Tier | Device | Job | Why |
+|---|---|---|---|
+| Per-pen acoustic | ESP32-S3 + PDM mic (the "node") | 8 kHz cough-ring frames, on-device SoundTalks RDI + ReHS | close range, < 1.5 m from snout — the classifier's primary signal |
+| Overall compute + thermal | **Pi 5** (aggregator, existing edge services) | MQTT hub, bridge, storage, MLX90640 thermal ROI at pen level | not per-pen compute; one thermal cam per pen at most |
+| Optional far-field | CCTV camera + mic | night/distance coverage | where spectral subtraction may matter (see §6.5) |
+
+The "2 nodes" number was the simulator's fleet *default* (2 pens) — not a hard ceiling. The code path is node-agnostic (`nodeId` topics); scaling = flashing more ESP32s.
+
+### 8.2 Remaining open
+
+- Pi 5 location (Q4) is *assumed* dry-room; confirm before buying cabling.
+- CCTV far-field (Q3 tier 3) is a nice-to-have — the spectral subtraction decision in §6.5 says YES only if far-field mics are actually deployed.
 
 ---
 
-## 9. Source of truth
+## 9. Spectral subtraction experiment (the far-field mic question, v1.1)
 
-- Simulator: `tools/simulator-web/` (engines `environment.ts`, `soundTalks.ts`, `sensorFarm.ts`; 188 tests).
+**Question from Master:** "How do we actually do spectral subtraction — and is it worth it?"
+
+**Engine:** `tools/simulator-web/src/engines/spectralSubtractor.ts` (TDD — 5 tests pin the numbers below). Recipe: Hann-windowed complex STFT (256 pt / 128 hop) → noise spectrum estimate → per-bin `max(|X| − α·N, β·|X|)` with phase preserved → overlap-add ISTFT (COLA `w[i]+w[i+N/2]=1`). β = 0.02 spectral floor guards musical noise. `'first'` mode = mean of first N frames; `'gated'` = seeded EMA updated only in energy-quiet frames (adapts during silences, ignores speech bursts).
+
+**[measured]** in-sim results (deterministic seeds, 8 kHz):
+
+| Scenario | Result |
+|---|---|
+| Pure stationary noise, first-N estimate, α=2 | −20.4 dB floor drop |
+| Same, gated estimate, α=2 | −14.4 dB (deliberately more conservative) |
+| 0.7 s cough in 0.5 s noise lead, α=1.5 (default) | −14.1 dB global floor drop |
+| Cough-band preservation (600 ± 200 Hz) | band drop within **0.14 dB** of global drop — subtraction does NOT preferentially damage the cough band |
+| Band-concentration "gain" | **−0.14 dB ≈ 0** — the honest finding |
+
+**Verdict (worth it?): marginal-to-no for close-range node mics; YES as a pre-filter for far-field CCTV audio.**
+1. A broadband cough buried in broadband noise cannot be "revealed" by floor subtraction — there is no spectral contrast to concentrate (gain ≈ 0 dB, measured). The buy is a uniform noise-floor drop (14–20 dB).
+2. A 14–20 dB cleaner floor is directly useful for: gating/detection thresholds, the RNNoise-style front-end of the CNN-LSTM (C2), and night-time CCTV where SNR is the limiting factor.
+3. Budget order: the far-field tier is optional; the sim A/B (this §) is the cheap decision tool — if the CCTV mic experiment repeats these numbers on a real barn clip, deploy subtraction in front of the far-field classifier; otherwise skip it.
+
+Param checkpoints for tuning: `oversubtraction` (1.5 default, 2–3 for stationary), `floor` (0.02), `noiseMode` (first for fixed mounts, gated for drifting background).
+
+---
+
+## 10. Source of truth
+
+- Simulator: `tools/simulator-web/` (engines `environment.ts`, `soundTalks.ts`, `sensorFarm.ts`, `spectralSubtractor.ts`; 193 tests).
 - Existing live docs: `docs/DEPLOYMENT.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`.
 - Measured bridge state: `systemctl status pigpulse-bridge` (re-verify live before Phase A1).
