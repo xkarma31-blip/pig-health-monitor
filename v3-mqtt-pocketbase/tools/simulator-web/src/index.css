@@ -510,3 +510,91 @@ canvas {
   font-size: 1rem;
   padding: 0.6rem 1rem;
 }
+/* ---- Phase 3 Stage D: scene editor -------------------------------------- */
+.scene-editor { display: flex; flex-direction: column; gap: 0.6rem; }
+.scene-toolbar { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.scene-hint { font-size: 0.85rem; color: var(--ink-dim); }
+.scene-pen {
+  position: relative;
+  height: 240px;
+  border: 2px solid var(--panel-edge);
+  border-radius: 10px;
+  background:
+    repeating-linear-gradient(45deg, rgba(6, 182, 212, 0.04) 0 8px, transparent 8px 16px),
+    var(--panel);
+  cursor: crosshair;
+  touch-action: none;
+}
+.scene-coverage {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border: 2px dashed var(--accent);
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.45;
+}
+.scene-coverage.is-off { border-color: var(--warn); opacity: 0.25; }
+.scene-actor {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px solid #fff;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.scene-actor.is-selected { outline: 3px solid var(--accent); outline-offset: 3px; }
+.scene-pig { width: 22px; height: 22px; background: #f4a261; }
+.scene-pig.health-infected { background: #e76f51; }
+.scene-pig.health-critical { background: #ef4444; }
+.scene-node { width: 14px; height: 14px; background: var(--accent); border-radius: 3px; }
+.scene-node.is-off { background: var(--bad); opacity: 0.6; }
+.scene-inspector { display: flex; flex-direction: column; gap: 0.4rem; max-height: 300px; overflow-y: auto; }
+.scene-item { border: 1px solid var(--panel-edge); border-radius: 8px; padding: 0.4rem 0.6rem; }
+.scene-item summary { cursor: pointer; color: var(--ink); font-size: 0.92rem; }
+.scene-item-controls { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; margin-top: 0.4rem; }
+.scene-item-controls label { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; color: var(--ink-dim); }
+.scene-item-controls input[type='number'] {
+  width: 4.2rem;
+  background: #0b1120;
+  color: var(--ink);
+  border: 1px solid var(--panel-edge);
+  border-radius: 6px;
+  padding: 0.2rem 0.3rem;
+}
+.btn { background: #11202f; color: var(--accent); border: 1px solid var(--accent); border-radius: 6px; padding: 0.35rem 0.8rem; cursor: pointer; font-size: 0.9rem; }
+.btn:hover { background: #152a3d; }
+.btn-danger { color: #fca5a5; border-color: var(--bad); }
+.btn-danger:hover { background: #2a1418; }
+
+/* ---- Phase 3 Stage D: environment console -------------------------------- */
+.env-console { display: flex; flex-direction: column; gap: 0.6rem; }
+.env-readout { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+.env-readout select { background: #0b1120; color: var(--ink); border: 1px solid var(--panel-edge); border-radius: 6px; padding: 0.2rem 0.4rem; }
+.env-sliders { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.4rem 0.9rem; }
+.env-slider { display: flex; flex-direction: column; gap: 0.15rem; font-size: 0.85rem; color: var(--ink); }
+.env-slider input[type='range'] { accent-color: var(--accent); width: 100%; }
+.env-events { display: flex; flex-direction: column; gap: 0.4rem; }
+.env-event-buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.env-events p, .env-events ul { margin: 0; font-size: 0.9rem; color: var(--ink); }
+.env-events li { margin-left: 1.2rem; }
+
+/* ---- Phase 3 Stage D: backend inspector ---------------------------------- */
+.backend-inspector { display: flex; flex-direction: column; gap: 0.6rem; }
+.backend-services { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; }
+.backend-service { display: flex; gap: 0.5rem; align-items: baseline; font-size: 0.92rem; color: var(--ink); }
+.verdict-dot { flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; align-self: center; }
+.verdict-up { background: var(--good); }
+.verdict-down { background: var(--bad); }
+.verdict-unknown { background: var(--warn); }
+.backend-detail { color: var(--ink-dim); font-size: 0.85rem; }
+.backend-diagnosis { border: 1px solid var(--warn); border-radius: 8px; padding: 0.5rem 0.7rem; font-size: 0.9rem; color: var(--ink); }
+.backend-diagnosis ul { margin: 0.3rem 0 0; }
+.backend-diagnosis li { margin-left: 1.2rem; margin-bottom: 0.2rem; }
+.backend-evidence { font-size: 0.85rem; color: var(--ink-dim); margin: 0; }
+.backend-evidence code { color: var(--accent); }
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}

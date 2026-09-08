@@ -24,7 +24,7 @@
 import { VirtualEsp32Node, VirtualTickResult } from './virtualEsp32';
 import { ChaosSettings } from '../types/chaos';
 import { PigActorState } from './environment';
-import { CanonTelemetryPayload, WIFI_WEAK_RSSI } from '../types/canonMqtt';
+import { CanonAlertPayload, CanonTelemetryPayload, WIFI_WEAK_RSSI } from '../types/canonMqtt';
 
 export interface SensorNodeConfig {
   id: string; // matches live `devices` deviceId (esp32-001 …)
@@ -65,6 +65,8 @@ export interface FarmTelemetryRecord {
 export interface FarmTickResult {
   nodes: SensorNodeState[];
   telemetry: FarmTelemetryRecord[];
+  /** Firmware alerts issued by nodes (deviceId + canonical payload). */
+  alerts: Array<{ deviceId: string; alert: CanonAlertPayload }>;
   /** Publish attempts that chaos dropped (deviceId, reason). */
   drops: Array<{ deviceId: string; reason: string }>;
   raw: Array<{ deviceId: string; telemetry?: CanonTelemetryPayload; dropped: boolean }>;
@@ -164,7 +166,7 @@ export class SensorFarm {
    * publishes real 8-column telemetry when the pig is inside its radius.
    */
   tick(pigs: PigActorState[]): FarmTickResult {
-    const result: FarmTickResult = { nodes: [], telemetry: [], drops: [], raw: [] };
+    const result: FarmTickResult = { nodes: [], telemetry: [], alerts: [], drops: [], raw: [] };
     for (const [id, entry] of this.nodes) {
       const cfg = entry.cfg;
       const powered = cfg.powered ?? true;
@@ -196,6 +198,9 @@ export class SensorFarm {
       const tickRes: VirtualTickResult = entry.node.tick();
       if (tickRes.dropped) {
         result.drops.push({ deviceId: id, reason: weakLink ? 'weak link (placement)' : 'chaos drop' });
+      }
+      if (tickRes.alert && tickRes.alert.length > 0) {
+        for (const a of tickRes.alert) result.alerts.push({ deviceId: id, alert: a });
       }
       if (tickRes.telemetry && pigId && powered) {
         result.telemetry.push(toRecord(id, tickRes.telemetry, rssi, pigId));

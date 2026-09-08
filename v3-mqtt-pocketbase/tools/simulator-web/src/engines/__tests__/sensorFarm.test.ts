@@ -118,4 +118,13 @@ describe('SensorFarm — telemetry with real columns', () => {
     expect(ta.batteryPct).toBe(tb.batteryPct);
     expect(ta.watchedPigId).toBe(tb.watchedPigId);
   });
+
+  it('surfaces firmware alerts from a feverish watched pig', () => {
+    const farm = new SensorFarm([{ id: 'esp32-001', x: 0.8, y: 0.79 }], 42); // next to pig-002 (40.4°C)
+    let all = [] as unknown as Array<{ deviceId: string; alert: { type: string; severity: string } }>;
+    for (let i = 0; i < 60; i++) all = all.concat(farm.tick(PIGS).alerts);
+    expect(all.length).toBeGreaterThan(0);
+    expect(all[0].deviceId).toBe('esp32-001');
+    expect(all[0].alert.type).toContain('FEVER');
+  });
 });

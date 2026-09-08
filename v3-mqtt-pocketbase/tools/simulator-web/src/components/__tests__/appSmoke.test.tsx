@@ -21,8 +21,8 @@ describe('App cockpit (SSR smoke)', () => {
     expect(html).toContain('data-testid="ota-dialog"');
     // Stage 4: barn + AI readout + pipeline trace + scenario runner
     expect(html).toContain('data-testid="barn-panel"');
-    expect(html).toContain('data-testid="barn-pig-d0wd-01"');
-    expect(html).toContain('data-testid="barn-infect-d0wd-01"');
+    expect(html).toContain('data-testid="barn-pig-pig-001"');
+    expect(html).toContain('data-testid="barn-infect-pig-001"');
     expect(html).toContain('data-testid="classifier-panel"');
     expect(html).toContain('data-testid="mel-canvas"');
     expect(html).toContain('data-testid="trend-badge"');
@@ -33,5 +33,15 @@ describe('App cockpit (SSR smoke)', () => {
     expect(html).toContain('data-testid="scenario-runner"');
     expect(html).toContain('data-testid="scenario-play-healthy-baseline"');
     expect(html).toContain('data-testid="scenario-play-influenza-outbreak"');
+    // Phase 3 Stage A–D: real herd + scene editor + env console + backend inspector
+    expect(html).toContain('data-testid="scene-editor"');
+    expect(html).toContain('data-testid="scene-pen"');
+    expect(html).toContain('data-testid="scene-pig-pig-001"');
+    expect(html).toContain('data-testid="scene-node-esp32-001"');
+    expect(html).toContain('data-testid="env-console"');
+    expect(html).toContain('data-testid="env-param-entropy"');
+    expect(html).toContain('data-testid="env-event-DRAFT"');
+    expect(html).toContain('data-testid="backend-inspector"');
+    expect(html).toContain('data-testid="backend-reprobe"');
   });
 });
