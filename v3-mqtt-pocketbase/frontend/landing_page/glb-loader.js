@@ -146,12 +146,6 @@
         const rootNodes = (json.scenes[sceneIdx] && json.scenes[sceneIdx].nodes) || [];
         const root = new T.Group();
 
-        /* Diagnostic: log first accessor data */
-        var _dbgPos = decodeAccessor({ buffers: buffers, bufferViews: json.bufferViews }, json.accessors[0]);
-        console.log('[GLB] buf0 type:', buffers[0].constructor.name, 'byteOff:', buffers[0].byteOffset, 'len:', buffers[0].byteLength);
-        console.log('[GLB] acc0 data type:', _dbgPos.data.constructor.name, 'length:', _dbgPos.data.length, 'first6:', Array.from(_dbgPos.data.slice(0, 6)));
-        console.log('[GLB] acc0 has NaN:', _dbgPos.data.some(function(v){ return isNaN(v); }));
-
         /* Build a flat glb context for buildNode */
         const glbCtx = { buffers: buffers, accessors: json.accessors, bufferViews: json.bufferViews, meshes: json.meshes, materials: materials, nodes: json.nodes };
 
