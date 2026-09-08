@@ -10,6 +10,9 @@ export interface ChaosSettings {
   simulatedMudBlotches: boolean; // Cold evaporative patches on pigs
   tinRoofRainNoise: boolean;     // Torrential rain acoustic masking
   metalFeederNoise: boolean;     // Metal banging bursts
+  /** Optional TX sag override (mV, 0-300). When absent, the node uses its
+   *  natural 150-250 mV radio-burst model. */
+  batterySagMv?: number;
   epochId: number;               // Monotonic increment to cancel mid-flight async jobs
 }
 

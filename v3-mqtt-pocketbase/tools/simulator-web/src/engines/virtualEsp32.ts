@@ -374,7 +374,9 @@ export class VirtualEsp32Node {
     if (this.stateTicks === 1) {
       // TX sag transient from radio burst (voltage dips, SOC unchanged)
       this.hardware.txSagActive = true;
-      const sag = TX_SAG_MIN_MV + Math.floor(this.rng() * (TX_SAG_MAX_MV - TX_SAG_MIN_MV));
+      const sag =
+        this.chaos.batterySagMv ??
+        TX_SAG_MIN_MV + Math.floor(this.rng() * (TX_SAG_MAX_MV - TX_SAG_MIN_MV));
       this.hardware.batteryMv = Math.max(2500, this.voltsForPct(this.hardware.batteryPct) - sag);
     }
 
