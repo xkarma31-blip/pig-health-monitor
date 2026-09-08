@@ -4,6 +4,17 @@
 > Every design decision below cites a **measured live readout** taken 2026-09-08
 > (systemd, docker ps, ss, PocketBase API, firmware sources). Nothing is spec-sheet fantasy.
 
+## ✓ STATUS: ALL STAGES COMPLETE & COMMITTED (2026-09-08)
+
+| Stage | Commit | Delivered |
+|-------|--------|-----------|
+| A Grounded world model | `77a42d1` | environment.ts v3: REAL_HERD, open-air factors, entropy events, contagion, scene CRUD (v2-congruent defaults, opt-in realism) |
+| B Sensor farm | `56524b1` | SensorFarm: placeable/replaceable esp32 nodes, coverage→watched pig, geometric RSSI, 8-real-column telemetry |
+| C Backend probes | `ef1217b` | backendProbe: tri-state liveness + mosquitto-down root-cause synthesis (live-verified in Node) |
+| D Cockpit wiring | `385903a` | SceneEditor + EnvironmentConsole + BackendInspector wired to real herd + farm + loop |
+
+Final gate: tsc clean · vitest **158/158 (20 files)** · build OK · dev server 200. Handoff: `2026-09-08-simulation-web-ui-sandbox-SESSION-STATE.md`.
+
 ## 1. Measured ground truth (this afternoon, live)
 
 | Layer | State | Evidence |
