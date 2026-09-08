@@ -598,3 +598,31 @@ canvas {
   width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
   clip: rect(0 0 0 0); white-space: nowrap; border: 0;
 }
+
+/* ---- v3.1: SoundTalks respiration health + storage + clock/rain ---- */
+.badge-ok { background: #064e3b; color: #a7f3d0; }
+.badge-warn { background: #78350f; color: #fcd34d; }
+.badge-alarm { background: #7f1d1d; color: #fecaca; animation: pulse-alarm 1.4s ease-in-out infinite; }
+.badge-rain { background: #1e3a8a; color: #93c5fd; }
+@keyframes pulse-alarm { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+
+.band-green { background: #064e3b; color: #a7f3d0; }
+.band-yellow { background: #78350f; color: #fcd34d; }
+.band-red { background: #7f1d1d; color: #fecaca; }
+
+.soundtalks-readout { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+.soundtalks-big { display: flex; flex-direction: column; line-height: 1.15; }
+.soundtalks-big b { font-size: 1.9rem; color: var(--accent); }
+.sparkline { display: flex; align-items: flex-end; gap: 2px; height: 48px; margin: 0.5rem 0; }
+.spark-bar { flex: 1; min-height: 2px; background: teal; border-radius: 1px 1px 0 0; opacity: 0.85; }
+
+.soundtalks-cal { border: 1px solid var(--panel-edge); border-radius: 10px; padding: 0.6rem 0.8rem 0.8rem; margin: 0.5rem 0; }
+.soundtalks-cal legend { padding: 0 0.4rem; color: var(--muted); }
+
+.storage-rows { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
+.storage-rows li { display: flex; justify-content: space-between; align-items: center; padding: 0.3rem 0.6rem; background: var(--panel-edge); border-radius: 8px; }
+.storage-label { color: var(--muted); }
+.storage-rows b { color: var(--accent); }
+.clock-setter { gap: 0.3rem; }
+.btn-mini { padding: 0.15rem 0.5rem; font-size: 0.85rem; }
+.clock-setter input { width: 3.2rem; padding: 0.15rem 0.4rem; }

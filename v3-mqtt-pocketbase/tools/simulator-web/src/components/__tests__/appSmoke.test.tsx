@@ -28,6 +28,14 @@ describe('App cockpit (SSR smoke)', () => {
     expect(html).toContain('data-testid="trend-badge"');
     expect(html).toContain('data-testid="score-stable"');
     expect(html).toContain('data-testid="score-elevated"');
+    // v3.1: respiration health, storage retention, sim clock + rain.
+    expect(html).toContain('data-testid="soundtalks-panel"');
+    expect(html).toContain('data-testid="soundtalks-rdi"');
+    expect(html).toContain('data-testid="storage-panel"');
+    expect(html).toContain('data-testid="storage-retention"');
+    expect(html).toContain('data-testid="env-time-of-day"');
+    expect(html).toContain('data-testid="env-set-clock"');
+    expect(html).toContain('data-testid="env-param-rain"');
     expect(html).toContain('data-testid="score-cluster"');
     expect(html).toContain('data-testid="pipeline-trace"');
     expect(html).toContain('data-testid="scenario-runner"');

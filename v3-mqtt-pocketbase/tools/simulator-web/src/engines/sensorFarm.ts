@@ -25,6 +25,7 @@ import { VirtualEsp32Node, VirtualTickResult } from './virtualEsp32';
 import { ChaosSettings } from '../types/chaos';
 import { PigActorState } from './environment';
 import { CanonAlertPayload, CanonTelemetryPayload, WIFI_WEAK_RSSI } from '../types/canonMqtt';
+import { SIM_DAY_SEC } from './soundTalks';
 
 export interface SensorNodeConfig {
   id: string; // matches live `devices` deviceId (esp32-001 …)
@@ -72,6 +73,91 @@ export interface FarmTickResult {
   raw: Array<{ deviceId: string; telemetry?: CanonTelemetryPayload; dropped: boolean }>;
 }
 
+export interface StorageStats {
+  /** Records currently kept (inside window and under capacity). */
+  retained: number;
+  /** Hard cap on stored records. */
+  capacity: number;
+  /** Records dropped because they outlived the retention window. */
+  evictedByAge: number;
+  /** Records dropped oldest-first past the capacity cap. */
+  evictedByCapacity: number;
+  /** Approximate wire bytes of the retained set (sum of JSON payload lengths). */
+  estBytes: number;
+}
+
+export interface StorageOptions {
+  /** Sim-seconds to keep records. Defaults to 7 accelerated sim days. */
+  retentionSeconds?: number;
+  /** Maximum retained records (telemetry rows) before oldest-first eviction. */
+  capacityRecords?: number;
+}
+
+/**
+ * Telemetry retention — the "storage piling up" surface of the 24/7 live
+ * deployment. Records carry their ingest time from the farm's monotonic sim
+ * clock, so retention math is deterministic and testable (unlike the
+ * firmware's wall-clock timestamp). Eviction runs on ingest, like a retention
+ * job on the write path.
+ */
+export class StorageRing {
+  private entries: { at: number; record: FarmTelemetryRecord }[] = [];
+  private evictedByAge = 0;
+  private evictedByCapacity = 0;
+  private retentionWindowSeconds: number;
+  private capacityRecords: number;
+
+  constructor(opts: StorageOptions = {}) {
+    this.retentionWindowSeconds = opts.retentionSeconds ?? 7 * SIM_DAY_SEC;
+    this.capacityRecords = opts.capacityRecords ?? 20_000;
+  }
+
+  /** Ingest records at sim-time nowSec, then enforce retention + capacity. */
+  push(records: FarmTelemetryRecord[], nowSec: number): void {
+    for (const record of records) this.entries.push({ at: nowSec, record });
+    this.evict(nowSec);
+  }
+
+  /** Drop by age first, then oldest-first past capacity. Run on every ingest. */
+  evict(nowSec: number): void {
+    const cutoff = nowSec - this.retentionWindowSeconds;
+    const kept: typeof this.entries = [];
+    for (const e of this.entries) {
+      if (e.at < cutoff) this.evictedByAge++;
+      else kept.push(e);
+    }
+    this.entries = kept;
+    while (this.entries.length > this.capacityRecords) {
+      this.entries.shift();
+      this.evictedByCapacity++;
+    }
+  }
+
+  setRetentionSeconds(seconds: number): void {
+    this.retentionWindowSeconds = Math.max(1, seconds);
+  }
+
+  get retentionSeconds(): number {
+    return this.retentionWindowSeconds;
+  }
+
+  setCapacity(records: number): void {
+    this.capacityRecords = Math.max(1, Math.floor(records));
+  }
+
+  get stats(): StorageStats {
+    let estBytes = 0;
+    for (const e of this.entries) estBytes += JSON.stringify(e.record).length;
+    return {
+      retained: this.entries.length,
+      capacity: this.capacityRecords,
+      evictedByAge: this.evictedByAge,
+      evictedByCapacity: this.evictedByCapacity,
+      estBytes
+    };
+  }
+}
+
 const DEFAULT_COVERAGE_RADIUS = 0.5;
 const RSSI_REF_DIST = 0.08; // pen units at which RSSI ≈ -55 dBm
 const RSSI_REF_DBM = -55;
@@ -104,8 +190,11 @@ export function resolveWatchedPig(
 
 export class SensorFarm {
   private nodes: Map<string, { cfg: SensorNodeConfig; node: VirtualEsp32Node }> = new Map();
+  private clock = 0;
+  readonly storage: StorageRing;
 
-  constructor(configs: SensorNodeConfig[] = [], readonly defaultSeed = 0x5EED) {
+  constructor(configs: SensorNodeConfig[] = [], readonly defaultSeed = 0x5EED, storageOpts: StorageOptions = {}) {
+    this.storage = new StorageRing(storageOpts);
     for (const cfg of configs) this.addNode(cfg);
   }
 
@@ -164,8 +253,11 @@ export class SensorFarm {
   /**
    * Advance all powered nodes. Each watches the nearest in-coverage pig and
    * publishes real 8-column telemetry when the pig is inside its radius.
+   * `opts.dtSec` advances the farm's monotonic ingest clock (default 0.25 s,
+   * matching the node uptime grain) so retention eviction is deterministic.
    */
-  tick(pigs: PigActorState[]): FarmTickResult {
+  tick(pigs: PigActorState[], opts: { dtSec?: number } = {}): FarmTickResult {
+    this.clock += opts.dtSec ?? 0.25;
     const result: FarmTickResult = { nodes: [], telemetry: [], alerts: [], drops: [], raw: [] };
     for (const [id, entry] of this.nodes) {
       const cfg = entry.cfg;
@@ -210,7 +302,23 @@ export class SensorFarm {
         this.nodeView(entry, pigs, { watchedPigId: pigId, rssiDbm: rssi, packetLossRate: effectiveLoss })
       );
     }
+    this.storage.push(result.telemetry, this.clock);
     return result;
+  }
+
+  /** Retention stats for the storage panel (records / capacity / evictions / est bytes). */
+  get storageStats(): StorageStats {
+    return this.storage.stats;
+  }
+
+  /** Retune the retention window live (sim-seconds, min 1). */
+  setRetentionSeconds(seconds: number): void {
+    this.storage.setRetentionSeconds(seconds);
+  }
+
+  /** Current retention window in sim-seconds. */
+  get retentionSeconds(): number {
+    return this.storage.retentionSeconds;
   }
 
   private nodeView(

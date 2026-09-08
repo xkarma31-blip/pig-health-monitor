@@ -284,3 +284,56 @@ describe('v3: contagion', () => {
     expect(dankExposure).toBeGreaterThan(airyExposure * 2);
   });
 });
+describe('v3.1: sim clock + weather (time-of-day + rain)', () => {
+  it('exposes a wall-clock style time of day that advances with the accelerated day', () => {
+    const env = new BarnEnvironment({ pigs: [{ id: 'p1' }], seed: 7 });
+    expect(env.timeOfDayLabel).toBe('00:00');
+    tickSec(env, 90); // 90 s of 360 s sim day = 6 h
+    expect(env.timeOfDayLabel).toBe('06:00');
+    tickSec(env, 270); // full day → wraps to midnight
+    expect(env.timeOfDayLabel).toBe('00:00');
+  });
+
+  it('setClock rewinds/forwards the displayed time and the diurnal phase', () => {
+    const env = new BarnEnvironment({
+      pigs: [{ id: 'p1' }], seed: 7,
+      params: { diurnalAmplitude: 3 }
+    });
+    env.setClock(12, 0);
+    expect(env.timeOfDayLabel).toBe('12:00');
+    // 6 sim-hours later (90 s) the sine (peak at 06:00) has reached its trough
+    // from the 12:00 phase — ambient sits at base − amplitude.
+    tickSec(env, 90);
+    expect(env.timeOfDayLabel).toBe('18:00');
+    expect(env.ambientTemp).toBeCloseTo(28.5 - 3, 1);
+  });
+
+  it('keeps the PRNG stream untouched by clock reads and sets; determinism holds', () => {
+    const make = () => new BarnEnvironment({ pigs: [{ id: 'p1' }], seed: 7, params: { entropy: 1 } });
+    const a = make();
+    const b = make();
+    a.setClock(14, 30);
+    tickSec(a, 60);
+    tickSec(b, 60);
+    // Clock ops must not consume the rng: identical seed → identical ambient path.
+    expect(a.ambientTemp).toBe(b.ambientTemp);
+  });
+
+  it('rain cools the barn and dampens the diurnal swing', () => {
+    const dry = new BarnEnvironment({ pigs: [{ id: 'p1' }], seed: 7, params: { diurnalAmplitude: 2 } });
+    const wet = new BarnEnvironment({ pigs: [{ id: 'p1' }], seed: 7, params: { diurnalAmplitude: 2, rain: 1 } });
+    tickSec(dry, 90);
+    tickSec(wet, 90);
+    // Rain pulls the peak down ≈ 2.5 °C and scales the whole signal by ~0.85,
+    // so at the dry peak the wet barn reads ≈ 30.5→23.8 (Δ ≈ 6.7 °C).
+    const delta = dry.ambientTemp - wet.ambientTemp;
+    expect(delta).toBeGreaterThan(6);
+    expect(delta).toBeLessThan(7.5);
+    expect(wet.ambient.rain).toBe(1);
+  });
+
+  it('rain is off by default (v2-congruent: realism stays opt-in)', () => {
+    const env = new BarnEnvironment({ pigs: [{ id: 'p1' }], seed: 7 });
+    expect(env.ambient.rain).toBe(0);
+  });
+});

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { BarnEnvironment, REAL_HERD, createRng } from './engines/environment';
-import { SensorFarm, type FarmTelemetryRecord, type SensorNodeState } from './engines/sensorFarm';
+import { SensorFarm, type FarmTelemetryRecord, type SensorNodeState, type StorageStats } from './engines/sensorFarm';
+import { SoundTalks, type SoundTalksCalibration, type SoundTalksState } from './engines/soundTalks';
 import { VirtualEsp32Node } from './engines/virtualEsp32';
 import { runInferenceChain, type TrendLabel } from './engines/inferenceChain';
 import { generateCoughBurst } from './engines/audioSynthesizer';
@@ -24,6 +25,8 @@ import { PipelineTrace } from './components/PipelineTrace';
 import { ScenarioRunner } from './components/ScenarioRunner';
 import { SceneEditor } from './components/SceneEditor';
 import { EnvironmentConsole } from './components/EnvironmentConsole';
+import { SoundTalksPanel } from './components/SoundTalksPanel';
+import { StoragePanel } from './components/StoragePanel';
 import { BackendInspector } from './components/BackendInspector';
 
 // Canonical formant frequencies (shared with the ESP32 DSP design).
@@ -96,6 +99,10 @@ export default function App() {
   if (tracerRef.current === null) tracerRef.current = new PipelineTracer(300);
   const tracer = tracerRef.current;
 
+  const soundTalksRef = useRef<SoundTalks | null>(null);
+  if (soundTalksRef.current === null) soundTalksRef.current = new SoundTalks();
+  const soundTalks = soundTalksRef.current;
+
   const wdRef = useRef<WatchdogState | null>(null);
   if (wdRef.current === null) {
     wdRef.current = {
@@ -129,6 +136,11 @@ export default function App() {
   const [ambientNow, setAmbientNow] = useState(() => env.ambientTemp);
   const [ai, setAi] = useState<ClassifierView | null>(null);
   const [traceEvents, setTraceEvents] = useState<PipelineEvent[]>(() => tracer.snapshot());
+  // v3.1: respiration health, storage ledger, sim clock.
+  const [soundTalksView, setSoundTalksView] = useState<SoundTalksState>(() => soundTalks.state);
+  const [storageStats, setStorageStats] = useState<StorageStats>(() => farm.storageStats);
+  const [retentionSeconds, setRetentionSeconds] = useState(() => farm.retentionSeconds);
+  const [clockLabel, setClockLabel] = useState(() => env.timeOfDayLabel);
 
   // Place a cough burst into the audible ring at the current second segment.
   const placeBurst = (t: number, count: number, wd: WatchdogState) => {
@@ -156,6 +168,12 @@ export default function App() {
           tracer.push('SENSOR', tickRes.timeSec, `coughs x${c.count}`, c.pigId, true);
         }
       }
+      // v3.1: feed the same cough stream into the SoundTalks-style engine
+      // (dt-robust: any tick shape or sim speed keeps the rolling 24-bin day).
+      const dayCoughs = tickRes.coughs.reduce((a, c) => a + c.count, 0);
+      soundTalks.record(dayCoughs, 0.25 * speedRef.current);
+      setSoundTalksView(soundTalks.state);
+      setClockLabel(env.timeOfDayLabel);
       if (tickRes.infections) {
         for (const i of tickRes.infections) {
           wd.infections.push(i);
@@ -170,6 +188,7 @@ export default function App() {
       // 2) Hardware layer: nodes watch the nearest in-coverage pig and publish.
       const farmRes = farm.tick(env.snapshot());
       setFarmNodes(farmRes.nodes);
+      setStorageStats(farm.storageStats);
       if (farmRes.alerts.length > 0) setAlerts((prev) => [...prev, ...farmRes.alerts.map((a) => a.alert)]);
       setDroppedCount((c) => c + farmRes.drops.length);
       const n1 = farmRes.raw.find((r) => r.deviceId === 'esp32-001');
@@ -252,6 +271,29 @@ export default function App() {
   const setParams = (p: Partial<typeof params>) => {
     env.setParams(p);
     setParamsState(env.ambient);
+  };
+
+  // v3.1: respiration-health calibration / storage retention / sim clock controls.
+  const patchCalibration = (patch: Partial<SoundTalksCalibration>) => {
+    soundTalks.setCalibration(patch);
+    setSoundTalksView(soundTalks.state);
+  };
+  const calibrateNow = () => {
+    soundTalks.calibrateNow();
+    setSoundTalksView(soundTalks.state);
+  };
+  const resetBaseline = () => {
+    soundTalks.resetBaseline();
+    setSoundTalksView(soundTalks.state);
+  };
+  const setRetention = (seconds: number) => {
+    farm.setRetentionSeconds(seconds);
+    setRetentionSeconds(farm.retentionSeconds);
+    setStorageStats(farm.storageStats);
+  };
+  const setClock = (h: number, m: number) => {
+    env.setClock(h, m);
+    setClockLabel(env.timeOfDayLabel);
   };
 
   // ---- chaos monkey → node (epoch-bumped, applied mid-run) ----------------
@@ -412,9 +454,32 @@ export default function App() {
             activeEvents={wdRef.current?.events ?? []}
             recentInfections={wdRef.current?.infections ?? []}
             speed={speed}
+            timeOfDay={clockLabel}
             onParamsChange={setParams}
             onEvent={(name) => env.triggerEvent(name)}
             onSpeedChange={setSpeed}
+            onSetClock={setClock}
+            accessible={accessible}
+          />
+        </section>
+
+        <section className="panel">
+          <h2>Respiration Health (SoundTalks-style)</h2>
+          <SoundTalksPanel
+            state={soundTalksView}
+            onCalibrationChange={patchCalibration}
+            onCalibrateNow={calibrateNow}
+            onResetBaseline={resetBaseline}
+            accessible={accessible}
+          />
+        </section>
+
+        <section className="panel">
+          <h2>Telemetry Storage (24/7 retention)</h2>
+          <StoragePanel
+            stats={storageStats}
+            retentionSeconds={retentionSeconds}
+            onRetentionChange={setRetention}
             accessible={accessible}
           />
         </section>

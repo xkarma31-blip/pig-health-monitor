@@ -88,6 +88,8 @@ export interface EnvironmentParams {
   wanderSpeed?: number;
   /** Noise amplitude °C of the ambient signal. */
   ambientNoise?: number;
+  /** Rain 0..1 — cools ambient (≈ −2.5 °C at 1.0), dampens the diurnal swing. */
+  rain?: number;
 }
 
 export interface EnvironmentOptions {
@@ -138,7 +140,8 @@ const DEFAULT_PARAMS: Required<EnvironmentParams> = {
   contagionDose: 5,
   contagionRate: 0.08,
   wanderSpeed: 0.012,
-  ambientNoise: 0.02
+  ambientNoise: 0.02,
+  rain: 0
 };
 
 // Event envelope: name → peak ambient shift °C and halflife seconds.
@@ -190,6 +193,7 @@ export class BarnEnvironment {
   private rng: () => number;
   private pigs: InternalPig[];
   private elapsedSec = 0;
+  private clockPhaseSec = 0;
   private params: Required<EnvironmentParams>;
   private events: ActiveEvent[] = [];
   readonly seed: number;
@@ -225,6 +229,32 @@ export class BarnEnvironment {
     return this.elapsedSec;
   }
 
+  /**
+   * Wall-clock style time-of-day (seconds since midnight, 0..86399) for the
+   * accelerated 360-sim-second day. Shiftable via setClock — the diurnal sine
+   * reads this getter, so setting the clock genuinely moves the temperature
+   * curve without touching the deterministic PRNG stream.
+   */
+  get timeOfDaySec(): number {
+    const dayFrac = this.elapsedSec / 360;
+    return (this.clockPhaseSec + dayFrac * 86400) % 86400;
+  }
+
+  /** Freeze the sim clock at an arbitrary wall-clock time (h: 0..23, m: 0..59). */
+  setClock(h: number, m: number): void {
+    const target = Math.max(0, Math.min(23, Math.floor(h))) * 3600 + Math.max(0, Math.min(59, Math.floor(m))) * 60;
+    const dayFrac = this.elapsedSec / 360;
+    this.clockPhaseSec = (((target - dayFrac * 86400) % 86400) + 86400) % 86400;
+  }
+
+  /** Human-readable time-of-day, e.g. "14:05". */
+  get timeOfDayLabel(): string {
+    const s = Math.floor(this.timeOfDaySec);
+    const hh = String(Math.floor(s / 3600)).padStart(2, '0');
+    const mm = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
+    return `${hh}:${mm}`;
+  }
+
   get ambient(): EnvironmentParams {
     return { ...this.params };
   }
@@ -234,7 +264,13 @@ export class BarnEnvironment {
     let t = this.params.ambientBaseTemp;
     if (this.params.diurnalAmplitude > 0) {
       // Slow day cycle: full swing over 6 minutes of sim time (fast enough to watch).
-      t += this.params.diurnalAmplitude * Math.sin((this.elapsedSec / 360) * 2 * Math.PI);
+      // Driven by the sim clock so setClock shifts the curve phase with it.
+      t += this.params.diurnalAmplitude * Math.sin((this.timeOfDaySec / 86400) * 2 * Math.PI);
+    }
+    // Rain cools the barn (evaporation + overcast) and dampens the diurnal swing.
+    if (this.params.rain > 0) {
+      t -= this.params.rain * 2.5;
+      t *= 1 - this.params.rain * 0.15;
     }
     for (const ev of this.events) {
       const env = EVENT_ENVELOPE[ev.name];

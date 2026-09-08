@@ -6,9 +6,11 @@ export interface EnvironmentConsoleProps {
   activeEvents: string[];
   recentInfections: Array<{ pigId: string; sourceId: string }>;
   speed: number;
+  timeOfDay?: string;
   onParamsChange: (p: Partial<EnvironmentParams>) => void;
   onEvent: (name: EntropyEventName) => void;
   onSpeedChange: (speed: number) => void;
+  onSetClock?: (h: number, m: number) => void;
   accessible?: boolean;
 }
 
@@ -27,7 +29,8 @@ const SLIDERS: Array<{
   { key: 'contagionRadius', label: 'Contagion radius', min: 0, max: 0.6, step: 0.05 },
   { key: 'contagionRate', label: 'Contagion rate', min: 0, max: 1, step: 0.05 },
   { key: 'wanderSpeed', label: 'Wander speed', min: 0, max: 0.06, step: 0.002 },
-  { key: 'ambientNoise', label: 'Ambient noise °C', min: 0, max: 0.2, step: 0.01 }
+  { key: 'ambientNoise', label: 'Ambient noise °C', min: 0, max: 0.2, step: 0.01 },
+  { key: 'rain', label: 'Rain (weather)', min: 0, max: 1, step: 0.05 }
 ];
 
 const EVENTS: EntropyEventName[] = ['DRAFT', 'HEAT_SPIKE', 'DOOR_OPEN'];
@@ -42,9 +45,11 @@ export function EnvironmentConsole({
   activeEvents,
   recentInfections,
   speed,
+  timeOfDay,
   onParamsChange,
   onEvent,
-  onSpeedChange
+  onSpeedChange,
+  onSetClock
 }: EnvironmentConsoleProps) {
   return (
     <div className="env-console" data-testid="env-console" role="group" aria-label="Environment console">
@@ -52,6 +57,16 @@ export function EnvironmentConsole({
         <span className="badge" data-testid="env-ambient-now">
           Ambient {ambientTemp.toFixed(1)}°C
         </span>
+        {timeOfDay !== undefined && (
+          <span className="badge" data-testid="env-time-of-day">
+            🕐 {timeOfDay}
+          </span>
+        )}
+        {(params.rain ?? 0) > 0 && (
+          <span className="badge badge-rain" data-testid="env-raining">
+            Raining {Math.round((params.rain ?? 0) * 100)}%
+          </span>
+        )}
         <span className="badge">
           Speed
           <select
@@ -65,6 +80,43 @@ export function EnvironmentConsole({
             <option value={4}>4×</option>
           </select>
         </span>
+        {onSetClock && (
+          <span className="badge clock-setter" data-testid="env-set-clock">
+            Set clock
+            <input
+              type="number"
+              min={0}
+              max={23}
+              step={1}
+              aria-label="hour"
+              data-testid="env-set-clock-h"
+              defaultValue={12}
+            />
+            :
+            <input
+              type="number"
+              min={0}
+              max={59}
+              step={1}
+              aria-label="minute"
+              data-testid="env-set-clock-m"
+              defaultValue={0}
+            />
+            <button
+              type="button"
+              className="btn btn-mini"
+              data-testid="env-set-clock-go"
+              onClick={(e) => {
+                const group = (e.currentTarget.closest('.clock-setter') as HTMLElement) ?? e.currentTarget;
+                const h = Number((group.querySelector('input[data-testid="env-set-clock-h"]') as HTMLInputElement)?.value ?? 12);
+                const m = Number((group.querySelector('input[data-testid="env-set-clock-m"]') as HTMLInputElement)?.value ?? 0);
+                onSetClock(h, m);
+              }}
+            >
+              Go
+            </button>
+          </span>
+        )}
       </div>
 
       <div className="env-sliders">
