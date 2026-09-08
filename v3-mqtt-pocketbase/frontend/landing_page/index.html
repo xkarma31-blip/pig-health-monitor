@@ -2679,7 +2679,7 @@ xTaskCreatePinnedToCore(<br>
       this.target = new THREE.Vector3(0, 0.15, 0);
       this.enableDamping = true; this.dampingFactor = 0.08;
       this.autoRotate = false; this.autoRotateSpeed = 1.3;
-      this.minDistance = 2.6; this.maxDistance = 8;
+      this.minDistance = 1.8; this.maxDistance = 10;
       this.minPolarAngle = 0.25; this.maxPolarAngle = Math.PI * 0.52;
       const offset = new THREE.Vector3().copy(camera.position).sub(this.target);
       this.spherical = new THREE.Spherical().setFromVector3(offset);
@@ -2963,6 +2963,8 @@ xTaskCreatePinnedToCore(<br>
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, wrap.clientWidth / wrap.clientHeight, 0.1, 100);
     const defaultCamPos = new THREE.Vector3(3.4, 2.6, 3.8);
+    const defaultTarget = new THREE.Vector3(0, 0.15, 0);
+    const defaultRadius = defaultCamPos.distanceTo(defaultTarget);
     camera.position.copy(defaultCamPos);
     // No detached-canvas probe here — creating an extra GL context (webgl2 first) can poison ANGLE
     // on some Intel drivers and break the real renderer below. Just build it; failure → fallback.
@@ -3273,16 +3275,21 @@ xTaskCreatePinnedToCore(<br>
             glbLoaded = true;
             btnGLB.textContent = 'PCB View';
             controls.target.set(0, 0, 0);
-            /* Pull camera back for the larger GLB model */
-            const glbCamPos = defaultCamPos.clone().multiplyScalar(1.8);
+            /* Position camera to frame the centered GLB model */
+            const glbCamPos = new THREE.Vector3(4.2, 3.0, 4.2);
             camera.position.copy(glbCamPos);
+            controls.sphericalTarget.setFromVector3(new THREE.Vector3().copy(camera.position).sub(controls.target));
+            controls.spherical.copy(controls.sphericalTarget);
+            controls.update();
             renderer.shadowMap.needsUpdate = true;
           });
         } else if (glbModel) {
           glbModel.visible = showGLB;
           btnGLB.textContent = showGLB ? 'PCB View' : '3D Model';
-          if (showGLB) { controls.target.set(0, 0.15, 0); camera.position.copy(defaultCamPos); }
+          if (showGLB) { controls.target.set(0, 0, 0); camera.position.set(4.2, 3.0, 4.2); }
           else { camera.position.copy(defaultCamPos); controls.target.set(0, 0.15, 0); }
+          controls.sphericalTarget.setFromVector3(new THREE.Vector3().copy(camera.position).sub(controls.target));
+          controls.spherical.copy(controls.sphericalTarget);
           renderer.shadowMap.needsUpdate = true;
         }
       });
@@ -3424,9 +3431,17 @@ xTaskCreatePinnedToCore(<br>
       e.target.textContent = wireGroup.visible ? 'Hide wires' : 'Show wires';
     });
     document.getElementById('btn-reset').addEventListener('click', () => {
-      camera.position.copy(defaultCamPos);
-      controls.target.set(0, 0.15, 0);
-      if (controls.sphericalTarget){ controls.sphericalTarget.setFromVector3(new THREE.Vector3().copy(camera.position).sub(controls.target)); }
+      if (glbModel && glbModel.visible) {
+        /* GLB mode: reset to GLB defaults */
+        controls.target.set(0, 0, 0);
+        camera.position.set(4.2, 3.0, 4.2);
+      } else {
+        /* Hardware model: reset to defaults */
+        camera.position.copy(defaultCamPos);
+        controls.target.set(0, 0.15, 0);
+      }
+      controls.sphericalTarget.setFromVector3(new THREE.Vector3().copy(camera.position).sub(controls.target));
+      controls.spherical.copy(controls.sphericalTarget);
       controls.update();
     });
 

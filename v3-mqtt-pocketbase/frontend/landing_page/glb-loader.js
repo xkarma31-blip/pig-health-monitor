@@ -153,17 +153,18 @@
           root.add(buildNode(ni, glbCtx, textures, materials, json.nodes));
         });
 
-        /* Auto-center and scale: compute world bounding box */
+        /* Auto-center and scale: compute world bounding box.
+           We need TWO passes: first to find the center (position-only, ignoring
+           rotations/scaling from the node tree), then to center and scale. */
         root.updateMatrixWorld(true);
         const box = new T.Box3().setFromObject(root);
         const center = box.getCenter(new T.Vector3());
         const size = box.getSize(new T.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
         if (maxDim > 0) {
-          /* Center the model at origin */
+          /* Center the model at origin, then scale to ~3 unit extent */
           root.position.sub(center);
-          /* Scale to fit within a ~2 unit cube */
-          root.scale.setScalar(2.0 / maxDim);
+          root.scale.setScalar(3.0 / maxDim);
         }
 
         onDone(root);
