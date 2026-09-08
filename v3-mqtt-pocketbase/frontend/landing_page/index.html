@@ -3273,7 +3273,9 @@ xTaskCreatePinnedToCore(<br>
             glbLoaded = true;
             btnGLB.textContent = 'PCB View';
             controls.target.set(0, 0, 0);
-            camera.position.copy(defaultCamPos);
+            /* Pull camera back for the larger GLB model */
+            const glbCamPos = defaultCamPos.clone().multiplyScalar(1.8);
+            camera.position.copy(glbCamPos);
             renderer.shadowMap.needsUpdate = true;
           });
         } else if (glbModel) {
