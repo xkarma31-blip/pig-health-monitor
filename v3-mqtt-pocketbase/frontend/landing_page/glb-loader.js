@@ -154,17 +154,16 @@
         });
 
         /* Auto-center and scale: compute world bounding box.
-           We need TWO passes: first to find the center (position-only, ignoring
-           rotations/scaling from the node tree), then to center and scale. */
+           Scale so the model fills ~5 units — close enough for detail at min zoom,
+           far enough to see the whole thing at default zoom. */
         root.updateMatrixWorld(true);
         const box = new T.Box3().setFromObject(root);
         const center = box.getCenter(new T.Vector3());
         const size = box.getSize(new T.Vector3());
         const maxDim = Math.max(size.x, size.y, size.z);
         if (maxDim > 0) {
-          /* Center the model at origin, then scale to ~3 unit extent */
           root.position.sub(center);
-          root.scale.setScalar(3.0 / maxDim);
+          root.scale.setScalar(5.0 / maxDim);
         }
 
         onDone(root);

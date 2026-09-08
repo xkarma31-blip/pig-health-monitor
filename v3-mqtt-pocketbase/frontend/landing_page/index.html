@@ -2679,7 +2679,7 @@ xTaskCreatePinnedToCore(<br>
       this.target = new THREE.Vector3(0, 0.15, 0);
       this.enableDamping = true; this.dampingFactor = 0.08;
       this.autoRotate = false; this.autoRotateSpeed = 1.3;
-      this.minDistance = 1.8; this.maxDistance = 10;
+      this.minDistance = 0.4; this.maxDistance = 12;
       this.minPolarAngle = 0.25; this.maxPolarAngle = Math.PI * 0.52;
       const offset = new THREE.Vector3().copy(camera.position).sub(this.target);
       this.spherical = new THREE.Spherical().setFromVector3(offset);
@@ -3276,7 +3276,7 @@ xTaskCreatePinnedToCore(<br>
             btnGLB.textContent = 'PCB View';
             controls.target.set(0, 0, 0);
             /* Position camera to frame the centered GLB model */
-            const glbCamPos = new THREE.Vector3(4.2, 3.0, 4.2);
+            const glbCamPos = new THREE.Vector3(3.5, 2.5, 3.5);
             camera.position.copy(glbCamPos);
             controls.sphericalTarget.setFromVector3(new THREE.Vector3().copy(camera.position).sub(controls.target));
             controls.spherical.copy(controls.sphericalTarget);
@@ -3286,7 +3286,7 @@ xTaskCreatePinnedToCore(<br>
         } else if (glbModel) {
           glbModel.visible = showGLB;
           btnGLB.textContent = showGLB ? 'PCB View' : '3D Model';
-          if (showGLB) { controls.target.set(0, 0, 0); camera.position.set(4.2, 3.0, 4.2); }
+          if (showGLB) { controls.target.set(0, 0, 0); camera.position.set(3.5, 2.5, 3.5); }
           else { camera.position.copy(defaultCamPos); controls.target.set(0, 0.15, 0); }
           controls.sphericalTarget.setFromVector3(new THREE.Vector3().copy(camera.position).sub(controls.target));
           controls.spherical.copy(controls.sphericalTarget);
@@ -3434,7 +3434,7 @@ xTaskCreatePinnedToCore(<br>
       if (glbModel && glbModel.visible) {
         /* GLB mode: reset to GLB defaults */
         controls.target.set(0, 0, 0);
-        camera.position.set(4.2, 3.0, 4.2);
+        camera.position.set(3.5, 2.5, 3.5);
       } else {
         /* Hardware model: reset to defaults */
         camera.position.copy(defaultCamPos);
