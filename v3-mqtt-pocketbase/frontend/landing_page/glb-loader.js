@@ -104,7 +104,7 @@
     fetch(url)
       .then(function (r) { return r.arrayBuffer(); })
       .then(function (buf) {
-        const magic = buf.slice(0, 4).toString();
+        const magic = String.fromCharCode.apply(null, new Uint8Array(buf, 0, 4));
         if (magic !== 'glTF') throw new Error('Not a GLB');
         const dv = new DataView(buf);
         /* GLB 2.0 layout: [header 12B] [chunk0_len 4B] [chunk0_type 4B] [jsonChunkData] [chunk1_len 4B] [chunk1_type 4B] [binChunkData] */
