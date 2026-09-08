@@ -76,6 +76,14 @@ export interface VirtualNodeOptions {
   pigBaseTemp?: number;         // core temp for the simulated pig (default 38.6)
 }
 
+/** Runtime host-driven vitals overrides (barn environment → node). */
+export interface SimEnvironmentOverride {
+  bodyTemp?: number;                       // °C — authoritative sensed core temp
+  coughRate?: number;                      // coughs/min — overrides random model
+  trend?: CanonTelemetryPayload['healthTrend']; // overrides derived trend
+  position?: { x: number; y: number };     // normalized 0..1 → 32x24 thermal grid
+}
+
 export interface VirtualTickResult {
   snapshot: VirtualHardwareState;
   telemetry?: CanonTelemetryPayload;
@@ -457,6 +465,18 @@ export class VirtualEsp32Node {
 
   private lastBodyTemp = 38.6;
 
+  /** Runtime host-driven overrides (barn environment → node). */
+  private envOverride: SimEnvironmentOverride = {};
+
+  /**
+   * Let the barn environment drive the node's vitals instead of the internal
+   * random model. Backward compatible: leaving fields unset falls back to the
+   * original simulated path.
+   */
+  setEnvironment(env: SimEnvironmentOverride): void {
+    this.envOverride = env;
+  }
+
   private pushAlert(result: VirtualTickResult, alert: CanonAlertPayload): void {
     if (!result.alert) result.alert = [];
     result.alert.push(alert);
@@ -465,16 +485,21 @@ export class VirtualEsp32Node {
   private buildTelemetry(): CanonTelemetryPayload {
     const profile = this.opts.profile ?? PROFILE_D0WD;
     const baseTemp = this.opts.pigBaseTemp ?? 38.6;
-    const noise = (this.rng() - 0.5) * 0.6;
-    const bodyTemp = Math.round((baseTemp + noise) * 10) / 10;
+
+    // Environment override wins; otherwise internal base + noise.
+    const bodyTemp =
+      typeof this.envOverride.bodyTemp === 'number'
+        ? Math.round(this.envOverride.bodyTemp * 10) / 10
+        : Math.round((baseTemp + (this.rng() - 0.5) * 0.6) * 10) / 10;
     this.lastBodyTemp = bodyTemp;
 
-    // Thermal frame from the 32x24 engine (pig stationary center)
+    // Thermal frame from the 32x24 engine (pig position driven or center).
+    const pos = this.envOverride.position;
     const pig: SimulatedPig = {
       id: profile.id,
       name: profile.name,
-      x: 16,
-      y: 12,
+      x: pos ? Math.max(0, Math.min(31, Math.round(pos.x * 31))) : 16,
+      y: pos ? Math.max(0, Math.min(23, Math.round(pos.y * 23))) : 12,
       baseTemp: bodyTemp,
       angleRad: 0,
       inFov: true
@@ -487,13 +512,16 @@ export class VirtualEsp32Node {
     const hotspot = extractFirmwareHotspot(frame);
 
     const ambientNoise = (this.rng() - 0.5) * 1.0;
-    const coughRate = Math.max(0, Math.round(6 + (this.rng() - 0.5) * 6));
-    const coughCluster = this.rng() > 0.85;
-    const healthTrend = coughCluster
-      ? TREND_CLUSTER
-      : coughRate > 10
-        ? TREND_ELEVATED
-        : TREND_STABLE;
+
+    // Cough + trend: environment override wins over the random model.
+    const coughRate =
+      typeof this.envOverride.coughRate === 'number'
+        ? Math.max(0, Math.round(this.envOverride.coughRate))
+        : Math.max(0, Math.round(6 + (this.rng() - 0.5) * 6));
+    const coughCluster = this.envOverride.trend ? this.envOverride.trend === TREND_CLUSTER : this.rng() > 0.85;
+    const healthTrend =
+      this.envOverride.trend ??
+      (coughCluster ? TREND_CLUSTER : coughRate > 10 ? TREND_ELEVATED : TREND_STABLE);
 
     const batteryPct = Math.round(this.hardware.batteryPct * 10) / 10;
     const batteryV = this.hardware.batteryMv / 1000;

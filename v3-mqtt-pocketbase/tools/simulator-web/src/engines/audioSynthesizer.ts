@@ -66,7 +66,8 @@ export function createAdsrEnvelope(
 export function generateCoughBurst(
   type: 'INFECTIOUS' | 'NON_INFECTIOUS',
   durationMs: number,
-  sampleRate: number = DEFAULT_SAMPLE_RATE
+  sampleRate: number = DEFAULT_SAMPLE_RATE,
+  rand: () => number = Math.random
 ): Float32Array {
   const length = Math.ceil(durationMs * sampleRate / 1000);
   const buffer = new Float32Array(length);
@@ -87,7 +88,7 @@ export function generateCoughBurst(
 
   for (let i = 0; i < length; i++) {
     // Simple pseudo-random
-    const noise = Math.random() * 2.0 - 1.0;
+    const noise = rand() * 2.0 - 1.0;
     // One-pole resonator approximation
     const y = noise * 0.05 + alpha * (y1 * Math.cos(omega0) - y2) * 0.001;
     y2 = y1;
