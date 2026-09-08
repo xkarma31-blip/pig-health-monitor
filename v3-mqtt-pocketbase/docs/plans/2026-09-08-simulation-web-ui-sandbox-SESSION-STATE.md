@@ -28,6 +28,20 @@ Plan: `docs/plans/2026-09-08-simulation-proof-environment-ai-trace.md`. All 4 pl
 
 **Counts at Phase 2 close:** tsc clean · vitest **126/126 across 19 files** · `npm run build` OK · dev server 200 on `/` + all transformed modules.
 
+## Phase 3: Full-Capstone Emulation (real herd → sensor farm → live backend) ✅
+
+Plan: `docs/plans/2026-09-08-simulation-full-capstone-emulation.md`. Stages A–D landed, all grounded in measured live readouts (2026-09-08).
+
+| Stage | Commit | Notes |
+|-------|--------|-------|
+| Plan | `56fb130` | `docs: full-capstone emulation plan` — grounded in bridge crash-loop, PB schema, firmware topics |
+| A Grounded world model | `77a42d1` | environment.ts v3: `REAL_HERD` (pig-001 Peppa … pig-004 Wilbur from live `pigs`), open-air factors, entropy events (DRAFT/HEAT_SPIKE/DOOR_OPEN), contagion (proximity × airflow × humidity → exposure → INFECTED), scene CRUD. **Defaults reverted to v2-congruent** (diurnal 0, entropy 0, contagion 0) so every seed-dependent test keeps its exact PRNG stream — realism is opt-in via `setParams`. +11 v3 tests. |
+| B Sensor farm | `56524b1` | `SensorFarm`/`SensorNodeConfig`: placeable/replaceable esp32 nodes (esp32-001/002 match live `devices`), watched pig = nearest in coverage radius, RSSI from geometry (free-space-ish path loss, WIFI_WEAK_RSSI → 50% packet loss), online = powered && !hibernating, 8-column telemetry records (deviceId, timestamp, temperature, bodyTemp, pigId, status, batteryPct, wifiRssi) matching the live `telemetry` collection; node alerts surfaced. +10 tests. |
+| C Backend probes | `ef1217b` | `backendProbe.ts`: tri-state liveness (`up`/`down`/`unreachable` — browser CORS ≠ dead service), HTTP/WS/TCP kinds with injectable fetch/ws/net, root-cause synthesis (Mosquitto DOWN + bridge crash-loop chain, NRestarts input). **Live-verified in Node**: PB 200, OpenResty 200, thermal-ws 426, Mosquitto refused, ValKey open. +11 tests. |
+| D Cockpit wiring | `385903a` | `SceneEditor` (click-to-place + numeric inputs + coverage circles + power/remove/add), `EnvironmentConsole` (9 sliders incl. diurnal/entropy/contagion, event buttons, sim speed 0.5–4×), `BackendInspector` (live probes + root-cause diagnosis + measured bridge evidence 5347 restarts). App: REAL_HERD → farm coverage → watched-pig pipeline → trace; barn/arena/heatmap now driven by the real herd. +CSS (a11y high contrast), smoke test updated to `pig-001…004` + new panels. |
+
+**Counts at Phase 3 close:** tsc clean · vitest **158/158 across 20 files** (+21 vs Phase 2) · `npm run build` OK · dev server 200 on `/`.
+
 ## Verification (all PASSED at handoff time)
 
 - `npx tsc --noEmit` (in `tools/simulator-web/`) — **clean** (was 10 errors pre-fix)
@@ -48,6 +62,9 @@ npm run dev    # → http://localhost:5173
 - **Browser runtime not screenshot-verified** — headless env could not screenshot localhost. SSR output confirms full cockpit markup; visual check pending on a real browser.
 - **Cough formant fidelity** — `generateCoughBurst` ≈ ADSR-shaped noise; 600/1600 Hz formant is approximate (band energy tested, spectral purity not). Known, documented in README.
 - **Live MQTT mode** exists in `mqttService` (`MqttMode 'live'`) but cockpit runs LOOPBACK by default.
+- **Bridge crash-loop is REAL** (measured: Mosquitto :1883 refused, `pigpulse-bridge` NRestarts 4017 → 5347 during this session). It is *shown* in the BackendInspector, not fixed here — fixing the broker is separate work (`docker run` mosquitto per `deploy/docker/`, then bridge connects).
+- **TCP probes (Mosquitto/ValKey) only run in Node** — in the browser they report `unreachable` (honest tri-state), verified live via `tsx` against the actual deployment.
+- **Contagion/entropy are literature-grounded, not outbreak-validated** — realistic dynamics, no farm-outbreak calibration data. Defaults stay OFF until the EnvironmentConsole switches them on.
 
 ## Follow-ups still open (OUTSIDE sandbox scope — not started)
 
