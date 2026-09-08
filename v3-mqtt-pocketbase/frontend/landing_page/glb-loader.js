@@ -5,27 +5,29 @@
   window._glbLoaderReady = true;
 
   function decodeAccessor(glb, accessor) {
-    const T = THREE;
     const bv = glb.bufferViews[accessor.bufferView];
     const bufferData = glb.buffers[bv.buffer];
-    /* bufferData is a Uint8Array view into the raw ArrayBuffer.
-       TypedArray constructors interpret byteOffset relative to the ArrayBuffer,
-       not the Uint8Array — so add bufferData.byteOffset (= binOffset). */
-    const byteOffset = bufferData.byteOffset + (bv.byteOffset || 0) + (accessor.byteOffset || 0);
+    const srcOffset = (bv.byteOffset || 0) + (accessor.byteOffset || 0);
     const comp = accessor.componentType;
     const count = accessor.count;
     const type = accessor.type;
-    let arr;
     const mul = type === 'VEC3' ? 3 : type === 'VEC2' ? 2 : 1;
+    /* Copy into an independent ArrayBuffer to avoid any shared-buffer
+       corruption when Three.js mutates attribute data (e.g. computeVertexNormals). */
+    var elemBytes, Ctor;
     switch (comp) {
-      case 5126: arr = new Float32Array(bufferData, byteOffset, count * mul); break;
-      case 5123: arr = new Uint16Array(bufferData, byteOffset, count * mul); break;
-      case 5122: arr = new Int16Array(bufferData, byteOffset, count * mul); break;
-      case 5125: arr = new Uint32Array(bufferData, byteOffset, count); break;
-      case 5121: arr = new Uint8Array(bufferData, byteOffset, count * mul); break;
-      case 5120: arr = new Int8Array(bufferData, byteOffset, count * mul); break;
+      case 5126: Ctor = Float32Array; elemBytes = 4; break;
+      case 5123: Ctor = Uint16Array;  elemBytes = 2; break;
+      case 5122: Ctor = Int16Array;   elemBytes = 2; break;
+      case 5125: Ctor = Uint32Array;  elemBytes = 4; break;
+      case 5121: Ctor = Uint8Array;   elemBytes = 1; break;
+      case 5120: Ctor = Int8Array;    elemBytes = 1; break;
       default: throw new Error('Unsupported componentType: ' + comp);
     }
+    var len = comp === 5125 ? count : count * mul;
+    var tmp = new Uint8Array(len * elemBytes);
+    tmp.set(new Uint8Array(bufferData.buffer, bufferData.byteOffset + srcOffset, len * elemBytes));
+    var arr = new Ctor(tmp.buffer);
     return { data: arr, type: type, count: count };
   }
 
@@ -143,6 +145,12 @@
         const sceneIdx = json.scene != null ? json.scene : 0;
         const rootNodes = (json.scenes[sceneIdx] && json.scenes[sceneIdx].nodes) || [];
         const root = new T.Group();
+
+        /* Diagnostic: log first accessor data */
+        var _dbgPos = decodeAccessor({ buffers: buffers, bufferViews: json.bufferViews }, json.accessors[0]);
+        console.log('[GLB] buf0 type:', buffers[0].constructor.name, 'byteOff:', buffers[0].byteOffset, 'len:', buffers[0].byteLength);
+        console.log('[GLB] acc0 data type:', _dbgPos.data.constructor.name, 'length:', _dbgPos.data.length, 'first6:', Array.from(_dbgPos.data.slice(0, 6)));
+        console.log('[GLB] acc0 has NaN:', _dbgPos.data.some(function(v){ return isNaN(v); }));
 
         /* Build a flat glb context for buildNode */
         const glbCtx = { buffers: buffers, accessors: json.accessors, bufferViews: json.bufferViews, meshes: json.meshes, materials: materials, nodes: json.nodes };
