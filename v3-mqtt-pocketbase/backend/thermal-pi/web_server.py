@@ -37,6 +37,7 @@ import config
 import esp_audio_ingest
 import i2c_scanDiag
 import pigpulse_stats
+import thermal_publish
 from mlx_reader import MlxReader, averaged_reading
 
 ROOT = Path(__file__).resolve().parent
@@ -71,6 +72,7 @@ _fps_ema = 0.0
 _last_t = 0.0
 _last_error = "starting"
 _cached: dict | None = None
+_publisher = thermal_publish.ThermalPublisher()
 
 # The I2C bus scan walks 112 addresses with an ioctl+write each. On a healthy
 # bus that is milliseconds, but if a device holds SDA low every probe can burn a
@@ -135,6 +137,14 @@ def _loop() -> None:
                 _last_ok = True
                 _last_error = "OK"
                 _last_t = t1
+                # Publish to MQTT so the thermal data joins the normal
+                # pipeline. Rate-limited inside the publisher, and it never
+                # raises into this loop — a broker outage must not stop the
+                # dashboard from drawing.
+                try:
+                    _publisher.publish_frame(st, _frame_seq)
+                except Exception as e:  # noqa: BLE001
+                    print(f"[web] thermal publish error: {e}", flush=True)
             else:
                 _last_ok = False
                 _last_error = _reader.last_error
@@ -261,6 +271,7 @@ class Handler(BaseHTTPRequestHandler):
                 f"Local IPv4: {', '.join(local_ips) or 'unknown'}",
                 f"Dashboard URL: {url_hint}",
                 f"ESP32-S3 mic: {esp_state}",
+                f"Thermal MQTT: {_publisher.status()}",
                 f"Last error: {_last_error}",
             ]
             self._send(200, "text/plain; charset=utf-8", ("\n".join(lines) + "\n").encode())
@@ -477,6 +488,8 @@ def main() -> None:
     # ESP32-S3 barn mic — the only audio source; firmware pushes PCM to TCP :9090
     print("[web] starting ESP mic ingest (tcp :9090)...")
     esp_audio_ingest.ensure_started()
+    # Publish thermal readings over MQTT so the Pi is a pipeline node
+    _publisher.start()
     # Brief wait for first frame so / isn't empty on first hit
     for _ in range(40):
         if _cached:

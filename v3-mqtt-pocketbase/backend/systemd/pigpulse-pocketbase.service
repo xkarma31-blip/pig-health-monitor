@@ -6,9 +6,16 @@ After=network.target
 Type=simple
 User=pigpulse
 WorkingDirectory=/home/pigpulse/pocketbase
-# Loopback only. The bridge and the health check both talk to 127.0.0.1, so
-# binding 0.0.0.0 only exposed an admin login on the farm AP.
-ExecStart=/home/pigpulse/pocketbase/pocketbase serve --http=127.0.0.1:8090
+# Bound to the AP address ONLY — not 0.0.0.0 (which exposed an admin login to
+# every client on the farm AP) and not 127.0.0.1 (which made it unreachable
+# by the laptop-side cloud_sync worker, i.e. it re-created the two-island gap
+# this binding was meant to close). The address is fixed by
+# wlan0-static-ip.service, so this is stable.
+#
+# Exposure surface: anything that can associate with SSID PigPulse can reach
+# the admin API. That is why the admin password is mandatory and lives in
+# /etc/pigpulse/bridge.env, never in the repo.
+ExecStart=/home/pigpulse/pocketbase/pocketbase serve --http=192.168.69.1:8090
 Restart=on-failure
 RestartSec=5
 

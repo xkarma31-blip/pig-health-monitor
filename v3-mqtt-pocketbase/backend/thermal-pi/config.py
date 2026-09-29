@@ -70,6 +70,16 @@ TLS_CERT = _os.environ.get("TLS_CERT", "")   # e.g. thermal-pi/tls.crt
 TLS_KEY  = _os.environ.get("TLS_KEY", "")    # e.g. thermal-pi/tls.key
 # Empty TLS_CERT => plain http on WEB_PORT.
 
+# --- MQTT: publish the Pi as a pipeline node (see thermal_publish.py) ------
+# The Pi used to be a private website: it read the sensor, drew a dashboard,
+# and stopped. Every other node publishes to MQTT. This makes the Pi publish
+# on the same wire contract, so its thermal data reaches PocketBase (via the
+# existing local_bridge) and can then be shipped to the cloud.
+MQTT_BROKER = _os.environ.get("MQTT_BROKER", "127.0.0.1")
+MQTT_PORT = int(_os.environ.get("MQTT_PORT", "1883"))
+THERMAL_PUBLISH_ENABLED = _os.environ.get("THERMAL_PUBLISH_ENABLED", "1") != "0"
+PUBLISH_PIG_ID = _os.environ.get("PUBLISH_PIG_ID", "unassigned")
+
 # --- Audio: ESP32-S3 barn mic (s3-mic-01) — the ONLY mic ----------------
 # There is no Pi GPIO mic. The original ESP32-D0WD is decommissioned and the
 # direct-wired INMP441 on the 40-pin header was removed 2026-09-29: it relied

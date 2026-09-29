@@ -1,0 +1,34 @@
+[Unit]
+Description=PigPulse Pi -> cloud PocketBase sync (closes the two-island gap)
+Documentation=file:/home/solrahk/pig-health-monitor/CANON.md
+After=network-online.target pigpulse-pocketbase.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Runs on the LAPTOP, not the Pi. The Pi AP has no WAN, so it can only be the
+# server; Tailscale cannot help because a node with no internet cannot reach
+# the coordination server to enrol.
+User=solrahk
+WorkingDirectory=/home/solrahk/pig-health-monitor/v3-mqtt-pocketbase/backend/workers
+# Credentials for BOTH PocketBases. Create once:
+#   install -d -m 0700 ~/.config/pigpulse
+#   cat > ~/.config/pigpulse/sync.env <<EOF
+#   SYNC_SOURCE_URL=http://192.168.69.1:8090
+#   SYNC_SOURCE_EMAIL=...      # the Pi's PocketBase admin
+#   SYNC_SOURCE_PASSWORD=...
+#   SYNC_DEST_URL=http://127.0.0.1:8090
+#   SYNC_DEST_EMAIL=...        # the cloud/laptop PocketBase admin
+#   SYNC_DEST_PASSWORD=...
+#   EOF
+#   chmod 600 ~/.config/pigpulse/sync.env
+# The Pi is only reachable once the laptop has joined the PigPulse AP:
+#   nmcli con down GFiber_E9BD4; nmcli con up uuid 4f088feb-bb8d-4dd6-b238-16241cbc89c0
+EnvironmentFile=%h/.config/pigpulse/sync.env
+ExecStart=/usr/bin/python3 %h/pig-health-monitor/v3-mqtt-pocketbase/backend/workers/cloud_sync.py
+Restart=on-failure
+RestartSec=30
+NoNewPrivileges=true
+
+[Install]
+WantedBy=default.target

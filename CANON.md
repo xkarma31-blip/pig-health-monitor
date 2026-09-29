@@ -46,20 +46,65 @@
                     Expo app ──HTTP/SSE──┘  (127.0.0.1:8090, or adb reverse :18090)
 ```
 
-### 2.1 The known structural gap — do not mistake it for a bug
+### 2.1 The two-island gap — CLOSED 2026-09-29
 
-**The Pi and the laptop are two isolated islands.** The bridge writes
-`synced: false` on every record, and **nothing anywhere reads it**.
-`backend/workers/` is empty.
+**Before:** the Pi and the laptop were isolated islands. The bridge wrote
+`synced: false` on every record, nothing read it, and `backend/workers/` was
+empty. The Expo app reads the laptop's PocketBase and had no reference to the
+Pi's ports, so thermal data collected on the Pi never reached the phone. That
+is why the capstone felt broken while every individual service was green.
 
-- The Expo app reads the **laptop's** PocketBase. It has no reference to port
-  8080, 8091, 9090, or the AP IP.
-- The Pi's thermal dashboard `:8080` is a **standalone web page**, not part of
-  the Expo data path.
-- So: **thermal data collected on the Pi never reaches the phone app.**
+**Now, two pieces:**
 
-This is the top open architecture item. The `synced` flag was designed for a
-cloud-sync worker that was never written.
+1. `backend/thermal-pi/thermal_publish.py` — the Pi publishes on the same MQTT
+   wire contract as every other node, as `pi-thermal-01`. The existing
+   `local_bridge` picks it up with **no new bridge code** and writes it to
+   `telemetry` / `alerts` / `devices` with `synced: false`.
+2. `backend/workers/cloud_sync.py` — ships `synced=false` rows from the Pi to
+   the cloud PocketBase, then marks the source synced.
+
+```
+  thermal-pi ──MQTT pig/pi-thermal-01/*──► mosquitto ──► local_bridge ──► PB(pi) [synced=false]
+                                                                            │
+                                            cloud_sync.py (ON THE LAPTOP) │
+                                                                            ▼
+                                                                          PB(cloud) ──► Expo app
+```
+
+**Why the worker runs on the LAPTOP:** the Pi AP has no WAN. Tailscale cannot
+help — every node must reach the coordination server over the public internet,
+so a node with no internet cannot enrol. The Pi can only ever be the server.
+The laptop joins the PigPulse AP and pulls.
+
+**Delivery semantics: at-least-once.** A source row is marked `synced=true`
+only *after* the cloud insert succeeds, so a crash mid-batch re-sends rather
+than loses. The destination may briefly hold a duplicate. The alternative —
+marking first — silently loses rows, which is the failure that hid the
+audio_events loss for days.
+
+**Requires on the Pi (one time):**
+```sh
+cd ~/pocketbase && ./pocketbase migrate up   # adds the 7 thermal fields
+sudo systemctl restart pigpulse-pocketbase pigpulse-thermal
+```
+Until that migration runs, PocketBase **silently discards** `verdict`,
+`hotspot`, `center`, `max`, `min`, `ambient`, `alerts` — measured, not guessed.
+
+**And on the laptop (one time):**
+```sh
+mkdir -p ~/.config/pigpulse && chmod 700 ~/.config/pigpulse
+cat > ~/.config/pigpulse/sync.env <<EOF
+SYNC_SOURCE_URL=http://192.168.69.1:8090
+SYNC_SOURCE_EMAIL=...      # the Pi's PocketBase admin
+SYNC_SOURCE_PASSWORD=...
+SYNC_DEST_URL=http://127.0.0.1:8090
+SYNC_DEST_EMAIL=...        # the cloud/laptop PocketBase admin
+SYNC_DEST_PASSWORD=...
+EOF
+chmod 600 ~/.config/pigpulse/sync.env
+systemctl --user enable --now pigpulse-cloud-sync
+```
+Test before trusting it: `python3 backend/workers/cloud_sync.py --once --dry-run`
 
 ### 2.2 MQTT topics (the wire contract)
 
@@ -87,8 +132,11 @@ Live schema lives in `v3-mqtt-pocketbase/deploy/pocketbase/bin/pb_migrations/`.
 > with the old field set and no `audio_events`. Use the migrations, not this.
 
 > ⚠️ **PocketBase silently discards unknown fields.** A schema drift loses data
-> with no error. This already cost us the whole `audio_events` stream. After any
-> payload change, add the field via a migration or the data vanishes.
+> with no error. This cost the whole `audio_events` stream in September 2026,
+> and it silently ate 7 of the 14 thermal keys when the Pi publisher was first
+> wired up. After any payload change, add the field via a migration **and
+> verify** by publishing one row and diffing published-vs-stored. Editing the
+> schema JSON by hand does NOT create the SQLite columns — run the migration.
 
 ### 2.4 Hardware inventory
 
@@ -185,8 +233,9 @@ than falling back to a default. `.husky/pre-commit` blocks keys/JWTs/PEMs.
 
 | # | Item | State |
 |---|---|---|
-| 1 | Pi ↔ cloud sync (the `synced:false` worker) | **not built** — see §2.1 |
-| 2 | `setup_pocketbase.py` stale vs migrations | not updated |
+| 1 | Pi ↔ cloud sync | ✅ **built** 2026-09-29 — see §2.1. Needs the migration + `sync.env` to go live |
+| 1b | Pi PocketBase now bound to `192.168.69.1` | ✅ so the laptop can read it. Anything on the AP can reach the admin API — the password is mandatory for that reason |
+| 2 | `setup_pocketbase.py` stale vs migrations | still stale — use `pb_migrations/`, not that script |
 | 3 | `deploy/systemd/` is empty — laptop units unversioned | not done |
 | 4 | Camera RTSP creds hard-coded in source | not moved |
 | 5 | LWT/`status` topic missing from ESP32-S3 firmware | `devices` rows go stale |
