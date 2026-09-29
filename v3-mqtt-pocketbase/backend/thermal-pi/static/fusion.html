@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PigPulse — Thermal + CCTV Fusion</title>
+<style>
+  :root{
+    --ink:#0b0b14; --panel:#141428; --line:#00e5ff; --acc:#00e5ff;
+    --dim:#b9c2d6; --good:#39ff88; --warn:#ffd400; --bad:#ff4d6d;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:#f2f6ff;
+       font:18px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:1340px;margin:0 auto;padding:24px 20px 48px}
+  header{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
+  h1{font-size:34px;margin:0;color:#fff}
+  h2{font-size:20px;margin:26px 0 10px;color:var(--acc)}
+  .sub{color:var(--dim);font-size:17px;margin:4px 0 0}
+  .pills{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .pill{background:var(--panel);border:2px solid #2b3157;border-radius:999px;
+        padding:8px 16px;font-size:16px;font-weight:700;color:var(--dim)}
+  .pill .dot{display:inline-block;width:11px;height:11px;border-radius:50%;
+             background:#5a6180;margin-right:8px;vertical-align:middle}
+  .pill.ok{border-color:var(--good);color:var(--good)} .pill.ok .dot{background:var(--good)}
+  .pill.bad{border-color:var(--bad);color:var(--bad)} .pill.bad .dot{background:var(--bad)}
+  .grid{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:20px;margin-top:20px;
+        align-items:start}
+  @media (max-width:1020px){.grid{grid-template-columns:1fr}}
+  .panel{background:var(--panel);border:3px solid var(--line);border-radius:16px;padding:18px}
+  #stage{position:relative;background:#000;border-radius:12px;overflow:hidden;
+         aspect-ratio:16/9;border:2px solid #2b3157}
+  #cctv{display:block;width:100%;height:100%;object-fit:contain;background:#000}
+  #ovl{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  .hud{position:absolute;left:10px;top:10px;display:flex;gap:8px;flex-wrap:wrap}
+  .tag{background:rgba(0,0,0,.72);border:1px solid var(--line);border-radius:8px;
+       padding:6px 10px;font-size:16px;font-weight:700;color:var(--acc)}
+  #cctvOffline{position:absolute;inset:0;display:none;place-content:center;text-align:center;
+       background:repeating-linear-gradient(45deg,#101426 0 18px,#0d1020 18px 36px);
+       color:var(--dim);font-weight:700;padding:20px}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px}
+  .box{background:#0e0e1e;border:2px solid #2b3157;border-radius:10px;padding:10px 12px}
+  .box .lbl{display:block;font-size:15px;color:var(--dim);font-weight:700}
+  .box .val{display:block;font-size:26px;font-weight:800;color:#fff;margin-top:2px}
+  .box .sml{display:block;font-size:15px;color:var(--dim)}
+  .status{margin-top:12px;font-size:16px;color:var(--dim);min-height:22px;text-align:center}
+  .ctl{margin-top:14px}
+  .ctl label{display:flex;justify-content:space-between;gap:10px;font-size:17px;
+             font-weight:700;color:#fff;margin-bottom:6px}
+  .ctl label span{color:var(--acc)}
+  input[type=range]{width:100%;accent-color:var(--acc);height:22px}
+  select,button{font:inherit;font-size:17px;font-weight:700;color:#fff;
+                background:#0e0e1e;border:2px solid var(--line);border-radius:10px;
+                padding:11px 14px;width:100%}
+  button{cursor:pointer} button:hover{background:#171a33}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .big{font-size:20px;padding:14px}
+  .btnMuted{border-color:var(--bad);color:var(--bad)}
+  .toggle{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:700;
+          background:#0e0e1e;border:2px solid #2b3157;border-radius:10px;padding:11px 14px}
+  .toggle input{width:22px;height:22px;accent-color:var(--acc)}
+  a{color:var(--acc);font-weight:700;font-size:17px;display:block;padding:7px 0}
+  .note{color:var(--dim);font-size:16px}
+  .legend{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:16px;color:var(--dim)}
+  .bar{flex:1;height:14px;border-radius:7px;border:1px solid #2b3157}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>Thermal + CCTV Fusion</h1>
+      <p class="sub">Heat overlaid on the live camera feed — one page, one origin.</p>
+    </div>
+    <div class="pills">
+      <button id="soundBtn" class="big" style="width:auto" onclick="toggleSound()">🔊 SOUND ON</button>
+      <span class="pill" id="cctvPill"><span class="dot"></span>CCTV</span>
+      <span class="pill" id="thrPill"><span class="dot"></span>thermal</span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="panel">
+      <div id="stage">
+        <img id="cctv" src="/cctv" alt="CCTV live feed">
+        <canvas id="ovl"></canvas>
+        <div class="hud">
+          <span class="tag" id="hudTemp">-- C</span>
+          <span class="tag" id="hudCursor">move over image</span>
+        </div>
+        <div id="cctvOffline">
+          CCTV offline<br>
+          <span style="font-weight:400">check pigpulse-cctv.service and the camera AP link</span>
+        </div>
+      </div>
+
+      <div class="legend">
+        <span id="legendMin">-- C</span>
+        <div class="bar" id="legendBar"></div>
+        <span id="legendMax">-- C</span>
+      </div>
+
+      <div class="stats">
+        <div class="box"><span class="lbl">Center (pig body)</span><span class="val" id="center">--</span></div>
+        <div class="box"><span class="lbl">Minimum</span><span class="val" id="min">--</span></div>
+        <div class="box"><span class="lbl">Maximum</span><span class="val" id="max">--</span></div>
+        <div class="box"><span class="lbl">Average</span><span class="val" id="avg">--</span></div>
+        <div class="box"><span class="lbl">Ambient</span><span class="val" id="ambient">--</span></div>
+        <div class="box"><span class="lbl">Frame rate</span><span class="val" id="fps">--</span></div>
+      </div>
+      <div class="status" id="status">Starting…</div>
+    </section>
+
+    <aside class="panel">
+      <h2>Overlay alignment</h2>
+      <p class="note">Drag the sliders until the heat sits on the animal. Saved on this device.</p>
+
+      <div class="ctl"><label>Opacity <span id="opV">55%</span></label>
+        <input id="op" type="range" min="0" max="100" value="55" oninput="setParam('op',this.value)"></div>
+      <div class="ctl"><label>Horizontal fit <span id="dxV">0%</span></label>
+        <input id="dx" type="range" min="-100" max="100" value="0" oninput="setParam('dx',this.value)"></div>
+      <div class="ctl"><label>Vertical fit <span id="dyV">0%</span></label>
+        <input id="dy" type="range" min="-100" max="100" value="0" oninput="setParam('dy',this.value)"></div>
+      <div class="ctl"><label>Width <span id="wV">100%</span></label>
+        <input id="w" type="range" min="20" max="200" value="100" oninput="setParam('w',this.value)"></div>
+      <div class="ctl"><label>Height <span id="hV">100%</span></label>
+        <input id="h" type="range" min="20" max="200" value="100" oninput="setParam('h',this.value)"></div>
+      <div class="ctl"><label>Rotation <span id="rotV">0°</span></label>
+        <input id="rot" type="range" min="-45" max="45" value="0" oninput="setParam('rot',this.value)"></div>
+      <div class="row" style="margin-top:12px">
+        <button onclick="resetParams()">Reset alignment</button>
+        <button onclick="fitFrame()">Fit to frame</button>
+      </div>
+
+      <h2>Palette</h2>
+      <select id="palette" onchange="setPalette(this.value)">
+        <option value="iron" selected>Iron / Thermal</option>
+        <option value="rainbow">Rainbow</option>
+        <option value="arctic">Arctic</option>
+        <option value="gray">Gray</option>
+      </select>
+      <div class="ctl" style="margin-top:12px">
+        <label class="toggle"><input id="contrast" type="checkbox" checked
+          onchange="redraw()"> Enhanced contrast <span style="color:var(--dim);font-weight:400">(3–97%)</span></label>
+      </div>
+      <div class="ctl">
+        <label class="toggle"><input id="markers" type="checkbox" checked
+          onchange="redraw()"> Hot / cold crosshairs</label>
+      </div>
+
+      <h2>Sound</h2>
+      <div class="ctl" style="background:#0e0e1e;border:2px solid #2b3157;border-radius:10px;padding:10px 12px;margin-bottom:8px;">
+        <strong>ESP32-S3 barn mic</strong> <span style="opacity:.75;">— s3-mic-01, TCP :9090</span>
+      </div>
+      <button id="micBtn" class="big" style="margin-top:10px" onclick="toggleMic()">START LISTENING</button>
+      <button id="recBtn" class="big" style="margin-top:10px" onclick="recordEsp()">RECORD 10s</button>
+      <div class="note" id="micMsg" style="margin-top:8px">Pick a source, then start.</div>
+
+      <div class="ctl" style="margin-top:14px;background:#0e0e1e;border:2px solid #2b3157;border-radius:10px;padding:12px 14px">
+        <label style="margin-bottom:4px">ESP link <span id="espState">checking…</span></label>
+        <div class="note" id="espDetail" style="word-break:break-word">—</div>
+      </div>
+
+      <button class="big" style="margin-top:10px" id="soundBtn2" onclick="toggleSound()">🔊 SOUND ON</button>
+
+      <h2>Elsewhere</h2>
+      <a href="/">← Thermal dashboard</a>
+      <a href="/wifi-setup.html">Wi-Fi setup QR →</a>
+    </aside>
+  </div>
+</div>
+
+<script src="/static/mic.js"></script>
+<script>
+'use strict';
+const SW = 32, SH = 24, FETCH_DELAY_MS = 85;
+const cctv = document.getElementById('cctv');
+const ovl  = document.getElementById('ovl');
+const octx = ovl.getContext('2d');
+const src  = document.createElement('canvas'); src.width = SW; src.height = SH;
+const sctx = src.getContext('2d');
+const imgData = sctx.createImageData(SW, SH);
+
+let palette = 'iron';
+let last = null, lastOk = false, timer = null;
+const DEF = { op:55, dx:0, dy:0, w:100, h:100, rot:0 };
+let P = Object.assign({}, DEF);
+let muted = localStorage.getItem('pigpulse.muted') === '1';
+
+/* ---------- alignment params (persisted) ---------- */
+function loadParams() {
+  try { Object.assign(P, JSON.parse(localStorage.getItem('pigpulse.fusion') || '{}')); }
+  catch (e) { P = Object.assign({}, DEF); }
+  for (const k of Object.keys(DEF)) {
+    const el = document.getElementById(k); if (el) el.value = P[k];
+    showParam(k);
+  }
+}
+function saveParams() { localStorage.setItem('pigpulse.fusion', JSON.stringify(P)); }
+function showParam(k) {
+  const el = document.getElementById(k + 'V'); if (!el) return;
+  el.textContent = (k === 'rot') ? P[k] + '\u00B0' : P[k] + '%';
+}
+function setParam(k, v) { P[k] = parseFloat(v); showParam(k); saveParams(); redraw(); }
+function resetParams() { Object.assign(P, DEF); loadParamsToUI(); saveParams(); redraw(); }
+function fitFrame() {
+  P.dx = 0; P.dy = 0; P.w = 100; P.h = 100; P.rot = 0; P.op = 55;
+  loadParamsToUI(); saveParams(); redraw();
+}
+function loadParamsToUI() {
+  for (const k of Object.keys(DEF)) { const el = document.getElementById(k); if (el) el.value = P[k]; showParam(k); }
+}
+function setPalette(name) { palette = name; updateLegend(); redraw(); }
+
+/* ---------- colour (same stops as the thermal dashboard) ---------- */
+function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
+function lerp(a, b, k) { return a + (b - a) * k; }
+function stopsFor(name) {
+  if (name === 'gray') return [[0,[0,0,0]],[1,[255,255,255]]];
+  if (name === 'arctic') return [[0,[1,10,35]],[0.25,[0,80,160]],[0.5,[0,210,255]],[0.75,[170,255,230]],[1,[255,255,255]]];
+  if (name === 'rainbow') return [[0,[35,0,80]],[0.16,[0,0,255]],[0.33,[0,180,255]],[0.5,[0,255,80]],[0.66,[255,255,0]],[0.83,[255,90,0]],[1,[255,255,255]]];
+  return [[0,[0,0,12]],[0.18,[34,6,75]],[0.36,[132,20,78]],[0.55,[224,58,48]],[0.72,[255,151,31]],[0.88,[255,243,105]],[1,[255,255,255]]];
+}
+function thermalColor(t) {
+  t = clamp(t, 0, 1);
+  const s = stopsFor(palette);
+  for (let i = 0; i < s.length - 1; i++) {
+    const a = s[i], b = s[i + 1];
+    if (t >= a[0] && t <= b[0]) {
+      const k = (t - a[0]) / (b[0] - a[0]);
+      return [lerp(a[1][0],b[1][0],k), lerp(a[1][1],b[1][1],k), lerp(a[1][2],b[1][2],k)];
+    }
+  }
+  return s[s.length - 1][1];
+}
+function updateLegend() {
+  document.getElementById('legendBar').style.background =
+    'linear-gradient(90deg,' + stopsFor(palette).map(s =>
+      `rgb(${s[1][0]},${s[1][1]},${s[1][2]}) ${Math.round(s[0]*100)}%`).join(',') + ')';
+}
+function percentile(values, p) {
+  const a = values.slice().sort((x, y) => x - y);
+  return a[clamp(Math.round((a.length - 1) * p), 0, a.length - 1)];
+}
+
+/* ---------- render ---------- */
+function render() {
+  if (!last || !last.pixels) { octx.clearRect(0, 0, ovl.width, ovl.height); return; }
+  const px = last.pixels;
+  let lo = last.min, hi = last.max;
+  if (document.getElementById('contrast').checked) {
+    const a = percentile(px, 0.03), b = percentile(px, 0.97);
+    if (b - a >= 0.5) { lo = a; hi = b; }
+  }
+  const span = Math.max(0.25, hi - lo);
+  for (let y = 0; y < SH; y++) {
+    for (let x = 0; x < SW; x++) {
+      const c = thermalColor((px[y * SW + x] - lo) / span);
+      const i = (y * SW + x) * 4;
+      imgData.data[i] = c[0]; imgData.data[i+1] = c[1];
+      imgData.data[i+2] = c[2]; imgData.data[i+3] = 255;
+    }
+  }
+  sctx.putImageData(imgData, 0, 0);
+
+  octx.clearRect(0, 0, ovl.width, ovl.height);
+  const W = ovl.width, H = ovl.height;
+  const cx = (0.5 + P.dx / 100) * W;
+  const cy = (0.5 + P.dy / 100) * H;
+  const w = P.w / 100 * W;
+  const h = P.h / 100 * H;
+
+  octx.save();
+  octx.globalAlpha = P.op / 100;
+  octx.imageSmoothingEnabled = true;
+  octx.imageSmoothingQuality = 'high';
+  octx.translate(cx, cy);
+  octx.rotate(P.rot * Math.PI / 180);
+  octx.drawImage(src, -w / 2, -h / 2, w, h);
+  octx.restore();
+
+  if (document.getElementById('markers').checked) {
+    octx.save();
+    octx.translate(cx, cy);
+    octx.rotate(P.rot * Math.PI / 180);
+    octx.lineWidth = 3;
+    octx.font = 'bold 17px system-ui, sans-serif';
+    drawCross(last.maxX, last.maxY, w, h, '#ffffff', 'HOT ' + fmt(last.max));
+    drawCross(last.minX, last.minY, w, h, '#62d9ff', 'COLD ' + fmt(last.min));
+    octx.restore();
+  }
+}
+function drawCross(sx, sy, w, h, color, label) {
+  if (sx === undefined || sy === undefined) return;
+  const x = -w / 2 + (sx / (SW - 1)) * w;
+  const y = -h / 2 + (sy / (SH - 1)) * h;
+  octx.strokeStyle = color; octx.fillStyle = color;
+  octx.shadowColor = 'rgba(0,0,0,.9)'; octx.shadowBlur = 6;
+  octx.beginPath();
+  octx.moveTo(x - 16, y); octx.lineTo(x + 16, y);
+  octx.moveTo(x, y - 16); octx.lineTo(x, y + 16);
+  octx.stroke();
+  octx.beginPath(); octx.arc(x, y, 7, 0, Math.PI * 2); octx.stroke();
+  octx.fillText(label, clamp(x + 12, 4, w), clamp(y - 12, 20, h));
+}
+function redraw() { render(); }
+
+function fmt(v) { return (v === undefined || v === null) ? '--' : v.toFixed(1) + ' C'; }
+
+/* ---------- polling ---------- */
+async function tick() {
+  try {
+    const r = await fetch('/data?ts=' + Date.now(), { cache: 'no-store' });
+    const d = await r.json();
+    if (d.ok && d.pixels) {
+      last = d; lastOk = true;
+      render();
+      document.getElementById('center').textContent = fmt(d.center);
+      document.getElementById('min').textContent     = fmt(d.min);
+      document.getElementById('max').textContent     = fmt(d.max);
+      document.getElementById('avg').textContent     = fmt(d.avg);
+      document.getElementById('ambient').textContent = fmt(d.ambient);
+      document.getElementById('fps').textContent     = (d.fps || 0).toFixed(1) + ' fps';
+      document.getElementById('hudTemp').textContent = fmt(d.center) + '  \u00B7  ' + (d.verdict || '');
+      document.getElementById('legendMin').textContent = fmt(d.min);
+      document.getElementById('legendMax').textContent = fmt(d.max);
+      document.getElementById('status').textContent = d.verdict || 'OK';
+      pill('thrPill', true, 'thermal ' + (d.fps || 0).toFixed(0) + ' fps');
+    } else {
+      lastOk = false;
+      document.getElementById('status').textContent = d.error || 'Sensor not ready';
+      pill('thrPill', false, 'thermal: ' + (d.error || 'no frame'));
+    }
+  } catch (e) {
+    lastOk = false;
+    document.getElementById('status').textContent = 'thermal link lost: ' + e.message;
+    pill('thrPill', false, 'thermal: lost');
+  }
+  timer = setTimeout(tick, FETCH_DELAY_MS);
+}
+function pill(id, ok, text) {
+  const el = document.getElementById(id);
+  el.className = 'pill ' + (ok ? 'ok' : 'bad');
+  el.innerHTML = '<span class="dot"></span>' + text;
+}
+
+/* ---------- CCTV ---------- */
+let cctvDown = false;
+function cctvOk() {
+  cctvDown = false;
+  document.getElementById('cctvOffline').style.display = 'none';
+  document.getElementById('cctv').style.visibility = 'visible';
+  pill('cctvPill', true, 'CCTV live');
+}
+function cctvFail() {
+  cctvDown = true;
+  document.getElementById('cctvOffline').style.display = 'grid';
+  document.getElementById('cctv').style.visibility = 'hidden';
+  pill('cctvPill', false, 'CCTV offline');
+}
+cctv.addEventListener('load', () => {
+  if (!cctv.naturalWidth) return cctvFail();
+  ovl.width = cctv.naturalWidth;
+  ovl.height = cctv.naturalHeight;
+  document.getElementById('stage').style.aspectRatio =
+    cctv.naturalWidth + ' / ' + cctv.naturalHeight;
+  cctvOk(); render();
+});
+cctv.addEventListener('error', cctvFail);
+// Nothing on the wire for 6 s → treat as down (MJPEG has no clean EOF).
+setTimeout(() => { if (!cctv.naturalWidth) cctvFail(); }, 6000);
+
+/* ---------- sound + mic ---------- */
+function paintSound() {
+  const t = muted ? '\uD83D\uDD07 MUTED' : '\uD83D\uDD0A SOUND ON';
+  for (const id of ['soundBtn', 'soundBtn2']) {
+    const b = document.getElementById(id);
+    b.textContent = t;
+    b.classList.toggle('btnMuted', muted);
+  }
+}
+function toggleSound() {
+  muted = !muted;
+  localStorage.setItem('pigpulse.muted', muted ? '1' : '0');
+  if (window.PigPulseMic) PigPulseMic.setMuted(muted);
+  paintSound();
+}
+/* ---------- mic source: the ESP32-S3 barn mic over TCP :9090 ----------
+   The Pi GPIO mic (INMP441 on the 40-pin header) was removed 2026-09-29:
+   it depended on dtoverlay=googlevoicehat-soundcard, which needs a codec
+   chip this board does not have, so it only ever returned zeros.
+   The rate is read from /esp/status at click time — the firmware owns it. */
+const MIC_SRC = { esp: { url: '/esp/stream', rate: null, label: 'ESP barn mic (s3-mic-01)' } };
+let micActive = null;                       // key currently streaming
+
+/* ---------- record the ESP barn mic to a WAV download ---------- */
+async function recordEsp() {
+  const btn = document.getElementById('recBtn');
+  const msg = document.getElementById('micMsg');
+  const secs = 10;
+  btn.disabled = true;
+  btn.textContent = 'RECORDING ' + secs + 's…';
+  try {
+    const st = await fetch('/esp/status', { cache: 'no-store' })
+      .then(r => r.json()).catch(() => null);
+    if (!st || !st.connected) {
+      msg.textContent = 'ESP barn mic not connected — nothing to record.';
+      return;
+    }
+    const res = await fetch('/esp/record?seconds=' + secs);
+    if (!res.ok) {
+      msg.textContent = 'Record failed: ' + (await res.text());
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'esp-' + secs + 's-' + Date.now() + '.wav';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+    msg.textContent = 'Saved ' + secs + 's WAV (' + Math.round(blob.size / 1024)
+      + ' kB) — start listening to hear it back.';
+  } catch (e) {
+    msg.textContent = 'Record failed: ' + e;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'RECORD 10s';
+  }
+}
+
+async function toggleMic() {
+  const btn = document.getElementById('micBtn'), msg = document.getElementById('micMsg');
+  try {
+    if (micActive || PigPulseMic.isLive()) {
+      PigPulseMic.stop();
+      micActive = null;
+      btn.textContent = 'START LISTENING';
+      msg.textContent = 'Stopped.';
+      return;
+    }
+    const s = MIC_SRC.esp;
+    // Don't pretend to listen to an empty pipe — say who is missing.
+    const st = await fetch('/esp/status', { cache: 'no-store' })
+      .then(r => r.json()).catch(() => null);
+    if (!st || !st.connected) {
+      btn.textContent = 'START LISTENING';
+      msg.textContent = 'ESP barn mic not connected — check that s3-mic-01 is '
+        + 'powered and joined to the PigPulse AP, then retry.';
+      return;
+    }
+    const rate = st.rate || 48000;   // trust the server, not a hard-coded guess
+    btn.textContent = 'CONNECTING…';
+    const mode = await PigPulseMic.start(s.url, rate);
+    PigPulseMic.setMuted(muted);
+    micActive = 'esp';
+    btn.textContent = 'STOP — ' + s.label;
+    msg.textContent = 'Listening: ' + s.label + ' (' + mode + ') — ' +
+      (muted ? 'output muted' : 'output on');
+  } catch (e) {
+    micActive = null;
+    btn.textContent = 'START LISTENING';
+    msg.textContent = 'Mic error: ' + (e && e.message ? e.message : e);
+  }
+}
+
+// Server closed the stream (ESP gone >20 s) — reset honestly instead of
+// pretending we are still listening.
+if (window.PigPulseMic) {
+  PigPulseMic.onEnded = function () {
+    if (!micActive) return;
+    micActive = null;
+    document.getElementById('micBtn').textContent = 'START LISTENING';
+    document.getElementById('micMsg').textContent =
+      'Stream ended — device stopped sending.';
+  };
+}
+
+/* ---------- ESP link health ---------- */
+async function pollEsp() {
+  try {
+    const s = await fetch('/esp/status', { cache: 'no-store' }).then(r => r.json());
+    const st = document.getElementById('espState');
+    const d  = document.getElementById('espDetail');
+    st.textContent = s.connected ? 'CONNECTED'
+      : s.stale ? 'STALE — device silent'
+      : (s.accepted ? 'reconnecting…' : 'waiting for device');
+    st.style.color = s.connected ? 'var(--good)'
+      : s.stale ? 'var(--bad)'
+      : 'var(--warn)';
+    const parts = [];
+    if (s.connected && s.peer) parts.push(s.peer);
+    parts.push(s.rate + ' Hz ' + (s.channels === 2 ? 'stereo' : 'mono'));
+    parts.push((s.bytes / 1024).toFixed(0) + ' kB received');
+    parts.push(s.signal
+      ? 'signal ' + s.nonzeroPct + '% non-zero'
+      : 'ALL ZEROS — no audio');
+    if (s.lastMs !== null) parts.push('last ' + s.lastMs + ' ms ago');
+    d.textContent = parts.join('  ·  ');
+    d.style.color = s.signal ? '#f2f6ff' : 'var(--bad)';
+    d.style.fontWeight = s.signal ? '400' : '700';
+  } catch (e) {
+    document.getElementById('espState').textContent = 'no link';
+    document.getElementById('espDetail').textContent = 'status endpoint unreachable';
+  }
+  setTimeout(pollEsp, 1500);
+}
+
+/* ---------- cursor readout ---------- */
+document.getElementById('stage').addEventListener('mousemove', ev => {
+  if (!lastOk || !last.pixels || !ovl.width) return;
+  const rect = ovl.getBoundingClientRect();
+  const fx = (ev.clientX - rect.left) / rect.width;
+  const fy = (ev.clientY - rect.top) / rect.height;
+  const x = clamp(Math.round(fx * (SW - 1)), 0, SW - 1);
+  const y = clamp(Math.round(fy * (SH - 1)), 0, SH - 1);
+  document.getElementById('hudCursor').textContent =
+    'x=' + x + ' y=' + y + '  ' + fmt(last.pixels[y * SW + x]);
+});
+document.getElementById('stage').addEventListener('mouseleave', () => {
+  document.getElementById('hudCursor').textContent = 'move over image';
+});
+
+/* ---------- boot ---------- */
+loadParams();
+updateLegend();
+paintSound();
+
+if (window.PigPulseMic) PigPulseMic.setMuted(muted);
+tick();
+pollEsp();
+</script>
+</body>
+</html>

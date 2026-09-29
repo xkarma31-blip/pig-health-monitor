@@ -1,0 +1,16 @@
+[Unit]
+Description=PigPulse Local PocketBase Server
+After=network.target
+
+[Service]
+Type=simple
+User=pigpulse
+WorkingDirectory=/home/pigpulse/pocketbase
+# Loopback only. The bridge and the health check both talk to 127.0.0.1, so
+# binding 0.0.0.0 only exposed an admin login on the farm AP.
+ExecStart=/home/pigpulse/pocketbase/pocketbase serve --http=127.0.0.1:8090
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

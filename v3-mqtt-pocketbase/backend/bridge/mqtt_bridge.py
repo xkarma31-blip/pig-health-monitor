@@ -171,7 +171,7 @@ def on_message(client, userdata, msg):
             handle_response(device_id, payload)
 
     except json.JSONDecodeError:
-        log.error(f"❌ Invalid JSON on {msg.topic}")
+        log.error(f"❌ Invalid JSON on {msg.topic} | payload={msg.payload[:200]!r}")
     except Exception as e:
         log.error(f"❌ Error processing {msg.topic}: {e}")
 

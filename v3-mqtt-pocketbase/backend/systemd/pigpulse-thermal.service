@@ -1,0 +1,21 @@
+[Unit]
+Description=PigPulse MLX90640 web dashboard + ESP32-S3 mic ingest (Pi 4B)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pigpulse
+WorkingDirectory=/home/pigpulse/thermal-pi
+ExecStart=/home/pigpulse/thermal-pi/.venv/bin/python /home/pigpulse/thermal-pi/web_server.py --port 8080
+Restart=on-failure
+RestartSec=5
+# Only the two directives below are added: both are inert unless the process
+# tries something unusual. ProtectSystem/ProtectHome/ReadWritePaths were
+# deliberately NOT added — a wrong ReadWritePaths makes the unit fail to start
+# and this has no way to be boot-tested from the laptop.
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

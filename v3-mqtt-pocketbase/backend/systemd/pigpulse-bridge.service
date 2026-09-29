@@ -1,0 +1,21 @@
+[Unit]
+Description=PigPulse Local MQTT to PocketBase Bridge
+After=network.target pigpulse-pocketbase.service
+Wants=pigpulse-pocketbase.service
+# Bridge retries forever on its own, but ordering it after the broker means a
+# cold boot does not spend the first 5 s cycle on a refused connection.
+After=mosquitto.service
+Wants=mosquitto.service
+
+[Service]
+Type=simple
+User=pigpulse
+WorkingDirectory=/home/pigpulse/bridge
+ExecStart=/home/pigpulse/thermal-pi/.venv/bin/python /home/pigpulse/bridge/local_bridge.py
+# on-failure, not always: `always` also restarts after a clean exit, which
+# turned every transient import error into a silent 5 s crash loop.
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

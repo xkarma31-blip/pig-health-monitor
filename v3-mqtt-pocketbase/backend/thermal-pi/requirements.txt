@@ -1,0 +1,14 @@
+# PigPulse MLX90640 on Raspberry Pi 4B — runtime deps
+# Official Melexis FIR Python driver (Raspberry Pi hardware I2C: 'I2C-1')
+mlx9064x-driver>=1.0.0
+
+# Pin: mlx driver uses pkg_resources (removed from setuptools>=81 / Python 3.13+)
+setuptools<81
+
+# MQTT & Local Bridge Dependencies
+paho-mqtt>=2.0.0
+requests>=2.31.0
+
+
+# Optional: only if you swap to smbus2-based tooling later
+# smbus2>=0.4.3

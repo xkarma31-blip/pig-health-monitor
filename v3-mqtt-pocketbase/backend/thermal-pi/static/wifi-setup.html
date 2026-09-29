@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PigPulse — Wi-Fi Setup</title>
+<style>
+  :root{--ink:#0b0b14;--panel:#141428;--line:#00e5ff;--acc:#00e5ff;--dim:#b9c2d6}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ink);color:#f2f6ff;
+       font:18px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  .wrap{max-width:940px;margin:0 auto;padding:32px 20px 56px}
+  h1{font-size:40px;line-height:1.15;margin:0 0 6px;color:#fff}
+  h2{font-size:24px;margin:34px 0 14px;color:var(--acc)}
+  p{margin:10px 0}
+  .sub{color:var(--dim);font-size:19px}
+  .card{background:var(--panel);border:3px solid var(--line);border-radius:16px;
+        padding:24px;margin-top:22px}
+  .qr{display:block;width:min(460px,90%);height:auto;margin:6px auto 2px;
+      background:#fff;padding:14px;border-radius:12px}
+  .row{display:flex;flex-wrap:wrap;gap:16px}
+  .box{flex:1 1 260px;background:#0e0e1e;border:2px solid #3a4066;border-radius:12px;padding:16px 18px}
+  .lbl{font-size:16px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;font-weight:700}
+  .val{font-size:30px;font-weight:800;color:#fff;margin-top:4px}
+  a{color:var(--acc);font-weight:700}
+  .links a{display:block;font-size:20px;padding:10px 0;text-decoration:none;
+           border-bottom:1px solid #262a45}
+  .links a:hover{text-decoration:underline}
+  .note{color:var(--dim);font-size:17px}
+  footer{margin-top:34px;color:var(--dim);font-size:17px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Scan to join PigPulse Wi-Fi</h1>
+  <p class="sub">Point your phone camera at the code — no typing.</p>
+
+  <div class="card">
+    <img class="qr" src="wifi-qr.svg" alt="QR code to join PigPulse Wi-Fi">
+    <div class="row">
+      <div class="box"><div class="lbl">Network (SSID)</div><div class="val">PigPulse</div></div>
+      <div class="box"><div class="lbl">Password</div><div class="val">capstone</div></div>
+    </div>
+    <p class="note">Open the code with your camera, or use your phone's
+      <strong>Add network</strong> settings.</p>
+  </div>
+
+  <h2>Once connected — everything in one place</h2>
+  <div class="card links">
+    <a href="https://192.168.69.1:8080/">🌡️ Thermal dashboard &amp; live view</a>
+    <a href="https://192.168.69.1:8080/static/fusion.html">🔥 Thermal + CCTV fusion (heat over camera)</a>
+    <a href="http://192.168.69.1:8091/">📹 CCTV live feed (raw MJPEG)</a>
+    <a href="http://192.168.69.1:8090/">📊 PocketBase (telemetry &amp; admin)</a>
+    <p class="note" style="margin-top:14px">
+      MQTT broker: <strong>192.168.69.1:1883</strong> (anonymous allowed on this LAN).
+      WebSockets: <strong>:9001</strong>.
+    </p>
+  </div>
+
+  <footer>PigPulse · swine health monitoring · node <strong>s3-mic-01</strong></footer>
+</div>
+</body>
+</html>

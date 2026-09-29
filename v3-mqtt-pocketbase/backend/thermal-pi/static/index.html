@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PigPulse MLX90640 — Raspberry Pi 4B</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg0: #05070d;
+      --bg1: #0b1220;
+      --card: rgba(255,255,255,0.075);
+      --card2: rgba(0,0,0,0.30);
+      --line: rgba(255,255,255,0.14);
+      --text: #f5f7fb;
+      --muted: #aeb9ca;
+      --good: #7bf5c6;
+      --warn: #ffd166;
+      --bad: #ff6b6b;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(55, 91, 158, 0.42), transparent 38%),
+        radial-gradient(circle at top right, rgba(187, 72, 121, 0.22), transparent 32%),
+        linear-gradient(135deg, var(--bg1), var(--bg0));
+      min-height: 100vh;
+    }
+    .wrap { width: min(1180px, 100%); margin: 0 auto; padding: 18px; }
+    .top {
+      display: flex; align-items: flex-end; justify-content: space-between;
+      gap: 16px; flex-wrap: wrap; margin-bottom: 14px;
+    }
+    h1 { font-size: clamp(24px, 4vw, 42px); line-height: 1.05; margin: 8px 0 5px; letter-spacing: -0.045em; }
+    .sub { color: var(--muted); font-size: 14px; }
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid var(--line); background: rgba(255,255,255,0.08);
+      border-radius: 999px; padding: 9px 12px; color: #dce6f7; font-size: 13px;
+    }
+    a.pill { text-decoration: none; cursor: pointer; }
+    a.pill:hover { background: rgba(255,255,255,0.16); }
+    .dot { width: 9px; height: 9px; border-radius: 999px; background: var(--warn); box-shadow: 0 0 16px var(--warn); }
+    .dot.ok { background: var(--good); box-shadow: 0 0 16px var(--good); }
+    .dot.bad { background: var(--bad); box-shadow: 0 0 16px var(--bad); }
+    .grid { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 16px; align-items: start; }
+    .panel {
+      background: var(--card); border: 1px solid var(--line); border-radius: 24px;
+      padding: 14px; box-shadow: 0 24px 80px rgba(0,0,0,0.38); backdrop-filter: blur(14px);
+    }
+    .cameraShell {
+      position: relative; width: 100%; max-width: 900px; margin: 0 auto;
+      border-radius: 20px; overflow: hidden; background: #000;
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+    canvas { width: 100%; aspect-ratio: 4/3; display: block; background: #000; }
+    .hud { position: absolute; left: 12px; top: 12px; display: flex; flex-wrap: wrap; gap: 8px; pointer-events: none; }
+    .hud span {
+      background: rgba(0,0,0,0.48); border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 999px; padding: 6px 9px; font-size: 12px; color: #edf3ff;
+    }
+    .legend {
+      display: grid; grid-template-columns: auto 1fr auto; gap: 10px;
+      align-items: center; margin: 12px auto 0; max-width: 900px;
+      color: var(--muted); font-size: 12px;
+    }
+    .bar {
+      height: 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.22);
+      background: linear-gradient(90deg, #080017, #240b55, #8d164f, #e03b32, #ff9a1f, #fff36d, #ffffff);
+    }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+    .box {
+      background: var(--card2); border-radius: 16px; padding: 11px 10px;
+      border: 1px solid rgba(255,255,255,0.10); min-height: 76px;
+    }
+    .label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 5px; }
+    .value { display: block; font-size: clamp(18px, 3vw, 25px); font-weight: 800; letter-spacing: -0.03em; }
+    .small { color: #9eabba; font-size: 12px; margin-top: 4px; }
+    .verdict-NORMAL { color: var(--good); }
+    .verdict-FEVER, .verdict-OUT_OF_BAND { color: var(--warn); }
+    .verdict-HYPERTHERMIA { color: var(--bad); }
+    .controls { display: grid; gap: 12px; }
+    .controlTitle { font-weight: 800; font-size: 16px; margin: 2px 0 0; }
+    .control {
+      background: var(--card2); border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 16px; padding: 12px; text-align: left;
+    }
+    .control label {
+      display: flex; justify-content: space-between; gap: 12px;
+      color: #dce5f3; font-size: 13px; margin-bottom: 8px;
+    }
+    .control label strong { color: #fff; }
+    select, button, input[type="range"] { width: 100%; }
+    select, button {
+      background: rgba(255,255,255,0.10); color: #fff;
+      border: 1px solid rgba(255,255,255,0.16); border-radius: 12px;
+      padding: 10px 11px; font-weight: 700; outline: none;
+    }
+    option { background: #101827; }
+    button { cursor: pointer; transition: 0.15s ease; }
+    button:hover { background: rgba(255,255,255,0.18); }
+    .buttonRow { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .toggleLine {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; color: #dce5f3; font-size: 13px;
+    }
+    .toggleLine input { transform: scale(1.15); }
+    .status { margin-top: 12px; color: var(--muted); font-size: 13px; min-height: 20px; text-align: center; }
+    .micHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .micStatus { font-size: 16px; font-weight: 800; }
+    .micSub2 { color: var(--muted); font-size: 13px; margin-top: 3px; line-height: 1.35; word-break: break-word; }
+    .vu {
+      height: 15px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.22);
+      background: rgba(0,0,0,0.45); overflow: hidden;
+    }
+    .vuf {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--good), var(--warn) 70%, var(--bad));
+      transition: width 0.25s linear;
+    }
+    .vuRow {
+      display: grid; grid-template-columns: 16px minmax(0,1fr) 44px;
+      gap: 8px; align-items: center; margin-top: 8px;
+      font-size: 14px; font-weight: 700; color: #dce5f3;
+    }
+    .vuRow span:last-child { text-align: right; }
+    .micMode { color: var(--muted); font-size: 13px; margin-top: 9px; line-height: 1.45; }
+    .micErr {
+      color: var(--bad); font-weight: 700; font-size: 14px; margin-top: 8px;
+      border: 1px solid rgba(255,107,107,0.5); background: rgba(255,107,107,0.12);
+      border-radius: 10px; padding: 8px 10px; display: none; word-break: break-word;
+    }
+    button.liveOn {
+      background: rgba(255,107,107,0.28); border-color: var(--bad); color: #ffd9d9;
+    }
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
+      .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 650px) {
+      .wrap { padding: 10px; }
+      .panel { padding: 10px; border-radius: 20px; }
+      .stats { grid-template-columns: repeat(2, 1fr); }
+      .controls { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h1>PigPulse Thermal — Pi 4B</h1>
+        <div class="sub">MLX90640 32×24 • I²C pin 3/5 • Melexis driver • live browser enhance</div>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <a class="pill" href="/static/fusion.html">🔥 Thermal + CCTV fusion →</a>
+        <a class="pill" href="/static/fusion.html#mic">ESP32-S3 barn mic — listen &amp; record →</a>
+        <div class="pill"><span class="dot" id="liveDot"></span><span id="liveText">Connecting…</span></div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="panel">
+        <div class="cameraShell">
+          <canvas id="thermal" width="512" height="384"></canvas>
+          <div class="hud">
+            <span id="hudRange">Range --</span>
+            <span id="hudCursor">Move over image</span>
+          </div>
+        </div>
+
+        <div class="legend">
+          <span id="legendMin">-- C</span>
+          <div class="bar" id="legendBar"></div>
+          <span id="legendMax">-- C</span>
+        </div>
+
+        <div class="stats">
+          <div class="box"><span class="label">Center (pig body)</span><span class="value" id="center">--</span><div class="small" id="verdict">--</div></div>
+          <div class="box"><span class="label">Minimum</span><span class="value" id="min">--</span><div class="small" id="minPos">--</div></div>
+          <div class="box"><span class="label">Maximum</span><span class="value" id="max">--</span><div class="small" id="maxPos">--</div></div>
+          <div class="box"><span class="label">Average</span><span class="value" id="avg">--</span><div class="small">all 768 pixels</div></div>
+          <div class="box"><span class="label">Ambient</span><span class="value" id="ambient">--</span><div class="small">sensor Ta</div></div>
+          <div class="box"><span class="label">Speed</span><span class="value" id="fps">--</span><div class="small" id="readMs">--</div></div>
+        </div>
+
+        <div class="status" id="status">Starting…</div>
+      </div>
+
+      <div class="panel controls">
+        <div class="controlTitle">Mic — INMP441</div>
+
+        <div class="control">
+          <div class="micHead">
+            <div>
+              <div class="micStatus" id="micText">Checking mic…</div>
+              <div class="micSub2" id="micSub">—</div>
+            </div>
+            <span class="dot" id="micDot"></span>
+          </div>
+          <div class="vuRow">
+            <span>L</span><div class="vu"><div class="vuf" id="micBarL"></div></div>
+            <span id="micValL">0%</span>
+          </div>
+          <div class="vuRow">
+            <span>R</span><div class="vu"><div class="vuf" id="micBarR"></div></div>
+            <span id="micValR">0%</span>
+          </div>
+          <div class="micMode" id="micMode">—</div>
+          <div class="micErr" id="micErr"></div>
+          <div class="buttonRow" style="margin-top:10px;">
+            <button type="button" id="micLiveBtn" onclick="micToggleLive()">START LISTENING</button>
+            <button type="button" id="micRecBtn" onclick="micRecord(10)">RECORD 10 s</button>
+          </div>
+          <div class="small" id="micRec" style="margin-top:8px;">Idle</div>
+        </div>
+
+        <div class="controlTitle" style="margin-top:10px;">Image Controls</div>
+
+        <div class="control">
+          <label><strong>Palette</strong><span id="paletteName">Iron</span></label>
+          <select id="palette" onchange="setPalette(this.value)">
+            <option value="iron" selected>Iron / Thermal</option>
+            <option value="rainbow">Rainbow</option>
+            <option value="arctic">Arctic</option>
+            <option value="gray">Gray</option>
+          </select>
+        </div>
+
+        <div class="control">
+          <label><strong>Interpolation</strong><span id="interpName">Smooth</span></label>
+          <div class="buttonRow">
+            <button type="button" onclick="setInterpolation(true)" id="smoothBtn">Smooth</button>
+            <button type="button" onclick="setInterpolation(false)" id="pixelBtn">Pixel</button>
+          </div>
+        </div>
+
+        <div class="control">
+          <label><strong>Detail boost</strong><span id="detailVal">0.35</span></label>
+          <input id="detail" type="range" min="0" max="1.2" value="0.35" step="0.05" oninput="setDetail(this.value)">
+        </div>
+
+        <div class="control">
+          <label><strong>Frame smoothing</strong><span id="smoothVal">0.35</span></label>
+          <input id="temporal" type="range" min="0" max="0.85" value="0.35" step="0.05" oninput="setTemporal(this.value)">
+        </div>
+
+        <div class="control">
+          <div class="toggleLine">
+            <span><strong>Enhanced contrast</strong><br><span class="small">3%–97% range</span></span>
+            <input id="contrast" type="checkbox" checked onchange="redrawLast()">
+          </div>
+        </div>
+
+        <div class="control">
+          <div class="toggleLine">
+            <span><strong>Hot/cold markers</strong><br><span class="small">Max/min crosshairs</span></span>
+            <input id="markers" type="checkbox" checked onchange="redrawLast()">
+          </div>
+        </div>
+
+        <div class="control">
+          <button type="button" onclick="downloadCsv()">Download Current Frame CSV</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script src="/static/mic.js"></script>
+<script>
+const SENSOR_W = 32, SENSOR_H = 24, OUT_W = 512, OUT_H = 384, FETCH_DELAY_MS = 85;
+const canvas = document.getElementById('thermal');
+canvas.width = OUT_W; canvas.height = OUT_H;
+const ctx = canvas.getContext('2d', { alpha: false });
+const imageData = ctx.createImageData(OUT_W, OUT_H);
+let palette = 'iron', useSmoothInterpolation = true, detailBoost = 0.35, temporalAmount = 0.35;
+let temporalPixels = null, lastData = null, isFetching = false;
+
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+function lerp(a, b, t) { return a + (b - a) * t; }
+function fmtC(v) { return Number(v).toFixed(2) + ' C'; }
+
+function setPalette(v) {
+  palette = v;
+  document.getElementById('paletteName').textContent = document.getElementById('palette').selectedOptions[0].textContent;
+  updateLegendGradient(); redrawLast();
+}
+function setInterpolation(v) {
+  useSmoothInterpolation = v;
+  document.getElementById('interpName').textContent = v ? 'Smooth' : 'Pixel';
+  document.getElementById('smoothBtn').style.opacity = v ? '1' : '0.55';
+  document.getElementById('pixelBtn').style.opacity = v ? '0.55' : '1';
+  redrawLast();
+}
+function setDetail(v) { detailBoost = Number(v); document.getElementById('detailVal').textContent = detailBoost.toFixed(2); redrawLast(); }
+function setTemporal(v) { temporalAmount = Number(v); document.getElementById('smoothVal').textContent = temporalAmount.toFixed(2); }
+
+function getPixel(pixels, x, y) {
+  x = clamp(x, 0, SENSOR_W - 1); y = clamp(y, 0, SENSOR_H - 1);
+  return pixels[y * SENSOR_W + x];
+}
+function sampleBilinear(pixels, x, y) {
+  const x0 = Math.floor(x), y0 = Math.floor(y);
+  const x1 = Math.min(x0 + 1, SENSOR_W - 1), y1 = Math.min(y0 + 1, SENSOR_H - 1);
+  const fx = x - x0, fy = y - y0;
+  const p00 = getPixel(pixels, x0, y0), p10 = getPixel(pixels, x1, y0);
+  const p01 = getPixel(pixels, x0, y1), p11 = getPixel(pixels, x1, y1);
+  return lerp(lerp(p00, p10, fx), lerp(p01, p11, fx), fy);
+}
+function applyTemporalSmoothing(newPixels) {
+  if (!temporalPixels || temporalPixels.length !== newPixels.length) {
+    temporalPixels = newPixels.slice(); return temporalPixels;
+  }
+  const alpha = clamp(temporalAmount, 0, 1);
+  for (let i = 0; i < newPixels.length; i++)
+    temporalPixels[i] = temporalPixels[i] + alpha * (newPixels[i] - temporalPixels[i]);
+  return temporalPixels;
+}
+function enhanceDetails(pixels) {
+  if (detailBoost <= 0.001) return pixels;
+  const out = new Array(pixels.length);
+  for (let y = 0; y < SENSOR_H; y++) {
+    for (let x = 0; x < SENSOR_W; x++) {
+      const i = y * SENSOR_W + x, c = pixels[i];
+      const n = (getPixel(pixels, x - 1, y) + getPixel(pixels, x + 1, y) +
+                 getPixel(pixels, x, y - 1) + getPixel(pixels, x, y + 1)) * 0.25;
+      out[i] = c + detailBoost * (c - n);
+    }
+  }
+  return out;
+}
+function percentile(values, p) {
+  const sorted = values.slice().sort((a, b) => a - b);
+  const idx = clamp(Math.round((sorted.length - 1) * p), 0, sorted.length - 1);
+  return sorted[idx];
+}
+function getDisplayRange(pixels, rawMin, rawMax) {
+  if (document.getElementById('contrast').checked) {
+    let lo = percentile(pixels, 0.03), hi = percentile(pixels, 0.97);
+    if (hi - lo < 0.5) { lo = rawMin; hi = rawMax; }
+    return [lo, hi];
+  }
+  return [rawMin, rawMax];
+}
+function colorStopsForPalette(name) {
+  if (name === 'gray') return [[0.00, [0,0,0]], [1.00, [255,255,255]]];
+  if (name === 'arctic') return [
+    [0.00, [1,10,35]], [0.25, [0,80,160]], [0.50, [0,210,255]],
+    [0.75, [170,255,230]], [1.00, [255,255,255]]];
+  if (name === 'rainbow') return [
+    [0.00, [35,0,80]], [0.16, [0,0,255]], [0.33, [0,180,255]],
+    [0.50, [0,255,80]], [0.66, [255,255,0]], [0.83, [255,90,0]], [1.00, [255,255,255]]];
+  return [
+    [0.00, [0,0,12]], [0.18, [34,6,75]], [0.36, [132,20,78]],
+    [0.55, [224,58,48]], [0.72, [255,151,31]], [0.88, [255,243,105]], [1.00, [255,255,255]]];
+}
+function thermalColor(t) {
+  t = clamp(t, 0, 1);
+  const stops = colorStopsForPalette(palette);
+  for (let i = 0; i < stops.length - 1; i++) {
+    const a = stops[i], b = stops[i + 1];
+    if (t >= a[0] && t <= b[0]) {
+      const k = (t - a[0]) / (b[0] - a[0]);
+      return [lerp(a[1][0], b[1][0], k), lerp(a[1][1], b[1][1], k), lerp(a[1][2], b[1][2], k)];
+    }
+  }
+  return stops[stops.length - 1][1];
+}
+function updateLegendGradient() {
+  const stops = colorStopsForPalette(palette)
+    .map(s => `rgb(${s[1][0]},${s[1][1]},${s[1][2]}) ${Math.round(s[0] * 100)}%`).join(',');
+  document.getElementById('legendBar').style.background = `linear-gradient(90deg, ${stops})`;
+}
+function drawMarker(sensorX, sensorY, label, color) {
+  const x = (sensorX / (SENSOR_W - 1)) * OUT_W;
+  const y = (sensorY / (SENSOR_H - 1)) * OUT_H;
+  ctx.save();
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 2;
+  ctx.shadowColor = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 5;
+  ctx.beginPath();
+  ctx.moveTo(x - 12, y); ctx.lineTo(x + 12, y);
+  ctx.moveTo(x, y - 12); ctx.lineTo(x, y + 12);
+  ctx.stroke();
+  ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.stroke();
+  ctx.font = 'bold 13px system-ui, sans-serif';
+  ctx.fillText(label, clamp(x + 9, 4, OUT_W - 90), clamp(y - 9, 14, OUT_H - 4));
+  ctx.restore();
+}
+function drawThermal(data) {
+  const rawPixels = data.pixels;
+  let pixels = applyTemporalSmoothing(rawPixels);
+  pixels = enhanceDetails(pixels);
+  const range = getDisplayRange(pixels, data.min, data.max);
+  const displayMin = range[0], displayMax = range[1];
+  const span = Math.max(0.25, displayMax - displayMin);
+  for (let py = 0; py < OUT_H; py++) {
+    const sySmooth = (py / (OUT_H - 1)) * (SENSOR_H - 1);
+    const syPixel = Math.floor((py / OUT_H) * SENSOR_H);
+    for (let px = 0; px < OUT_W; px++) {
+      const sxSmooth = (px / (OUT_W - 1)) * (SENSOR_W - 1);
+      const sxPixel = Math.floor((px / OUT_W) * SENSOR_W);
+      const temp = useSmoothInterpolation
+        ? sampleBilinear(pixels, sxSmooth, sySmooth)
+        : getPixel(pixels, sxPixel, syPixel);
+      const c = thermalColor((temp - displayMin) / span);
+      const o = (py * OUT_W + px) * 4;
+      imageData.data[o] = c[0]; imageData.data[o + 1] = c[1];
+      imageData.data[o + 2] = c[2]; imageData.data[o + 3] = 255;
+    }
+  }
+  ctx.putImageData(imageData, 0, 0);
+  if (document.getElementById('markers').checked) {
+    drawMarker(data.maxX, data.maxY, 'HOT ' + fmtC(data.max), '#ffffff');
+    drawMarker(data.minX, data.minY, 'COLD ' + fmtC(data.min), '#62d9ff');
+  }
+  document.getElementById('legendMin').textContent = displayMin.toFixed(1) + ' C';
+  document.getElementById('legendMax').textContent = displayMax.toFixed(1) + ' C';
+  document.getElementById('hudRange').textContent =
+    'Display range ' + displayMin.toFixed(1) + '–' + displayMax.toFixed(1) + ' C';
+}
+function redrawLast() { if (lastData) drawThermal(lastData); }
+function updateNumbers(data) {
+  document.getElementById('center').textContent = fmtC(data.center);
+  document.getElementById('min').textContent = fmtC(data.min);
+  document.getElementById('max').textContent = fmtC(data.max);
+  document.getElementById('avg').textContent = fmtC(data.avg);
+  document.getElementById('ambient').textContent = fmtC(data.ambient);
+  document.getElementById('fps').textContent = (data.fps || 0).toFixed(1) + ' fps';
+  document.getElementById('readMs').textContent = (data.readMs || 0) + ' ms read time';
+  document.getElementById('minPos').textContent = 'x=' + data.minX + ', y=' + data.minY;
+  document.getElementById('maxPos').textContent = 'x=' + data.maxX + ', y=' + data.maxY;
+  const v = document.getElementById('verdict');
+  if (data.verdict) {
+    v.textContent = data.verdict;
+    v.className = 'small verdict-' + data.verdict;
+  }
+  document.getElementById('status').textContent =
+    'Frame ' + data.frame + ' • updated ' + new Date().toLocaleTimeString();
+  document.getElementById('liveDot').className = 'dot ok';
+  document.getElementById('liveText').textContent = 'Live';
+}
+async function updateFrame() {
+  if (isFetching) return;
+  isFetching = true;
+  try {
+    const res = await fetch('/data?ts=' + Date.now(), { cache: 'no-store' });
+    const data = await res.json();
+    if (!data.ok) {
+      document.getElementById('status').textContent = data.error || 'Sensor not ready';
+      document.getElementById('liveDot').className = 'dot bad';
+      document.getElementById('liveText').textContent = 'Sensor error';
+      return;
+    }
+    lastData = data;
+    drawThermal(data);
+    updateNumbers(data);
+  } catch (e) {
+    document.getElementById('status').textContent = 'Web update error: ' + e;
+    document.getElementById('liveDot').className = 'dot bad';
+    document.getElementById('liveText').textContent = 'Disconnected';
+  } finally {
+    isFetching = false;
+    setTimeout(updateFrame, FETCH_DELAY_MS);
+  }
+}
+canvas.addEventListener('mousemove', (ev) => {
+  if (!lastData) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = clamp((ev.clientX - rect.left) / rect.width, 0, 0.9999);
+  const y = clamp((ev.clientY - rect.top) / rect.height, 0, 0.9999);
+  const sx = Math.floor(x * SENSOR_W), sy = Math.floor(y * SENSOR_H);
+  document.getElementById('hudCursor').textContent =
+    'x=' + sx + ' y=' + sy + ' • ' + fmtC(getPixel(lastData.pixels, sx, sy));
+});
+canvas.addEventListener('mouseleave', () => {
+  document.getElementById('hudCursor').textContent = 'Move over image';
+});
+function downloadCsv() { window.location.href = '/csv?ts=' + Date.now(); }
+
+/* ---------- Mic panel — shared client in /static/mic.js ---------- */
+function micSetModeText(mode) {
+  const el = document.getElementById('micMode');
+  if (!window.PigPulseMic) {
+    el.textContent = 'Mic client not loaded (/static/mic.js) — thermal unaffected';
+    return;
+  }
+  el.textContent =
+    mode === 'worklet'
+      ? 'Playback: AudioWorklet (separate audio thread)'
+      : mode === 'script-processor'
+        ? 'Playback: ScriptProcessor fallback (plain HTTP origin)'
+        : PigPulseMic.secure()
+          ? 'Ready — AudioWorklet available (secure context)'
+          : 'Plain HTTP origin — will use ScriptProcessor fallback (no HTTPS needed)';
+}
+async function micRefresh() {
+  if (!window.PigPulseMic) return;
+  const t = document.getElementById('micText'),
+        sub = document.getElementById('micSub'),
+        dot = document.getElementById('micDot'),
+        err = document.getElementById('micErr'),
+        rec = document.getElementById('micRec'),
+        btn = document.getElementById('micLiveBtn'),
+        recBtn = document.getElementById('micRecBtn');
+  try {
+    const s = await fetch('/esp/status', {cache: 'no-store'}).then(r => r.json());
+    const live = s.connected && s.signal;
+    dot.className = 'dot ' + (live ? 'ok' : (s.socket ? '' : 'bad'));
+    t.textContent = live ? 'ESP32-S3 barn mic live'
+      : (s.socket ? 'ESP connected, no signal' : 'ESP32-S3 not connected');
+    sub.textContent = `s3-mic-01 · ${s.rate} Hz · peer ${s.peer || '—'}`;
+    // Ingest exposes a single signal-quality figure (nonzero sample % over a
+    // short rolling window), not per-channel levels.
+    const pl = Math.round(s.nonzeroPct || 0);
+    document.getElementById('micBarL').style.width = pl + '%';
+    document.getElementById('micBarR').style.width = pl + '%';
+    document.getElementById('micValL').textContent = pl + '%';
+    document.getElementById('micValR').textContent = pl + '%';
+    if (s.bindError) { err.style.display = 'block'; err.textContent = s.bindError; }
+    else if (s.stale) { err.style.display = 'block'; err.textContent = 'TCP socket open but no data arriving (stale).'; }
+    else { err.style.display = 'none'; }
+    rec.textContent = 'Idle';
+    recBtn.disabled = !live;
+    btn.disabled = !live;
+    btn.textContent = PigPulseMic.isLive() ? 'STOP LISTENING' : 'START LISTENING';
+    btn.classList.toggle('liveOn', PigPulseMic.isLive());
+  } catch (e) {
+    dot.className = 'dot bad';
+    t.textContent = 'Mic: server unreachable';
+    sub.textContent = String(e);
+  }
+}
+
+async function micToggleLive() {
+  if (!window.PigPulseMic) return;
+  const btn = document.getElementById('micLiveBtn'),
+        err = document.getElementById('micErr');
+  btn.disabled = true;
+  err.style.display = 'none';
+  try {
+    if (PigPulseMic.isLive()) {
+      PigPulseMic.stop();
+      btn.textContent = 'START LISTENING';
+      btn.classList.remove('liveOn');
+      micSetModeText(null);
+    } else {
+      const mode = await PigPulseMic.start("/esp/stream");
+      btn.textContent = 'STOP LISTENING';
+      btn.classList.add('liveOn');
+      micSetModeText(mode);
+    }
+  } catch (e) {
+    err.style.display = 'block';
+    err.textContent = 'Live start failed: ' + e;
+    btn.textContent = 'START LISTENING';
+    btn.classList.remove('liveOn');
+  } finally {
+    btn.disabled = false;
+    micRefresh();
+  }
+}
+function micRecord(n) {
+  const rec = document.getElementById('micRec');
+  rec.textContent = 'Recording ' + n + ' s — download starts when done.';
+  rec.classList.add('busy');
+  window.location.href = '/esp/record?seconds=' + n + '&ts=' + Date.now();
+  setTimeout(() => { rec.classList.remove('busy'); micRefresh(); }, (n + 3) * 1000);
+}
+if (window.PigPulseMic) {
+  setInterval(micRefresh, 700);
+  micRefresh();
+  window.PigPulseMic.onEnded = () => {
+    const btn = document.getElementById('micLiveBtn');
+    btn.textContent = 'START LISTENING';
+    btn.classList.remove('liveOn');
+    micSetModeText(null);
+    micRefresh();
+  };
+  window.addEventListener('beforeunload', () => PigPulseMic.stop());
+} else {
+  document.getElementById('micText').textContent = 'Mic client failed to load';
+  document.getElementById('micSub').textContent =
+    '/static/mic.js missing — thermal unaffected';
+}
+micSetModeText(null);
+/* ---------- end mic panel ---------- */
+
+setInterpolation(true);
+setPalette('iron');
+updateFrame();
+</script>
+</body>
+</html>

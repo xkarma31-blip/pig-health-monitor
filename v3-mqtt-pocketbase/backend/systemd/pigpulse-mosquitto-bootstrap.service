@@ -1,0 +1,15 @@
+[Unit]
+Description=PigPulse MQTT broker bootstrap (offline staged debs)
+Documentation=file:/home/pigpulse/scripts/bootstrap_mosquitto.sh
+After=local-fs.target
+Before=pigpulse-bridge.service pigpulse-pocketbase.service
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash /home/pigpulse/scripts/bootstrap_mosquitto.sh
+RemainAfterExit=yes
+StandardOutput=append:/var/log/pigpulse-mosquitto-bootstrap.log
+StandardError=append:/var/log/pigpulse-mosquitto-bootstrap.log
+
+[Install]
+WantedBy=multi-user.target

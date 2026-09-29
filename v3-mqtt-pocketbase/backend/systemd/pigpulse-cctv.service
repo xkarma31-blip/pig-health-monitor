@@ -1,0 +1,17 @@
+[Unit]
+Description=PigPulse Tapo CCTV MJPEG feed (127.0.0.1:8091, proxied by thermal-pi)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pigpulse
+WorkingDirectory=/home/pigpulse/cctv
+# stdlib only (fcntl/array not needed) -> system python is fine and keeps this
+# unit independent of the thermal venv.
+ExecStart=/usr/bin/python3 /home/pigpulse/cctv/tapo_mjpeg_server.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
