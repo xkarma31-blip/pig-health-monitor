@@ -1,0 +1,37 @@
+PigPulse DASHBOARD DECODER (what each number means)
+
+WORKING vs BROKEN at a glance:
+Body/Max/Min/Avg: move with your hand = working. Frozen 0.0 = no frames.
+Ambient: room temp = working. Exactly 25.0 = placeholder, no frame yet.
+Canvas: heat blobs = working. Pure black = no data.
+Debug card LINK OK + rising frames = healthy. Anything else = see below.
+Audio: jumps with sound = working. NO MIC = dead input.
+Uptime: climbing = stable. Resets to 0 = reboot loop (check power).
+
+THERMAL:
+Body = hottest 3x3 pixels, sun-corrected. Hand in front = 30s C. Empty room = near ambient, never 0.0.
+Maximum + x,y = liveness test. Wave hand, coordinates MUST move.
+Minimum sits near ambient. If min = max, sensor stares at one surface.
+Debug card: LINK OK = healthy. FOUND NO FRAMES = wired but unreadable (pull-ups suspect). NOT FOUND = power or swapped SDA/SCL.
+Frame age: under 1s = fresh. "never" = no frame since boot.
+
+AUDIO:
+Level % = loudness only. Quiet = single digits. Clap = spike.
+Wave: flat center line in silence is CORRECT. Jagged = sound. Red flat = dead input.
+Cough count: +1 per loud burst. Test = 3 spaced claps, expect +3. It hears, it does not diagnose (no AI model aboard yet).
+Distress Hz: ignore unless level meter is active. Wandering numbers in silence mean nothing.
+
+SYSTEM:
+Uptime resets = power sag. Suspect 9V block or loose USB first.
+Battery ~0.2V on bench = floating pin, expected until divider built.
+Heap = hundreds of KB and flat. Falling = leak.
+LAN = - until home WiFi saved. Dashboard AP is always 192.168.4.1.
+
+SPEED (new):
+stats XXms = phone-to-board round trip. Under 200ms = healthy link.
+Thermal XXms = full frame download time. Big number = weak WiFi.
+Frame age = freshness of the thermal data itself.
+
+TWO DECISIVE TESTS:
+1. Hand wave: body rises, hotspot moves, canvas blooms.
+2. Triple clap: level spikes, wave draws, cough +3.

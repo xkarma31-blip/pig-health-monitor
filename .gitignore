@@ -64,3 +64,14 @@ builds/
 **/firstboot.log
 **/__pycache__/
 **/*.pyc
+
+# === Gaps found in the 2026-09-29 repo audit ===
+# Each of these was untracked-but-not-ignored, i.e. one `git add .` from being
+# committed.
+.planning/
+**/dist_new/
+docs/*.mp3
+docs/**/*.mp3
+docs/*.pdf
+docs/*.xlsx
+**/apktool_out/

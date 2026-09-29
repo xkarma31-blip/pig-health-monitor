@@ -9,7 +9,10 @@ window.PIGPULSE_CONFIG = {
   researchTitle: 'Multimodal TinyML Acoustic Safeguard for Open-Air Swine Farming',
 
   /** Canonical production app (Expo web) */
-  appUrl: 'https://pig-health-monitor.vercel.app',
+  appUrl: 'https://pig-health-monitor.vercel.app/app',
+
+  /** Local preview dashboard; selected only on localhost by bootstrap.js. */
+  localAppUrl: 'http://localhost:8094/app',
 
   /**
    * Marketing / portfolio host (this HTML landing).

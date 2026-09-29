@@ -7,11 +7,15 @@ Usage:
   python3 scripts/health_check.py           # human table
   python3 scripts/health_check.py --json    # JSON for AI parsing
 """
-import sys, json, socket, time, subprocess, http.client, urllib.request, urllib.error, shutil
+import os, sys, json, socket, time, subprocess, http.client, urllib.request, urllib.error, shutil
 
 PB_URL="http://127.0.0.1:8090"
-PB_ADMIN_EMAIL="admin@pigpulse.local"
-PB_ADMIN_PASS="admin123"
+# No default on purpose: a hard-coded admin password in source is how
+# admin123 ended up in git in the first place. Export PB_EMAIL/PB_PASSWORD,
+# or let the PB checks report "skipped: no credentials".
+PB_ADMIN_EMAIL=os.environ.get("PB_EMAIL","")
+PB_ADMIN_PASS=os.environ.get("PB_PASSWORD","")
+HAVE_PB_CREDS=bool(PB_ADMIN_EMAIL and PB_ADMIN_PASS)
 
 def _is_pi():
     """Pi rig has no Docker/AP overlap with the laptop rig (2026-09-28)."""

@@ -6,9 +6,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { SensorReading } from '../data/mockSensors';
 
 const firebaseConfig = {
-  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || 'AIzaSyDGPyc_Yz5eGoiszQpj3YNB46G01xH_QDs',
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY || '<REMOVED-2026-09-29>',
   authDomain: 'studio-1248778633-99f62.firebaseapp.com',
-  databaseURL: 'https://studio-1248778633-99f62-default-rtdb.firebaseio.com',
+  databaseURL: '<REMOVED-2026-09-29>',
   projectId: 'studio-1248778633-99f62',
   storageBucket: 'studio-1248778633-99f62.firebasestorage.app',
   messagingSenderId: '362832626962',

@@ -1,0 +1,42 @@
+[
+  {
+    "id": "01-title",
+    "prompt": "A modern IoT sensor device mounted in a pig pen, thermal camera lens glowing blue, clean white plastic enclosure, LED status light, professional product photography, studio lighting, 4K quality",
+    "filename": "01-title.png"
+  },
+  {
+    "id": "02-pig-farm",
+    "prompt": "Healthy pink pigs in a clean open-air tropical pig pen, green vegetation in background, morning sunlight, wide angle view, photorealistic, 4K quality",
+    "filename": "02-pig-farm.png"
+  },
+  {
+    "id": "03-thermal-camera",
+    "prompt": "Close-up of MLX90640 thermal camera sensor, 32x24 pixel infrared array visualization, heat map colors from blue to red, technical photography, 4K quality",
+    "filename": "03-thermal-camera.png"
+  },
+  {
+    "id": "04-fever-alert",
+    "prompt": "Digital dashboard showing pig body temperature 40.5\u00b0C, red fever alert warning, thermal image overlay, modern UI design, dark theme, 4K quality",
+    "filename": "04-fever-alert.png"
+  },
+  {
+    "id": "05-audio-monitoring",
+    "prompt": "Two small MEMS microphones, sound wave visualization, audio frequency spectrum, cough detection concept, technical illustration style, 4K quality",
+    "filename": "05-audio-monitoring.png"
+  },
+  {
+    "id": "06-battery",
+    "prompt": "3.7V lithium polymer battery, 2000mAh, week-long battery life concept, power management circuit, green energy icon, product photography, 4K quality",
+    "filename": "06-battery.png"
+  },
+  {
+    "id": "07-tropical-farm",
+    "prompt": "Open-air tropical pig farm, solar panels, rain clouds in distance, humid environment, pig pen with smart device mounted, photorealistic, 4K quality",
+    "filename": "07-tropical-farm.png"
+  },
+  {
+    "id": "08-end-screen",
+    "prompt": "Text logo 'PigPulse' in modern green font, tagline 'Healthy pigs, happy farmers', white background, clean minimalist design, brand identity, 4K quality",
+    "filename": "08-end-screen.png"
+  }
+]

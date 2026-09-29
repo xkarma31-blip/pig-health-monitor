@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 500" width="600" height="500">
+  <defs>
+    <radialGradient id="good" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#22c55e" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#22c55e" stop-opacity="0.05"/>
+    </radialGradient>
+    <radialGradient id="ok" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.05"/>
+    </radialGradient>
+    <radialGradient id="poor" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ef4444" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#ef4444" stop-opacity="0.05"/>
+    </radialGradient>
+  </defs>
+  
+  <!-- Title -->
+  <text x="300" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#1e293b">AUDIO COVERAGE — Single Microphone</text>
+  
+  <!-- Pen area -->
+  <rect x="50" y="50" width="400" height="400" fill="none" stroke="#475569" stroke-width="2"/>
+  <text x="50" y="45" font-size="10" fill="#64748b">4m × 4m Pen</text>
+  
+  <!-- Coverage circles (realistic audio falloff) -->
+  <!-- Good: 0-2m (25% of pen) -->
+  <circle cx="250" cy="250" r="100" fill="url(#good)" stroke="#22c55e" stroke-width="2" stroke-dasharray="5,5"/>
+  <circle cx="250" cy="250" r="100" fill="none" stroke="#22c55e" stroke-width="1" stroke-dasharray="5,5"/>
+  
+  <!-- OK: 2-3m (additional 25%) -->
+  <circle cx="250" cy="250" r="150" fill="url(#ok)" stroke="#f59e0b" stroke-width="2" stroke-dasharray="5,5"/>
+  
+  <!-- Poor: 3-4m (outer 25%) -->
+  <circle cx="250" cy="250" r="200" fill="url(#poor)" stroke="#ef4444" stroke-width="2" stroke-dasharray="5,5"/>
+  
+  <!-- Center mic -->
+  <circle cx="250" cy="250" r="8" fill="#1e293b"/>
+  <text x="250" y="255" text-anchor="middle" font-size="9" fill="#fff" font-weight="bold">MIC</text>
+  
+  <!-- Labels -->
+  <text x="200" y="220" font-size="11" fill="#22c55e" font-weight="bold">✅ Good</text>
+  <text x="200" y="205" font-size="9" fill="#22c55e">&lt;2m | Direct path</text>
+  
+  <text x="310" y="180" font-size="11" fill="#f59e0b" font-weight="bold">⚠️ OK</text>
+  <text x="310" y="165" font-size="9" fill="#f59e0b">2-3m | Some noise</text>
+  
+  <text x="370" y="130" font-size="11" fill="#ef4444" font-weight="bold">❌ Poor</text>
+  <text x="370" y="115" font-size="9" fill="#ef4444">3-4m | Occlusion</text>
+  
+  <!-- Obstacles -->
+  <rect x="80" y="320" width="80" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1" rx="3"/>
+  <text x="120" y="340" text-anchor="middle" font-size="9" fill="#475569">Feeder</text>
+  
+  <rect x="350" y="80" width="60" height="30" fill="#e2e8f0" stroke="#94a3b8" stroke-width="1" rx="3"/>
+  <text x="380" y="100" text-anchor="middle" font-size="9" fill="#475569">Waterer</text>
+  
+  <!-- Pigs -->
+  <circle cx="150" cy="180" r="12" fill="#f97316" opacity="0.8"/>
+  <text x="150" y="185" text-anchor="middle" font-size="8" fill="#fff">P</text>
+  
+  <circle cx="320" cy="300" r="12" fill="#f97316" opacity="0.8"/>
+  <text x="320" y="305" text-anchor="middle" font-size="8" fill="#fff">P</text>
+  
+  <circle cx="380" cy="150" r="12" fill="#f97316" opacity="0.8"/>
+  <text x="380" y="155" text-anchor="middle" font-size="8" fill="#fff">P</text>
+  
+  <!-- Legend -->
+  <rect x="460" y="400" width="130" height="90" fill="#f8fafc" stroke="#e2e8f0" rx="5"/>
+  <circle cx="475" cy="420" r="6" fill="#22c55e"/>
+  <text x="485" y="424" font-size="9" fill="#475569">Good (50% area)</text>
+  <circle cx="475" cy="440" r="6" fill="#f59e0b"/>
+  <text x="485" y="444" font-size="9" fill="#475569">OK (25% area)</text>
+  <circle cx="475" cy="460" r="6" fill="#ef4444"/>
+  <text x="485" y="464" font-size="9" fill="#475569">Poor (25% area)</text>
+  <circle cx="475" cy="480" r="6" fill="#f97316"/>
+  <text x="485" y="484" font-size="9" fill="#475569">Pig location</text>
+  
+  <!-- Coverage note -->
+  <rect x="50" y="465" width="380" height="25" fill="#f0fdf4" stroke="#bbf7d0" rx="5"/>
+  <text x="60" y="482" font-size="9" fill="#166534">📊 Reliable coverage: ~50% of pen (near mic). Faint coughs missed at edges.</text>
+</svg>

@@ -1,1 +1,61 @@
-npx lint-staged
+#!/usr/bin/env bash
+# Secret scanner — runs on every commit.
+#
+# Context: on 2026-09-29 an audit found 21 tracked files carrying a Firebase
+# API key, an RTDB project URL, plaintext service-account passwords, and two
+# Firebase ID tokens. Those were purged from the working tree, but nothing
+# stopped them from being added again. This hook does.
+#
+# It scans STAGED content only (what is about to be committed), so an existing
+# historical commit does not block unrelated work.
+#
+# To bypass for a genuine false positive:
+#   git commit --no-verify
+set -uo pipefail
+
+# Patterns that must never be committed (deliberately written as prose so
+# this file does not match its own patterns):
+#   - a Google API key   (AIza prefix + 35 chars)
+#   - a Firebase RTDB host (*.firebaseio.com)
+#   - a JSON Web Token   (eyJhbGciOi prefix)
+#   - a PEM / ssh key header
+#   - the Google identity toolkit keys endpoint
+PATTERNS='AIza[0-9A-Za-z_-]{35}|https://[a-z0-9_-]+\.firebaseio\.com|eyJhbGciOi[A-Za-z0-9_.-]{40,}|BEGIN [A-Z ]*PRIVATE KEY|identitytoolkit\.googleapis\.com/v1/keys'
+
+# Paths where a match is expected and allowed (tombstones/placeholders).
+ALLOW='your-project\.firebaseio\.com|<REMOVED-[0-9-]+>'
+
+files=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$files" ] && exit 0
+
+hits=""
+for f in $files; do
+    # Skip binaries and anything deleted/renamed.
+    [ -f "$f" ] || continue
+    case "$f" in
+        *.png|*.jpg|*.jpeg|*.gif|*.webp|*.apk|*.whl|*.db|*.mp3|*.mp4|*.pdf|*.zip|*.xlsx) continue ;;
+    esac
+    found=$(git show ":$f" 2>/dev/null \
+        | grep -nEI "$PATTERNS" \
+        | grep -vE "$ALLOW" \
+        | sed "s|^|$f:|")
+    [ -n "$found" ] && hits="$hits$found"$'\n'
+done
+
+if [ -n "$hits" ]; then
+    echo ""
+    echo "════════════════════════════════════════════════════════════"
+    echo " COMMIT BLOCKED — secret-shaped content staged:"
+    echo "════════════════════════════════════════════════════════════"
+    printf '%s' "$hits" | head -40
+    echo ""
+    echo " Move the value to an env var / untracked secrets file, or"
+    echo " delete it. Real keys MUST be rotated — removing them from"
+    echo " the working tree does not invalidate them."
+    echo ""
+    echo " Bypass only for a confirmed false positive: git commit --no-verify"
+    echo "════════════════════════════════════════════════════════════"
+    exit 1
+fi
+
+exit 0

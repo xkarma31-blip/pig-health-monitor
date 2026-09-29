@@ -1,0 +1,39 @@
+PigPulse BENCH PINOUT (classic ESP32 DevKit, the one on USB)
+Grounded to your wiring guide + proven mic project.
+Note: shopping list targets S3 later. This test = connected classic board.
+
+STEP 1 - POWER RAILS
+ESP32 3V3 -> breadboard (+) rail
+ESP32 GND -> breadboard (-) rail
+Bridge both rail ends. Meter must read 3.28-3.32V.
+3.3V ONLY everywhere. MLX dies on 5V.
+
+STEP 2 - MLX90640 THERMAL (I2C addr 0x33)
+VDD -> (+), GND -> (-)
+SDA -> G21, SCL -> G22
+REQUIRED: 4.7k SDA -> (+), 4.7k SCL -> (+).
+No pull-ups = MLX never answers.
+
+STEP 3 - MIC 1, pig-facing (LEFT slot)
+VDD -> (+), GND -> (-)
+WS -> 15, SCK -> 14, SD -> 32
+L/R -> (-) GND
+
+STEP 4 - MIC 2, noise ref (RIGHT slot)
+Same as Mic 1 EXCEPT L/R -> (+) 3V3.
+Both SD wires go to GPIO32 directly, no resistor
+(mics tri-state on opposite slots - standard method).
+Both L/R to GND = dual-mic silently broken. Check this first.
+
+NOT THIS TEST (staged):
+- BME280 ambient sensor (next upgrade)
+- SD module (S3 guide says SPI 10-13; remap for classic later)
+- Power = your 18650 shield per BOM (not LiPo)
+- GPIO34 battery + GPIO27 MOSFET gate stay unconnected
+
+BOOT TO CONFIG MODE (every bench test):
+1. Hold BOOT, tap EN, keep holding BOOT ~2 sec
+2. Serial 115200 shows CONFIG MODE + AP: PigPulse-Config
+3. Phone joins PigPulse-Config / pigpulse123
+4. Open http://192.168.4.1
+Skipping BOOT-hold = board sleeps in 1 sec (floating batt pin).

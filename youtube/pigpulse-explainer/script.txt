@@ -1,0 +1,17 @@
+PigPulse: Smart Pig Health Monitoring
+
+Pig farming is a vital industry across Southeast Asia. But keeping pigs healthy is hard. Fever, respiratory infections, and heat stress can spread fast — and farmers often don't notice until it's too late.
+
+Meet PigPulse. A smart monitoring system that watches your pigs 24/7.
+
+Here's how it works. A device mounted in the pig pen uses a thermal camera to scan body temperatures. If a pig runs a fever — above 40 degrees Celsius — the system alerts you instantly.
+
+But temperature isn't everything. PigPulse also listens. Dual microphones detect coughing and distress vocalizations — early signs of respiratory disease.
+
+The device runs on a single battery charge for a full week. It sends data wirelessly to your phone or a central gateway. No internet required.
+
+PigPulse is designed for open-air tropical farms — where solar loading, rain, and humidity break conventional sensors. Our five-layer environmental compensation handles it all.
+
+The goal? Catch disease early. Reduce mortality. Improve welfare. And give farmers peace of mind.
+
+PigPulse. Healthy pigs, happy farmers.

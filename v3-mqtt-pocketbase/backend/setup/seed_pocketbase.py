@@ -14,12 +14,12 @@ Usage:
 
 Idempotent when --clean not used (appends). With --clean, wipes telemetry/alerts/pigs/devices first.
 """
-import argparse, time, random, base64, math, sys
+import argparse, time, random, base64, math, os, sys
 import requests
 
 PB_URL_DEFAULT="http://127.0.0.1:8090"
 PB_EMAIL="admin@pigpulse.local"
-PB_PASSWORD="admin123"
+PB_PASSWORD=os.environ.get("PB_PASSWORD","")
 
 PIG_NAMES=["Peppa","Boss Hog","Babe","Wilbur","Hamlet","Daisy","Coco","Bessie"]
 DEVICE_IDS=["esp32-001","esp32-002"]

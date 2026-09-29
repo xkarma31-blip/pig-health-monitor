@@ -12,17 +12,16 @@
 #define WIFI_PASSWORD "YOUR_WIFI_PASSWORD"
 
 // --- Firebase Configuration ---
-// Get these from Project Settings > General > Web API Key
-#define FIREBASE_API_KEY "YOUR_API_KEY"
+// REMOVED 2026-09-29. Firebase was retired in favour of MQTT + PocketBase.
+// These macros were committed to git, including a live project URL and a
+// plaintext service-account password. The v3 firmware never referenced a
+// single one of them (0 uses in src/main.cpp) — they were pure dead weight
+// that only created leak risk. Do not reintroduce.
+//   FIREBASE_API_KEY       (removed)
+//   FIREBASE_DATABASE_URL  (removed)
+//   FIREBASE_USER_EMAIL    (removed)
+//   FIREBASE_USER_PASSWORD (removed)
 
-// Get this from Realtime Database > Data (URL starts with https://)
-#define FIREBASE_DATABASE_URL "https://studio-1248778633-99f62-default-rtdb.firebaseio.com"
-
-// Optional: Firebase User Email/Password (If Auth is enabled)
-#define FIREBASE_USER_EMAIL "pigmonitor@internal.dev"
-#define FIREBASE_USER_PASSWORD "PigMonitor2026!"
-
-// Multi-tenant sandboxing ID (Align with mobile app user UID)
 #define FARM_USER_UID "FARMER_UID_HERE"
 
 #endif

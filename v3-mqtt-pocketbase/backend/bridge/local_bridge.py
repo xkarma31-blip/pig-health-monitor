@@ -31,8 +31,19 @@ except ImportError:
 MQTT_BROKER = os.getenv("MQTT_BROKER", "127.0.0.1")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
 POCKETBASE_URL = os.getenv("POCKETBASE_URL", "http://127.0.0.1:8090")
-PB_EMAIL = os.getenv("PB_EMAIL", "admin@pigpulse.local")
-PB_PASSWORD = os.getenv("PB_PASSWORD", "admin123")
+PB_EMAIL = os.getenv("PB_EMAIL", "")
+PB_PASSWORD = os.getenv("PB_PASSWORD", "")
+
+if not (PB_EMAIL and PB_PASSWORD):
+    # No baked-in default. admin123 shipped in this file for months, which
+    # meant anyone who could reach :8090 owned the database. Credentials come
+    # from an EnvironmentFile= in the unit, or an untracked env file.
+    log_fatal = (
+        "PB_EMAIL / PB_PASSWORD are not set. The bridge refuses to start "
+        "without them rather than fall back to a hard-coded admin password. "
+        "Set them in the systemd unit (EnvironmentFile=-/etc/pigpulse/bridge.env)."
+    )
+    raise SystemExit(log_fatal)
 
 logging.basicConfig(
     level=logging.INFO,

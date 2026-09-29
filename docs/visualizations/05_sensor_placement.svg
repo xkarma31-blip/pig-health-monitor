@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 500" width="600" height="500">
+  <defs>
+    <linearGradient id="ceil" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e2e8f0" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#e2e8f0" stop-opacity="0.1"/>
+    </linearGradient>
+  </defs>
+  
+  <text x="300" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#1e293b">OPTIMAL SENSOR PLACEMENT</text>
+  
+  <!-- Pen top view -->
+  <rect x="50" y="50" width="400" height="400" fill="none" stroke="#475569" stroke-width="2"/>
+  
+  <!-- Ceiling mount positions -->
+  <!-- Main sensor package (center) -->
+  <circle cx="250" cy="250" r="25" fill="#e2e8f0" stroke="#475569" stroke-width="2"/>
+  <rect x="240" y="240" width="20" height="20" fill="#1e293b" rx="3"/>
+  <text x="250" y="253" text-anchor="middle" font-size="6" fill="#fff">ALL</text>
+  <text x="250" y="280" text-anchor="middle" font-size="8" fill="#475569">Main Unit</text>
+  
+  <!-- Secondary mic (far side for coverage) -->
+  <circle cx="420" cy="420" r="15" fill="#e2e8f0" stroke="#475569" stroke-width="1"/>
+  <rect x="413" y="413" width="14" height="14" fill="#1e293b" rx="2"/>
+  <text x="420" y="423" text-anchor="middle" font-size="5" fill="#fff">MIC2</text>
+  <text x="420" y="440" text-anchor="middle" font-size="8" fill="#475569">Mic 2</text>
+  
+  <!-- Coverage from main -->
+  <circle cx="250" cy="250" r="80" fill="none" stroke="#22c55e" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+  <circle cx="250" cy="250" r="150" fill="none" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+  
+  <!-- Coverage from mic 2 -->
+  <circle cx="420" cy="420" r="80" fill="none" stroke="#22c55e" stroke-width="1" stroke-dasharray="3,3" opacity="0.5"/>
+  
+  <!-- Obstacles -->
+  <rect x="60" y="320" width="80" height="30" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1" rx="3"/>
+  <text x="100" y="340" text-anchor="middle" font-size="9" fill="#475569">Feeder</text>
+  
+  <rect x="300" y="60" width="60" height="30" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1" rx="3"/>
+  <text x="330" y="80" text-anchor="middle" font-size="9" fill="#475569">Waterer</text>
+  
+  <!-- Ventilation fan -->
+  <circle cx="80" cy="100" r="20" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+  <text x="80" y="105" text-anchor="middle" font-size="8" fill="#475569">Fan</text>
+  
+  <!-- Sunlight zone -->
+  <rect x="300" y="300" width="100" height="80" fill="#fef3c7" opacity="0.3" stroke="#fbbf24" stroke-width="1" stroke-dasharray="4,4" rx="3"/>
+  <text x="350" y="345" text-anchor="middle" font-size="8" fill="#92400e">⚠️ Sunlight zone</text>
+  
+  <!-- Pigs -->
+  <circle cx="150" cy="180" r="12" fill="#f97316" opacity="0.8"/>
+  <text x="150" y="185" text-anchor="middle" font-size="8" fill="#fff">P1</text>
+  
+  <circle cx="350" cy="200" r="12" fill="#f97316" opacity="0.8"/>
+  <text x="350" y="205" text-anchor="middle" font-size="8" fill="#fff">P2</text>
+  
+  <circle cx="100" cy="400" r="12" fill="#f97316" opacity="0.8"/>
+  <text x="100" y="405" text-anchor="middle" font-size="8" fill="#fff">P3</text>
+  
+  <circle cx="380" cy="380" r="12" fill="#f97316" opacity="0.8"/>
+  <text x="380" y="385" text-anchor="middle" font-size="8" fill="#fff">P4</text>
+  
+  <!-- Legend -->
+  <rect x="460" y="80" width="130" height="140" fill="#f8fafc" stroke="#e2e8f0" rx="5"/>
+  <text x="475" y="100" font-size="9" font-weight="bold" fill="#475569">PLACEMENT RULES</text>
+  <text x="475" y="118" font-size="8" fill="#64748b">1. Center ceiling mount</text>
+  <text x="475" y="134" font-size="8" fill="#64748b">2. 2.5-3m height optimal</text>
+  <text x="475" y="150" font-size="8" fill="#64748b">3. Point DOWN (not at walls)</text>
+  <text x="475" y="166" font-size="8" fill="#64748b">4. Avoid pointing at windows</text>
+  <text x="475" y="182" font-size="8" fill="#64748b">5. Second mic for far side</text>
+  <text x="475" y="198" font-size="8" fill="#64748b">6. Use IR-transparent window</text>
+  <text x="475" y="214" font-size="8" fill="#64748b">7. IP65 enclosure</text>
+  
+  <!-- Note -->
+  <rect x="50" y="465" width="380" height="25" fill="#eff6ff" stroke="#bfdbfe" rx="5"/>
+  <text x="60" y="482" font-size="9" fill="#1e40af">📊 Dual-mic + ceiling mount + sunlight avoidance = best coverage with ₱6,500 budget.</text>
+</svg>

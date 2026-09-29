@@ -8,7 +8,8 @@ import sys
 
 POCKETBASE_URL = "http://localhost:8090"
 PB_EMAIL = "admin@pigpulse.local"
-PB_PASSWORD = "admin123"
+import os
+PB_PASSWORD = os.environ.get("PB_PASSWORD", "")
 
 
 def authenticate():

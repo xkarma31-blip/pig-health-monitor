@@ -6,20 +6,15 @@
 
   function launchAppOrWeb() {
     const c = cfg();
-    const appUrl = c.appDeepLink || 'soulexpoapp://';
-    const webUrl = (c.appUrl || '').replace(/\/?$/, '/') || '/';
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent
-    );
+    const webUrl = getAppUrl(c);
     if (typeof playClick === 'function') playClick();
-    if (isMobile) {
-      window.location.href = appUrl;
-      setTimeout(() => {
-        if (document.hasFocus()) window.location.href = webUrl;
-      }, 2000);
-    } else {
-      window.location.href = webUrl;
-    }
+    window.location.href = webUrl;
+  }
+
+  function getAppUrl(c) {
+    const isLocal = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
+    const base = isLocal ? (c.localAppUrl || c.appUrl) : c.appUrl;
+    return (base || '/').replace(/\/?$/, '/tabs');
   }
 
   function applyReducedMotion() {
@@ -33,7 +28,7 @@
     const c = cfg();
     document.querySelectorAll('[data-config-href]').forEach((el) => {
       const key = el.getAttribute('data-config-href');
-      const url = c[key];
+      const url = key === 'appUrl' ? getAppUrl(c) : c[key];
       if (url) {
         el.setAttribute('href', url);
         if (key === 'appUrl' || key === 'repoUrl' || key === 'apkUrl') {
@@ -62,9 +57,10 @@
     const ver = document.getElementById('footer-version');
     if (ver && c.version) ver.textContent = `v${c.version}`;
     const appLink = document.getElementById('footer-app-link');
-    if (appLink && c.appUrl) {
-      appLink.href = c.appUrl;
-      appLink.textContent = new URL(c.appUrl).hostname;
+    if (appLink && (c.appUrl || c.localAppUrl)) {
+      const appUrl = getAppUrl(c);
+      appLink.href = appUrl;
+      appLink.textContent = new URL(appUrl).host;
     }
     const landLink = document.getElementById('footer-landing-link');
     if (landLink && c.landingUrl) {

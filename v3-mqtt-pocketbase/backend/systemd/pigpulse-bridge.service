@@ -11,6 +11,19 @@ Wants=mosquitto.service
 Type=simple
 User=pigpulse
 WorkingDirectory=/home/pigpulse/bridge
+# Credentials live in an untracked env file, never in this repo. Create it with:
+#   sudo install -d -m 0750 /etc/pigpulse
+#   sudo tee /etc/pigpulse/bridge.env >/dev/null <<EOF
+#   PB_EMAIL=...            # PocketBase admin identity
+#   PB_PASSWORD=...         # PocketBase admin password
+#   POCKETBASE_URL=http://127.0.0.1:8090
+#   MQTT_BROKER=127.0.0.1
+#   EOF
+#   sudo chown root:pigpulse /etc/pigpulse/bridge.env
+#   sudo chmod 0640 /etc/pigpulse/bridge.env
+# The leading '-' means a missing file does not block the unit; the bridge
+# then exits with a message telling you to create it.
+EnvironmentFile=-/etc/pigpulse/bridge.env
 ExecStart=/home/pigpulse/thermal-pi/.venv/bin/python /home/pigpulse/bridge/local_bridge.py
 # on-failure, not always: `always` also restarts after a clean exit, which
 # turned every transient import error into a silent 5 s crash loop.

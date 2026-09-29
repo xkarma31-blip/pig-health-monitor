@@ -3,7 +3,7 @@ import { RefreshControl, ScrollView, Text, TouchableOpacity, View, StyleSheet } 
 import { useRouter } from 'expo-router';
 import { useTheme, type Status } from '../../theme';
 import { useAuth } from '../../hooks/useAuth';
-import { subscribeRoster, subscribeAlerts } from '../../utils/pocketbase-data';
+import { usePocketbaseRealtime, type TelemetryFrame } from '../../hooks/usePocketbaseRealtime';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
 import {
   LogoMark,
@@ -19,42 +19,42 @@ import {
 import { playSound } from '../../utils/sounds';
 import { haptic } from '../../utils/haptics';
 
-type Pen = { id: string; name: string; note: string; temp: string; status: Status; trend: number[] };
-
-// Pens are a hardware concept the RTDB does not model yet — keep as demo
-// until /users/$uid/pens/ exists (see gap notes in .planning/).
-const PENS: Pen[] = [
-  { id: 'pen-3', name: 'Pen 3', note: 'Fever detected, pig #04', temp: '38.9°', status: 'alert', trend: [38.0, 38.1, 38.3, 38.5, 38.7, 38.9] },
-  { id: 'pen-5', name: 'Pen 5', note: 'Elevated coughing, monitor', temp: '38.4°', status: 'watch', trend: [38.0, 38.0, 38.1, 38.2, 38.3, 38.4] },
-  { id: 'pen-1', name: 'Pen 1', note: 'All clear', temp: '38.1°', status: 'healthy', trend: [38.1, 38.0, 38.2, 38.1, 38.0, 38.1] },
-  { id: 'pen-2', name: 'Pen 2', note: 'All clear', temp: '38.2°', status: 'healthy', trend: [38.2, 38.3, 38.1, 38.2, 38.2, 38.2] },
-  { id: 'pen-4', name: 'Pen 4', note: 'All clear', temp: '38.0°', status: 'healthy', trend: [38.1, 38.0, 38.0, 38.1, 38.0, 38.0] },
-];
-
 const FARM = { name: 'Sundown Farm', penCount: 5, pigCount: 110 };
-
 const DEMO_STATS = { healthy: 3, watch: 1, alert: 1 };
 
-function herdStatusFromRecords(
-  roster: Record<string, unknown>[],
-  alerts: Record<string, unknown>[],
-) {
-  let healthy = 0;
-  let watch = 0;
-  let alert = 0;
-  for (const pig of roster) {
-    const hs = String(pig.healthStatus || 'NORMAL').toUpperCase();
-    if (hs === 'NORMAL') healthy += 1;
-    else if (hs === 'ELEVATED' || hs === 'WATCH') watch += 1;
-    else alert += 1;
+function inferStatus(frame: TelemetryFrame): Status {
+  const hs = String(frame.healthStatus || '').toUpperCase();
+  if (hs === 'NORMAL' || hs === 'HEALTHY') return 'healthy';
+  if (hs === 'ELEVATED' || hs === 'WATCH') return 'watch';
+  if (hs === 'CRITICAL' || hs === 'ALERT' || hs === 'HIGH') return 'alert';
+  // Fall back to temperature heuristic
+  const temp = frame.temperature;
+  if (typeof temp === 'number') {
+    if (temp > 39.5) return 'alert';
+    if (temp > 39.0) return 'watch';
   }
-  for (const a of alerts) {
-    const sev = String(a.severity || a.level || '').toUpperCase();
-    if (sev === 'CRITICAL' || sev === 'HIGH') alert += 1;
-    else if (sev === 'WARNING' || sev === 'ELEVATED') watch += 1;
-  }
-  return { healthy, watch, alert };
+  return 'healthy';
 }
+
+function formatTimestamp(value: string | undefined): string {
+  if (!value) return '—';
+  try {
+    return new Date(value).toLocaleString(undefined, {
+      month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+    });
+  } catch {
+    return value;
+  }
+}
+
+type DeviceRow = {
+  id: string;
+  name: string;
+  temp: string;
+  note: string;
+  status: Status;
+  trend: number[];
+};
 
 export default function HomeScreen() {
   const { colors, spacing, radius, typography } = useTheme();
@@ -62,51 +62,77 @@ export default function HomeScreen() {
   const { user } = useAuth();
   const tier = useBreakpoint();
 
+  const {
+    telemetry,
+    deviceIds,
+    connectionStatus,
+    lastError,
+    reconnect,
+  } = usePocketbaseRealtime();
+
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [isOnline] = useState(true); // wire to real connectivity state
-  const [statsKey, setStatsKey] = useState(0); // bump to replay the count-up
-  const [roster, setRoster] = useState<Record<string, unknown>[]>([]);
-  const [alerts, setAlerts] = useState<Record<string, unknown>[]>([]);
+  const [statsKey, setStatsKey] = useState(0);
 
+  // Debounce the loading indicator — give PB 850ms to deliver first frame.
   useEffect(() => {
     const t = setTimeout(() => setLoading(false), 850);
     return () => clearTimeout(t);
   }, []);
 
-  useEffect(() => {
-    if (!user || user.admin) return;  // end-user → live; admin & guest → demo figures
-    const unsubRoster = subscribeRoster(setRoster);
-    const unsubAlerts = subscribeAlerts(setAlerts);
-    return () => {
-      unsubRoster();
-      unsubAlerts();
-    };
-  }, [user]);
+  // Derive device rows from realtime telemetry
+  const devices: DeviceRow[] = useMemo(() => {
+    return deviceIds.map((id) => {
+      const frame = telemetry[id];
+      const name = String(frame?.deviceId || id);
+      const temp = typeof frame?.temperature === 'number'
+        ? `${frame.temperature.toFixed(1)}°`
+        : '—';
+      const note = formatTimestamp(frame?.timestamp);
+      return {
+        id,
+        name,
+        temp,
+        note,
+        status: inferStatus(frame || {}),
+        trend: [], // Sparkline needs historical frames; empty for now
+      };
+    });
+  }, [deviceIds, telemetry]);
 
-  const liveStats = useMemo(() => herdStatusFromRecords(roster, alerts), [roster, alerts]);
-  const hasLiveData = Boolean(user) && !user!.admin && roster.length + alerts.length > 0;
-  const stats = hasLiveData ? liveStats : DEMO_STATS;
+  const stats = useMemo(() => {
+    let healthy = 0, watch = 0, alert = 0;
+    for (const d of devices) {
+      if (d.status === 'healthy') healthy++;
+      else if (d.status === 'watch') watch++;
+      else if (d.status === 'alert') alert++;
+    }
+    return devices.length > 0 ? { healthy, watch, alert } : DEMO_STATS;
+  }, [devices]);
+
+  const hasLiveData = devices.length > 0;
+  const isOnline = connectionStatus === 'connected' || connectionStatus === 'connecting';
+  const topAlert = devices.find((d) => d.status === 'alert');
 
   const onRefresh = () => {
     setRefreshing(true);
+    reconnect();
     setTimeout(() => {
       setRefreshing(false);
       setStatsKey((k) => k + 1);
-    }, 900);
+    }, 1200);
   };
 
-  const topAlert = PENS.find((p) => p.status === 'alert');
   const contentMax = tier === 'expanded' ? 1100 : tier === 'medium' ? 720 : undefined;
   const penColumns = tier === 'expanded' ? 3 : tier === 'medium' ? 2 : 1;
 
-  const penRows = useMemo(() => {
-    const rows: Pen[][] = [];
-    for (let i = 0; i < PENS.length; i += penColumns) {
-      rows.push(PENS.slice(i, i + penColumns));
+  const deviceRows = useMemo(() => {
+    const rows: DeviceRow[][] = [];
+    for (let i = 0; i < devices.length; i += penColumns) {
+      rows.push(devices.slice(i, i + penColumns));
     }
     return rows;
-  }, [penColumns]);
+  }, [devices, penColumns]);
 
   return (
     <ScrollView
@@ -131,25 +157,47 @@ export default function HomeScreen() {
             </Text>
           </View>
           <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 4 }]}>
-            {isOnline ? `${FARM.name} · ${FARM.penCount} pens · ${FARM.pigCount} pigs` : 'Last synced 6 minutes ago'}
+            {hasLiveData
+              ? `${FARM.name} · ${devices.length} device${devices.length !== 1 ? 's' : ''} streaming`
+              : connectionStatus === 'error'
+                ? `Connection error — showing cached data`
+                : `${FARM.name} · connecting to PocketBase…`}
           </Text>
         </View>
         <View
           style={[
             styles.pill,
-            { backgroundColor: isOnline ? colors.healthySoft : colors.alertSoft, borderRadius: radius.pill },
+            {
+              backgroundColor: isOnline ? colors.healthySoft : colors.alertSoft,
+              borderRadius: radius.pill,
+            },
           ]}
         >
           <Text style={[typography.label, { color: isOnline ? colors.healthy : colors.alert }]}>
-            {isOnline ? 'Online' : 'Offline'}
+            {connectionStatus === 'connected' ? 'Live' : connectionStatus === 'connecting' ? 'Connecting' : connectionStatus === 'error' ? 'Error' : 'Offline'}
           </Text>
         </View>
       </View>
 
-      {/* Farm-wide status — live from Firebase when signed in, demo otherwise */}
+      {/* Connection error detail */}
+      {lastError ? (
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={reconnect}
+          style={[styles.errorBar, { backgroundColor: colors.alertSoft, borderRadius: radius.md, marginTop: spacing.md }]}
+          accessibilityRole="button"
+          accessibilityLabel={`Connection error: ${lastError}. Tap to retry.`}
+        >
+          <Text style={[typography.bodySmall, { color: colors.alert }]}>
+            ⚠ {lastError} — tap to retry
+          </Text>
+        </TouchableOpacity>
+      ) : null}
+
+      {/* Farm-wide status */}
       <View>
         <StatRow key={`${statsKey}-${stats.healthy}-${stats.watch}-${stats.alert}`} {...stats} />
-        {!hasLiveData ? (
+        {!hasLiveData && connectionStatus !== 'error' ? (
           <TouchableOpacity
             activeOpacity={0.6}
             hitSlop={{ top: 12, bottom: 12, left: 24, right: 24 }}
@@ -159,17 +207,19 @@ export default function HomeScreen() {
               router.push('/login');
             }}
             accessibilityRole="button"
-            accessibilityLabel="Sign in to stream live herd status"
-            accessibilityHint="Opens the login screen"
+            accessibilityLabel="Waiting for first telemetry frame"
+            accessibilityHint="Shows demo data until a device reports"
           >
             <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm }]}>
-              Demo figures — sign in to stream live herd status
+              {connectionStatus === 'connected'
+                ? 'No telemetry frames yet — demo figures shown until a device reports'
+                : 'Demo figures — connect to PocketBase to stream live herd status'}
             </Text>
           </TouchableOpacity>
         ) : null}
       </View>
 
-      {/* Live thermal feed — opens the fullscreen view */}
+      {/* Live thermal feed */}
       <TouchableOpacity
         activeOpacity={0.85}
         onPress={() => {
@@ -182,16 +232,16 @@ export default function HomeScreen() {
         accessibilityLabel="Live thermal feed"
         accessibilityHint="Opens the live thermal camera view"
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+        <View style={{ flexDirection: 'row' as any, alignItems: 'center', flex: 1 }}>
           <ThermalThumbnail />
           <View style={{ marginLeft: spacing.md, flex: 1 }}>
             <Text style={[typography.h2, { color: colors.textPrimary }]}>Live thermal feed</Text>
             <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 2, fontSize: 12.5 }]}>
-              Node B streaming, 32×24 array
+              {hasLiveData ? `${devices.length} device${devices.length !== 1 ? 's' : ''} streaming` : 'Node B · MLX90640 · 32×24 array'}
             </Text>
           </View>
         </View>
-        <Badge label="Live" status="alert" />
+        <Badge label={hasLiveData ? 'Live' : 'Demo'} status={hasLiveData ? 'alert' : 'info'} />
       </TouchableOpacity>
 
       {/* Needs attention */}
@@ -206,38 +256,46 @@ export default function HomeScreen() {
         </View>
       ) : null}
 
-      {/* Pens — responsive grid */}
+      {/* Devices / pens grid */}
       <View style={{ marginTop: spacing.xl }}>
         <View style={styles.sectionHead}>
-          <Text style={[typography.caption, { color: colors.textMuted }]}>Pens</Text>
-          <Text style={[typography.bodySmall, { color: colors.textMuted, fontSize: 12.5 }]}>{FARM.penCount} total</Text>
+          <Text style={[typography.caption, { color: colors.textMuted }]}>
+            {devices.length > 0 ? 'Devices' : 'Pens'}
+          </Text>
+          <Text style={[typography.bodySmall, { color: colors.textMuted, fontSize: 12.5 }]}>
+            {devices.length > 0 ? `${devices.length} connected` : `${FARM.penCount} total`}
+          </Text>
         </View>
         {loading ? (
           <Skeleton rows={penColumns === 1 ? 5 : 3} />
-        ) : PENS.length === 0 ? (
+        ) : devices.length === 0 ? (
           <ListGroup>
             <EmptyState
               icon={<ThermometerIcon size={18} color={colors.accent} />}
-              title="No pens registered"
-              message="Pens appear here once sensor nodes are assigned to them."
+              title="No devices streaming"
+              message={
+                hasLiveData
+                  ? 'Connected but no telemetry frames yet.'
+                  : 'Connect to PocketBase to see live device telemetry. Demo figures are shown until the first frame arrives.'
+              }
             />
           </ListGroup>
         ) : (
           <View>
-            {penRows.map((row, rowIdx) => (
+            {deviceRows.map((row, rowIdx) => (
               <View key={`row-${rowIdx}`} style={penColumns > 1 ? styles.gridRow : null}>
-                {row.map((pen) => (
+                {row.map((device) => (
                   <View
-                    key={pen.id}
+                    key={device.id}
                     style={penColumns > 1 ? { flex: 1, paddingHorizontal: spacing.sm / 2 } : null}
                   >
                     <ListGroup>
                       <ListRow
-                        title={pen.name}
-                        subtitle={pen.note}
-                        value={pen.temp}
-                        status={pen.status}
-                        trend={pen.trend}
+                        title={device.name}
+                        subtitle={device.note}
+                        value={device.temp}
+                        status={device.status}
+                        trend={device.trend}
                         index={rowIdx}
                       />
                     </ListGroup>
@@ -258,10 +316,11 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  brandRow: { flexDirection: 'row', alignItems: 'center' },
+  header: { flexDirection: 'row' as any, justifyContent: 'space-between', alignItems: 'flex-start' },
+  brandRow: { flexDirection: 'row' as any, alignItems: 'center' },
   pill: { paddingVertical: 5, paddingHorizontal: 11 },
-  feedCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14 },
-  sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 8 },
-  gridRow: { flexDirection: 'row', marginHorizontal: -6, marginBottom: 12 },
+  errorBar: { paddingVertical: 10, paddingHorizontal: 14 },
+  feedCard: { flexDirection: 'row' as any, alignItems: 'center', justifyContent: 'space-between', padding: 14 },
+  sectionHead: { flexDirection: 'row' as any, justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 8 },
+  gridRow: { flexDirection: 'row' as any, marginHorizontal: -6, marginBottom: 12 },
 });

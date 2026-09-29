@@ -11,8 +11,7 @@
 
 // 🌩️ Firebase Realtime Database Backend
 // Ensure the URL matches your Firebase Database URL. Do not add a trailing slash.
-#define FIREBASE_URL "https://studio-1248778633-99f62-default-rtdb.firebaseio.com"
-
+// FIREBASE_URL removed 2026-09-29 (committed secret; Firebase retired).
 // 🔌 ESP32-S3 Pin Definitions
 // Modify these if your physical wiring changes
 #define SQUEAL_SENSOR_PIN 4   // Example: Analog/Digital sound sensor

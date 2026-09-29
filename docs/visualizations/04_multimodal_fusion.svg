@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 500" width="600" height="500">
+  <defs>
+    <radialGradient id="mgood" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#22c55e" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#22c55e" stop-opacity="0.1"/>
+    </radialGradient>
+    <radialGradient id="mok" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#f59e0b" stop-opacity="0.25"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0.08"/>
+    </radialGradient>
+  </defs>
+  
+  <text x="300" y="30" text-anchor="middle" font-size="16" font-weight="bold" fill="#1e293b">MULTI-MODAL FUSION — Full PigPulse Coverage</text>
+  
+  <!-- Pen -->
+  <rect x="50" y="50" width="400" height="400" fill="none" stroke="#475569" stroke-width="2"/>
+  
+  <!-- CCTV FOV (full coverage, lightest) -->
+  <path d="M250,50 L50,450 L450,450 Z" fill="#8b5cf6" opacity="0.08" stroke="#8b5cf6" stroke-width="1" stroke-dasharray="4,4"/>
+  
+  <!-- MLX90640 FOV (medium coverage) -->
+  <path d="M250,50 L70,450 L430,450 Z" fill="#3b82f6" opacity="0.12" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,4"/>
+  
+  <!-- Audio coverage (strongest near center) -->
+  <circle cx="250" cy="250" r="100" fill="url(#mgood)" stroke="#22c55e" stroke-width="2"/>
+  <circle cx="250" cy="250" r="150" fill="url(#mok)" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,4"/>
+  <circle cx="250" cy="250" r="200" fill="#ef4444" opacity="0.1" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,4"/>
+  
+  <!-- Combined coverage zones (color-coded by quality) -->
+  <!-- Green zone: All 3 modalities good -->
+  <rect x="100" y="100" width="100" height="100" fill="#22c55e" opacity="0.25" rx="3"/>
+  <text x="150" y="155" text-anchor="middle" font-size="10" fill="#22c55e" font-weight="bold">EXCELLENT</text>
+  <text x="150" y="170" text-anchor="middle" font-size="8" fill="#22c55e">Audio+Thermo+CCTV</text>
+  
+  <!-- Orange zone: Thermo + CCTV, audio weak -->
+  <rect x="200" y="100" width="80" height="80" fill="#f59e0b" opacity="0.2" rx="3"/>
+  <text x="240" y="145" text-anchor="middle" font-size="9" fill="#f59e0b" font-weight="bold">GOOD</text>
+  <text x="240" y="158" text-anchor="middle" font-size="7" fill="#f59e0b">Thermo+CCTV</text>
+  
+  <!-- Red zone: CCTV only -->
+  <rect x="280" y="100" width="80" height="80" fill="#ef4444" opacity="0.15" rx="3"/>
+  <text x="320" y="145" text-anchor="middle" font-size="9" fill="#ef4444" font-weight="bold">CCTV ONLY</text>
+  
+  <!-- Gray zone: Partial coverage -->
+  <rect x="50" y="200" width="50" height="200" fill="#94a3b8" opacity="0.2" rx="3"/>
+  <text x="75" y="305" text-anchor="middle" font-size="8" fill="#fff" transform="rotate(-90,75,300)">Partial</text>
+  
+  <!-- Center sensors -->
+  <circle cx="250" cy="250" r="10" fill="#1e293b"/>
+  <text x="250" y="255" text-anchor="middle" font-size="8" fill="#fff" font-weight="bold">MIC</text>
+  
+  <!-- MLX90640 -->
+  <rect x="220" y="235" width="25" height="15" fill="#3b82f6" rx="2"/>
+  <text x="232" y="246" text-anchor="middle" font-size="6" fill="#fff">MLX</text>
+  
+  <!-- CCTV -->
+  <rect x="270" y="235" width="30" height="15" fill="#8b5cf6" rx="2"/>
+  <text x="285" y="246" text-anchor="middle" font-size="6" fill="#fff">CCTV</text>
+  
+  <!-- Pigs with IDs -->
+  <circle cx="150" cy="150" r="12" fill="#f97316"/>
+  <text x="150" y="155" text-anchor="middle" font-size="8" fill="#fff" font-weight="bold">P1</text>
+  <text x="150" y="140" text-anchor="middle" font-size="7" fill="#166534">All 3</text>
+  
+  <circle cx="300" cy="350" r="12" fill="#f97316"/>
+  <text x="300" y="355" text-anchor="middle" font-size="8" fill="#fff" font-weight="bold">P2</text>
+  <text x="300" y="338" text-anchor="middle" font-size="7" fill="#166534">CCTV+Thermo</text>
+  
+  <circle cx="100" cy="380" r="12" fill="#f97316" opacity="0.7"/>
+  <text x="100" y="385" text-anchor="middle" font-size="8" fill="#fff" font-weight="bold">P3</text>
+  <text x="100" y="368" text-anchor="middle" font-size="7" fill="#166534">CCTV only</text>
+  
+  <circle cx="400" cy="200" r="12" fill="#f97316" opacity="0.6"/>
+  <text x="400" y="205" text-anchor="middle" font-size="8" fill="#fff" font-weight="bold">P4</text>
+  <text x="400" y="188" text-anchor="middle" font-size="7" fill="#166534">Partial</text>
+  
+  <!-- Legend -->
+  <rect x="460" y="80" width="130" height="200" fill="#f8fafc" stroke="#e2e8f0" rx="5"/>
+  <text x="475" y="100" font-size="9" font-weight="bold" fill="#475569">COVERAGE ZONES</text>
+  
+  <rect x="475" y="108" width="12" height="12" fill="#22c55e" opacity="0.5" rx="2"/>
+  <text x="492" y="118" font-size="8" fill="#475569">All 3 modalities</text>
+  
+  <rect x="475" y="128" width="12" height="12" fill="#f59e0b" opacity="0.5" rx="2"/>
+  <text x="492" y="138" font-size="8" fill="#475569">Thermo + CCTV</text>
+  
+  <rect x="475" y="148" width="12" height="12" fill="#ef4444" opacity="0.5" rx="2"/>
+  <text x="492" y="158" font-size="8" fill="#475569">CCTV only</text>
+  
+  <rect x="475" y="168" width="12" height="12" fill="#94a3b8" opacity="0.5" rx="2"/>
+  <text x="492" y="178" font-size="8" fill="#475569">Partial/edge</text>
+  
+  <text x="475" y="205" font-size="9" font-weight="bold" fill="#475569">OVERLAP AREA</text>
+  <text x="475" y="223" font-size="8" fill="#64748b">Center: 100% (all 3)</text>
+  <text x="475" y="239" font-size="8" fill="#64748b">Mid: 66% (2/3)</text>
+  <text x="475" y="255" font-size="8" fill="#64748b">Edge: 33% (1/3)</text>
+  <text x="475" y="271" font-size="8" fill="#64748b">Overall: ~85%</text>
+  
+  <!-- Coverage note -->
+  <rect x="50" y="465" width="380" height="25" fill="#f0fdf4" stroke="#bbf7d0" rx="5"/>
+  <text x="60" y="482" font-size="9" fill="#166534">📊 Multi-modal fusion achieves ~85% effective coverage. CCTV fills audio gaps, thermal adds fever.</text>
+</svg>

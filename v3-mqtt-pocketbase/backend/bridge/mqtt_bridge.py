@@ -36,7 +36,7 @@ MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
 POCKETBASE_URL = os.getenv("POCKETBASE_URL", "http://pocketbase:8090")
 VALKEY_URL = os.getenv("VALKEY_URL", "redis://valkey:6379")
 PB_EMAIL = os.getenv("PB_EMAIL", "admin@pigpulse.local")
-PB_PASSWORD = os.getenv("PB_PASSWORD", "admin123")
+PB_PASSWORD = os.getenv("PB_PASSWORD", "")
 
 TELEMETRY_TTL = 300  # 5 minutes
 HEALTHBEAT_INTERVAL = 60  # seconds
