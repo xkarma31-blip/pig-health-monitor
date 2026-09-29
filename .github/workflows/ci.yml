@@ -1,48 +1,45 @@
 name: CI
 on: [push, pull_request]
 
+# NOTE 2026-09-29: every job below used `working-directory: mobile_app` and
+# `firmware` — the STALE Firebase-era copies at the repo root. The root
+# mobile_app/ has since been deleted and the root firmware/ is frozen. CI was
+# therefore building code that nothing ships. Repointed at the v3 tree.
+#
+# There is a second workflow file at
+# v3-mqtt-pocketbase/.github/workflows/ci.yml — it is DEAD, because GitHub
+# only loads workflows from the repository root .github/workflows/. Delete it
+# rather than maintaining two.
+
 jobs:
-  mobile-app:
-    name: Mobile App (Lint + Test)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: mobile_app
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: mobile_app/package-lock.json
-      - run: npm ci
-      - run: npx eslint . --ext .ts,.tsx
-      - run: npx jest --no-cache
-
-  firmware:
-    name: Firmware (PlatformIO)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: firmware
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: pip install platformio
-      - run: pio check --skip-packages --severity=medium 2>/dev/null || echo "pio check skipped (no platformio.ini)"
-
-  scripts:
-    name: Python Scripts (Syntax Check)
+  path-guard:
+    name: Canon Guard
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: pip install pyright
-      - run: pyright scripts/ 2>/dev/null || echo "pyright checks skipped (no pyproject.toml)"
+      - name: Fail if a non-canonical component reappears at the repo root
+        run: |
+          set -e
+          fail=0
+          for p in mobile_app landing_page; do
+            if [ -e "$p" ]; then
+              echo "::error::$p exists at the repo root. The canonical copy is"
+              echo "::error::v3-mqtt-pocketbase/frontend/$p. See CANON.md."
+              fail=1
+            fi
+          done
+          if [ -e "firebase.json" ] || [ -e ".firebaserc" ] || [ -d "firebase_config" ]; then
+            echo "::error::Firebase config has returned. Firebase was retired in"
+            echo "::error::favour of MQTT + PocketBase. See CANON.md."
+            fail=1
+          fi
+          # workflow files only count from the root .github/workflows/
+          if [ -e "v3-mqtt-pocketbase/.github/workflows/ci.yml" ]; then
+            echo "::error::A nested workflow file exists. GitHub ignores it, so it"
+            echo "::error::silently rots. Move it to .github/workflows/ or delete it."
+            fail=1
+          fi
+          exit $fail
 
   secrets:
     name: Credential Scanner (trufflehog)
@@ -54,3 +51,84 @@ jobs:
       - uses: trufflesecurity/trufflehog@main
         with:
           extra_args: --results=verified,unknown --fail
+
+  backend:
+    name: Pi Backend (Syntax + Import)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Byte-compile every tracked python file
+        run: |
+          set -e
+          find v3-mqtt-pocketbase/backend -name '*.py' -not -path '*/__pycache__/*' \
+            -exec python3 -m py_compile {} +
+          echo "python syntax OK"
+      - name: Shell syntax
+        run: |
+          set -e
+          find v3-mqtt-pocketbase/backend -name '*.sh' -exec bash -n {} \;
+          echo "bash syntax OK"
+      - name: Import the thermal-pi modules (no hardware needed)
+        run: |
+          cd v3-mqtt-pocketbase/backend/thermal-pi
+          pip install -q mlx9064x-driver "setuptools<81"
+          python3 -c "
+            import web_server, config, esp_audio_ingest, mlx_reader, \
+                   pigpulse_stats, i2c_scanDiag
+            print('thermal-pi imports OK')
+            assert config.NETWORK_MODE == 'ap', config.NETWORK_MODE
+            assert config.AP_IP == '192.168.69.1', config.AP_IP
+          "
+
+  mobile-app:
+    name: Mobile App (Lint + Test)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: v3-mqtt-pocketbase/frontend/mobile_app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: v3-mqtt-pocketbase/frontend/mobile_app/package-lock.json
+      - run: npm ci
+      - run: npx eslint . --ext .ts,.tsx
+      - run: npx jest --no-cache
+
+  firmware:
+    name: Firmware (PlatformIO lint)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: v3-mqtt-pocketbase/firmware
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install platformio
+      - run: pio check --skip-packages --severity=medium 2>/dev/null || echo "pio check skipped"
+
+  firebase-free:
+    name: No Firebase in the canonical tree
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Assert the v3 frontend and firmware are Firebase-free
+        run: |
+          set -e
+          hits=$(grep -rnIE "from ['\"]firebase|require\(['\"]firebase|Firebase_ESP_Client|firebaseio\.com" \
+            v3-mqtt-pocketbase/frontend/mobile_app/src \
+            v3-mqtt-pocketbase/firmware/src \
+            v3-mqtt-pocketbase/firmware/include 2>/dev/null || true)
+          if [ -n "$hits" ]; then
+            echo "::error::Firebase reference found in the canonical tree:"
+            echo "$hits"
+            exit 1
+          fi
+          echo "canonical tree is Firebase-free"

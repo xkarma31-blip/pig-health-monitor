@@ -2,9 +2,15 @@
   "name": "pig-health-monitor",
   "private": true,
   "scripts": {
-    "lint": "cd mobile_app && npx eslint . --ext .ts,.tsx",
-    "test": "cd mobile_app && npx jest",
-    "prepare": "husky"
+    "lint": "cd v3-mqtt-pocketbase/frontend/mobile_app && npx eslint . --ext .ts,.tsx",
+    "test": "cd v3-mqtt-pocketbase/frontend/mobile_app && npx jest",
+    "prepare": "husky",
+    "ci:backend": "bash -n v3-mqtt-pocketbase/backend/scripts/*.sh v3-mqtt-pocketbase/backend/thermal-pi/scripts/*.sh && find v3-mqtt-pocketbase/backend -name '*.py' -not -path '*/__pycache__/*' -exec python3 -m py_compile {} + && echo 'backend OK'",
+    "scan:secrets": ".husky/pre-commit || true",
+    "deploy:landing": "bash scripts/deploy-landing.sh",
+    "diag:pi": "ssh pigpulse@192.168.69.1 'python3 ~/thermal-pi/scripts/pi_diag.py'",
+    "health:pi": "ssh pigpulse@192.168.69.1 'python3 ~/scripts/health_check.py'",
+    "health:local": "python3 v3-mqtt-pocketbase/backend/scripts/health_check.py --json"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -15,8 +21,8 @@
     "typescript-eslint": "^8.59.4"
   },
   "lint-staged": {
-    "mobile_app/src/**/*.{ts,tsx}": [
-      "npx eslint --config mobile_app/eslint.config.mjs --fix --no-warn-ignored"
+    "v3-mqtt-pocketbase/frontend/mobile_app/src/**/*.{ts,tsx}": [
+      "npx eslint --config v3-mqtt-pocketbase/frontend/mobile_app/eslint.config.mjs --fix --no-warn-ignored"
     ]
   }
 }
