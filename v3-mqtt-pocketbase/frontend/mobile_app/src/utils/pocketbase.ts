@@ -52,8 +52,12 @@ export interface PBRealtimeEvent {
   record: Record<string, unknown> & { id: string; collectionName: string };
 }
 
-const PB_ADMIN_EMAIL = process.env.EXPO_PUBLIC_PB_EMAIL || 'admin@pigpulse.local';
-const PB_ADMIN_PASS = process.env.EXPO_PUBLIC_PB_PASSWORD || 'admin123';
+const PB_ADMIN_EMAIL = process.env.EXPO_PUBLIC_PB_EMAIL || '';
+// No baked-in default. This string shipped inside the APK, so anyone who
+// installed the app had the database admin password. Supply it at build time
+// via EXPO_PUBLIC_PB_PASSWORD, or leave empty and use PocketBase *user* auth
+// (see utils/pocketbase-auth.ts), which is what production should do.
+const PB_ADMIN_PASS = process.env.EXPO_PUBLIC_PB_PASSWORD || '';
 
 /**
  * Admin auth — caches token 55min. Use for dev/demo only; production should use user auth.

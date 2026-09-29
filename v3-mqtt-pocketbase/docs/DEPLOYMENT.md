@@ -66,7 +66,7 @@ cd firmware
 Create `.env` in `deploy/docker/`:
 ```env
 PB_EMAIL=admin@pigpulse.local
-PB_PASSWORD=admin123
+PB_PASSWORD=${PB_PASSWORD:?set PB_PASSWORD - see CANON.md §5}
 JWT_SECRET=your-secret-key
 ```
 

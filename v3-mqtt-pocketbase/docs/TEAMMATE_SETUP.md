@@ -25,7 +25,7 @@ docker compose up -d
 ### 3. Open the Dashboard
 - **PocketBase Admin:** http://localhost:8091
   - Email: `admin@pigpulse.local`
-  - Password: `admin123`
+  - Password: `$PB_PASSWORD`
 - **API Gateway:** http://localhost:80
 - **MQTT Broker:** localhost:1883
 

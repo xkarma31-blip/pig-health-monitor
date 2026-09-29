@@ -74,7 +74,7 @@ services:
       - POCKETBASE_URL=http://pocketbase:8090
       - VALKEY_URL=redis://valkey:6379
       - PB_EMAIL=${PB_EMAIL:-admin@pigpulse.local}
-      - PB_PASSWORD=${PB_PASSWORD:-admin123}
+      - PB_PASSWORD=${PB_PASSWORD:-$PB_PASSWORD}
     volumes:
       - ../backend/bridge:/app  # Hot-reload in dev
     depends_on:

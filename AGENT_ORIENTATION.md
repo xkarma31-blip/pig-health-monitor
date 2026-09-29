@@ -15,7 +15,7 @@ Below is the **last measured** state:
 |-------|---------|-------------|------|--------|---------|
 | Broker | **Mosquitto** | Docker `pigpulse-mosquitto` | 1883 / 9001 | **✅ UP** | `allow_anonymous true`, `mosquitto.conf` at `deploy/docker/mosquitto/mosquitto.conf` |
 | Cache | **ValKey** | Docker `pigpulse-valkey` + native `valkey-server` | 6380 (docker), 6379 (native) | **✅ UP** but **⚠️ UNWIRED** | Bridge declares `VALKEY_URL` but never imports `redis` — buffer is dead code |
-| DB | **PocketBase** | systemd `pigpulse-pocketbase.service` | 8090 | **✅ UP** | Binary at `deploy/pocketbase/bin/pocketbase`, `pb_data/data.db` (143KB), admin `admin@pigpulse.local / admin123`, collections: `telemetry`, `alerts`, `devices`, `pigs`, `users` (auth) |
+| DB | **PocketBase** | systemd `pigpulse-pocketbase.service` | 8090 | **✅ UP** | Binary at `deploy/pocketbase/bin/pocketbase`, `pb_data/data.db` (143KB), admin `admin@pigpulse.local` (password in /etc/pigpulse/bridge.env), collections: `telemetry`, `alerts`, `devices`, `pigs`, `users` (auth) |
 | Bridge | **MQTT→PB Bridge** | systemd `pigpulse-bridge.service` (`python3 mqtt_bridge.py`) | — | **✅ UP** | Subscribes `pig/+/telemetry` (qos0), `pig/+/alerts|status` (qos1); tested end-to-end via `paho-mqtt` publish → PB record appears |
 | Gateway | **OpenResty** | native `openresty.service` (PID 19245) | 80 | **✅ UP** | Live config `/usr/local/openresty/nginx/conf/nginx.conf` proxies `/api/` → `127.0.0.1:8090/api/`, `/api/realtime` (SSE, no buffering), `/admin/`, `/mqtt` (WS), `/thermal-ws` |
 | Live WS | **Thermal-WS** | Docker `pigpulse-thermal-ws` | 8080 | **✅ FIXED 2026-09-02** | Was `ENOTFOUND mosquitto` — fixed to `MQTT_BROKER=pigpulse-mosquitto` on `pigpulse-net` bridge (172.19.0.0/16). Subscribes `pig/+/thermal/live` and broadcasts to WS clients. |
@@ -89,7 +89,7 @@ bash scripts/health_check.sh
 # 2. PB sanity
 TOKEN=$(curl -s -X POST http://localhost:8090/api/admins/auth-with-password \
   -H "Content-Type: application/json" \
-  -d '{"identity":"admin@pigpulse.local","password":"admin123"}' | python3 -c "import sys,json;print(json.load(sys.stdin)['token'])")
+  -d '{"identity":"admin@pigpulse.local","password":"$PB_PASSWORD"}' | python3 -c "import sys,json;print(json.load(sys.stdin)['token'])")
 curl -s http://localhost:8090/api/collections -H "Authorization: Bearer $TOKEN" | python3 -m json.tool | head -n 30
 curl -s "http://localhost:8090/api/collections/telemetry/records?perPage=2&sort=-created" -H "Authorization: Bearer $TOKEN" | python3 -m json.tool
 
