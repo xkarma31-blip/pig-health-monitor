@@ -58,7 +58,15 @@ npm run deploy:landing  # Vercel landing page
 
 ## Constraints
 
-- **Never commit a secret.** Pre-commit scanner + trufflehog enforce it.
+- **Never commit a secret.** A pre-commit scanner blocks Google API keys,
+  Firebase RTDB hosts, JWTs and PEM headers, and `trufflehog` runs in CI.
+  The hook is wired via `core.hooksPath = .husky` (husky v9 layout, no npm
+  install required) — that setting is **local**, so a fresh clone must run:
+  `git config core.hooksPath .husky`
+  Verify it actually fires rather than assuming it — plant a throwaway file
+  holding an obviously fake key of the right shape (a Google API key literal:
+  the `AIza` prefix plus 35 word characters) and try to commit it. The commit
+  MUST be refused. If it succeeds, the guard is not running.
 - PocketBase admin creds come from `/etc/pigpulse/bridge.env`, never a default.
 - **No `sudo`** except `/etc/systemd/`, `sysctl`, `apt`. It has created
   root-owned directories that later agents could not edit.
