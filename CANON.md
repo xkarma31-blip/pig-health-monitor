@@ -33,7 +33,7 @@
   │                              ▲                    │                            │
   │  ESP32-S3 "s3-mic-01" ──TCP:9090──► esp_audio_ingest                          │
   │                        └──MQTT──► mosquitto :1883 ──► local_bridge ──► PB :8090│
-  │  Tapo CCTV ──RTSP──► ffmpeg ──► tapo_mjpeg :8091 ──proxy──► /cctv            │
+  │  Tapo CCTV ──RTSP──► ffmpeg ──► tapo_mjpeg :8091 ──╳ NO /cctv PROXY (§2.4)  │
   │  hostapd + dnsmasq (AP)         wlan0-static-ip (192.168.69.1)                  │
   └────────────────────────────────────┬───────────────────────────────────────────┘
                                        ╳   NO REPLICATION PATH EXISTS
@@ -138,9 +138,82 @@ Live schema lives in `v3-mqtt-pocketbase/deploy/pocketbase/bin/pb_migrations/`.
 > verify** by publishing one row and diffing published-vs-stored. Editing the
 > schema JSON by hand does NOT create the SQLite columns — run the migration.
 
-### 2.4 Hardware inventory
+### 2.4 Network topology — the uplink problem
 
-| Device | Role | Status |
+> **STATUS: DESIGN DECISION, NOT VERIFIED.** Diagnosed by inspection on
+> 2026-09-30. The Pi was offline, so none of this has been tested on device.
+> Do not quote any number here as a measurement.
+
+**Current state (measured 2026-09-30):** the Pi is an island. It runs hostapd
++ dnsmasq and serves `192.168.69.0/24`, with **no uplink and no WAN**. `ping
+192.168.69.1` gave 100% packet loss and the Pi is absent from the tailnet.
+
+**Tailscale is not a solution on its own.** Every tailnet node must reach the
+coordination server over the public internet, so a node with no internet cannot
+enrol. Tailscale becomes viable *only after* some uplink exists — it is a
+private access path layered on top of an uplink, never a substitute for one.
+
+**2.4 GHz is LOCKED — this is a hard constraint, not a preference.**
+
+| Device | Band | Consequence |
+|---|---|---|
+| Tapo CCTV | 2.4 GHz only | Ethernet or 2.4 GHz. No 5 GHz fallback. |
+| ESP32-S3 `s3-mic-01` | 2.4 GHz only | The only audio sensor. |
+| Phone | dual-band | The only device that would survive a 5 GHz AP. |
+
+The Pi 4B's built-in radio (BCM43438) is **2.4 GHz only**. A single radio
+cannot be a WiFi client and an AP at the same time, so an adapter that becomes
+the **WAN client would take over the radio and drop the CCTV and the ESP32-S3**.
+Bandwidth is *not* the constraint — the sensors are tiny. Reach and having any
+uplink at all are.
+
+**Planned topology — two radios, independent interfaces:**
+
+```
+Built-in radio (wlan0) → AP "PigPulse", 2.4 GHz → CCTV + ESP32-S3  [unchanged]
+USB adapter   (wlan1) → client, joins farm router (5 GHz) → WAN   [new]
+```
+
+This is the only option that adds WAN without touching the sensor band. A
+USB cellular modem is the alternative that also needs no radio.
+
+**⚠️ Known gotcha — the repo hardcodes `wlan0` as the AP interface in five
+places:** `wlan0-static-ip.service`, `config.py:64` (`WIFI_IFACE`),
+`admin_console.py:494`, `health_check.py:43`, `pi_diag.py:220`. Plugging in a
+USB adapter can renumber interfaces, which would silently move the AP to
+`wlan1` and put `192.168.69.1` on the wrong interface — the ESP and CCTV would
+drop with no obvious cause. **Pin the AP to the built-in radio by MAC
+(udev rule) or set `WIFI_IFACE` per service before relying on this.**
+
+**Two decisions this forces:**
+1. **Isolation.** The Pi becomes multi-homed. Do **not** forward or NAT between
+   the pig AP and the farm LAN — a stray or compromised device on the AP would
+   otherwise gain a path onto the farm network.
+2. **Subnet collision.** The AP is `192.168.69.0/24`. The farm router must not
+   hand out that range.
+
+**Unverified and blocking:** whether the farm router's 5 GHz actually reaches
+inside the barn. A USB stick in a metal barn may not get a usable link. **Test
+this before buying anything** — a phone hotspot held at the Pi's location is a
+cheap proxy. Also unverified: regulatory domain (`iw reg get`, which caps 2.4 GHz
+channels 12/13 in some regions), and actual interface enumeration.
+
+#### Two dead links found 2026-09-30 (independent of the uplink)
+
+- **There is no `/cctv` route in the live gateway.** The live config has exactly
+  nine locations: `/health`, `/api/`, `/api/realtime`, `/_/`, `/admin/`,
+  `/mqtt`, `/thermal-ws`, `/`. The §2 diagram claims
+  `tapo_mjpeg → :8091 → proxy → /cctv`; **that proxy was never configured**, so
+  the camera was never reachable even from the laptop, let alone remotely.
+- **`cloud_sync.py` is not a live-feed mechanism.** It batches PocketBase
+  records with a `synced` flag every 60s. Video is a stream and cannot be
+  carried that way. "Remote live feed" therefore needs its own design — a relay
+  or tailnet access — and that is still undecided.
+
+Once an uplink exists, `cloud_sync.py` should move **onto the Pi**, since the Pi
+can then reach both networks and the laptop no longer has to join the AP.
+
+### 2.5 Hardware inventory
 |---|---|---|
 | **Pi 4B** | edge: thermal + ingest + AP + PB | ⚠️ **OFFLINE as of 2026-09-30** — see note |
 | **ESP32-S3** (`s3-mic-01`) | the ONLY mic. TCP :9090 audio, MQTT telemetry | ⚠️ **USB WEDGED** (recorded 2026-09-27) |
@@ -317,8 +390,10 @@ than falling back to a default. `.husky/pre-commit` blocks keys/JWTs/PEMs.
 | 4 | Camera RTSP creds hard-coded in source | not moved |
 | 5 | LWT/`status` topic missing from ESP32-S3 firmware | `devices` rows go stale |
 | 6 | `pig/+/audio` has no publisher | orphaned contract |
-| 7 | Tailscale not installed on Pi; AP has no WAN | blocks remote access |
+| 7 | **Pi has no WAN.** AP is an isolated island. Tailscale cannot help on its own — see §2.5 | blocks all remote access |
 | 8 | TLS cert has no `192.168.69.1` SAN | regen on the Pi |
+| 9 | **No `/cctv` route exists in the gateway** | **BROKEN LINK** — see §2.5. The §2 diagram claims a proxy that was never configured |
+| 10 | **`cloud_sync.py` cannot carry live video** | design gap — see §2.5. It syncs PocketBase *records* on an interval, not a stream |
 
 ---
 
