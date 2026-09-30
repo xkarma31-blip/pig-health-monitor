@@ -75,3 +75,6 @@ docs/**/*.mp3
 docs/*.pdf
 docs/*.xlsx
 **/apktool_out/
+
+# === Tool scratch state (2026-09-30 cleanup) ===
+.superpowers/

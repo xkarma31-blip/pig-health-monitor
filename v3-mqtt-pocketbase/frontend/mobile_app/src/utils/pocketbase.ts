@@ -16,13 +16,20 @@
 
 import { Platform } from 'react-native';
 
-// Resolve base URL — ADB reverse (127.0.0.1:18090) is primary on native
-const PB_FALLBACKS: string[] = [
-  process.env.EXPO_PUBLIC_POCKETBASE_URL,
-  'http://127.0.0.1:18090', // adb reverse tcp:18090 tcp:8090
-  'http://127.0.0.1:8090',
-  'http://localhost:8090',
-].filter(Boolean) as string[];
+// Resolve base URL.
+// Web: empty string => same-origin requests (`/api/...`). A public browser can
+// never reach a dev machine's loopback, and cross-origin hosts would be blocked
+// by the deployed CSP `connect-src 'self'`.
+// Native: ADB reverse (127.0.0.1:18090) is primary, then direct PocketBase.
+const PB_FALLBACKS: string[] = (
+  Platform.OS === 'web'
+    ? ['']
+    : [
+        process.env.EXPO_PUBLIC_POCKETBASE_URL,
+        'http://127.0.0.1:18090', // adb reverse tcp:18090 tcp:8090
+        'http://127.0.0.1:8090',
+      ]
+).filter(Boolean) as string[];
 
 export const PB_URL: string = PB_FALLBACKS[0]!;
 export const PB_FALLBACK_URLS = PB_FALLBACKS.slice(1);
@@ -52,12 +59,14 @@ export interface PBRealtimeEvent {
   record: Record<string, unknown> & { id: string; collectionName: string };
 }
 
-const PB_ADMIN_EMAIL = process.env.EXPO_PUBLIC_PB_EMAIL || '';
-// No baked-in default. This string shipped inside the APK, so anyone who
-// installed the app had the database admin password. Supply it at build time
-// via EXPO_PUBLIC_PB_PASSWORD, or leave empty and use PocketBase *user* auth
-// (see utils/pocketbase-auth.ts), which is what production should do.
-const PB_ADMIN_PASS = process.env.EXPO_PUBLIC_PB_PASSWORD || '';
+// Admin credentials are deliberately NOT read from env here. Any
+// EXPO_PUBLIC_* reference is inlined into the client bundle by `expo export`,
+// which publishes the database admin login to anyone who views source.
+// Requests to open collections need no auth; privileged writes belong in a
+// server-side proxy, never in this client. See utils/pocketbase-auth.ts for
+// the user-auth path used by the app.
+const PB_ADMIN_EMAIL = '';
+const PB_ADMIN_PASS = '';
 
 /**
  * Admin auth — caches token 55min. Use for dev/demo only; production should use user auth.

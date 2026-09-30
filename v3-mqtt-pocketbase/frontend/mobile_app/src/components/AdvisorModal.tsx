@@ -39,7 +39,9 @@ interface Message {
   text: string;
 }
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || '';
+// Web calls same-origin `/api/chat`; a public browser cannot reach a dev
+// machine's loopback host, and the deployed CSP allows `connect-src 'self'`.
+const API_URL = Platform.OS === 'web' ? '' : process.env.EXPO_PUBLIC_API_URL || '';
 
 export default function AdvisorModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
   const user = useAuth();

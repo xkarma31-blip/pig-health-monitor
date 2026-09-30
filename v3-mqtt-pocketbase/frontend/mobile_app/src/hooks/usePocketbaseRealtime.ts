@@ -51,9 +51,12 @@ export interface PocketbaseRealtimeResult {
 
 // ── Constants ──────────────────────────────────────────────────────
 
+// Web uses same-origin (''), so EventSource targets `/api/realtime` and passes
+// the deployed `connect-src 'self'` policy. Native uses the ADB reverse address.
 const PB_URL =
-  process.env.EXPO_PUBLIC_POCKETBASE_URL ||
-  (Platform.OS === 'web' ? 'http://localhost:8090' : 'http://127.0.0.1:18090');
+  Platform.OS === 'web'
+    ? ''
+    : process.env.EXPO_PUBLIC_POCKETBASE_URL || 'http://127.0.0.1:18090';
 
 const CACHE_KEY = 'pigpulse.realtime.cache';
 const RECONNECT_BASE_DELAY = 1000;
@@ -131,8 +134,40 @@ export function usePocketbaseRealtime(): PocketbaseRealtimeResult {
     reconnectAttempts.current = 0;
   }, []);
 
-  // ── Web: native EventSource ──────────────────────────────────────
-  const connectWeb = useCallback(() => {
+  // ── Web: poll the read-only serverless proxy ─────────────────────
+  // The browser cannot hold a PocketBase SSE stream through a serverless
+  // function, so the web build polls /api/telemetry instead. Native keeps
+  // native EventSource against PocketBase directly.
+  const connectWeb = useCallback(async () => {
+    if (!isMounted.current) return;
+    setConnectionStatus('connecting');
+
+    const poll = async () => {
+      if (!isMounted.current) return;
+      try {
+        const res = await fetch(
+          '/api/telemetry?collection=telemetry&sort=-timestamp&perPage=10',
+          { headers: { Accept: 'application/json' } }
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if (Array.isArray(data.items)) {
+          for (const item of data.items) handleFrame(item as TelemetryFrame);
+        }
+      } catch (e: unknown) {
+        if (!isMounted.current) return;
+        setConnectionStatus('error');
+        setLastError(e instanceof Error ? String(e.message || e) : 'Poll failed');
+      }
+    };
+
+    await poll();
+    if (!isMounted.current) return;
+    pollTimer.current = setInterval(poll, POLL_INTERVAL);
+  }, [handleFrame]);
+
+  // ── Native: direct EventSource to PocketBase ─────────────────────
+  const connectNativeSse = useCallback(() => {
     if (!isMounted.current) return;
     setConnectionStatus('connecting');
 
@@ -177,7 +212,7 @@ export function usePocketbaseRealtime(): PocketbaseRealtimeResult {
         );
         reconnectAttempts.current += 1;
         reconnectTimer.current = setTimeout(() => {
-          if (isMounted.current) connectWeb();
+          if (isMounted.current) connectNativeSse();
         }, delay);
       };
     } catch (e: unknown) {
@@ -226,9 +261,9 @@ export function usePocketbaseRealtime(): PocketbaseRealtimeResult {
     if (Platform.OS === 'web') {
       connectWeb();
     } else {
-      connectNative();
+      connectNativeSse();
     }
-  }, [cleanup, connectWeb, connectNative]);
+  }, [cleanup, connectWeb, connectNativeSse]);
 
   // ── Lifecycle ────────────────────────────────────────────────────
   useEffect(() => {
@@ -246,14 +281,14 @@ export function usePocketbaseRealtime(): PocketbaseRealtimeResult {
     if (Platform.OS === 'web') {
       connectWeb();
     } else {
-      connectNative();
+      connectNativeSse();
     }
 
     return () => {
       isMounted.current = false;
       cleanup();
     };
-  }, [connectWeb, connectNative, cleanup]);
+  }, [connectWeb, connectNativeSse, cleanup]);
 
   return {
     telemetry,
