@@ -4,7 +4,7 @@
 > Authority: repository location, branch, topology, deployment, safety rules.
 > If any other document (including dated briefings, orientation snapshots, or
 > a stale `AGENTS.md`) contradicts this file, **this file wins**.
-> Last verified against the working tree: **2026-09-29**.
+> Last verified against the working tree: **2026-09-30**.
 
 ---
 
@@ -142,11 +142,36 @@ Live schema lives in `v3-mqtt-pocketbase/deploy/pocketbase/bin/pb_migrations/`.
 
 | Device | Role | Status |
 |---|---|---|
-| **Pi 4B** | edge: thermal + ingest + AP + PB | ✅ live |
-| **ESP32-S3** (`s3-mic-01`) | the ONLY mic. TCP :9090 audio, MQTT telemetry | ✅ live |
-| **Tapo camera** | CCTV, RTSP → MJPEG | ✅ live |
+| **Pi 4B** | edge: thermal + ingest + AP + PB | ⚠️ **OFFLINE as of 2026-09-30** — see note |
+| **ESP32-S3** (`s3-mic-01`) | the ONLY mic. TCP :9090 audio, MQTT telemetry | ⚠️ **USB WEDGED** (recorded 2026-09-27) |
+| **Tapo camera** | CCTV, RTSP → MJPEG | ⚠️ unreachable (lives on the Pi AP) |
 | ~~ESP32-D0WD~~ | original node | ☠️ **DECOMMISSIONED — do not resurrect** |
 | ~~INMP441 on Pi GPIO~~ | fallback mic | ☠️ **REMOVED 2026-09-29** |
+
+> **HARDWARE STATUS IS UNVERIFIED — CHECK BEFORE YOU TRUST IT.**
+> Verified unreachable on **2026-09-30**: `ping 192.168.69.1` = 100% packet
+> loss, SSH connection timed out, and the Pi is **not on the Tailscale tailnet**
+> (only the laptop is). The "live" marks above are inherited from an earlier
+> session and are **not** current readouts.
+>
+> Consequently: **treat every Pi-side capability claim in this repo as
+> unverified.** There are no CPU, thermal, throttling, memory, or SD-endurance
+> measurements for the Pi in this repository, and none may be invented from a
+> spec sheet. Before quoting a Pi number, read it off the device:
+> `/proc/cpuinfo`, `/proc/meminfo`, `vcgencmd measure_temp`,
+> `vcgencmd get_throttled`, `lsblk`, `dmesg | grep -iE 'mmc|ext4|throttl'`.
+>
+> **Which board?** `docs/ARCHITECTURE_V3_20260914.md` specifies a **Pi 5
+> (4GB)**; `v3-mqtt-pocketbase/docs/RIG_DEVICE_INVENTORY.md` records a **Pi
+> 4B**. These are different boards with different thermal and I/O behaviour.
+> Unresolved — read the model off the device.
+>
+> **What is actually running today** is the **laptop rig**: PocketBase,
+> bridge, Mosquitto, ValKey, thermal-ws, OpenResty, the read-only proxy, and
+> the public dashboard reading from it. The public telemetry currently shown
+> is **seeded demo data** (`backend/setup/seed_pocketbase.py`), not live
+> sensor readings. The ESP32-S3 mic is the only audio path and its USB is
+> wedged, so the audio tier is **not deployable** until it is recovered.
 
 > The removed Pi GPIO mic used `dtoverlay=googlevoicehat-soundcard`, which needs
 > a physical codec chip this board does not have. It returned **bit-exact zeros**
@@ -174,21 +199,36 @@ Branch: **`feat/v3-mqtt-pocketbase`**
 | PB migrations | `v3-mqtt-pocketbase/deploy/pocketbase/bin/pb_migrations/` |
 | Gateway (nginx) | `v3-mqtt-pocketbase/deploy/openresty/` |
 | Simulator (research) | `v3-mqtt-pocketbase/tools/simulator-web/` |
+| Read-only PB proxy | `v3-mqtt-pocketbase/backend/workers/readonly_pb_proxy.py` |
+| Serverless telemetry fn | `v3-mqtt-pocketbase/frontend/mobile_app/api/telemetry.js` |
+| **Frozen reference** | `legacy/` (see §3.1 — reference only, never build) |
 
 ### 3.1 FROZEN / NON-CANONICAL — do not edit, do not revive
 
+**Moved 2026-09-30:** the two frozen frontend/firmware trees were moved out of
+the repo root into `legacy/`, under one README that explains what they are and
+why they must not be built. They sat at the root with plausible filenames
+(`firmware/platformio.ini`, `landing_page/index.html`), which is not a
+hypothetical hazard: on 2026-09-30 a repo copy of the OpenResty config was read
+as if it were the live one, and the two had diverged into entirely different
+architectures.
+
 | Path | Why |
 |---|---|
-| `firmware/` (root) | Firebase-era D0WD tree. Frozen, kept only because it holds untracked D0WD hardware work. Canonical firmware is the v3 path. |
-| `landing_page/` (root) | Stale subset. Production is served from the v3 path by the autodeploy cron. |
+| `legacy/firmware/` | Firebase-era D0WD tree. Frozen; the D0WD is decommissioned. See `legacy/README.md`. |
+| `legacy/landing_page/` | Stale Firebase-era subset. Production is the v3 path. |
 | `docs/` (root) | Dated reports. `docs/ARCHITECTURE_V3_20260914.md` is superseded by §2 of this file. |
 | `downloads/` | Vendor reference material (Melexis MLX90640 datasheet/gerber). Reference only. |
+| `youtube/` | Media reference. Not needed to build or run anything. |
 | `v3-mqtt-pocketbase/.github/` | **DEAD** — GitHub only loads workflows from the repo root. Delete it. |
 | `scripts/simulation/`, `scripts/firebase/` | **DELETED 2026-09-29.** Firebase-era, broken. |
 
-**A CI job (`path-guard`) fails the build if `mobile_app/`, `landing_page/`,
-`firebase.json`, `.firebaserc`, `firebase_config/`, or a nested workflow file
-reappears.**
+**Never** reuse the legacy firmware's MQTT topic scheme (`pig/telemetry/{x}`);
+the bridge expects `pig/{deviceId}/{channel}` (see §2.2).
+
+**A CI job (`path-guard`) fails the build if `firmware/`, `landing_page/`, or
+`mobile_app/` reappears at the repo root, and if any `legacy/` tree loses its
+`NON-CANONICAL.md` marker.**
 
 ---
 
@@ -196,16 +236,53 @@ reappears.**
 
 | What | How |
 |---|---|
-| Landing page | `~/bin/pigpulse-autodeploy.sh` (auto, 5 min) or `scripts/deploy-landing.sh` |
-| Expo app | `cd v3-mqtt-pocketbase/frontend/mobile_app && npx vercel --prod` |
+| **Landing + dashboard (the only web deploy)** | `~/.local/bin/pigpulse-autodeploy.sh` (cron, 5 min) or `scripts/deploy-landing.sh` |
 | Pi backend | `rsync` repo `backend/` → `/home/pigpulse/`, then `systemctl restart` |
 
+- The web deploy is **combined**: the autodeploy stages the Expo export under
+  the landing's `app/` before every push. Deploying the landing alone silently
+  kills the dashboard, so the script also holds `.env` out of the export and
+  refuses to deploy if `admin123` or `127.0.0.1` dev URLs appear in the bundle.
 - **Vercel project `pig-health-monitor`** → `https://pig-health-monitor.vercel.app/`
   - `/` = landing page (must stay the root)
   - `/app/` = Expo web shell, `/app/tabs` = dashboard
+  - `/api/telemetry?collection=telemetry|alerts|pigs|devices` = read-only JSON
 - `pig-health-research-portfolio.vercel.app` = secondary alias, not canonical.
 - **`scripts/deploy.sh` is DISABLED** — it deployed the stale app over the
   landing page. Do not re-enable; use the commands above.
+
+### 4.1 Admin surface — loopback only
+
+PocketBase serves its admin UI at `/_/`, and the gateway's catch-all
+`location /` proxied to it, so admin used to ride the public API path. The
+gateway now returns **403** for `/_/` and `/admin/`.
+
+| Access | Result |
+|---|---|
+| `http://127.0.0.1:8090/_/` | 200 — admin UI, **loopback only** |
+| `http://127.0.0.1/_/` via gateway | **403** |
+| `http://127.0.0.1/api/health` | 200 |
+
+There is **no port 8091**. Any doc saying otherwise is stale.
+
+The live gateway config lives at
+`/usr/local/openresty/nginx/conf/nginx.conf`. The repo copy
+(`v3-mqtt-pocketbase/deploy/openresty/conf/nginx.conf`) is now a verbatim copy
+of it — they had diverged into different architectures, which caused a real
+outage on 2026-09-30. After editing the live file: `openresty -t` then
+`openresty -s reload` (`systemctl reload openresty` is a silent no-op here).
+Backups: `nginx.conf.bak-20260930`, `nginx.conf.bak-20260930b`.
+
+### 4.2 The read-only telemetry proxy (laptop)
+
+`backend/workers/readonly_pb_proxy.py` on `127.0.0.1:8099`, published to the
+internet by Tailscale Funnel, reached only by the Vercel function.
+
+- systemd unit: `pigpulse-readonly-proxy.service`; key in
+  `/etc/pigpulse/readonly-proxy.env` (root-only, **not** in the repo).
+- Env secrets `PB_PROXY_URL` / `PB_PROXY_KEY` live in the Vercel project.
+- Funnel off: `tailscale funnel --https=443 off`.
+- To shut off the whole public data path, stop the unit and the funnel.
 
 ---
 

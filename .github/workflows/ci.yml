@@ -3,8 +3,9 @@ on: [push, pull_request]
 
 # NOTE 2026-09-29: every job below used `working-directory: mobile_app` and
 # `firmware` — the STALE Firebase-era copies at the repo root. The root
-# mobile_app/ has since been deleted and the root firmware/ is frozen. CI was
-# therefore building code that nothing ships. Repointed at the v3 tree.
+# mobile_app/ has since been deleted, and the root firmware/ + landing_page/
+# were moved to legacy/ on 2026-09-30. CI was therefore building code that
+# nothing ships. Repointed at the v3 tree.
 #
 # There is a second workflow file at
 # v3-mqtt-pocketbase/.github/workflows/ci.yml — it is DEAD, because GitHub
@@ -21,27 +22,27 @@ jobs:
         run: |
           set -e
           fail=0
-          # NOTE: root landing_page/ is checked in on purpose as a FROZEN
-          # reference copy (see its NON-CANONICAL.md), so only mobile_app is
-          # an error here. Guarding landing_page too would have failed every
-          # build since we deliberately kept the directory.
-          if [ -e mobile_app ]; then
-            echo "::error::mobile_app/ exists at the repo root. The canonical copy"
-            echo "::error::is v3-mqtt-pocketbase/frontend/mobile_app. See CANON.md."
+          # NOTE: the frozen Firebase-era trees were moved to legacy/ on
+          # 2026-09-30. They are reference only and must never reappear at the
+          # repo root, where their filenames looked live. The guards below are
+          # written as "if present, it must be labelled", so they still work
+          # whether or not the directory exists.
+          if [ -d landing_page ] || [ -d firmware ]; then
+            echo "::error::A frozen component reappeared at the repo root."
+            echo "::error::They belong in legacy/ (see legacy/README.md)."
+            echo "::error::Canonical copies: v3-mqtt-pocketbase/frontend/landing_page"
+            echo "::error::and v3-mqtt-pocketbase/firmware."
             fail=1
           fi
-          # If the frozen copy is ever deleted, that is fine — but if it is
-          # still there it MUST carry its marker, or agents will treat it as live.
-          if [ -d landing_page ] && [ ! -f landing_page/NON-CANONICAL.md ]; then
-            echo "::error::landing_page/ is missing NON-CANONICAL.md. Frozen dirs"
-            echo "::error::must be labelled or agents will start editing them."
-            fail=1
-          fi
-          if [ -d firmware ] && [ ! -f firmware/NON-CANONICAL.md ]; then
-            echo "::error::firmware/ is missing NON-CANONICAL.md (root copy is frozen;"
-            echo "::error::canonical firmware is v3-mqtt-pocketbase/firmware/)."
-            fail=1
-          fi
+          # If the frozen copies are ever restored to legacy/, they MUST carry
+          # their marker, or agents will treat them as live.
+          for d in legacy/landing_page legacy/firmware; do
+            if [ -d "$d" ] && [ ! -f "$d/NON-CANONICAL.md" ]; then
+              echo "::error::$d is missing NON-CANONICAL.md. Frozen dirs must be"
+              echo "::error::labelled or agents will start editing them."
+              fail=1
+            fi
+          done
           if [ -e "firebase.json" ] || [ -e ".firebaserc" ] || [ -d "firebase_config" ]; then
             echo "::error::Firebase config has returned. Firebase was retired in"
             echo "::error::favour of MQTT + PocketBase. See CANON.md."
