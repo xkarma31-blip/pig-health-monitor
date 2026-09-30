@@ -42,6 +42,9 @@ from mlx_reader import MlxReader, averaged_reading
 
 ROOT = Path(__file__).resolve().parent
 STATIC = ROOT / config.STATIC_DIR
+# Technician console pages. Kept out of STATIC/ because /static/ serves a
+# flat one-segment allowlist, and the console is a multi-page tree.
+ADMIN_STATIC = STATIC / "admin"
 
 _CTYPE = {
     ".html": "text/html; charset=utf-8",
@@ -288,10 +291,45 @@ class Handler(BaseHTTPRequestHandler):
                        b"Audio now comes from the ESP32-S3 barn mic: "
                        b"/esp/stream  /esp/status  /esp/record\n")
             return
+        # --- Technician console (admin_console.py) -------------------------
+        # Additive and unreachable from every branch above: "/admin" and
+        # "/admin/..." match none of them, so no existing route can be
+        # shadowed. Imported lazily so the Pi pays the import cost only when
+        # an operator actually opens the console.
+        if path == "/admin" or path.startswith("/admin/"):
+            self._admin(path, query)
+            return
         if path.startswith("/static/"):
             self._serve_static(path[len("/static/"):])
             return
         self._send(404, "text/plain", b"Not found")
+
+    def _admin(self, path: str, query: dict) -> None:
+        import admin_console
+
+        c = admin_console.ctx()
+        if path.startswith("/admin/api/"):
+            try:
+                _sa = self.server.server_address
+                port = int(_sa[1]) if isinstance(_sa, tuple) else config.WEB_PORT
+                code, body = admin_console.api(c, path, query, port)
+            except Exception as e:  # noqa: BLE001
+                body = json.dumps({"error": str(e)}).encode()
+                code = 500
+            self._send(code, "application/json", body)
+            return
+
+        # /admin  ->  Overview; everything else is a page shell from static/admin/
+        rel = "index.html" if path == "/admin" else path[len("/admin/"):]
+        if not rel or ".." in rel or rel.startswith("/") or "\\" in rel:
+            self._send(404, "text/plain", b"Not found")
+            return
+        f = ADMIN_STATIC / rel
+        if not f.is_file():
+            self._send(404, "text/plain", b"Not found")
+            return
+        self._send(200, _CTYPE.get(f.suffix.lower(), "text/html; charset=utf-8"),
+                   f.read_bytes())
 
     def _serve_static(self, rel: str) -> None:
         """Flat whitelist: one path segment under static/ (no traversal)."""
@@ -472,6 +510,23 @@ def main() -> None:
         action="store_true",
         help="run one averaged field sample (CLI smoke test) and exit",
     )
+    ap.add_argument(
+        "--dev-source",
+        default="",
+        metavar="SD_ROOT",
+        help=(
+            "serve the /admin console against a mounted Pi SD card (e.g. "
+            "/media/solrahk/rootfs) instead of live hardware. Changes ONLY "
+            "where data is read from -- the console code is identical to what "
+            "runs on the Pi. Starts no I2C loop, no ESP listener on :9090 and "
+            "no MQTT publisher."
+        ),
+    )
+    ap.add_argument(
+        "--dev-allow-any",
+        action="store_true",
+        help="permit a non-loopback bind in --dev-source mode (dev only)",
+    )
     args = ap.parse_args()
 
     if args.once:
@@ -482,19 +537,35 @@ def main() -> None:
         print(json.dumps(reading, indent=2))
         return
 
-    print(f"[web] init reader...")
-    # Kick background loop
-    threading.Thread(target=_loop, daemon=True).start()
-    # ESP32-S3 barn mic — the only audio source; firmware pushes PCM to TCP :9090
-    print("[web] starting ESP mic ingest (tcp :9090)...")
-    esp_audio_ingest.ensure_started()
-    # Publish thermal readings over MQTT so the Pi is a pipeline node
-    _publisher.start()
-    # Brief wait for first frame so / isn't empty on first hit
-    for _ in range(40):
-        if _cached:
-            break
-        time.sleep(0.1)
+    import admin_console
+    ctx = admin_console.configure(args.dev_source)
+    dev_root: Path | None = ctx.dev_source
+    if dev_root is not None:
+        print(f"[web] DEV-SNAPSHOT mode: console data source = {dev_root}")
+        if not dev_root.is_dir():
+            print(f"[web] --dev-source path does not exist: {dev_root}")
+            raise SystemExit(2)
+        if args.host not in ("127.0.0.1", "localhost", "::1") and not args.dev_allow_any:
+            # A dev preview exposes a source browser, config and unit files.
+            # Refuse to put that on a network by accident.
+            print(f"[web] refusing to bind {args.host} in dev mode without "
+                  f"--dev-allow-any", flush=True)
+            raise SystemExit(2)
+        print("[web] skipping I2C loop, ESP ingest (:9090) and MQTT publisher")
+    else:
+        print(f"[web] init reader...")
+        # Kick background loop
+        threading.Thread(target=_loop, daemon=True).start()
+        # ESP32-S3 barn mic — the only audio source; firmware pushes PCM to TCP :9090
+        print("[web] starting ESP mic ingest (tcp :9090)...")
+        esp_audio_ingest.ensure_started()
+        # Publish thermal readings over MQTT so the Pi is a pipeline node
+        _publisher.start()
+        # Brief wait for first frame so / isn't empty on first hit
+        for _ in range(40):
+            if _cached:
+                break
+            time.sleep(0.1)
 
     httpd = ThreadingHTTPServer((args.host, args.port), Handler)
     tls_cert = getattr(config, "TLS_CERT", "")
