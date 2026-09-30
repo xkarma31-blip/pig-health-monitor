@@ -1,0 +1,34 @@
+[Unit]
+Description=PigPulse read-only PocketBase telemetry proxy
+Documentation=file:///home/solrahk/pig-health-monitor/CANON.md
+# The proxy is useless without PocketBase behind it.
+After=network-online.target pigpulse-pocketbase.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+# Laptop rig. The Pi uses the units in backend/systemd/ and does NOT run this.
+WorkingDirectory=/home/solrahk/pig-health-monitor/v3-mqtt-pocketbase
+ExecStart=/usr/bin/python3 /home/solrahk/pig-health-monitor/v3-mqtt-pocketbase/backend/workers/readonly_pb_proxy.py
+
+# PROXY_KEY is the shared secret the Vercel function presents as
+# X-PigPulse-Key. It lives in this root-only file, never in the repo and
+# never in a client bundle.
+EnvironmentFile=/etc/pigpulse/readonly-proxy.env
+
+# Bind loopback only. Tailscale Funnel is what publishes this service, and
+# Funnel must be the only path out.
+Environment=PROXY_HOST=127.0.0.1
+Environment=PROXY_PORT=8099
+Environment=PB_UPSTREAM=http://127.0.0.1:8090
+
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/solrahk/.local/state
+
+[Install]
+WantedBy=multi-user.target

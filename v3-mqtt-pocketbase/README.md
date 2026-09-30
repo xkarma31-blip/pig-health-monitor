@@ -29,7 +29,7 @@ cp .env.example .env
 docker compose up -d
 ```
 
-- **PocketBase Admin:** http://localhost:8091
+- **PocketBase Admin:** http://127.0.0.1:8090/_/
 - **API Gateway:** http://localhost:80
 - **MQTT Broker:** localhost:1883
 

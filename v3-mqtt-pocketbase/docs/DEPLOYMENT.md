@@ -25,7 +25,7 @@ docker compose up -d
 |---------|------|-----|
 | OpenResty | 80 | http://localhost |
 | PocketBase API | 8090 | http://localhost:8090 |
-| PocketBase Admin | 8091 | http://localhost:8091 |
+| PocketBase Admin | 8090 (`/_/`) | http://127.0.0.1:8090/_/ |
 | MQTT Broker | 1883 | localhost:1883 |
 | MQTT WebSocket | 9001 | ws://localhost:9001 |
 | ValKey | 6379 | localhost:6379 |
@@ -58,7 +58,7 @@ cd firmware
 ```
 
 ### 5. Open Dashboard
-- PocketBase Admin: http://localhost:8091
+- PocketBase Admin: http://127.0.0.1:8090/_/
 - Expo App: http://localhost:8082 (if running)
 
 ## Environment Variables

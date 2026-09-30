@@ -23,7 +23,7 @@ docker compose up -d
 ```
 
 ### 3. Open the Dashboard
-- **PocketBase Admin:** http://localhost:8091
+- **PocketBase Admin:** http://127.0.0.1:8090/_/
   - Email: `admin@pigpulse.local`
   - Password: `$PB_PASSWORD`
 - **API Gateway:** http://localhost:80
@@ -35,7 +35,7 @@ docker compose up -d
 |---------|------|-----|---------|
 | OpenResty | 80 | http://localhost | API gateway, rate limiting |
 | PocketBase API | 8090 | http://localhost:8090 | Database + API |
-| PocketBase Admin | 8091 | http://localhost:8091 | Admin dashboard |
+| PocketBase Admin | 8090 (`/_/`) | http://127.0.0.1:8090/_/ | Admin dashboard |
 | MQTT Broker | 1883 | localhost:1883 | IoT message broker |
 | MQTT WebSocket | 9001 | ws://localhost:9001 | Web MQTT clients |
 | ValKey | 6379 | localhost:6379 | Cache layer |

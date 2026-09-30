@@ -78,3 +78,4 @@ docs/*.xlsx
 
 # === Tool scratch state (2026-09-30 cleanup) ===
 .superpowers/
+.deploy-stage/

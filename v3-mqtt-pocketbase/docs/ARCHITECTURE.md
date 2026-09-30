@@ -48,7 +48,7 @@
 │           │    │  - SQLite WAL mode             │                       │
 │           │    │  - Realtime SSE subscriptions  │                       │
 │           │    │  - Built-in auth (QR login)    │                       │
-│           │    │  - :8090 API + :8091 Admin      │                       │
+│           │    │  - :8090 API + /_/ Admin (loopback only)      │                       │
 │           │    └───────────────┬───────────────┘                       │
 └───────────┼────────────────────┼──────────────────────────────────────────┘
             │                    │

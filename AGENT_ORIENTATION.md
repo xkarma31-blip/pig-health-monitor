@@ -1,5 +1,27 @@
 # PigPulse v3 — Agent & Human Orientation Guide
 
+> ⚠️ **HISTORICAL SNAPSHOT — 2026-09-02. DO NOT TRUST AS CURRENT.**
+>
+> This file was accurate on its date and is kept for the reasoning it records.
+> It has since drifted from the system in ways that will mislead you:
+>
+> - It says the Expo app is "100% Firebase, no PocketBase SDK" and shows mock
+>   data. The app now reads live PocketBase telemetry through
+>   `usePocketbaseRealtime.ts` → `/api/telemetry`.
+> - It says ValKey caching is "dead code". Unverified either way; check the
+>   bridge for an actual Redis client import.
+> - It gives PocketBase admin as port `8091`. There is no 8091. Admin is
+>   `http://127.0.0.1:8090/_/`, and the gateway now **403s** `/_/` and
+>   `/admin/` so admin never rides the public path.
+> - It documents a Docker-only deployment. The live rig is a hybrid:
+>   Docker for Mosquitto/ValKey/thermal-ws, systemd for PocketBase/bridge/OpenResty.
+> - It does not mention the single-domain web topology or the read-only
+>   telemetry proxy.
+>
+> **For current truth read `CANON.md` and `PIGPULSE_EXTERNAL_AI_CONTEXT.md`.**
+> Verify anything load-bearing against live command output before acting on
+> anything written below.
+
 > **Purpose:** Onboard any AI assistant or new teammate in <5 minutes.  
 > **Date:** 2026-09-02 **Stack:** ESP32 → Mosquitto → Python Bridge → PocketBase → OpenResty → Expo  
 > **Live system status:** See §1 Health Matrix (verified 2026-09-02 10:55 PST)
