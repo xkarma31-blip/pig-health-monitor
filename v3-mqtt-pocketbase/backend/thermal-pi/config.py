@@ -7,8 +7,16 @@ Provenance: values copied from ESP32 config.h / sensors.cpp (bench firmware).
 Pi pin map is the only hardware remap (ESP GPIO21/22 → Pi header pins 3/5).
 """
 
+import os as _os
+
 # --- Device -----------------------------------------------------------
-DEVICE_ID = "PIGPULSE-RPI4B"
+# Single source of truth for this node's identity.
+# 2026-09-30: this was hardcoded as "PIGPULSE-RPI4B" while thermal_publish.py
+# separately hardcoded "pi-thermal-01" and never imported config at all — the two
+# layers disagreed and the config value was dead code. The value below is the one
+# that was actually being published and stored, so switching to it changes no
+# topic and no stored deviceId.
+DEVICE_ID = _os.environ.get("DEVICE_ID", "pi-thermal-01")
 FIRMWARE_VERSION = "0.1.0-pi"
 
 # --- MLX90640 I2C (Raspberry Pi hardware bus) -------------------------
@@ -53,7 +61,8 @@ STATIC_DIR = "static"
 # wlan0-static-ip.service (see backend/systemd/). These values exist only so
 # /health can print the correct URL for the operator; they do not configure WiFi.
 #   NETWORK_MODE=ap python3 web_server.py
-import os as _os
+# (`import os as _os` moved to the top of this file on 2026-09-30 so DEVICE_ID
+#  could be read from the environment before it is used.)
 
 NETWORK_MODE = _os.environ.get("NETWORK_MODE", "ap").strip().lower()  # ap | client
 

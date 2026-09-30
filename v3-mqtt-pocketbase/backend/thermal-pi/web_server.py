@@ -99,17 +99,54 @@ def i2c_addrs_cached() -> str:
     return text
 
 
+_log_state: dict = {}
+
+
+def _log(level: str, msg: str, every_s: float = 60.0) -> None:
+    """Rate-limited logging so a persistent fault cannot flood the journal.
+
+    First occurrence always logs. After that, an identical message logs at most
+    once per `every_s`, with a repeat count. This is the difference between
+    "the thermal feed died and I cannot tell why" and a usable journal.
+    """
+    now = time.monotonic()
+    key = msg[:160]
+    prev = _log_state.get(key)
+    if prev is None:
+        _log_state[key] = [now, 1]
+        print(f"[web] {msg}", flush=True)
+        return
+    prev[1] += 1
+    if now - prev[0] < every_s:
+        return
+    n = prev[1]
+    prev[0] = now
+    prev[1] = 1
+    print(f"[web] {msg} (repeated {n}x)", flush=True)
+
+
 def _loop() -> None:
     global _frame_seq, _last_ok, _read_ms, _fps_ema, _last_t, _last_error, _cached
-    # Boot: try init, retry every 10s like the ESP loop
-    # Surface why init fails so /health is not stuck on "starting".
+    # Boot: try init, retry every 10s like the ESP loop.
+    #
+    # 2026-09-30: this loop used to fail in COMPLETE SILENCE. A dead sensor left
+    # systemd reporting "active", the dashboard showed a bare "Sensor not ready",
+    # and the reason existed only inside a global — so a regression that stopped
+    # the thermal feed entirely left no evidence anywhere. Log it, rate-limited so
+    # a permanently dead sensor cannot flood the journal.
+    _log("warn", "thermal: initialising MLX90640 ...")
     while not _reader.init():
         with _lock:
             _last_error = _reader.last_error or "init retrying"
             _last_ok = False
+        _log("error",
+             f"thermal: MLX90640 init failed: {_last_error} "
+             f"(retrying every 10s; check 3V3/GND, SDA=pin3, SCL=pin5, "
+             f"4.7k pull-ups, expected ACK at 0x33)")
         time.sleep(10)
 
     live_every = 0.5  # ESP live sample cadence
+    _first_frame_logged = False
     while True:
         t0 = time.monotonic()
         img: list[float] = []
@@ -138,6 +175,15 @@ def _loop() -> None:
                 _cached = st
                 _frame_seq += 1
                 _last_ok = True
+                # 2026-09-30: log the transition back to life once, so a
+                # recovered sensor is visible in the journal rather than just
+                # silently becoming normal again.
+                if not _first_frame_logged:
+                    _first_frame_logged = True
+                    print(f"[web] thermal: first frame OK "
+                          f"(center={st.get('center', 0):.2f} C, "
+                          f"ambient={st.get('ambient', 0):.2f} C) — feed live",
+                          flush=True)
                 _last_error = "OK"
                 _last_t = t1
                 # Publish to MQTT so the thermal data joins the normal
@@ -151,7 +197,14 @@ def _loop() -> None:
             else:
                 _last_ok = False
                 _last_error = _reader.last_error
+                # 2026-09-30: this branch was silent. A sensor that initialised
+                # and then stopped answering produced no log at all, which is
+                # indistinguishable from "working" in journalctl.
+                _log("error",
+                     f"thermal: frame read failed: {_last_error or 'unknown'} "
+                     f"(is the I2C cable still seated?)")
                 if not _reader.ready:
+                    _log("warn", "thermal: reader not ready, re-initialising")
                     _reader.init()
         time.sleep(max(0.0, live_every - (time.monotonic() - t0)))
 

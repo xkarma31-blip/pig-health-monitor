@@ -35,7 +35,12 @@ import config
 
 # The Pi is a node like any other. This id is what shows up in the
 # `devices` collection and what the app filters on.
-DEVICE_ID = "pi-thermal-01"
+#
+# 2026-09-30: this was a hardcoded literal that ignored config.DEVICE_ID, so the
+# two layers disagreed about this node's identity. It now reads from config, and
+# the *default* keeps the previously published id byte-for-byte — the MQTT topic
+# and every stored deviceId are unchanged, only the source of truth moved.
+DEVICE_ID = config.DEVICE_ID
 
 # A pig is not 38.5 °C because the room is. Publishing every 0.5 s frame is
 # 172,800 rows/day per collection, which is how a device ends up starving the
