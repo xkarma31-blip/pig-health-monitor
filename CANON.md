@@ -390,10 +390,10 @@ than falling back to a default. `.husky/pre-commit` blocks keys/JWTs/PEMs.
 | 4 | Camera RTSP creds hard-coded in source | not moved |
 | 5 | LWT/`status` topic missing from ESP32-S3 firmware | `devices` rows go stale |
 | 6 | `pig/+/audio` has no publisher | orphaned contract |
-| 7 | **Pi has no WAN.** AP is an isolated island. Tailscale cannot help on its own — see §2.5 | blocks all remote access |
+| 7 | **Pi has no WAN.** AP is an isolated island. Tailscale cannot help on its own — see §2.4 | blocks all remote access |
 | 8 | TLS cert has no `192.168.69.1` SAN | regen on the Pi |
-| 9 | **No `/cctv` route exists in the gateway** | **BROKEN LINK** — see §2.5. The §2 diagram claims a proxy that was never configured |
-| 10 | **`cloud_sync.py` cannot carry live video** | design gap — see §2.5. It syncs PocketBase *records* on an interval, not a stream |
+| 9 | **No `/cctv` route exists in the gateway** | **BROKEN LINK** — see §2.4. The §2 diagram claims a proxy that was never configured |
+| 10 | **`cloud_sync.py` cannot carry live video** | design gap — see §2.4. It syncs PocketBase *records* on an interval, not a stream |
 
 ---
 
