@@ -1,0 +1,114 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGlob "**/build_revision.py" [90min . · 1 match[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py [90m[offset=1, limit=420][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✗ [0mSkill "" failed
+[91m[1mError: [0mInvalid arguments for tool "skill":
+- id: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead CANON.md [90m[offset=1, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+## Verdict
+
+**Yes—two left-side split-boss pairs can be a justified, functional addition**, provided they are actual mating bolt ears integrated into the tub and lid. Their function is **supplementary local clamping of the left lid edge**, between the existing corner fasteners—not hinging, wall mounting, or a replacement for the corner bolts.
+
+The image description establishes paired external bosses, **not hinges**. A split bolted closure is a plausible functional interpretation, not proof of the reference mechanism.
+
+Read-only review; no edits or subagents. References below are to `v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py`.
+
+## Findings, in severity order
+
+### 1. Medium — A 4 mm lid ear conflicts with the specified 3 mm lid-side envelope
+
+**References: lines 91–96, 125–127.**
+
+The proposed tub ears occupy **z=26…30**. With the lid translated upward by 30 mm, its specified local **z=0…3** becomes **assembly z=30…33**. These meet correctly at z=30.
+
+However, **12×14×4 cannot describe both halves while retaining those envelopes**:
+
+- Tub half: 4 mm thick is consistent.
+- Lid half: use **3 mm thickness**, or explicitly accept a locally thicker upper boss.
+- Do not center a 4 mm lid ear on local z=1.5: it would occupy −0.5…3.5 and intersect the tub ear in assembly.
+
+**Recommendation:** tub ears **12×14×4**, lid ears **12×14×3**, with mating faces at assembly z=30. If 4 mm upper ears are wanted, put them at local z=0…4, accepting 1 mm proud of the lid—not below its mating face.
+
+### 2. Medium — “4 mm overlap” is not 4 mm of wall engagement
+
+**References: lines 79–83, 108.**
+
+For a 12 mm X-width ear centered at **x=−62**, its bounds are **x=−68…−56**. The straight left wall occupies **x=−60…−57**.
+
+Thus:
+
+- Overlap inside the tub’s outside outline: **4 mm**.
+- Actual wall intersection: **3 mm**, the full nominal wall thickness.
+- Extension into the cavity: **1 mm**.
+
+This is a genuine positive-volume attachment, unlike an ear that only touches the outer wall. But rounding the ear’s inner corners and applying edge relief reduces the attachment near the ends; the full 14 mm Y-span should not be treated as an uninterrupted rectangular web.
+
+**Recommendation:** retain a **broad, solid root across the wall**, with modest plan corner radii, approximately **2 mm** as a concept starting point. Keep the bolt-bearing surfaces flat. Do not hollow or neck down the root merely to resemble a boss. This establishes a credible connection geometrically; it does **not** establish load capacity.
+
+### 3. Low — Additional fasteners provide local clamping, but also add removal steps
+
+**References: lines 84–95.**
+
+Existing corner axes are **(±54, ±50)**. The proposed side axes **(−64, ±32)** are approximately **20.6 mm** from their nearest corner axes. They are therefore distinct closure locations rather than duplicate holes at the corner posts.
+
+Their meaningful contribution is local left-edge restraint. They do not create a hinge: **all applicable corner and supplementary fasteners must be released before straight lid removal**.
+
+A clearance bore alone is not a closure. Specify purchased **through bolts plus nuts**, with heads and nuts bearing on the outer faces of the paired ears. Do not imply that an unthreaded lower bore retains the screw.
+
+## Recommended geometry and conflict assessment
+
+- **Two stations:** y=−32 and +32.
+- **Ear plan centers:** x=−62.
+- **Plan size:** 12 mm X × 14 mm Y; rounded rectangle with a broad fused root.
+- **Tub halves:** z=26…30.
+- **Lid halves:** local z=0…3; assemble by translation **+30 mm Z**, without mirroring or rotating the hole pattern.
+- **Bolt axes:** x=−64, y=±32, parallel to Z.
+- **Concept bore:** Ø3.4 mm, consistent with the existing nominal M3 clearance convention—not a print-fit approval.
+- **Outboard bore ligament:** 4 mm from axis to x=−68, leaving **2.3 mm nominal material** to a Ø3.4 bore before edge relief. Hardware bearing diameters must be checked separately.
+
+**No nominal geometric conflict is apparent with the listed components:**
+
+- **Corner posts:** nearest post center is 13 mm beyond the ear’s nearest Y-edge; its 4.5 mm radius does not reach the ear. Head, washer and tool envelopes still need checking. **Lines 84–88.**
+- **Tray:** tray X-envelope is ±41; the ear’s inboard edge is −56, giving **15 mm nominal X separation**. Unknown electronics and strap tails remain outside this assessment. **Lines 223–230.**
+- **Spine:** X-envelope is ±24, well inboard of the ears. **Lines 188–200.**
+- **SHT:** the arm/landing is associated with y=61 and the carrier is offset toward positive X; the proposed negative-X ears at y=±32 are outside those nominal envelopes. **Lines 202–221.**
+- **Cable apertures:** positioned on the ±Y walls, not at these left-side ear stations. **Lines 113–119.**
+
+Straight +Z lid removal remains geometrically plausible **if there are no hooks, undercuts, overlapping lips, or retained bolts crossing the split plane**.
+
+## Missing verification
+
+The current mesh gate checks manifold edges and positive volume, not closure behavior or attachment connectivity (**lines 298–310**). Before accepting a modeled revision, check:
+
+1. Each ear is genuinely fused into its parent mesh, not a disconnected closed island.
+2. Both hole pairs align in the assembled transform.
+3. Head, nut, washer and tool envelopes clear the wall and adjacent hardware.
+4. The lid clears the tub through a straight +Z removal sweep after fastener removal.
+
+**Bottom line:** recommend this as an **optional, real supplementary split-boss closure**, with a 4 mm tub half and 3 mm lid half. It is defensible reference-like functionality—not fake hinge detail—but offers incremental edge clamping at the cost of two additional fasteners. No load, seal, hardware-fit, or print-fit approval is implied.

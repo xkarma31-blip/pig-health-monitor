@@ -1,0 +1,1435 @@
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+{"nonmanifold_edges": 0, "volume_mm3": 88.07427988783954, "nominal_height_mm": 3, "optional_tray_top_depth_mm": 9, "gross_clearance_to_lid_mm": 21, "nominal_20mm_stack_margin_mm": 1, "bolt_stack_grip_mm": 9, "candidate_bolt_length_mm": 14, "minimum_length_under_prior_assumptions_mm": 13.4, "limits": ["Only1mm nominal top margin before tolerances and cables", "3mm underside gap requires electrical/solder protrusion assessment", "Use four spacers; change tray bolts rather than retain18mm bolt blindly", "Not a physical fit or universal header compatibility claim"]}
+Blender 4.0.2
+
+Blender quit
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+Import finished in 0.0027 sec.
+Import finished in 0.0012 sec.
+Import finished in 0.0014 sec.
+Import finished in 0.0010 sec.
+{"pass": true, "assumed_hardware_checks": [{"axis_mm": [-15, -25], "role": "shaft", "printed_hits_mm3": {"main_tub": 0.0, "main_lid": 0, "thermal_tub": 0, "thermal_face": 0, "thermal_angled_hood": 0, "thermal_raised_cradle": 0, "acoustic_tub": 0, "acoustic_face": 0, "mounting_spine": 0, "sht_mount_arm": 0, "sht_adjustable_carrier": 0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0, "microphone_strap_carrier.001": 0, "acoustic_trim": 0, "acoustic_trim.001": 0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0, "tray_spacer_6mm.003": 0, "tray_spacer_6mm.004": 0}, "pcb_reservation_hit_mm3": 0, "pass": true}, {"axis_mm": [-15, -25], "role": "nut_washer", "printed_hits_mm3": {"main_tub": 0.0, "main_lid": 0, "thermal_tub": 0, "thermal_face": 0, "thermal_angled_hood": 0, "thermal_raised_cradle": 0, "acoustic_tub": 0, "acoustic_face": 0, "mounting_spine": 0, "sht_mount_arm": 0, "sht_adjustable_carrier": 0, "electronics_strap_tray": 0, "microphone_strap_carrier": 0, "microphone_strap_carrier.001": 0, "acoustic_trim": 0, "acoustic_trim.001": 0, "tray_spacer_6mm.001": 0, "tray_spacer_6mm.002": 0, "tray_spacer_6mm.003": 0, "tray_spacer_6mm.004": 0}, "pcb_reservation_hit_mm3": 0, "pass": true}, {"axis_mm": [-15, 25], "role": "shaft", "printed_hits_mm3": {"main_tub": 0.0, "main_lid": 0, "thermal_tub": 0, "thermal_face": 0, "thermal_angled_hood": 0, "thermal_raised_cradle": 0, "acoustic_tub": 0, "acoustic_face": 0, "mounting_spine": 0, "sht_mount_arm": 0, "sht_adjustable_carrier": 0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0, "microphone_strap_carrier.001": 0, "acoustic_trim": 0, "acoustic_trim.001": 0, "tray_spacer_6mm.001": 0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0, "tray_spacer_6mm.004": 0}, "pcb_reservation_hit_mm3": 0, "pass": true}, {"axis_mm": [-15, 25], "role": "nut_washer", "printed_hits_mm3": {"main_tub": 0.0, "main_lid": 0, "thermal_tub": 0, "thermal_face": 0, "thermal_angled_hood": 0, "thermal_raised_cradle": 0, "acoustic_tub": 0, "acoustic_face": 0, "mounting_spine": 0, "sht_mount_arm": 0, "sht_adjustable_carrier": 0, "electronics_strap_tray": 0, "microphone_strap_carrier": 0, "microphone_strap_carrier.001": 0, "acoustic_trim": 0, "acoustic_trim.001": 0, "tray_spacer_6mm.001": 0, "tray_spacer_6mm.002": 0, "tray_spacer_6mm.003": 0, "tray_spacer_6mm.004": 0}, "pcb_reservation_hit_mm3": 0, "pass": true}, {"axis_mm": [15, -25], "role": "shaft", "printed_hits_mm3": {"main_tub": 0.0, "main_lid": 0, "thermal_tub": 0, "thermal_face": 0, "thermal_angled_hood": 0, "thermal_raised_cradle": 0, "acoustic_tub": 0, "acoustic_face": 0, "mounting_spine": 0, "sht_mount_arm": 0, "sht_adjustable_carrier": 0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0, "microphone_strap_carrier.001": 0, "acoustic_trim": 0, "acoustic_trim.001": 0, "tray_spacer_6mm.001": 0, "tray_spacer_6mm.002": 0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0}, "pcb_reservation_hit_mm3": 0, "pass": true}, {"axis_mm": [15, -25], "role": "nut_washer", "printed_hits_mm3": {"main_tub": 0.0, "main_lid": 0, "thermal_tub": 0, "thermal_face": 0, "thermal_angled_hood": 0, "thermal_raised_cradle": 0, "acoustic_tub": 0, "acoustic_face": 0, "mounting_spine": 0, "sht_mount_arm": 0, "sht_adjustable_carrier": 0, "electronics_strap_tray": 0, "microphone_strap_carrier": 0, "microphone_strap_carrier.001": 0, "acoustic_trim": 0, "acoustic_trim.001": 0, "tray_spacer_6mm.001": 0, "tray_spacer_6mm.002": 0, "tray_spacer_6mm.003": 0, "tray_spacer_6mm.004": 0}, "pcb_reservation_hit_mm3": 0, "pass": true}, {"axis_mm": [15, 25], "role": "shaft", "printed_hits_mm3": {"main_tub": 0.0, "main_lid": 0, "thermal_tub": 0, "thermal_face": 0, "thermal_angled_hood": 0, "thermal_raised_cradle": 0, "acoustic_tub": 0, "acoustic_face": 0, "mounting_spine": 0, "sht_mount_arm": 0, "sht_adjustable_carrier": 0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0, "microphone_strap_carrier.001": 0, "acoustic_trim": 0, "acoustic_trim.001": 0, "tray_spacer_6mm.001": 0, "tray_spacer_6mm.002": 0, "tray_spacer_6mm.003": 0, "tray_spacer_6mm.004": 0.0}, "pcb_reservation_hit_mm3": 0, "pass": true}, {"axis_mm": [15, 25], "role": "nut_washer", "printed_hits_mm3": {"main_tub": 0.0, "main_lid": 0, "thermal_tub": 0, "thermal_face": 0, "thermal_angled_hood": 0, "thermal_raised_cradle": 0, "acoustic_tub": 0, "acoustic_face": 0, "mounting_spine": 0, "sht_mount_arm": 0, "sht_adjustable_carrier": 0, "electronics_strap_tray": 0, "microphone_strap_carrier": 0, "microphone_strap_carrier.001": 0, "acoustic_trim": 0, "acoustic_trim.001": 0, "tray_spacer_6mm.001": 0, "tray_spacer_6mm.002": 0, "tray_spacer_6mm.003": 0, "tray_spacer_6mm.004": 0}, "pcb_reservation_hit_mm3": 0, "pass": true}], "replaced_spacers": 4, "tray_top_depth_mm": 9.000001907348633, "lid_inner_depth_mm": 29.999998092651367, "gross_clearance_mm": 20.999996185302734, "stack20_margin_mm": 0.9999961853027344, "printed_part_collisions": [], "reservation_intersections_mm3": {"main_tub": 0.0, "main_lid": 0, "thermal_tub": 0, "thermal_face": 0, "thermal_angled_hood": 0, "thermal_raised_cradle": 0, "acoustic_tub": 0, "acoustic_face": 0, "mounting_spine": 0, "sht_mount_arm": 0, "sht_adjustable_carrier": 0, "electronics_strap_tray": 0, "microphone_strap_carrier": 0, "microphone_strap_carrier.001": 0, "acoustic_trim": 0, "acoustic_trim.001": 0, "tray_spacer_6mm.001": 0, "tray_spacer_6mm.002": 0, "tray_spacer_6mm.003": 0, "tray_spacer_6mm.004": 0}, "candidate_hardware": "four M3x14, 9mm grip, 13.4mm minimum under prior assumptions", "limits": ["Assumed shaft/nut envelopes only; no head/tool/actual hardware validation", "No insulation,connector or actual PCB validation"]}
+Blender 4.0.2
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/revision-p/assembled-review.blend"
+
+Blender quit
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+{"status": "research coupon, uninstalled and unvalidated retention", "source_board_plan_mm": [14, 12], "sound_keepout_radius_mm": 6.3, "corner_bearing_total_nominal_mm2": 9, "seat_z_mm": 11, "nonmanifold_edges": 0, "volume_mm3": 1716.3020766985328, "retention": "Four outboard stops/tie tunnels; purchased ties, prethreaded, not printed hardware", "limitations": ["Tie bends/head and actual port/component-safe route require verification", "Actual PCB underside/corner-safe areas unknown", "Gasket,port alignment and response not validated", "Must check installed bolt/tie/cable envelopes"]}
+Blender 4.0.2
+
+Blender quit
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+Import finished in 0.0062 sec.
+{"status": "research replacement carrier installation", "scene_sha256": "b221e03ccc1a797e777850bb10df4b1db598ddcf6cda69d7125b322d8b2d0122", "checker_sha256": "2d9ed63ddebe0d1eda89ef63c3294c28bce10072c1e41438532f18474efe8741", "saved_transform_valid": true, "finite_contact_patches": [{"local_xy_mm": [-6.25, -5.25], "seat_area_mm2": 2.249999949708581, "pass": true}, {"local_xy_mm": [-6.25, 5.25], "seat_area_mm2": 2.249999949708581, "pass": true}, {"local_xy_mm": [6.25, -5.25], "seat_area_mm2": 2.249999949708581, "pass": true}, {"local_xy_mm": [6.25, 5.25], "seat_area_mm2": 2.249999949708581, "pass": true}], "through_tunnel_checks": [{"side": -1, "y_mm": -5.25, "reserved_section_mm": [0.6, 1.0], "probe_count": 9, "pass": true}, {"side": -1, "y_mm": 5.25, "reserved_section_mm": [0.6, 1.0], "probe_count": 9, "pass": true}, {"side": 1, "y_mm": -5.25, "reserved_section_mm": [0.6, 1.0], "probe_count": 9, "pass": true}, {"side": 1, "y_mm": 5.25, "reserved_section_mm": [0.6, 1.0], "probe_count": 9, "pass": true}], "assumed_rear_hardware": [{"axis_mm": [-10, -10], "support_hit_mm3": 0.0, "board_hit_mm3": 0}, {"axis_mm": [-10, 10], "support_hit_mm3": 0.0, "board_hit_mm3": 0}, {"axis_mm": [10, -10], "support_hit_mm3": 0.0, "board_hit_mm3": 0}, {"axis_mm": [10, 10], "support_hit_mm3": 0.0, "board_hit_mm3": 0}], "sampled_corner_bearing": [{"xy_mm": [-6.25, -5.25], "hit": true, "seat_z_mm": 11.0, "pass": true}, {"xy_mm": [-6.25, 5.25], "hit": true, "seat_z_mm": 11.0, "pass": true}, {"xy_mm": [6.25, -5.25], "hit": true, "seat_z_mm": 11.0, "pass": true}, {"xy_mm": [6.25, 5.25], "hit": true, "seat_z_mm": 11.0, "pass": true}], "support_intersections_mm3": {"main_tub": 0, "main_lid": 0, "thermal_tub": 0, "thermal_face": 0, "thermal_angled_hood": 0, "thermal_raised_cradle": 0, "acoustic_tub": 0.0, "acoustic_face": 0, "mounting_spine": 0, "sht_mount_arm": 0, "sht_adjustable_carrier": 0, "electronics_strap_tray": 0, "microphone_strap_carrier.001": 0, "acoustic_trim": 0, "acoustic_trim.001": 0, "tray_spacer_6mm.001": 0, "tray_spacer_6mm.002": 0, "tray_spacer_6mm.003": 0, "tray_spacer_6mm.004": 0}, "board_intersections_mm3": {"main_tub": 0, "main_lid": 0, "thermal_tub": 0, "thermal_face": 0, "thermal_angled_hood": 0, "thermal_raised_cradle": 0, "acoustic_tub": 0.0, "acoustic_face": 0, "mounting_spine": 0, "sht_mount_arm": 0, "sht_adjustable_carrier": 0, "electronics_strap_tray": 0, "microphone_strap_carrier.001": 0, "acoustic_trim": 0, "acoustic_trim.001": 0, "tray_spacer_6mm.001": 0, "tray_spacer_6mm.002": 0, "tray_spacer_6mm.003": 0, "tray_spacer_6mm.004": 0}, "support_board_intersection_mm3": 8.58306884765625e-06, "pass": true, "limits": ["PCB body only; no underside component or acoustic port validation", "Existing carrier removed; new fastener grip and retention unfinished", "No gasket or measured acoustic coupling supplied"]}
+Blender 4.0.2
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/revision-p/assembled-review.blend"
+
+Blender quit
+Blender 4.0.2
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/revision-p/assembled-review.blend"
+Info: Total files 1 | Changed 1 | Failed 0
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/revision-p/assembled-review.blend"
+Info: Total files 1 | Changed 1 | Failed 0
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/revision-p/assembled-review.blend"
+Info: Total files 1 | Changed 1 | Failed 0
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+Import finished in 0.0026 sec.
+Info: Saved "sht-12x12-assembly.blend"
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+Import finished in 0.0026 sec.
+Info: Saved "sht-18x12.7-assembly.blend"
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+Import finished in 0.0028 sec.
+Info: Saved "sht-25.5x17.7-assembly.blend"
+[
+  {
+    "variant": "12x12",
+    "checks": {
+      "ventilation_overlap_mm3": 0.0,
+      "nonmanifold_edges": 0,
+      "connected_components": 1,
+      "tie_passages": [
+        {
+          "xy_mm": [
+            21,
+            -9.0
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        },
+        {
+          "xy_mm": [
+            21,
+            9.0
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        },
+        {
+          "xy_mm": [
+            27,
+            -9.0
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        },
+        {
+          "xy_mm": [
+            27,
+            9.0
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        }
+      ],
+      "volume_mm3": 2925.164332987365,
+      "head_-12_collision_mm3": 0.0,
+      "head_12_collision_mm3": 0.0,
+      "tool_-12_collision_mm3": 0.0,
+      "tool_12_collision_mm3": 0.0,
+      "board_penetration_mm3": 0.0,
+      "contact_area_mm2_each": [
+        1.4400835835241697,
+        1.4400835835240888,
+        1.4400835835244117,
+        1.4400835835252193
+      ],
+      "installed_collisions_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "acoustic_trim": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "electronics_strap_tray": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "thermal_angled_hood": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "REFERENCE_ARTWORK_LABEL_NOT_STL": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.001": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.002": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.003": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.004": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.005": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.006": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.007": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.008": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.009": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.010": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.011": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.012": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.013": 0.0,
+        "PURCHASED_LED_VISUAL_ONLY": 0.0
+      },
+      "replacement_count": 1,
+      "pass": true
+    }
+  },
+  {
+    "variant": "18x12.7",
+    "checks": {
+      "ventilation_overlap_mm3": 0.0,
+      "nonmanifold_edges": 0,
+      "connected_components": 1,
+      "tie_passages": [
+        {
+          "xy_mm": [
+            21,
+            -9.35
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        },
+        {
+          "xy_mm": [
+            21,
+            9.35
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        },
+        {
+          "xy_mm": [
+            27,
+            -9.35
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        },
+        {
+          "xy_mm": [
+            27,
+            9.35
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        }
+      ],
+      "volume_mm3": 2974.6841725997283,
+      "head_-12_collision_mm3": 0.0,
+      "head_12_collision_mm3": 0.0,
+      "tool_-12_collision_mm3": 0.0,
+      "tool_12_collision_mm3": 0.0,
+      "board_penetration_mm3": 0.0,
+      "contact_area_mm2_each": [
+        1.4400835835240888,
+        1.440083583524008,
+        1.4400812945747758,
+        1.4400812945746144
+      ],
+      "installed_collisions_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "acoustic_trim": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "electronics_strap_tray": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "thermal_angled_hood": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "REFERENCE_ARTWORK_LABEL_NOT_STL": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.001": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.002": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.003": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.004": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.005": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.006": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.007": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.008": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.009": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.010": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.011": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.012": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.013": 0.0,
+        "PURCHASED_LED_VISUAL_ONLY": 0.0
+      },
+      "replacement_count": 1,
+      "pass": true
+    }
+  },
+  {
+    "variant": "25.5x17.7",
+    "checks": {
+      "ventilation_overlap_mm3": 0.0,
+      "nonmanifold_edges": 0,
+      "connected_components": 1,
+      "tie_passages": [
+        {
+          "xy_mm": [
+            21,
+            -11.85
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        },
+        {
+          "xy_mm": [
+            21,
+            11.85
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        },
+        {
+          "xy_mm": [
+            27,
+            -11.85
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        },
+        {
+          "xy_mm": [
+            27,
+            11.85
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        }
+      ],
+      "volume_mm3": 3133.50814282774,
+      "head_-12_collision_mm3": 0.0,
+      "head_12_collision_mm3": 0.0,
+      "tool_-12_collision_mm3": 0.0,
+      "tool_12_collision_mm3": 0.0,
+      "board_penetration_mm3": 0.0,
+      "contact_area_mm2_each": [
+        1.4400841557620225,
+        1.4400841557616997,
+        1.44007957786049,
+        1.4400795778603286
+      ],
+      "installed_collisions_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "acoustic_trim": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "electronics_strap_tray": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "thermal_angled_hood": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "REFERENCE_ARTWORK_LABEL_NOT_STL": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.001": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.002": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.003": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.004": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.005": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.006": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.007": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.008": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.009": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.010": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.011": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.012": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.013": 0.0,
+        "PURCHASED_LED_VISUAL_ONLY": 0.0
+      },
+      "replacement_count": 1,
+      "pass": true
+    }
+  }
+]
+
+Blender quit
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+Import finished in 0.0024 sec.
+Import finished in 0.0012 sec.
+Import finished in 0.0016 sec.
+Import finished in 0.0014 sec.
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Import finished in 0.0044 sec.
+Import finished in 0.0039 sec.
+Info: Saved "combined-research-candidate.blend"
+Blender 4.0.2
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/sht-25.5x17.7-assembly.blend"
+
+Blender quit
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+Import finished in 0.0144 sec.
+{"pass": true, "installed_printed_instances": 20, "inventory_check": {"expected": ["acoustic_face", "acoustic_trim", "acoustic_trim.001", "acoustic_tub", "electronics_strap_tray", "main_lid", "main_tub", "microphone_strap_carrier", "microphone_strap_carrier.001", "mounting_spine", "sht_adjustable_carrier", "sht_mount_arm", "thermal_angled_hood", "thermal_face", "thermal_raised_cradle", "thermal_tub", "tray_spacer_6mm.001", "tray_spacer_6mm.002", "tray_spacer_6mm.003", "tray_spacer_6mm.004"], "actual": ["acoustic_face", "acoustic_trim", "acoustic_trim.001", "acoustic_tub", "electronics_strap_tray", "main_lid", "main_tub", "microphone_strap_carrier", "microphone_strap_carrier.001", "mounting_spine", "sht_adjustable_carrier", "sht_mount_arm", "thermal_angled_hood", "thermal_face", "thermal_raised_cradle", "thermal_tub", "tray_spacer_6mm.001", "tray_spacer_6mm.002", "tray_spacer_6mm.003", "tray_spacer_6mm.004"], "missing": [], "unexpected": [], "pass": true}, "unchecked_component": ["Actual PCB underside components, cable and tie bends remain unmeasured"], "component_reservations": [{"label": "ESP chosen 30x24x20 envelope", "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0}, "pass": true}, {"label": "left mic nominal PCB", "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 6.973743438609681e-06, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0}, "pass": true}, {"label": "right mic nominal PCB", "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 6.973743438609681e-06, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0}, "pass": true}, {"label": "SHT nominal PCB", "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0}, "pass": true}], "pair_count": 190, "collisions": [], "limits": ["Printed-part geometry only; thermal remains P", "No physical fit, cable routing or structural approval"], "tray_head_driver_envelopes": [{"axis_mm": [-15, -25], "role": "rear_head", "assumed_radius_mm": 3.0, "depth_interval_mm": [-2.4, 0], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0}, "pass": true}, {"axis_mm": [-15, -25], "role": "rear_driver", "assumed_radius_mm": 3.5, "depth_interval_mm": [-24, -2.4], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0}, "pass": true}, {"axis_mm": [-15, -25], "role": "shaft", "assumed_radius_mm": 1.5, "depth_interval_mm": [0, 14], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0}, "pass": true}, {"axis_mm": [-15, -25], "role": "nut_washer", "assumed_radius_mm": 3.5, "depth_interval_mm": [9, 12.4], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0}, "pass": true}, {"axis_mm": [-15, 25], "role": "rear_head", "assumed_radius_mm": 3.0, "depth_interval_mm": [-2.4, 0], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0}, "pass": true}, {"axis_mm": [-15, 25], "role": "rear_driver", "assumed_radius_mm": 3.5, "depth_interval_mm": [-24, -2.4], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0}, "pass": true}, {"axis_mm": [-15, 25], "role": "shaft", "assumed_radius_mm": 1.5, "depth_interval_mm": [0, 14], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0}, "pass": true}, {"axis_mm": [-15, 25], "role": "nut_washer", "assumed_radius_mm": 3.5, "depth_interval_mm": [9, 12.4], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0}, "pass": true}, {"axis_mm": [15, -25], "role": "rear_head", "assumed_radius_mm": 3.0, "depth_interval_mm": [-2.4, 0], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0}, "pass": true}, {"axis_mm": [15, -25], "role": "rear_driver", "assumed_radius_mm": 3.5, "depth_interval_mm": [-24, -2.4], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0}, "pass": true}, {"axis_mm": [15, -25], "role": "shaft", "assumed_radius_mm": 1.5, "depth_interval_mm": [0, 14], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0}, "pass": true}, {"axis_mm": [15, -25], "role": "nut_washer", "assumed_radius_mm": 3.5, "depth_interval_mm": [9, 12.4], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0}, "pass": true}, {"axis_mm": [15, 25], "role": "rear_head", "assumed_radius_mm": 3.0, "depth_interval_mm": [-2.4, 0], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0}, "pass": true}, {"axis_mm": [15, 25], "role": "rear_driver", "assumed_radius_mm": 3.5, "depth_interval_mm": [-24, -2.4], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0}, "pass": true}, {"axis_mm": [15, 25], "role": "shaft", "assumed_radius_mm": 1.5, "depth_interval_mm": [0, 14], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0}, "pass": true}, {"axis_mm": [15, 25], "role": "nut_washer", "assumed_radius_mm": 3.5, "depth_interval_mm": [9, 12.4], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0}, "pass": true}], "combined_mic_bearing": [{"xy_mm": [-6.25, -5.25], "area_mm2": 2.249999949708581, "pass": true}, {"xy_mm": [-6.25, 5.25], "area_mm2": 2.249999949708581, "pass": true}, {"xy_mm": [6.25, -5.25], "area_mm2": 2.249999949708581, "pass": true}, {"xy_mm": [6.25, 5.25], "area_mm2": 2.249999949708581, "pass": true}], "combined_mic_tunnels": [{"side": -1, "y_mm": -5.25, "pass": true}, {"side": -1, "y_mm": 5.25, "pass": true}, {"side": 1, "y_mm": -5.25, "pass": true}, {"side": 1, "y_mm": 5.25, "pass": true}], "research_spine_topology": {"nonmanifold_edges": 0, "islands": 1, "volume_mm3": 44570.430944120104}, "research_spine_nominal_ligaments_mm": {"access_bore_to_outer_side": 5.2, "access_bore_to_nearest_strap_slot_y": 8.7, "note": "Nominal planar geometry, not measured printed strength or fatigue"}, "spine_ligament_design_gate": {"minimum_chosen_mm": 4.0, "pass": true, "scope": "Nominal layout regression guard only; no structural load rating"}, "spine_export_roundtrip": {"bounds_error_mm": 0.0, "intersection_mm3": 44570.43094036724, "expected_volume_mm3": 44570.430944120104, "pass": true}}
+Blender 4.0.2
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-research-candidate.blend"
+
+Blender quit
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+{"status": "research replacement carrier installation", "scene_sha256": "ec5788c0d99c4f2f021ef619d41d3a71bf4741036d2de05a30aaa8ff790476e1", "checker_sha256": "2d9ed63ddebe0d1eda89ef63c3294c28bce10072c1e41438532f18474efe8741", "saved_transform_valid": true, "finite_contact_patches": [{"local_xy_mm": [-6.25, -5.25], "seat_area_mm2": 2.249999949708581, "pass": true}, {"local_xy_mm": [-6.25, 5.25], "seat_area_mm2": 2.249999949708581, "pass": true}, {"local_xy_mm": [6.25, -5.25], "seat_area_mm2": 2.249999949708581, "pass": true}, {"local_xy_mm": [6.25, 5.25], "seat_area_mm2": 2.249999949708581, "pass": true}], "through_tunnel_checks": [{"side": -1, "y_mm": -5.25, "reserved_section_mm": [0.6, 1.0], "probe_count": 9, "pass": true}, {"side": -1, "y_mm": 5.25, "reserved_section_mm": [0.6, 1.0], "probe_count": 9, "pass": true}, {"side": 1, "y_mm": -5.25, "reserved_section_mm": [0.6, 1.0], "probe_count": 9, "pass": true}, {"side": 1, "y_mm": 5.25, "reserved_section_mm": [0.6, 1.0], "probe_count": 9, "pass": true}], "assumed_rear_hardware": [{"axis_mm": [-10, -10], "support_hit_mm3": 0.0, "board_hit_mm3": 0}, {"axis_mm": [-10, 10], "support_hit_mm3": 0.0, "board_hit_mm3": 0}, {"axis_mm": [10, -10], "support_hit_mm3": 0.0, "board_hit_mm3": 0}, {"axis_mm": [10, 10], "support_hit_mm3": 0.0, "board_hit_mm3": 0}], "sampled_corner_bearing": [{"xy_mm": [-6.25, -5.25], "hit": true, "seat_z_mm": 11.0, "pass": true}, {"xy_mm": [-6.25, 5.25], "hit": true, "seat_z_mm": 11.0, "pass": true}, {"xy_mm": [6.25, -5.25], "hit": true, "seat_z_mm": 11.0, "pass": true}, {"xy_mm": [6.25, 5.25], "hit": true, "seat_z_mm": 11.0, "pass": true}], "support_intersections_mm3": {"main_tub": 0, "main_lid": 0, "thermal_tub": 0, "thermal_face": 0, "thermal_angled_hood": 0, "thermal_raised_cradle": 0, "acoustic_tub": 0.0, "acoustic_face": 0, "mounting_spine": 0, "sht_mount_arm": 0, "sht_adjustable_carrier": 0, "electronics_strap_tray": 0, "microphone_strap_carrier.001": 0, "acoustic_trim": 0, "acoustic_trim.001": 0, "tray_spacer_6mm.001": 0, "tray_spacer_6mm.002": 0, "tray_spacer_6mm.003": 0, "tray_spacer_6mm.004": 0}, "board_intersections_mm3": {"main_tub": 0, "main_lid": 0, "thermal_tub": 0, "thermal_face": 0, "thermal_angled_hood": 0, "thermal_raised_cradle": 0, "acoustic_tub": 0.0, "acoustic_face": 0, "mounting_spine": 0, "sht_mount_arm": 0, "sht_adjustable_carrier": 0, "electronics_strap_tray": 0, "microphone_strap_carrier.001": 0, "acoustic_trim": 0, "acoustic_trim.001": 0, "tray_spacer_6mm.001": 0, "tray_spacer_6mm.002": 0, "tray_spacer_6mm.003": 0, "tray_spacer_6mm.004": 0}, "support_board_intersection_mm3": 8.58306884765625e-06, "pass": true, "limits": ["PCB body only; no underside component or acoustic port validation", "Existing carrier removed; new fastener grip and retention unfinished", "No gasket or measured acoustic coupling supplied"]}
+Blender 4.0.2
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-research-candidate.blend"
+
+Blender quit
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+{"status": "research replacement carrier installation", "scene_sha256": "ec5788c0d99c4f2f021ef619d41d3a71bf4741036d2de05a30aaa8ff790476e1", "checker_sha256": "2d9ed63ddebe0d1eda89ef63c3294c28bce10072c1e41438532f18474efe8741", "saved_transform_valid": true, "finite_contact_patches": [{"local_xy_mm": [-6.25, -5.25], "seat_area_mm2": 2.249999949708581, "pass": true}, {"local_xy_mm": [-6.25, 5.25], "seat_area_mm2": 2.249999949708581, "pass": true}, {"local_xy_mm": [6.25, -5.25], "seat_area_mm2": 2.249999949708581, "pass": true}, {"local_xy_mm": [6.25, 5.25], "seat_area_mm2": 2.249999949708581, "pass": true}], "through_tunnel_checks": [{"side": -1, "y_mm": -5.25, "reserved_section_mm": [0.6, 1.0], "probe_count": 9, "pass": true}, {"side": -1, "y_mm": 5.25, "reserved_section_mm": [0.6, 1.0], "probe_count": 9, "pass": true}, {"side": 1, "y_mm": -5.25, "reserved_section_mm": [0.6, 1.0], "probe_count": 9, "pass": true}, {"side": 1, "y_mm": 5.25, "reserved_section_mm": [0.6, 1.0], "probe_count": 9, "pass": true}], "assumed_rear_hardware": [{"axis_mm": [-10, -10], "support_hit_mm3": 0.0, "board_hit_mm3": 0}, {"axis_mm": [-10, 10], "support_hit_mm3": 0.0, "board_hit_mm3": 0}, {"axis_mm": [10, -10], "support_hit_mm3": 0.0, "board_hit_mm3": 0}, {"axis_mm": [10, 10], "support_hit_mm3": 0.0, "board_hit_mm3": 0}], "sampled_corner_bearing": [{"xy_mm": [-6.25, -5.25], "hit": true, "seat_z_mm": 11.0, "pass": true}, {"xy_mm": [-6.25, 5.25], "hit": true, "seat_z_mm": 11.0, "pass": true}, {"xy_mm": [6.25, -5.25], "hit": true, "seat_z_mm": 11.0, "pass": true}, {"xy_mm": [6.25, 5.25], "hit": true, "seat_z_mm": 11.0, "pass": true}], "support_intersections_mm3": {"main_tub": 0, "main_lid": 0, "thermal_tub": 0, "thermal_face": 0, "thermal_angled_hood": 0, "thermal_raised_cradle": 0, "acoustic_tub": 0.0, "acoustic_face": 0, "mounting_spine": 0, "sht_mount_arm": 0, "sht_adjustable_carrier": 0, "electronics_strap_tray": 0, "microphone_strap_carrier": 0, "acoustic_trim": 0, "acoustic_trim.001": 0, "tray_spacer_6mm.001": 0, "tray_spacer_6mm.002": 0, "tray_spacer_6mm.003": 0, "tray_spacer_6mm.004": 0}, "board_intersections_mm3": {"main_tub": 0, "main_lid": 0, "thermal_tub": 0, "thermal_face": 0, "thermal_angled_hood": 0, "thermal_raised_cradle": 0, "acoustic_tub": 0.0, "acoustic_face": 0, "mounting_spine": 0, "sht_mount_arm": 0, "sht_adjustable_carrier": 0, "electronics_strap_tray": 0, "microphone_strap_carrier": 0, "acoustic_trim": 0, "acoustic_trim.001": 0, "tray_spacer_6mm.001": 0, "tray_spacer_6mm.002": 0, "tray_spacer_6mm.003": 0, "tray_spacer_6mm.004": 0}, "support_board_intersection_mm3": 8.58306884765625e-06, "pass": true, "limits": ["PCB body only; no underside component or acoustic port validation", "Existing carrier removed; new fastener grip and retention unfinished", "No gasket or measured acoustic coupling supplied"]}
+Blender 4.0.2
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-research-candidate.blend"
+
+Blender quit
+{
+  "opening_mm": [
+    42,
+    12
+  ],
+  "chosen_edge_margin_mm": 1,
+  "rows": [
+    {
+      "variant": "narrow",
+      "nominal_fov_deg": [
+        55,
+        35
+      ],
+      "pupil_setback_mm": 0,
+      "nominal_ray_half_extent_mm": [
+        0,
+        0
+      ],
+      "remaining_margin_mm": [
+        20,
+        5
+      ],
+      "sampled_centered_budget_clear": true
+    },
+    {
+      "variant": "narrow",
+      "nominal_fov_deg": [
+        55,
+        35
+      ],
+      "pupil_setback_mm": 2,
+      "nominal_ray_half_extent_mm": [
+        1.0411341011034925,
+        0.630597577757967
+      ],
+      "remaining_margin_mm": [
+        18.95886589889651,
+        4.369402422242033
+      ],
+      "sampled_centered_budget_clear": true
+    },
+    {
+      "variant": "narrow",
+      "nominal_fov_deg": [
+        55,
+        35
+      ],
+      "pupil_setback_mm": 4,
+      "nominal_ray_half_extent_mm": [
+        2.082268202206985,
+        1.261195155515934
+      ],
+      "remaining_margin_mm": [
+        17.917731797793014,
+        3.738804844484066
+      ],
+      "sampled_centered_budget_clear": true
+    },
+    {
+      "variant": "narrow",
+      "nominal_fov_deg": [
+        55,
+        35
+      ],
+      "pupil_setback_mm": 6,
+      "nominal_ray_half_extent_mm": [
+        3.1234023033104776,
+        1.8917927332739009
+      ],
+      "remaining_margin_mm": [
+        16.876597696689522,
+        3.108207266726099
+      ],
+      "sampled_centered_budget_clear": true
+    },
+    {
+      "variant": "narrow",
+      "nominal_fov_deg": [
+        55,
+        35
+      ],
+      "pupil_setback_mm": 8,
+      "nominal_ray_half_extent_mm": [
+        4.16453640441397,
+        2.522390311031868
+      ],
+      "remaining_margin_mm": [
+        15.835463595586031,
+        2.477609688968132
+      ],
+      "sampled_centered_budget_clear": true
+    },
+    {
+      "variant": "narrow",
+      "nominal_fov_deg": [
+        55,
+        35
+      ],
+      "pupil_setback_mm": 12,
+      "nominal_ray_half_extent_mm": [
+        6.246804606620955,
+        3.7835854665478017
+      ],
+      "remaining_margin_mm": [
+        13.753195393379045,
+        1.2164145334521983
+      ],
+      "sampled_centered_budget_clear": true
+    },
+    {
+      "variant": "narrow",
+      "nominal_fov_deg": [
+        55,
+        35
+      ],
+      "pupil_setback_mm": 16,
+      "nominal_ray_half_extent_mm": [
+        8.32907280882794,
+        5.044780622063736
+      ],
+      "remaining_margin_mm": [
+        11.67092719117206,
+        -0.0447806220637359
+      ],
+      "sampled_centered_budget_clear": false
+    },
+    {
+      "variant": "wide",
+      "nominal_fov_deg": [
+        110,
+        75
+      ],
+      "pupil_setback_mm": 0,
+      "nominal_ray_half_extent_mm": [
+        0,
+        0
+      ],
+      "remaining_margin_mm": [
+        20,
+        5
+      ],
+      "sampled_centered_budget_clear": true
+    },
+    {
+      "variant": "wide",
+      "nominal_fov_deg": [
+        110,
+        75
+      ],
+      "pupil_setback_mm": 2,
+      "nominal_ray_half_extent_mm": [
+        2.856296013484229,
+        1.5346539759579207
+      ],
+      "remaining_margin_mm": [
+        17.14370398651577,
+        3.4653460240420793
+      ],
+      "sampled_centered_budget_clear": true
+    },
+    {
+      "variant": "wide",
+      "nominal_fov_deg": [
+        110,
+        75
+      ],
+      "pupil_setback_mm": 4,
+      "nominal_ray_half_extent_mm": [
+        5.712592026968458,
+        3.0693079519158415
+      ],
+      "remaining_margin_mm": [
+        14.287407973031542,
+        1.9306920480841585
+      ],
+      "sampled_centered_budget_clear": true
+    },
+    {
+      "variant": "wide",
+      "nominal_fov_deg": [
+        110,
+        75
+      ],
+      "pupil_setback_mm": 6,
+      "nominal_ray_half_extent_mm": [
+        8.568888040452686,
+        4.603961927873762
+      ],
+      "remaining_margin_mm": [
+        11.431111959547314,
+        0.3960380721262382
+      ],
+      "sampled_centered_budget_clear": true
+    },
+    {
+      "variant": "wide",
+      "nominal_fov_deg": [
+        110,
+        75
+      ],
+      "pupil_setback_mm": 8,
+      "nominal_ray_half_extent_mm": [
+        11.425184053936915,
+        6.138615903831683
+      ],
+      "remaining_margin_mm": [
+        8.574815946063085,
+        -1.138615903831683
+      ],
+      "sampled_centered_budget_clear": false
+    },
+    {
+      "variant": "wide",
+      "nominal_fov_deg": [
+        110,
+        75
+      ],
+      "pupil_setback_mm": 12,
+      "nominal_ray_half_extent_mm": [
+        17.137776080905372,
+        9.207923855747524
+      ],
+      "remaining_margin_mm": [
+        2.862223919094628,
+        -4.207923855747524
+      ],
+      "sampled_centered_budget_clear": false
+    },
+    {
+      "variant": "wide",
+      "nominal_fov_deg": [
+        110,
+        75
+      ],
+      "pupil_setback_mm": 16,
+      "nominal_ray_half_extent_mm": [
+        22.85036810787383,
+        12.277231807663366
+      ],
+      "remaining_margin_mm": [
+        -2.8503681078738303,
+        -7.277231807663366
+      ],
+      "sampled_centered_budget_clear": false
+    }
+  ],
+  "limits": [
+    "Analytical centered planar aperture only; no whole assembly ray test",
+    "No real pupil placement inferred from overall product height",
+    "Nominal FOV is not a hard optical cutoff; source sensitivity and angle tolerances matter",
+    "Bridge tilt,finite thickness,alignment offsets and actual lens shape excluded"
+  ],
+  "conclusion": "Bridge cannot be treated as generic wide-angle adapter across unknown pupil setbacks"
+}
+Blender 4.2.3 LTS (hash 0e22e4fcea03 built 2024-10-14 23:31:34)
+Timer 'STL Import' took 7.58 ms
+Timer 'STL Import' took 1.71 ms
+Timer 'STL Import' took 2.86 ms
+Timer 'STL Import' took 2.02 ms
+Timer 'STL Import' took 0.70 ms
+Timer 'STL Import' took 1.10 ms
+Timer 'STL Import' took 2.75 ms
+Timer 'STL Import' took 3.06 ms
+Timer 'STL Import' took 2.39 ms
+Timer 'STL Import' took 1.94 ms
+Timer 'STL Export' took 1.93 ms
+Timer 'STL Export' took 0.45 ms
+Timer 'STL Export' took 0.49 ms
+Info: Total files 0 | Changed 0 | Failed 0
+Timer 'STL Export' took 1.08 ms
+Timer 'STL Export' took 0.36 ms
+Timer 'STL Export' took 0.30 ms
+Timer 'STL Export' took 35.09 ms
+Timer 'STL Export' took 0.32 ms
+Timer 'STL Export' took 0.32 ms
+Info: Saved "pcb25_4x17_78_installed.blend"
+Info: Saved "pcb25_4square_installed.blend"
+Info: Saved "pcb28x16_installed.blend"
+THERMAL REAR CHECKS WRITTEN /tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters
+INSTALLED HARDWARE REPORT /tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/thermal-installed-hardware-checks-20261019T040140127912Z.json acceptance= True
+Blender 4.2.3 LTS (hash 0e22e4fcea03 built 2024-10-14 23:31:34)
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4x17_78_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb28x16_installed.blend"
+
+Blender quit
+{
+  "source_report": "thermal-installed-hardware-checks-20261019T040140127912Z.json",
+  "source_sha256": "59066e0097fb07dcca3899ba00703501ea86dfaab2570b09e1738e74ebdf2c89",
+  "acceptance": true,
+  "variants": [
+    {
+      "scene": "pcb25_4square_installed.blend",
+      "gates": {
+        "connected_solids": true,
+        "four_mount_load_paths": true,
+        "fastened_retainers": true,
+        "exact_pcb_bearing": true,
+        "hardware_and_tool_clearance": true,
+        "m3_threaded_receiver_established": true
+      },
+      "collisions": 0,
+      "mount_contact_samples": [
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        },
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        },
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        },
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        }
+      ]
+    },
+    {
+      "scene": "pcb25_4x17_78_installed.blend",
+      "gates": {
+        "connected_solids": true,
+        "four_mount_load_paths": true,
+        "fastened_retainers": true,
+        "exact_pcb_bearing": true,
+        "hardware_and_tool_clearance": true,
+        "m3_threaded_receiver_established": true
+      },
+      "collisions": 0,
+      "mount_contact_samples": [
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        },
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        },
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        },
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        }
+      ]
+    },
+    {
+      "scene": "pcb28x16_installed.blend",
+      "gates": {
+        "connected_solids": true,
+        "four_mount_load_paths": true,
+        "fastened_retainers": true,
+        "exact_pcb_bearing": true,
+        "hardware_and_tool_clearance": true,
+        "m3_threaded_receiver_established": true
+      },
+      "collisions": 0,
+      "mount_contact_samples": [
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        },
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        },
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        },
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        }
+      ]
+    }
+  ]
+}
+{
+  "pass": true,
+  "parts": [
+    {
+      "name": "pcb25_4x17_78_rear_insert",
+      "components": 1,
+      "nonmanifold": 0,
+      "volume_mm3": 2768.6134494486487,
+      "stl_sha256": "b016452719ae22709e0cc5fde82ff41c72457e702dc295742a6d9fed4174d692",
+      "sliced": true,
+      "gcode_sha256": "d466d89b2771c57bf004c2f57eb21f46e4253cb716ef62848c969d88e658da6c",
+      "pass": true
+    },
+    {
+      "name": "pcb25_4x17_78_retainer_1",
+      "components": 1,
+      "nonmanifold": 0,
+      "volume_mm3": 187.63472671913192,
+      "stl_sha256": "0515584fd07c159b63530cae0b85aaf6175457436493a1749b80be5273a571ec",
+      "sliced": true,
+      "gcode_sha256": "948e9ba8cc8a90bb51a23aee78b40702c999c85005127a0c2eba317504b25077",
+      "pass": true
+    },
+    {
+      "name": "pcb25_4x17_78_retainer_2",
+      "components": 1,
+      "nonmanifold": 0,
+      "volume_mm3": 191.5437490400027,
+      "stl_sha256": "bddbe135eb13dbdef3e4fe01841d9e87e01e668778fca80a4d8e75f04d165e20",
+      "sliced": true,
+      "gcode_sha256": "0368703f27e627a8357365259d70efcb6a57401f7217c9353522cc6a542ef26f",
+      "pass": true
+    },
+    {
+      "name": "pcb25_4square_rear_insert",
+      "components": 1,
+      "nonmanifold": 0,
+      "volume_mm3": 3002.764502395186,
+      "stl_sha256": "ebd231a435e650de34262102f5e51c0849dc394f5e320a9c009aad4e21f3cbcc",
+      "sliced": true,
+      "gcode_sha256": "902ca0f79f24e4024ea46ff1f327b590ddae38e532667bb22774b6f30c91f833",
+      "pass": true
+    },
+    {
+      "name": "pcb25_4square_retainer_1",
+      "components": 1,
+      "nonmanifold": 0,
+      "volume_mm3": 213.14894518373615,
+      "stl_sha256": "c6775cf7eb9aa88e829ee943232b7e654734108f9b5e8649b634fc5fb161617a",
+      "sliced": true,
+      "gcode_sha256": "ef5bfa9a28de79ea35a6581953a8ee9eea95bc1edac7bd24ddf9eb9163c80fff",
+      "pass": true
+    },
+    {
+      "name": "pcb25_4square_retainer_2",
+      "components": 1,
+      "nonmanifold": 0,
+      "volume_mm3": 213.14894361174228,
+      "stl_sha256": "ee998b88b6626b897ac6dd05308cb8bb55c65388471d58c41a7a4acf2d7f08a1",
+      "sliced": true,
+      "gcode_sha256": "15773d4ff32ba843ec7494e1fc5f327e10c069667e1d69870da3bbfd197b9c68",
+      "pass": true
+    },
+    {
+      "name": "pcb28x16_rear_insert",
+      "components": 1,
+      "nonmanifold": 0,
+      "volume_mm3": 2616.8324141313306,
+      "stl_sha256": "ee51f6740ffcfdb53b9f1e0100e9802dab66eae4be0f16125c9b0bf49113268a",
+      "sliced": true,
+      "gcode_sha256": "34b6b877311a431d9444878694a8c76576084c53fe9b66ede59c88db38773b8a",
+      "pass": true
+    },
+    {
+      "name": "pcb28x16_retainer_1",
+      "components": 1,
+      "nonmanifold": 0,
+      "volume_mm3": 205.68782924418883,
+      "stl_sha256": "8e8d2c2a98a37f5cb6cafa10d647811bea6202657eabbbcaa86efe49230467f8",
+      "sliced": true,
+      "gcode_sha256": "95c164e41126a3410718bea084829bfe29383a381de6e113c326e8d5579fe732",
+      "pass": true
+    },
+    {
+      "name": "pcb28x16_retainer_2",
+      "components": 1,
+      "nonmanifold": 0,
+      "volume_mm3": 205.68775763397613,
+      "stl_sha256": "5f16ced5f1df792dc026089fab85f2016d5cfd68e446a4e92f24a57e8d270731",
+      "sliced": true,
+      "gcode_sha256": "ff7aa162221253c578918f68a8cfd6e2e1c3c4d5b7c8f2c25ff73dd0bdcfb5ed",
+      "pass": true
+    }
+  ]
+}
+ALL THREE INSTALLED SCENES VERIFIED {'pcb25_4x17_78': {'reopened': True, 'metadata_matches': True, 'baked_identity_transforms': True, 'object_count': 19}, 'pcb25_4square': {'reopened': True, 'metadata_matches': True, 'baked_identity_transforms': True, 'object_count': 19}, 'pcb28x16': {'reopened': True, 'metadata_matches': True, 'baked_identity_transforms': True, 'object_count': 19}}
+Blender 4.2.3 LTS (hash 0e22e4fcea03 built 2024-10-14 23:31:34)
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4x17_78_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb28x16_installed.blend"
+
+Blender quit
+{
+  "acceptance": true,
+  "scope": "Nominal digital thermal assembly; sampled optics; manufacturing mesh and slicer evidence. No physical certification.",
+  "gates": {
+    "blender42": true,
+    "independent_hardware": true,
+    "current_checker": true,
+    "current_scenes": true,
+    "all_sampled_optics": true,
+    "nine_exports_and_slices": true,
+    "scene_reopen": true,
+    "revision_P_unchanged": true
+  },
+  "hardware_report": "thermal-installed-hardware-checks-20261019T040140127912Z.json",
+  "hardware_sha256": "59066e0097fb07dcca3899ba00703501ea86dfaab2570b09e1738e74ebdf2c89",
+  "sampled_optical_scenarios": 216
+}
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+Import finished in 0.0027 sec.
+Import finished in 0.0015 sec.
+Import finished in 0.0015 sec.
+Import finished in 0.0012 sec.
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Import finished in 0.0036 sec.
+Import finished in 0.0041 sec.
+Info: Saved "combined-thermal-candidate.blend"
+Blender 4.0.2
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/sht-25.5x17.7-assembly.blend"
+
+Blender quit
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+Import finished in 0.0132 sec.
+{"pass": true, "installed_printed_instances": 23, "inventory_check": {"expected": ["acoustic_face", "acoustic_trim", "acoustic_trim.001", "acoustic_tub", "electronics_strap_tray", "main_lid", "main_tub", "microphone_strap_carrier", "microphone_strap_carrier.001", "mounting_spine", "pcb25_4square", "pcb25_4square_retainer", "pcb25_4square_retainer.001", "sht_adjustable_carrier", "sht_mount_arm", "thermal_angled_hood", "thermal_face", "thermal_raised_cradle", "thermal_tub", "tray_spacer_6mm.001", "tray_spacer_6mm.002", "tray_spacer_6mm.003", "tray_spacer_6mm.004"], "actual": ["acoustic_face", "acoustic_trim", "acoustic_trim.001", "acoustic_tub", "electronics_strap_tray", "main_lid", "main_tub", "microphone_strap_carrier", "microphone_strap_carrier.001", "mounting_spine", "pcb25_4square", "pcb25_4square_retainer", "pcb25_4square_retainer.001", "sht_adjustable_carrier", "sht_mount_arm", "thermal_angled_hood", "thermal_face", "thermal_raised_cradle", "thermal_tub", "tray_spacer_6mm.001", "tray_spacer_6mm.002", "tray_spacer_6mm.003", "tray_spacer_6mm.004"], "missing": [], "unexpected": [], "pass": true}, "unchecked_component": ["Actual PCB underside components, cable and tie bends remain unmeasured"], "component_reservations": [{"label": "ESP chosen 30x24x20 envelope", "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"label": "left mic nominal PCB", "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 6.973743438609681e-06, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"label": "right mic nominal PCB", "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 6.973743438609681e-06, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"label": "SHT nominal PCB", "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}], "pair_count": 253, "collisions": [], "limits": ["Printed-part geometry only; thermal remains P", "No physical fit, cable routing or structural approval"], "tray_head_driver_envelopes": [{"axis_mm": [-15, -25], "role": "rear_head", "assumed_radius_mm": 3.0, "depth_interval_mm": [-2.4, 0], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"axis_mm": [-15, -25], "role": "rear_driver", "assumed_radius_mm": 3.5, "depth_interval_mm": [-24, -2.4], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"axis_mm": [-15, -25], "role": "shaft", "assumed_radius_mm": 1.5, "depth_interval_mm": [0, 14], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"axis_mm": [-15, -25], "role": "nut_washer", "assumed_radius_mm": 3.5, "depth_interval_mm": [9, 12.4], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"axis_mm": [-15, 25], "role": "rear_head", "assumed_radius_mm": 3.0, "depth_interval_mm": [-2.4, 0], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"axis_mm": [-15, 25], "role": "rear_driver", "assumed_radius_mm": 3.5, "depth_interval_mm": [-24, -2.4], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"axis_mm": [-15, 25], "role": "shaft", "assumed_radius_mm": 1.5, "depth_interval_mm": [0, 14], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"axis_mm": [-15, 25], "role": "nut_washer", "assumed_radius_mm": 3.5, "depth_interval_mm": [9, 12.4], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"axis_mm": [15, -25], "role": "rear_head", "assumed_radius_mm": 3.0, "depth_interval_mm": [-2.4, 0], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"axis_mm": [15, -25], "role": "rear_driver", "assumed_radius_mm": 3.5, "depth_interval_mm": [-24, -2.4], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"axis_mm": [15, -25], "role": "shaft", "assumed_radius_mm": 1.5, "depth_interval_mm": [0, 14], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"axis_mm": [15, -25], "role": "nut_washer", "assumed_radius_mm": 3.5, "depth_interval_mm": [9, 12.4], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"axis_mm": [15, 25], "role": "rear_head", "assumed_radius_mm": 3.0, "depth_interval_mm": [-2.4, 0], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"axis_mm": [15, 25], "role": "rear_driver", "assumed_radius_mm": 3.5, "depth_interval_mm": [-24, -2.4], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"axis_mm": [15, 25], "role": "shaft", "assumed_radius_mm": 1.5, "depth_interval_mm": [0, 14], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"axis_mm": [15, 25], "role": "nut_washer", "assumed_radius_mm": 3.5, "depth_interval_mm": [9, 12.4], "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}], "combined_mic_bearing": [{"xy_mm": [-6.25, -5.25], "area_mm2": 2.249999949708581, "pass": true}, {"xy_mm": [-6.25, 5.25], "area_mm2": 2.249999949708581, "pass": true}, {"xy_mm": [6.25, -5.25], "area_mm2": 2.249999949708581, "pass": true}, {"xy_mm": [6.25, 5.25], "area_mm2": 2.249999949708581, "pass": true}], "combined_mic_tunnels": [{"side": -1, "y_mm": -5.25, "pass": true}, {"side": -1, "y_mm": 5.25, "pass": true}, {"side": 1, "y_mm": -5.25, "pass": true}, {"side": 1, "y_mm": 5.25, "pass": true}], "research_spine_topology": {"nonmanifold_edges": 0, "islands": 1, "volume_mm3": 44570.430944120104}, "research_spine_nominal_ligaments_mm": {"access_bore_to_outer_side": 5.2, "access_bore_to_nearest_strap_slot_y": 8.7, "note": "Nominal planar geometry, not measured printed strength or fatigue"}, "spine_ligament_design_gate": {"minimum_chosen_mm": 4.0, "pass": true, "scope": "Nominal layout regression guard only; no structural load rating"}, "spine_export_roundtrip": {"bounds_error_mm": 0.0, "intersection_mm3": 44570.43094036724, "expected_volume_mm3": 44570.430944120104, "pass": true}, "thermal_nonprintable_reservations": [{"name": "PCB envelope", "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"name": "M3_hex_nut_30_9", "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"name": "M3_hex_nut_30_-9", "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"name": "M3_hex_nut_-30_9", "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"name": "M3_hex_nut_-30_-9", "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}, {"name": "ASSUMED package", "printed_intersections_mm3": {"main_tub": 0.0, "main_lid": 0.0, "thermal_tub": 0.0, "thermal_face": 0.0, "thermal_angled_hood": 0.0, "thermal_raised_cradle": 0.0, "acoustic_tub": 0.0, "acoustic_face": 0.0, "mounting_spine": 0.0, "sht_mount_arm": 0.0, "sht_adjustable_carrier": 0.0, "electronics_strap_tray": 0.0, "microphone_strap_carrier": 0.0, "microphone_strap_carrier.001": 0.0, "acoustic_trim": 0.0, "acoustic_trim.001": 0.0, "tray_spacer_6mm.001": 0.0, "tray_spacer_6mm.002": 0.0, "tray_spacer_6mm.003": 0.0, "tray_spacer_6mm.004": 0.0, "pcb25_4square": 0.0, "pcb25_4square_retainer": 0.0, "pcb25_4square_retainer.001": 0.0}, "pass": true}]}
+Blender 4.0.2
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+
+Blender quit
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+{"status": "research replacement carrier installation", "scene_sha256": "494d1fb5a6b02dc3f8314858bef93959b96d33de6175b65abfc398639f33c337", "checker_sha256": "2d9ed63ddebe0d1eda89ef63c3294c28bce10072c1e41438532f18474efe8741", "saved_transform_valid": true, "finite_contact_patches": [{"local_xy_mm": [-6.25, -5.25], "seat_area_mm2": 2.249999949708581, "pass": true}, {"local_xy_mm": [-6.25, 5.25], "seat_area_mm2": 2.249999949708581, "pass": true}, {"local_xy_mm": [6.25, -5.25], "seat_area_mm2": 2.249999949708581, "pass": true}, {"local_xy_mm": [6.25, 5.25], "seat_area_mm2": 2.249999949708581, "pass": true}], "through_tunnel_checks": [{"side": -1, "y_mm": -5.25, "reserved_section_mm": [0.6, 1.0], "probe_count": 9, "pass": true}, {"side": -1, "y_mm": 5.25, "reserved_section_mm": [0.6, 1.0], "probe_count": 9, "pass": true}, {"side": 1, "y_mm": -5.25, "reserved_section_mm": [0.6, 1.0], "probe_count": 9, "pass": true}, {"side": 1, "y_mm": 5.25, "reserved_section_mm": [0.6, 1.0], "probe_count": 9, "pass": true}], "assumed_rear_hardware": [{"axis_mm": [-10, -10], "support_hit_mm3": 0.0, "board_hit_mm3": 0}, {"axis_mm": [-10, 10], "support_hit_mm3": 0.0, "board_hit_mm3": 0}, {"axis_mm": [10, -10], "support_hit_mm3": 0.0, "board_hit_mm3": 0}, {"axis_mm": [10, 10], "support_hit_mm3": 0.0, "board_hit_mm3": 0}], "sampled_corner_bearing": [{"xy_mm": [-6.25, -5.25], "hit": true, "seat_z_mm": 11.0, "pass": true}, {"xy_mm": [-6.25, 5.25], "hit": true, "seat_z_mm": 11.0, "pass": true}, {"xy_mm": [6.25, -5.25], "hit": true, "seat_z_mm": 11.0, "pass": true}, {"xy_mm": [6.25, 5.25], "hit": true, "seat_z_mm": 11.0, "pass": true}], "support_intersections_mm3": {"main_tub": 0, "main_lid": 0, "thermal_tub": 0, "thermal_face": 0, "thermal_angled_hood": 0, "thermal_raised_cradle": 0, "acoustic_tub": 0.0, "acoustic_face": 0, "mounting_spine": 0, "sht_mount_arm": 0, "sht_adjustable_carrier": 0, "electronics_strap_tray": 0, "microphone_strap_carrier.001": 0, "acoustic_trim": 0, "acoustic_trim.001": 0, "tray_spacer_6mm.001": 0, "tray_spacer_6mm.002": 0, "tray_spacer_6mm.003": 0, "tray_spacer_6mm.004": 0}, "board_intersections_mm3": {"main_tub": 0, "main_lid": 0, "thermal_tub": 0, "thermal_face": 0, "thermal_angled_hood": 0, "thermal_raised_cradle": 0, "acoustic_tub": 0.0, "acoustic_face": 0, "mounting_spine": 0, "sht_mount_arm": 0, "sht_adjustable_carrier": 0, "electronics_strap_tray": 0, "microphone_strap_carrier.001": 0, "acoustic_trim": 0, "acoustic_trim.001": 0, "tray_spacer_6mm.001": 0, "tray_spacer_6mm.002": 0, "tray_spacer_6mm.003": 0, "tray_spacer_6mm.004": 0}, "support_board_intersection_mm3": 8.58306884765625e-06, "pass": true, "limits": ["PCB body only; no underside component or acoustic port validation", "Existing carrier removed; new fastener grip and retention unfinished", "No gasket or measured acoustic coupling supplied"]}
+Blender 4.0.2
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+
+Blender quit
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+{"status": "research replacement carrier installation", "scene_sha256": "494d1fb5a6b02dc3f8314858bef93959b96d33de6175b65abfc398639f33c337", "checker_sha256": "2d9ed63ddebe0d1eda89ef63c3294c28bce10072c1e41438532f18474efe8741", "saved_transform_valid": true, "finite_contact_patches": [{"local_xy_mm": [-6.25, -5.25], "seat_area_mm2": 2.249999949708581, "pass": true}, {"local_xy_mm": [-6.25, 5.25], "seat_area_mm2": 2.249999949708581, "pass": true}, {"local_xy_mm": [6.25, -5.25], "seat_area_mm2": 2.249999949708581, "pass": true}, {"local_xy_mm": [6.25, 5.25], "seat_area_mm2": 2.249999949708581, "pass": true}], "through_tunnel_checks": [{"side": -1, "y_mm": -5.25, "reserved_section_mm": [0.6, 1.0], "probe_count": 9, "pass": true}, {"side": -1, "y_mm": 5.25, "reserved_section_mm": [0.6, 1.0], "probe_count": 9, "pass": true}, {"side": 1, "y_mm": -5.25, "reserved_section_mm": [0.6, 1.0], "probe_count": 9, "pass": true}, {"side": 1, "y_mm": 5.25, "reserved_section_mm": [0.6, 1.0], "probe_count": 9, "pass": true}], "assumed_rear_hardware": [{"axis_mm": [-10, -10], "support_hit_mm3": 0.0, "board_hit_mm3": 0}, {"axis_mm": [-10, 10], "support_hit_mm3": 0.0, "board_hit_mm3": 0}, {"axis_mm": [10, -10], "support_hit_mm3": 0.0, "board_hit_mm3": 0}, {"axis_mm": [10, 10], "support_hit_mm3": 0.0, "board_hit_mm3": 0}], "sampled_corner_bearing": [{"xy_mm": [-6.25, -5.25], "hit": true, "seat_z_mm": 11.0, "pass": true}, {"xy_mm": [-6.25, 5.25], "hit": true, "seat_z_mm": 11.0, "pass": true}, {"xy_mm": [6.25, -5.25], "hit": true, "seat_z_mm": 11.0, "pass": true}, {"xy_mm": [6.25, 5.25], "hit": true, "seat_z_mm": 11.0, "pass": true}], "support_intersections_mm3": {"main_tub": 0, "main_lid": 0, "thermal_tub": 0, "thermal_face": 0, "thermal_angled_hood": 0, "thermal_raised_cradle": 0, "acoustic_tub": 0.0, "acoustic_face": 0, "mounting_spine": 0, "sht_mount_arm": 0, "sht_adjustable_carrier": 0, "electronics_strap_tray": 0, "microphone_strap_carrier": 0, "acoustic_trim": 0, "acoustic_trim.001": 0, "tray_spacer_6mm.001": 0, "tray_spacer_6mm.002": 0, "tray_spacer_6mm.003": 0, "tray_spacer_6mm.004": 0}, "board_intersections_mm3": {"main_tub": 0, "main_lid": 0, "thermal_tub": 0, "thermal_face": 0, "thermal_angled_hood": 0, "thermal_raised_cradle": 0, "acoustic_tub": 0.0, "acoustic_face": 0, "mounting_spine": 0, "sht_mount_arm": 0, "sht_adjustable_carrier": 0, "electronics_strap_tray": 0, "microphone_strap_carrier": 0, "acoustic_trim": 0, "acoustic_trim.001": 0, "tray_spacer_6mm.001": 0, "tray_spacer_6mm.002": 0, "tray_spacer_6mm.003": 0, "tray_spacer_6mm.004": 0}, "support_board_intersection_mm3": 8.58306884765625e-06, "pass": true, "limits": ["PCB body only; no underside component or acoustic port validation", "Existing carrier removed; new fastener grip and retention unfinished", "No gasket or measured acoustic coupling supplied"]}
+Blender 4.0.2
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+
+Blender quit
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+# Integrated route research evidence
+
+Physical underside fit: **UNSUPPORTED**.
+Input and P geometry unchanged. Failed reservations are retained.
+
+- thermal_initial_depth_mismatch: FAIL / uncertain grazing; obstacles: thermal_face, thermal_angled_hood, thermal_raised_cradle, pcb25_4square, PCB envelope
+- thermal_initial_cradle_approach: FAIL / uncertain grazing; obstacles: pcb25_4square
+- thermal_repaired_existing_lower_bore: CLEAR (digital scenario only); obstacles: 
+- mic_left: CLEAR (digital scenario only); obstacles: 
+- mic_right: CLEAR (digital scenario only); obstacles: 
+- sht_initial_through_sidewall: FAIL / uncertain grazing; obstacles: main_tub, sht_adjustable_carrier
+- sht_repaired_upper_exit_external: CLEAR (digital scenario only); obstacles: 
+- microphone_strap_carrier lane -5.25 hypothetical_narrow_NOT_generic_tie: CLEAR (hypothetical only)
+- microphone_strap_carrier lane -5.25 conventional_example_NOT_product_spec: FAIL / conservative envelope
+- microphone_strap_carrier lane 5.25 hypothetical_narrow_NOT_generic_tie: CLEAR (hypothetical only)
+- microphone_strap_carrier lane 5.25 conventional_example_NOT_product_spec: FAIL / conservative envelope
+- microphone_strap_carrier.001 lane -5.25 hypothetical_narrow_NOT_generic_tie: CLEAR (hypothetical only)
+- microphone_strap_carrier.001 lane -5.25 conventional_example_NOT_product_spec: FAIL / conservative envelope
+- microphone_strap_carrier.001 lane 5.25 hypothetical_narrow_NOT_generic_tie: CLEAR (hypothetical only)
+- microphone_strap_carrier.001 lane 5.25 conventional_example_NOT_product_spec: FAIL / conservative envelope
+
+## Limits
+- No input geometry changes; failures retained, no P repairs.
+- 2mm bundle + 0.25mm radial reservation is an assumed scenario, not measured wiring.
+- Polyline capsule union reserves space, not minimum bend radius or threading feasibility.
+- Tie strip uses oriented rectangular cross-section tiles with covering spheres and 0.025mm allowance; joint sections overlap, bend mechanics unvalidated.
+- Narrow tie and head dimensions hypothetical; no assertion generic or purchased ties fit.
+- Nominal PCB contact, underside-safe tie lanes, acoustic response, assembly sequence unsupported.
+- Routes tested independently; shared wire trunks are ONE common 2mm bundle assumption, not multiple independent bundles.
+- No connector insertion envelopes, strain relief, fatigue, waterproofing or physical approval.
+
+Coordinates, transforms, first collision witnesses and clearance bounds: `integrated-routes.json`.
+Blender 4.0.2
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+
+Blender quit
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+{'crossing': True, 'contained': True, 'clear': True, 'finite_not_ray': True, 'strip_width': True}
+Blender 4.0.2
+
+Blender quit
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+Info: Saved "mic-retention-thread-option.blend"
+{
+  "blender_version": "4.0.2",
+  "status": "nominal geometry only; physical retention NOT qualified",
+  "cord_assumption": "0.5 mm round polyester lacing cord purchasing family; unmeasured, no vendor research",
+  "scene_mesh_count_checked": 48,
+  "original_scene_geometry_unchanged": true,
+  "loops": [
+    {
+      "side": "left",
+      "x_sign": -1,
+      "closed_loop_local_mm": [
+        [
+          -9.2,
+          -5.25,
+          9.5
+        ],
+        [
+          -5.1,
+          -5.25,
+          9.5
+        ],
+        [
+          -5.1,
+          -6.65,
+          9.5
+        ],
+        [
+          -5.1,
+          -6.65,
+          13.0
+        ],
+        [
+          -6.65,
+          -6.65,
+          13.0
+        ],
+        [
+          -6.65,
+          6.65,
+          13.0
+        ],
+        [
+          -5.1,
+          6.65,
+          13.0
+        ],
+        [
+          -5.1,
+          6.65,
+          9.5
+        ],
+        [
+          -5.1,
+          5.25,
+          9.5
+        ],
+        [
+          -9.2,
+          5.25,
+          9.5
+        ]
+      ],
+      "swept_radius_mm": 0.25,
+      "knot_tail_envelope_radius_mm": 0.9,
+      "collision_hits": [],
+      "pass": true
+    },
+    {
+      "side": "left",
+      "x_sign": 1,
+      "closed_loop_local_mm": [
+        [
+          9.2,
+          -5.25,
+          9.5
+        ],
+        [
+          5.1,
+          -5.25,
+          9.5
+        ],
+        [
+          5.1,
+          -6.65,
+          9.5
+        ],
+        [
+          5.1,
+          -6.65,
+          13.0
+        ],
+        [
+          6.65,
+          -6.65,
+          13.0
+        ],
+        [
+          6.65,
+          6.65,
+          13.0
+        ],
+        [
+          5.1,
+          6.65,
+          13.0
+        ],
+        [
+          5.1,
+          6.65,
+          9.5
+        ],
+        [
+          5.1,
+          5.25,
+          9.5
+        ],
+        [
+          9.2,
+          5.25,
+          9.5
+        ]
+      ],
+      "swept_radius_mm": 0.25,
+      "knot_tail_envelope_radius_mm": 0.9,
+      "collision_hits": [],
+      "pass": true
+    },
+    {
+      "side": "right",
+      "x_sign": -1,
+      "closed_loop_local_mm": [
+        [
+          -9.2,
+          -5.25,
+          9.5
+        ],
+        [
+          -5.1,
+          -5.25,
+          9.5
+        ],
+        [
+          -5.1,
+          -6.65,
+          9.5
+        ],
+        [
+          -5.1,
+          -6.65,
+          13.0
+        ],
+        [
+          -6.65,
+          -6.65,
+          13.0
+        ],
+        [
+          -6.65,
+          6.65,
+          13.0
+        ],
+        [
+          -5.1,
+          6.65,
+          13.0
+        ],
+        [
+          -5.1,
+          6.65,
+          9.5
+        ],
+        [
+          -5.1,
+          5.25,
+          9.5
+        ],
+        [
+          -9.2,
+          5.25,
+          9.5
+        ]
+      ],
+      "swept_radius_mm": 0.25,
+      "knot_tail_envelope_radius_mm": 0.9,
+      "collision_hits": [],
+      "pass": true
+    },
+    {
+      "side": "right",
+      "x_sign": 1,
+      "closed_loop_local_mm": [
+        [
+          9.2,
+          -5.25,
+          9.5
+        ],
+        [
+          5.1,
+          -5.25,
+          9.5
+        ],
+        [
+          5.1,
+          -6.65,
+          9.5
+        ],
+        [
+          5.1,
+          -6.65,
+          13.0
+        ],
+        [
+          6.65,
+          -6.65,
+          13.0
+        ],
+        [
+          6.65,
+          6.65,
+          13.0
+        ],
+        [
+          5.1,
+          6.65,
+          13.0
+        ],
+        [
+          5.1,
+          6.65,
+          9.5
+        ],
+        [
+          5.1,
+          5.25,
+          9.5
+        ],
+        [
+          9.2,
+          5.25,
+          9.5
+        ]
+      ],
+      "swept_radius_mm": 0.25,
+      "knot_tail_envelope_radius_mm": 0.9,
+      "collision_hits": [],
+      "pass": true
+    }
+  ],
+  "pass": true,
+  "method": "32-sided swept cylinders plus spherical bend envelopes; exact Boolean volume against every combined-scene mesh, nominal solid PCB and radius-6.3 full-depth sound keepout; 1e-5 mm3 reporting threshold",
+  "limitations": [
+    "No component, copper, solder or actual board measurements supplied",
+    "No knot security, tension, abrasion, creep, vibration or acoustic testing",
+    "No assembly insertion-motion or cord self-collision qualification",
+    "Knot/tail sphere is a reserved maximum, not a simulated tied knot"
+  ]
+}
+Blender 4.0.2
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+
+Blender quit
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+CONTRACT baseline PASS research-adapters/export-contract-42/baseline.json
+CONTRACT displaced-01 FAIL research-adapters/export-contract-42/displaced-01.json
+CONTRACT displaced-02 FAIL research-adapters/export-contract-42/displaced-02.json
+CONTRACT displaced-03 FAIL research-adapters/export-contract-42/displaced-03.json
+CONTRACT displaced-04 FAIL research-adapters/export-contract-42/displaced-04.json
+CONTRACT displaced-05 FAIL research-adapters/export-contract-42/displaced-05.json
+CONTRACT displaced-06 FAIL research-adapters/export-contract-42/displaced-06.json
+CONTRACT displaced-07 FAIL research-adapters/export-contract-42/displaced-07.json
+CONTRACT displaced-08 FAIL research-adapters/export-contract-42/displaced-08.json
+CONTRACT displaced-09 FAIL research-adapters/export-contract-42/displaced-09.json
+CONTRACT substituted-01 FAIL research-adapters/export-contract-42/substituted-01.json
+CONTRACT substituted-02 FAIL research-adapters/export-contract-42/substituted-02.json
+CONTRACT substituted-03 FAIL research-adapters/export-contract-42/substituted-03.json
+CONTRACT substituted-04 FAIL research-adapters/export-contract-42/substituted-04.json
+Blender 4.2.3 LTS (hash 0e22e4fcea03 built 2024-10-14 23:31:34)
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+Timer 'STL Import' took 4.61 ms
+Timer 'STL Import' took 1.51 ms
+Timer 'STL Import' took 2.34 ms
+Timer 'STL Import' took 2.50 ms
+Timer 'STL Import' took 0.88 ms
+Timer 'STL Import' took 0.78 ms
+Timer 'STL Import' took 2.12 ms
+Timer 'STL Import' took 2.62 ms
+Timer 'STL Import' took 1.93 ms
+Timer 'STL Import' took 1.12 ms
+Timer 'STL Import' took 0.55 ms
+Timer 'STL Import' took 1.15 ms
+Timer 'STL Import' took 0.61 ms
+Timer 'STL Import' took 1.02 ms
+Timer 'STL Import' took 0.67 ms
+Timer 'STL Import' took 0.55 ms
+Timer 'STL Import' took 0.28 ms
+Timer 'STL Import' took 0.32 ms
+Timer 'STL Import' took 0.29 ms
+Timer 'STL Import' took 0.29 ms
+Timer 'STL Import' took 3.51 ms
+Timer 'STL Import' took 0.59 ms
+Timer 'STL Import' took 0.57 ms
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+Timer 'STL Import' took 1.98 ms
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+Timer 'STL Import' took 0.59 ms
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+Timer 'STL Import' took 0.57 ms
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+Timer 'STL Import' took 1.95 ms
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+Timer 'STL Import' took 0.62 ms
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+Timer 'STL Import' took 0.56 ms
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+Read blend: "/tmp/opencode/pigpulse-fiCONTRACT substituted-05 FAIL research-adapters/export-contract-42/substituted-05.json
+CONTRACT substituted-06 FAIL research-adapters/export-contract-42/substituted-06.json
+CONTRACT substituted-07 FAIL research-adapters/export-contract-42/substituted-07.json
+CONTRACT substituted-08 FAIL research-adapters/export-contract-42/substituted-08.json
+CONTRACT substituted-09 FAIL research-adapters/export-contract-42/substituted-09.json
+CONTRACT stale_sht-01 FAIL research-adapters/export-contract-42/stale_sht-01.json
+Info: Applied modifier was not first, result may not be as expected
+CONTRACT render_modifier-01 FAIL research-adapters/export-contract-42/render_modifier-01.json
+nal-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+Timer 'STL Import' took 0.64 ms
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/pcb25_4square_installed.blend"
+Read blend: "/tmp/opencode/pigpulse-final-current-wAruBMhw/research-adapters/combined-thermal-candidate.blend"
+Timer 'STL Import' took 2.47 ms
+
+Blender quit
+[
+  {
+    "name": "sht-12x12",
+    "pass": true,
+    "stl_sha256": "5ebb123bdbedf72849a92d6b6183f2a8a1d53516aff785fe987473dbccb06507",
+    "log_sha256": "a2ac2dfe4f778d0d9c4b37fa896fa36cd395ed69e43a99267a47e791d1194c20",
+    "gcode_sha256": "238c59d5dc9dec0c89ad40ccae96ea118f9eb2e40f6936f970eff2832360e0ec"
+  },
+  {
+    "name": "sht-18x12.7",
+    "pass": true,
+    "stl_sha256": "d34b323797731ff180e553f5b11f637055bd50169f4b73d7753a383a4e050c13",
+    "log_sha256": "959f447e6e0d223407d1409e00f7bd24200658d3fb27e1330735ec86a003c821",
+    "gcode_sha256": "a3ecefe7b0d0f5760c26c779e8ee87cd4c22666140ab5fe320a24e7670080b7b"
+  },
+  {
+    "name": "sht-25.5x17.7",
+    "pass": true,
+    "stl_sha256": "b13dd1047083a9e8cc3fecd13350ac75625ce5e877a4d4b52ea3ed50d6e3c15f",
+    "log_sha256": "1c856164a37f1903ced4435cb8f0bf7983014cb349eb13ccd02db2c23d054556",
+    "gcode_sha256": "20369e96b608c93fb3e73787f714e6db70492a0c070bb1961b25a7f9a5dea885"
+  },
+  {
+    "name": "mic_14x12_corner_support",
+    "pass": true,
+    "stl_sha256": "d473fd0da831e62814f187aeeb9e52d83bfcb60a5595f64a6796adff0f3b2132",
+    "log_sha256": "294a4de511bd3489f64472aa8d5124c33a55c36c269b89743a82be1e22c34fd2",
+    "gcode_sha256": "1f28304e93f04ebc3188f31bb22b194729689b8383c27891e2c6403696233a9a"
+  },
+  {
+    "name": "research_spine_tray_access",
+    "pass": true,
+    "stl_sha256": "61b24625e0a43675366618da374dac334263cb61fbb4588fe0b4bb720994063e",
+    "log_sha256": "3cb90200a72dfe466afff04b67cbe8e54f0d7714a98fe4ca28afcd3a38a22ae1",
+    "gcode_sha256": "6f276a4eab71b2b7c1b31169c230bfc3d2d4e0d76369c08ecd1e5c572264b18d"
+  }
+]
+{
+  "pass": true,
+  "gates": {
+    "thermal": true,
+    "combined": true,
+    "current_run_bindings": true,
+    "printed_quantity": true,
+    "manufacturing_contract": true,
+    "regression_controls": true,
+    "current_contract_inputs": true,
+    "cord_scenario": true,
+    "selected_wire_routes": true,
+    "current_route_scene": true,
+    "left_mic": true,
+    "right_mic": true,
+    "mic-corner-combined-checks.json_current": true,
+    "mic-corner-right-combined-checks.json_current": true
+  },
+  "scope": "Research-dimensioned digital prototype; no physical fit, IP, load or sensor-performance certification",
+  "original_poster_sha256": "023d26a14c579d38401fee80d479b10d36004891dff9fdcba4fb7f281399102f"
+}

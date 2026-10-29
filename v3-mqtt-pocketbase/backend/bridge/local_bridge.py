@@ -30,7 +30,14 @@ except ImportError:
 
 MQTT_BROKER = os.getenv("MQTT_BROKER", "127.0.0.1")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
-POCKETBASE_URL = os.getenv("POCKETBASE_URL", "http://127.0.0.1:8090")
+
+# PocketBase is bound to the AP address ONLY, deliberately NOT to 0.0.0.0 and
+# NOT to 127.0.0.1 (see pigpulse-pocketbase.service). So the loopback default
+# that used to live here could never connect -- it produced
+#   "PocketBase unreachable at http://127.0.0.1:8090: ... Connection refused"
+# on every boot. 192.168.69.1 is created by wlan0-static-ip.service, which is
+# why that unit is now a declared dependency of pigpulse-pocketbase.service.
+POCKETBASE_URL = os.getenv("POCKETBASE_URL", "http://192.168.69.1:8090")
 PB_EMAIL = os.getenv("PB_EMAIL", "")
 PB_PASSWORD = os.getenv("PB_PASSWORD", "")
 
@@ -195,7 +202,7 @@ pb_client = LocalPocketBaseClient(POCKETBASE_URL)
 # the loop, so the broker stops ACKing and QoS-0 telemetry is dropped during
 # every PocketBase hiccup. The queue is bounded and drops OLDEST: for live
 # health data a fresh sample is always more valuable than a stale backlog.
-WRITE_QUEUE: "queue.Queue[tuple[str, dict, str]]" = queue.Queue(maxsize=512)
+WRITE_QUEUE: "queue.Queue[tuple[str, str, dict]]" = queue.Queue(maxsize=512)
 
 
 def _writer_loop() -> None:

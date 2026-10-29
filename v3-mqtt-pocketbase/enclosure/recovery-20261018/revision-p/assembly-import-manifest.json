@@ -1,0 +1,19 @@
+{
+  "main_tub": "f5152219d6976f380e1860400caf44d4a8bfeff5d35b1870740ea9d78c8efc12",
+  "main_lid": "3de0b601957fe48420371434df05db1afa5def114d90df4b79f86dd3aaf56550",
+  "thermal_tub": "ef5f2aa56b83c8cb7af040a7e7055b44766467e68dc6cc85f1e486b09ec1c2fa",
+  "thermal_face": "4ceadefe5bfd91dd54fe3c8aa9005f13ef3b9bb738ec906be17c304bdeabf671",
+  "acoustic_tub": "5ae7ee3d9dba0228e6177644a0076a0f14a0f56859c3853c1b32f150bf991d5d",
+  "acoustic_face": "68dbcded253e22103736a3d6b49ac3a976e64bbc17a57883d49bcc7ab2741ded",
+  "microphone_strap_carrier": "a3367779b55c4a209451834f9d90f65613ce9c836046a2535be0024dfa967422",
+  "thermal_strap_carrier": "f59a44bf1b194b1e0e8b0d6c19bd07fe3aeda5d4bfe5715a4a088b0424e61268",
+  "optical_trim": "4338e7d24baea8d695a9d34d9f3cb3ab050bc6c23cf49722835edac6e10b8424",
+  "acoustic_trim": "66e4c1fa40218273361efa841f83c8708f4f8bb0a11c47ef414c05a72aeb5d5c",
+  "mounting_spine": "d8566155e0fc07dcff34381212ddc977850b7991b4ed6e28763f305110b5aebb",
+  "sht_adjustable_carrier": "a3a898588a8937e33415ff05bedc24901993d5d87bcd0e62ec5bef1db2054dc1",
+  "sht_mount_arm": "3c1813784b9340e578b1bba883b837b08abdae78150f65e3528892259a039342",
+  "electronics_strap_tray": "90d80701e68ce12b23b3f8b404a4052a8e8b874499515530dc40881fef38486a",
+  "tray_spacer_6mm": "2276b9fb58021060234ee1de8ecb141b61fc46c5e025bda1196be3e24dc824b0",
+  "thermal_raised_cradle": "9d2cebe08c75bc8f4e752c05fb70079562e01cc88b2fab0fb4d1bf77564fed2d",
+  "thermal_angled_hood": "10a79f3270e9c3dce5153311b4fb9ab0347b5ae139ae931b0e953363c1c19b9c"
+}

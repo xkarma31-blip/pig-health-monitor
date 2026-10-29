@@ -1,0 +1,19 @@
+### Visual Discrepancies
+
+1. **Silhouette & Proportions:**
+   - **Outer Corners:** The poster depicts pronounced corner boss roundings and perimeter screw-flange contours on all modules. Image 2 renders the main enclosure as a sharp, boxy slab with simple uniform edge chamfers/fillets.
+   - **Aspect Ratio:** The main central box in Image 2 appears squarer and shallower than the tall, deep enclosure shown in the approved dimensioned views (120 × 200 × 35 mm).
+   - **Mounting Bosses:** Image 1 shows external molded screw boss ears flanking the vertical mating interfaces between modules; these are absent in Image 2, which uses through-face corner screws instead.
+
+2. **Accent & Branding:**
+   - **Acoustic Module:** Image 2 introduces vivid green concentric accent rings around the microphone ports. The original poster design utilizes flush, all-black mesh/grille apertures without colored bezels.
+   - **Main Body Graphics:** Image 2 faithfully reproduces the "PigPulse" logo, tagline, and green indicator LED on the front face.
+
+3. **Exposed Holes & Hardware:**
+   - **Acoustic Face Fixings:** Image 2 displays four small countersunk perimeter/interior holes grouped around the acoustic ports; these do not exist on the clean front face of the original design.
+   - **Fasteners:** Image 2 places four flush silver screws directly through the front corners of every module faceplate, whereas the original hides or integrates these into exterior perimeter lugs.
+
+*(Note: Perspective prevents full verification of the rear enclosure, side hinge mechanisms, and cable gland recesses).*
+
+### Prioritized Feasible Improvement
+**Standardize Module Corner Geometry:** Re-model the corners of the main enclosure and daughter modules to incorporate the pronounced rounded corner radii and subtle vertical recess lines of the approved reference, replacing the flat slab appearance.

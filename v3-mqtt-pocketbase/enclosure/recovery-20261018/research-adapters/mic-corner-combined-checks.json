@@ -1,0 +1,201 @@
+{
+  "status": "research replacement carrier installation",
+  "saved_transform_valid": true,
+  "finite_contact_patches": [
+    {
+      "local_xy_mm": [
+        -6.25,
+        -5.25
+      ],
+      "seat_area_mm2": 2.249999949708581,
+      "pass": true
+    },
+    {
+      "local_xy_mm": [
+        -6.25,
+        5.25
+      ],
+      "seat_area_mm2": 2.249999949708581,
+      "pass": true
+    },
+    {
+      "local_xy_mm": [
+        6.25,
+        -5.25
+      ],
+      "seat_area_mm2": 2.249999949708581,
+      "pass": true
+    },
+    {
+      "local_xy_mm": [
+        6.25,
+        5.25
+      ],
+      "seat_area_mm2": 2.249999949708581,
+      "pass": true
+    }
+  ],
+  "through_tunnel_checks": [
+    {
+      "side": -1,
+      "y_mm": -5.25,
+      "reserved_section_mm": [
+        0.6,
+        1.0
+      ],
+      "probe_count": 9,
+      "pass": true
+    },
+    {
+      "side": -1,
+      "y_mm": 5.25,
+      "reserved_section_mm": [
+        0.6,
+        1.0
+      ],
+      "probe_count": 9,
+      "pass": true
+    },
+    {
+      "side": 1,
+      "y_mm": -5.25,
+      "reserved_section_mm": [
+        0.6,
+        1.0
+      ],
+      "probe_count": 9,
+      "pass": true
+    },
+    {
+      "side": 1,
+      "y_mm": 5.25,
+      "reserved_section_mm": [
+        0.6,
+        1.0
+      ],
+      "probe_count": 9,
+      "pass": true
+    }
+  ],
+  "assumed_rear_hardware": [
+    {
+      "axis_mm": [
+        -10,
+        -10
+      ],
+      "support_hit_mm3": 0.0,
+      "board_hit_mm3": 0
+    },
+    {
+      "axis_mm": [
+        -10,
+        10
+      ],
+      "support_hit_mm3": 0.0,
+      "board_hit_mm3": 0
+    },
+    {
+      "axis_mm": [
+        10,
+        -10
+      ],
+      "support_hit_mm3": 0.0,
+      "board_hit_mm3": 0
+    },
+    {
+      "axis_mm": [
+        10,
+        10
+      ],
+      "support_hit_mm3": 0.0,
+      "board_hit_mm3": 0
+    }
+  ],
+  "sampled_corner_bearing": [
+    {
+      "xy_mm": [
+        -6.25,
+        -5.25
+      ],
+      "hit": true,
+      "seat_z_mm": 11.0,
+      "pass": true
+    },
+    {
+      "xy_mm": [
+        -6.25,
+        5.25
+      ],
+      "hit": true,
+      "seat_z_mm": 11.0,
+      "pass": true
+    },
+    {
+      "xy_mm": [
+        6.25,
+        -5.25
+      ],
+      "hit": true,
+      "seat_z_mm": 11.0,
+      "pass": true
+    },
+    {
+      "xy_mm": [
+        6.25,
+        5.25
+      ],
+      "hit": true,
+      "seat_z_mm": 11.0,
+      "pass": true
+    }
+  ],
+  "support_intersections_mm3": {
+    "main_tub": 0,
+    "main_lid": 0,
+    "thermal_tub": 0,
+    "thermal_face": 0,
+    "thermal_angled_hood": 0,
+    "thermal_raised_cradle": 0,
+    "acoustic_tub": 0.0,
+    "acoustic_face": 0,
+    "mounting_spine": 0,
+    "sht_mount_arm": 0,
+    "sht_adjustable_carrier": 0,
+    "electronics_strap_tray": 0,
+    "microphone_strap_carrier.001": 0,
+    "acoustic_trim": 0,
+    "acoustic_trim.001": 0,
+    "tray_spacer_6mm.001": 0,
+    "tray_spacer_6mm.002": 0,
+    "tray_spacer_6mm.003": 0,
+    "tray_spacer_6mm.004": 0
+  },
+  "board_intersections_mm3": {
+    "main_tub": 0,
+    "main_lid": 0,
+    "thermal_tub": 0,
+    "thermal_face": 0,
+    "thermal_angled_hood": 0,
+    "thermal_raised_cradle": 0,
+    "acoustic_tub": 0.0,
+    "acoustic_face": 0,
+    "mounting_spine": 0,
+    "sht_mount_arm": 0,
+    "sht_adjustable_carrier": 0,
+    "electronics_strap_tray": 0,
+    "microphone_strap_carrier.001": 0,
+    "acoustic_trim": 0,
+    "acoustic_trim.001": 0,
+    "tray_spacer_6mm.001": 0,
+    "tray_spacer_6mm.002": 0,
+    "tray_spacer_6mm.003": 0,
+    "tray_spacer_6mm.004": 0
+  },
+  "support_board_intersection_mm3": 8.58306884765625e-06,
+  "pass": true,
+  "limits": [
+    "PCB body only; no underside component or acoustic port validation",
+    "Existing carrier removed; new fastener grip and retention unfinished",
+    "No gasket or measured acoustic coupling supplied"
+  ]
+}

@@ -1,0 +1,326 @@
+{
+  "method": "Exact boolean intersection of assembled exported STL meshes",
+  "not_tested": [
+    "physical fit",
+    "electronic component interference",
+    "screw head/nut tool access",
+    "self intersections"
+  ],
+  "parts": {
+    "mounting_spine": {
+      "min": [
+        -24.0,
+        -4.283715952624334e-06,
+        -98.0
+      ],
+      "max": [
+        24.0,
+        5.000004291534424,
+        98.0
+      ]
+    },
+    "electronics_strap_tray": {
+      "min": [
+        -41.0,
+        -12.000001907348633,
+        -38.0
+      ],
+      "max": [
+        41.0,
+        -8.999998092651367,
+        38.0
+      ]
+    },
+    "thermal_raised_cradle": {
+      "min": [
+        -34.0,
+        -29.326030731201172,
+        65.12905883789062
+      ],
+      "max": [
+        34.0,
+        -16.999988555908203,
+        94.8700942993164
+      ]
+    },
+    "thermal_tub": {
+      "min": [
+        -46.0,
+        -14.000000953674316,
+        61.0
+      ],
+      "max": [
+        46.0,
+        8.305163987643027e-07,
+        99.0
+      ]
+    },
+    "thermal_face": {
+      "min": [
+        -46.0,
+        -17.0,
+        61.0
+      ],
+      "max": [
+        46.0,
+        -13.999999046325684,
+        99.0
+      ]
+    },
+    "main_lid": {
+      "min": [
+        -60.0,
+        -33.000003814697266,
+        -56.0
+      ],
+      "max": [
+        60.0,
+        -29.999998092651367,
+        56.0
+      ]
+    },
+    "main_tub": {
+      "min": [
+        -60.0,
+        -30.000001907348633,
+        -56.0
+      ],
+      "max": [
+        60.0,
+        2.447837687213905e-06,
+        56.0
+      ]
+    },
+    "acoustic_tub": {
+      "min": [
+        -50.0,
+        -30.0,
+        -99.0
+      ],
+      "max": [
+        50.0,
+        8.305163987643027e-07,
+        -61.0
+      ]
+    },
+    "sht_adjustable_carrier": {
+      "min": [
+        64.0,
+        -6.000000476837158,
+        45.0
+      ],
+      "max": [
+        96.0,
+        -2.9999992847442627,
+        77.0
+      ]
+    },
+    "thermal_angled_hood": {
+      "min": [
+        -46.0,
+        -38.091033935546875,
+        61.0
+      ],
+      "max": [
+        46.0,
+        -17.0,
+        99.0
+      ]
+    },
+    "sht_mount_arm": {
+      "min": [
+        -24.0,
+        -3.0000007152557373,
+        44.99980163574219
+      ],
+      "max": [
+        96.0,
+        10.000000953674316,
+        77.00020599365234
+      ]
+    },
+    "microphone_strap_carrier": {
+      "min": [
+        -37.0,
+        -30.0,
+        -93.0
+      ],
+      "max": [
+        -11.0,
+        -27.0,
+        -67.0
+      ]
+    },
+    "acoustic_face": {
+      "min": [
+        -50.0,
+        -33.0,
+        -99.0
+      ],
+      "max": [
+        50.0,
+        -30.0,
+        -61.0
+      ]
+    }
+  },
+  "pairs": [
+    {
+      "a": "main_tub",
+      "b": "main_lid",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "thermal_tub",
+      "b": "thermal_face",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "thermal_face",
+      "b": "thermal_angled_hood",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "acoustic_tub",
+      "b": "acoustic_face",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "mounting_spine",
+      "b": "main_tub",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "mounting_spine",
+      "b": "thermal_tub",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "mounting_spine",
+      "b": "acoustic_tub",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "mounting_spine",
+      "b": "sht_mount_arm",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "sht_mount_arm",
+      "b": "sht_adjustable_carrier",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "main_tub",
+      "b": "electronics_strap_tray",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "thermal_face",
+      "b": "thermal_raised_cradle",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "thermal_angled_hood",
+      "b": "thermal_raised_cradle",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "acoustic_face",
+      "b": "microphone_strap_carrier",
+      "overlap_mm3": 0.0
+    }
+  ],
+  "pair_intersection_gate": true,
+  "installed_part_count": 20,
+  "all_broadphase_candidate_pairs": [
+    {
+      "a": "acoustic_tub",
+      "b": "microphone_strap_carrier",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "acoustic_tub",
+      "b": "microphone_strap_carrier.001",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "electronics_strap_tray",
+      "b": "main_tub",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "main_tub",
+      "b": "sht_mount_arm",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "main_tub",
+      "b": "tray_spacer_6mm.001",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "main_tub",
+      "b": "tray_spacer_6mm.002",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "main_tub",
+      "b": "tray_spacer_6mm.003",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "main_tub",
+      "b": "tray_spacer_6mm.004",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "mounting_spine",
+      "b": "sht_mount_arm",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "sht_mount_arm",
+      "b": "thermal_tub",
+      "overlap_mm3": 0.0
+    },
+    {
+      "a": "thermal_angled_hood",
+      "b": "thermal_raised_cradle",
+      "overlap_mm3": 0.0
+    }
+  ],
+  "all_installed_intersection_gate": true,
+  "cradle_head_envelopes": [
+    {
+      "x": -30,
+      "local_y": -9,
+      "head_radius_mm": 3,
+      "head_plus_washer_height_mm": 2.4,
+      "hood_collision_mm3": 0.0
+    },
+    {
+      "x": -30,
+      "local_y": 9,
+      "head_radius_mm": 3,
+      "head_plus_washer_height_mm": 2.4,
+      "hood_collision_mm3": 0.0
+    },
+    {
+      "x": 30,
+      "local_y": -9,
+      "head_radius_mm": 3,
+      "head_plus_washer_height_mm": 2.4,
+      "hood_collision_mm3": 0.0
+    },
+    {
+      "x": 30,
+      "local_y": 9,
+      "head_radius_mm": 3,
+      "head_plus_washer_height_mm": 2.4,
+      "hood_collision_mm3": 0.0
+    }
+  ],
+  "cradle_head_clearance_gate": true,
+  "driver_access_assumption": "Install cradle on separator with hood removed; open axial access before final hood installation. Full driver geometry not simulated."
+}

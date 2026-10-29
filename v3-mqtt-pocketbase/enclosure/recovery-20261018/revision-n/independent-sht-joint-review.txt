@@ -1,0 +1,25 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/render_assembled.py [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+Read only the two requested files. No edits or execution. Coordinates below are **assembled millimetres**, expressed as **(X, height, depth)**, with depth = −Blender Y.
+
+### Findings, severity order
+
+1. **High — SHT arm–spine fasteners have no clear forward bearing/access surface.**  
+   `build_revision.py:189–191, 206–208`; `render_assembled.py:49–62`  
+   The joint axes are **(±12, 61)**; arm depth is **−10…−5**, spine **−5…0**. The thermal tub’s lower wall occupies **height 61…64, depth 0…14**, directly across these axes, with **no corresponding clearance holes**. Thus forward-projecting joint hardware encounters thermal-wall material, rather than a free bearing surface. For comparison, the renderer’s own head envelope—radius **2.7**, thickness **1.8**—placed against spine depth 0 would overlap that wall over **height 61…63.7, depth 0…1.8**. Reversing the screw does not establish nut clearance there.
+
+2. **Medium — The assembled review omits precisely these interfering joints.**  
+   `render_assembled.py:104–127`  
+   Purchased-head proxies cover the main lid, acoustic face and thermal hood only; neither SHT spine joint at **(±12,61)** is represented, nor its nut/shank envelope. Consequently, the review images do not expose finding 1. The source mesh gate (`build_revision.py:292–302`) checks individual manifoldness/volume, not assembled hardware interference.
+
+### Requested checks without a defensible additional collision finding
+
+- **Main lid versus SHT joints:** lid ends at **height 56**, leaving **5 mm axis-to-edge** from the joints at 61; lid depth is **30…33**. A radius-2.7 head does **not** intersect it. An axial tool envelope exceeding **5 mm radius** would encounter the lid at that depth, but no tool dimensions are specified.
+- **Microphone carrier nut access:** bolt axes are **X = −34, −14, 14, 34; height = −90 or −70**, with carrier depth **27…30**. Nearest acoustic inner side-wall boundaries are **height −96 and −64**, giving **6 mm axis-to-wall**. No nut or socket envelope is defined, so a concrete nut collision cannot be established from these files.
+- **Cable paths:** acoustic-to-main exits align at **X=0, depth=16**, across the **height −61…−56** gap. Main-to-thermal exits instead differ by **8 mm depth** (**16 versus 8**) across the **height 56…61** gap. That requires an external bend, but cable diameter/bend radius and routing solids are absent; this is an **unvalidated route**, not a demonstrated blocked path.
+
+These are source-derived geometric observations, not physical-fit claims.

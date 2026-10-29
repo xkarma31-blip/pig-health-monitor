@@ -100,7 +100,8 @@ async function paintBanner() {
 }
 
 function markNav() {
-  const here = location.pathname.split("/").pop() || "index.html";
+  const seg = location.pathname.split("/").pop();
+  const here = (!seg || seg === "admin") ? "index.html" : seg;
   document.querySelectorAll("nav a").forEach((a) => {
     if (a.getAttribute("href").endsWith(here)) a.classList.add("on");
   });
@@ -144,11 +145,173 @@ async function overview() {
   }
   box.appendChild(g2);
 
+  // Architecture & Component Deep-Dive Section
+  if (o.architecture && o.architecture.parts) {
+    box.appendChild(el("h2", null, "System Architecture & Hardware Breakdown (Click to Inspect)"));
+    box.appendChild(el("p", "lead", "Interactive map of physical pins, protocols, wiring diagrams, software packages, and target code files."));
+
+    const drawer = el("div", "detail-drawer");
+    drawer.style.display = "none";
+    box.appendChild(drawer);
+
+    const partsGrid = el("div", "grid");
+    for (const part of o.architecture.parts) {
+      // Attach the live/snapshot sensor reading so the drawer can show real
+      // state for hardware-backed parts, and nothing at all for the rest.
+      if (part.status_key && o.sensors[part.status_key]) {
+        part._sensor = o.sensors[part.status_key];
+      }
+      const pc = el("div", "card part-card");
+      pc.appendChild(el("div", "part-badge", part.tier));
+      pc.appendChild(el("h3", null, part.name));
+      const desc = el("p", "muted", part.function);
+      pc.appendChild(desc);
+
+      const dl = el("dl", "kv");
+      dl.appendChild(el("dt", null, "Protocol"));
+      dl.appendChild(el("dd", "mono", part.protocol || "—"));
+      dl.appendChild(el("dt", null, "Service / Unit"));
+      dl.appendChild(el("dd", "mono", part.service || "—"));
+      pc.appendChild(dl);
+
+      pc.addEventListener("click", () => showPartDetail(part, drawer));
+      partsGrid.appendChild(pc);
+    }
+    box.appendChild(partsGrid);
+
+    // Architectural Decisions Section
+    if (o.architecture.decisions && o.architecture.decisions.length) {
+      box.appendChild(el("h2", null, "Architectural Decision Records (ADRs) & Trade-offs"));
+      box.appendChild(el("p", "lead", "Rationales for why specific sensors, protocols, and database engines were chosen."));
+      const decContainer = el("div", "dec-list");
+      for (const d of o.architecture.decisions) {
+        const item = el("div", "dec-item");
+        item.appendChild(el("div", "dec-header", `#${d.num}. ${d.title}`));
+        const body = el("div", null);
+        body.appendChild(el("strong", null, "Decision: "));
+        body.appendChild(document.createTextNode(d.decision));
+        item.appendChild(body);
+        const rat = el("div", "dec-rationale");
+        rat.appendChild(el("strong", null, "Rationale: "));
+        rat.appendChild(document.createTextNode(d.rationale));
+        item.appendChild(rat);
+        decContainer.appendChild(item);
+      }
+      box.appendChild(decContainer);
+    }
+  }
+
   box.appendChild(el("h2", null, "Most serious findings"));
   (o.top || []).forEach((f) => box.appendChild(findingNode(f)));
   const more = el("p");
   more.appendChild(el("a", null, "All findings →")).href = "diagnostics.html";
   box.appendChild(more);
+}
+
+/**
+ * Render the deep-dive drawer for one architecture part.
+ *
+ * Untrusted strings (function text, pin notes, package names) go in via
+ * textContent, never innerHTML — the same rule the source viewer follows.
+ */
+function showPartDetail(part, drawer) {
+  drawer.textContent = "";
+
+  const h = el("h3");
+  h.appendChild(document.createTextNode(part.name));
+  const close = el("button", "btn-close", "×");
+  close.setAttribute("aria-label", "Close details");
+  close.addEventListener("click", (ev) => {
+    ev.stopPropagation();
+    drawer.style.display = "none";
+  });
+  h.appendChild(close);
+  drawer.appendChild(h);
+
+  drawer.appendChild(el("span", "part-badge", part.tier));
+
+  // Live status for this part, when the console has one.
+  if (part.status_key && part._sensor) {
+    const st = el("dl", "kv");
+    st.appendChild(el("dt", null, "Live state"));
+    const dd = el("dd");
+    dd.appendChild(renderVal(part._sensor));
+    st.appendChild(dd);
+    drawer.appendChild(st);
+  }
+
+  const rows = [
+    ["Function", part.function],
+    ["Protocol / Bus", part.protocol],
+    ["Hardware", part.hardware],
+    ["Service / Unit", part.service],
+    ["Data destination", part.data_destination],
+  ];
+  if (rows.some((r) => r[1])) {
+    const dl = el("dl", "kv");
+    for (const [k, v] of rows) {
+      if (!v) continue;
+      dl.appendChild(el("dt", null, k));
+      dl.appendChild(el("dd", null, v));
+    }
+    drawer.appendChild(dl);
+  }
+
+  // Wiring table — the pin-by-pin connection map.
+  if (part.wiring && part.wiring.length) {
+    drawer.appendChild(el("h3", null, "Wiring / connection map"));
+    const t = el("table", "wiring-table");
+    const thead = el("thead");
+    const hr = el("tr");
+    ["Component pin", "Connects to", "Note"].forEach((h2) =>
+      hr.appendChild(el("th", null, h2))
+    );
+    thead.appendChild(hr);
+    t.appendChild(thead);
+    const tb = el("tbody");
+    for (const w of part.wiring) {
+      const tr = el("tr");
+      tr.appendChild(el("td", "mono", w.sensor_pin || "—"));
+      tr.appendChild(el("td", "mono", w.pi_pin || "—"));
+      tr.appendChild(el("td", "muted", w.note || ""));
+      tb.appendChild(tr);
+    }
+    t.appendChild(tb);
+    drawer.appendChild(t);
+  }
+
+  // Required software packages.
+  if (part.packages && part.packages.length) {
+    drawer.appendChild(el("h3", null, "Required packages"));
+    const ul = el("ul", "step-list");
+    for (const p of part.packages) ul.appendChild(el("li", "mono", p));
+    drawer.appendChild(ul);
+  }
+
+  // Setup process — numbered, runnable steps.
+  if (part.setup_process && part.setup_process.length) {
+    drawer.appendChild(el("h3", null, "Process to make it work"));
+    const ol = el("ol", "step-list");
+    for (const s of part.setup_process) {
+      const li = el("li");
+      const pre = el("pre", "evidence", s);
+      li.appendChild(pre);
+      ol.appendChild(li);
+    }
+    drawer.appendChild(ol);
+  }
+
+  // Deep link into the Code viewer for the implementing file.
+  if (part.code_path) {
+    const row = el("div", "row");
+    const a = el("a", null, "Open " + part.code_path + " in the Code viewer →");
+    a.href = "/admin/code.html?path=" + encodeURIComponent(part.code_path);
+    row.appendChild(a);
+    drawer.appendChild(row);
+  }
+
+  drawer.style.display = "block";
+  drawer.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function findingNode(f) {
@@ -413,10 +576,26 @@ async function codePage() {
   wrap.appendChild(right);
   box.appendChild(wrap);
 
-  const first = (listing.files || []).find((f) => f.available.value);
-  if (first) {
+  // Honour ?path=<rel> so other pages can deep-link straight to a file
+  // (the architecture drawer links here). Falls back to the first
+  // available file when the target is absent or not allowlisted.
+  const want = new URLSearchParams(location.search).get("path");
+  const files = listing.files || [];
+  const target =
+    (want && files.find((f) => f.path === want && f.available.value)) ||
+    files.find((f) => f.available.value);
+  if (target) {
     const b = fl.querySelector("button:not([disabled])");
-    if (b) b.click();
+    if (b) {
+      // Click the button whose label matches the target so it highlights.
+      for (const btn of fl.querySelectorAll("button")) {
+        if (btn.textContent.indexOf(target.path) === 0) {
+          btn.click();
+          return;
+        }
+      }
+      b.click();
+    }
   }
 }
 
@@ -483,7 +662,8 @@ async function diagnostics() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-  const which = location.pathname.split("/").pop() || "index.html";
+  const seg = location.pathname.split("/").pop();
+  const which = (!seg || seg === "admin") ? "index.html" : seg;
   const pages = {
     "index.html": overview,
     "sensors.html": sensors,

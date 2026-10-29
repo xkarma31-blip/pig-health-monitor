@@ -1,0 +1,91 @@
+{
+  "assumption": "Carrier face-side surface coincides with acoustic face underside; probe slot exits only,not complete strap path.",
+  "slots": [
+    {
+      "carrier_center_x_mm": -24,
+      "slot_local_x_mm": -10,
+      "samples": [
+        {
+          "y_mm": -3,
+          "blocked_by_face": true,
+          "entry_z_mm": 0.0
+        },
+        {
+          "y_mm": 0,
+          "blocked_by_face": true,
+          "entry_z_mm": -7.450580596923828e-09
+        },
+        {
+          "y_mm": 3,
+          "blocked_by_face": true,
+          "entry_z_mm": 0.0
+        }
+      ]
+    },
+    {
+      "carrier_center_x_mm": -24,
+      "slot_local_x_mm": 10,
+      "samples": [
+        {
+          "y_mm": -3,
+          "blocked_by_face": true,
+          "entry_z_mm": 7.450580596923828e-09
+        },
+        {
+          "y_mm": 0,
+          "blocked_by_face": true,
+          "entry_z_mm": -7.450580596923828e-09
+        },
+        {
+          "y_mm": 3,
+          "blocked_by_face": true,
+          "entry_z_mm": 0.0
+        }
+      ]
+    },
+    {
+      "carrier_center_x_mm": 24,
+      "slot_local_x_mm": -10,
+      "samples": [
+        {
+          "y_mm": -3,
+          "blocked_by_face": true,
+          "entry_z_mm": 0.0
+        },
+        {
+          "y_mm": 0,
+          "blocked_by_face": true,
+          "entry_z_mm": 7.450580596923828e-09
+        },
+        {
+          "y_mm": 3,
+          "blocked_by_face": true,
+          "entry_z_mm": 7.450580596923828e-09
+        }
+      ]
+    },
+    {
+      "carrier_center_x_mm": 24,
+      "slot_local_x_mm": 10,
+      "samples": [
+        {
+          "y_mm": -3,
+          "blocked_by_face": true,
+          "entry_z_mm": 0.0
+        },
+        {
+          "y_mm": 0,
+          "blocked_by_face": true,
+          "entry_z_mm": 0.0
+        },
+        {
+          "y_mm": 3,
+          "blocked_by_face": true,
+          "entry_z_mm": -7.450580596923828e-09
+        }
+      ]
+    }
+  ],
+  "all_slot_exits_blocked": true,
+  "physical_fit_tested": false
+}

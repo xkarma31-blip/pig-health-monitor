@@ -1,0 +1,63 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py [90m[offset=1, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/check_assembly.py [90m[offset=1, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/render_assembled.py [90m[offset=1, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-k/README.md [90m[offset=1, limit=1000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-j/REVIEW_REPAIRS.md [90m[offset=1, limit=1000][0m
+> reviewer · cx/gpt-6.1-sol-review
+**One remaining mechanical defect; one verification gap.** References below are relative to `v3-mqtt-pocketbase/enclosure/recovery-20261018/`.
+
+1. **High — Raised cradle still does not provide unobstructed, full flat head bearing.**  
+   `build_revision.py:241–258`, particularly **246–257**.  
+   The platform is rotated and its center placed at Z=7. Its upper plane is therefore approximately `8.553 + y*tan(15°)`, while each horizontal stand terminates at `9.2 + y_center*tan(15°)`. At the uphill edge of the assumed 3mm-radius head/washer, the platform reaches **0.157mm above the stand’s bearing plane**. Consequently, part of that footprint encounters the inclined platform rather than a clear horizontal seat. Extending the stands fixed their connection/support, but did **not** completely fix the previous sloping-bearing problem. Provide a higher uninterrupted pad or remove the interfering platform material, then recheck roof clearance.  
+   The “flat bearing pads”/repair-complete statements in `revision-k/README.md:18–20` and `revision-j/REVIEW_REPAIRS.md:13–15` overstate this fix.
+
+2. **Medium — Head-envelope gate cannot detect that remaining bearing interference.**  
+   `check_assembly.py:65–74`.  
+   Each assumed head/washer is tested **only against the hood**, not against the cradle that supports it. Thus all four tests can pass while the head footprint intersects the uphill platform described above. Missing regression coverage: head-versus-cradle interference above the intended seating plane and full annular bearing coverage. The documented hood-collision result is narrower than verification of a usable fastener joint.
+
+**What appears fixed / appropriately qualified**
+- **Cradle-head versus hood clearance:** the stated ideal **2.996mm gap** and **0.596mm margin** for a 2.4mm envelope are consistent with the construction.
+- **Stand support:** the stands extend from the separator plane into the tilted platform; they are not simply floating beneath it.
+- **Hood bearing:** `build_revision.py:270–275` creates genuine flat-bottom cylindrical pockets, not merely tilted screw holes. These are **counterbores/spotfaces, not countersinks**.
+- **Access:** installing the cradle before the hood removes the previous requirement to drive its screws through the roof. Actual driver/nut envelopes, screw lengths, strength, and hardware fit remain **unmeasured uncertainties**, not established additional defects.
+
+Read-only source review; no files modified or geometry regenerated.

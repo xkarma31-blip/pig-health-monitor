@@ -1,0 +1,23 @@
+### Visual Inspection & Verification
+
+1. **Mint Acoustic Rings:**  
+   * **Verified visible.** Two circular mint-green bezel rings are clearly present around the acoustic microphone ports on the bottom module face of the 3D model.
+
+2. **Rounded Thermal Outer Corners:**  
+   * **Not verified.** The top thermal module in the 3D model features sharp, beveled/chamfered outer corners and flat planar facets rather than the continuous, smooth rounded corner fillets shown in the approved reference poster.
+
+3. **Logo & Tagline Readability:**  
+   * **Verified readable.** The centered "PigPulse" logo with the radiating signal icon above the "u" and the tagline *"Edge Intelligence for Swine Health"* are clearly legible across the main front enclosure.
+
+---
+
+### Remaining Visual Discrepancies (Real Geometry vs. View)
+
+* **Real Geometry Discrepancies:**
+  * **Thermal Bevel vs. Fillet:** The physical outer shell of the CAD thermal module is blocky with planar chamfers, whereas the reference features smooth, organic radial curvatures.
+  * **Fastener Layout:** The CAD acoustic module incorporates four prominent corner screw bosses plus four sub-fasteners around the ports, whereas the original reference front faces are largely smooth with fasteners situated along outer perimeter tabs or rear/top interfaces.
+  * **Hinges & Locking Latch Details:** The CAD main body omits the robust dual-side external latch/hinge mechanisms seen on the left side of the reference poster's main body.
+  * **Inter-module Interconnects:** The reference features visible central waterproof locking collar connectors bridging the modules; the CAD model shows solid blocks directly stacked or bracketed without the distinct cylindrical twist-lock couplings.
+
+* **Perspective / View Artifacts:**
+  * The CAD model is rendered in an axonometric/orthographic projection with a rigid rear wall-mount bracket extending rightward, obscuring the modular stacking clearances seen in the reference's straight-on, eye-level perspective.

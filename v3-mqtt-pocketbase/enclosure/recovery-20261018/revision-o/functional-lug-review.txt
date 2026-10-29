@@ -1,0 +1,114 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead . [90m[offset=0, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mSkill "using-superpowers" 
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGlob "**/*{build_revision.py,REFERENCE_DEVIATIONS.md}" [90min . · 2 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o/REFERENCE_DEVIATIONS.md [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018 [90m[offset=0, limit=120][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/check_assembly.py [90m[offset=0, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/original-poster.png [90m[offset=0, limit=20][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/render_assembled.py [90m[offset=0, limit=95][0m
+> reviewer · cx/gpt-6.1-sol-review
+## Verdict
+
+**Real external mounting lugs are justified as a functional prototype improvement for the requested wall attachment—not as a proven reconstruction of the reference.** They would provide accessible wall-fastener locations without opening the electronics cavity, while retaining the rear spine and its module connections.
+
+`revision-o/REFERENCE_DEVIATIONS.md:15–16` explicitly records missing external hinge/latch/mounting-lug details, but does **not** establish which illustrated details actually serve as wall mounts. Exact reference lug dimensions, fasteners, attachment method and load capability remain unknown.
+
+**Limitation:** I could read the source and deviation notes, but this model could not inspect `original-poster.png`. Reference correspondence below therefore relies on the written record, not a new visual verification. No files were modified or geometry generated.
+
+## Findings, in severity order
+
+### 1. Blocking design constraint: lugs must account for the spine’s rear projection
+
+The main tub’s rear floor is at local **Z = 0–3 mm** (`build_revision.py:79–83,108`). The assembled spine occupies local-equivalent **Z = −5–0 mm**, behind that floor (`build_revision.py:190`; `render_assembled.py:55–69`).
+
+Simply adding ears coplanar with the tub floor would leave their wall-facing surfaces **5 mm forward of the spine’s rear surface**. Tightening those ears directly against a flat wall would require spacers or a different rear offset. This is a geometric mounting conflict, not evidence of a particular failure load.
+
+### 2. Important uncertainty: wall contact and hardware access remain unvalidated
+
+The SHT arm is placed farther rearward than the spine, at assembly depth −10 mm (`render_assembled.py:60–61`), and includes a landing extending sideways (`build_revision.py:214–220`). Consequently, making lug backs flush with the spine does **not** establish that the complete assembly can sit against a flat wall.
+
+Wall spacers or a mounting substrate with suitable clearance may still be necessary. The wall anchor, head/washer envelope, driver access, installation sequence and rear nut clearance also need definition. These cannot be inferred from the poster.
+
+### 3. Missing verification: existing digital gates do not establish mounting functionality
+
+The builder checks manifold edges and positive volume (`build_revision.py:298–310`). The assembly audit explicitly excludes physical fit and general screw-head/nut/tool access (`check_assembly.py:42–44`). Neither establishes lug-root continuity, mounting-tool clearance, a wall-clearance envelope or mechanical capacity.
+
+## Minimal justified geometric proposal
+
+**Coordinate system:** native `build_revision.py` coordinates, millimetres: X across the tub, Y along its height, Z from rear floor toward lid. Main tub bounds are X ±60, Y ±56, Z 0–30.
+
+Propose **four integral side lugs**, not hinges, with the following **initial CAD dimensions**:
+
+| Feature | Proposed geometry |
+|---|---|
+| Lug centres | **(−67, −32, −1), (−67, +32, −1), (+67, −32, −1), (+67, +32, −1)** |
+| Each lug blank | **18 × 16 × 8 mm**, aligned X/Y/Z |
+| Left/right X extents | **−76 to −58 / +58 to +76** |
+| Y extents | **−40 to −24 / +24 to +40** |
+| Z extents | **−5 to +3** |
+| Bore centres | **(X, Y) = (±68, ±32)** |
+| Bores | **Ø4.5 mm through Z**, provisional clearance for a selected mounting fastener—not an anchor specification |
+| Integration | Boolean-union blanks into the tub before drilling and final edge relief; round exposed outer corners without consuming root overlap or bore ligaments |
+
+**Why these locations:**
+
+- **Connected root:** each blank overlaps the existing side-floor region by **2 mm in X**, with shared material at Z 0–3. That is intentional attachment overlap, not a new cut into the wall.
+- **Bores outside the shell:** the bore’s nearest edge is X = ±65.75, giving **5.75 mm nominal separation** from the outer sidewall plane at ±60.
+- **Corner posts avoided:** existing post centres are **(±54, ±50)**, radius 4.5 (`build_revision.py:85–88`). Proposed lug footprints stop at |Y| = 40; their bores are farther away.
+- **Cable exits avoided:** both main cable exits are centred at **X = 0, Y ≈ ±55, Z = 16**, rather than on the lug-bearing side regions (`build_revision.py:114–119`).
+- **Tray avoided:** the tray is **82 × 76 mm**, X ±41, Y ±38, installed above the floor; proposed additions stay at |X| ≥58 (`build_revision.py:223`; `render_assembled.py:62`).
+- **Spine retained:** it occupies X ±24, so these lugs do not require changing its geometry (`build_revision.py:190`).
+- **External fastening:** wall-fastener bores do not penetrate the electronics cavity.
+- **Rear datum:** lug backs at Z = −5 match the spine’s nominal rear plane, **but do not resolve the SHT-arm/wall clearance issue**.
+
+The resulting main-tub bounding width would be **152 mm**, before any edge treatment. This is a proposed geometry, not a print-fit or hardware-fit claim.
+
+## Decision boundary
+
+Proceeding to **CAD evaluation** of these four lugs is justified by the explicit wall-attachment requirement. Calling them reference-accurate, rugged, load-rated or wall-ready would be speculative.
+
+Before adopting the proposal, evaluate the complete assembly against a wall plane—including the SHT arm and rear hardware—and check union continuity, bore ligaments after beveling, selected fastener/tool envelopes and installation access. **No load capacity, physical fit or successful wall mounting is claimed.**

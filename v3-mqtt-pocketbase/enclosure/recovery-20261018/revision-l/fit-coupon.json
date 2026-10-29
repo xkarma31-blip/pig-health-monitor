@@ -1,0 +1,29 @@
+{
+  "optional_not_installed_part": true,
+  "dimensions_mm": [
+    58,
+    16,
+    3
+  ],
+  "holes_left_to_right": [
+    {
+      "center_x_mm": -21,
+      "nominal_diameter_mm": 3.0
+    },
+    {
+      "center_x_mm": -7,
+      "nominal_diameter_mm": 3.2
+    },
+    {
+      "center_x_mm": 7,
+      "nominal_diameter_mm": 3.4
+    },
+    {
+      "center_x_mm": 21,
+      "nominal_diameter_mm": 3.6
+    }
+  ],
+  "nonmanifold_edges": 0,
+  "volume_mm3": 2681.187139194709,
+  "instructions": "Print on intended printer/material. Identify left-to-right using listed X coordinates. Measure/try real bolt; do not infer nominal hole prints exactly. No coupon printed in this task."
+}

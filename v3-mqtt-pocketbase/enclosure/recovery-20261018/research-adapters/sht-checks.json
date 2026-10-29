@@ -1,0 +1,329 @@
+[
+  {
+    "variant": "12x12",
+    "checks": {
+      "ventilation_overlap_mm3": 0.0,
+      "nonmanifold_edges": 0,
+      "connected_components": 1,
+      "tie_passages": [
+        {
+          "xy_mm": [
+            21,
+            -9.0
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        },
+        {
+          "xy_mm": [
+            21,
+            9.0
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        },
+        {
+          "xy_mm": [
+            27,
+            -9.0
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        },
+        {
+          "xy_mm": [
+            27,
+            9.0
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        }
+      ],
+      "volume_mm3": 2925.164332987365,
+      "head_-12_collision_mm3": 0.0,
+      "head_12_collision_mm3": 0.0,
+      "tool_-12_collision_mm3": 0.0,
+      "tool_12_collision_mm3": 0.0,
+      "board_penetration_mm3": 0.0,
+      "contact_area_mm2_each": [
+        1.4400835835241697,
+        1.4400835835240888,
+        1.4400835835244117,
+        1.4400835835252193
+      ],
+      "installed_collisions_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "acoustic_trim": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "electronics_strap_tray": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "thermal_angled_hood": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "REFERENCE_ARTWORK_LABEL_NOT_STL": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.001": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.002": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.003": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.004": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.005": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.006": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.007": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.008": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.009": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.010": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.011": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.012": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.013": 0.0,
+        "PURCHASED_LED_VISUAL_ONLY": 0.0
+      },
+      "replacement_count": 1,
+      "pass": true
+    }
+  },
+  {
+    "variant": "18x12.7",
+    "checks": {
+      "ventilation_overlap_mm3": 0.0,
+      "nonmanifold_edges": 0,
+      "connected_components": 1,
+      "tie_passages": [
+        {
+          "xy_mm": [
+            21,
+            -9.35
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        },
+        {
+          "xy_mm": [
+            21,
+            9.35
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        },
+        {
+          "xy_mm": [
+            27,
+            -9.35
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        },
+        {
+          "xy_mm": [
+            27,
+            9.35
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        }
+      ],
+      "volume_mm3": 2974.6841725997283,
+      "head_-12_collision_mm3": 0.0,
+      "head_12_collision_mm3": 0.0,
+      "tool_-12_collision_mm3": 0.0,
+      "tool_12_collision_mm3": 0.0,
+      "board_penetration_mm3": 0.0,
+      "contact_area_mm2_each": [
+        1.4400835835240888,
+        1.440083583524008,
+        1.4400812945747758,
+        1.4400812945746144
+      ],
+      "installed_collisions_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "acoustic_trim": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "electronics_strap_tray": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "thermal_angled_hood": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "REFERENCE_ARTWORK_LABEL_NOT_STL": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.001": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.002": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.003": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.004": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.005": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.006": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.007": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.008": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.009": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.010": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.011": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.012": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.013": 0.0,
+        "PURCHASED_LED_VISUAL_ONLY": 0.0
+      },
+      "replacement_count": 1,
+      "pass": true
+    }
+  },
+  {
+    "variant": "25.5x17.7",
+    "checks": {
+      "ventilation_overlap_mm3": 0.0,
+      "nonmanifold_edges": 0,
+      "connected_components": 1,
+      "tie_passages": [
+        {
+          "xy_mm": [
+            21,
+            -11.85
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        },
+        {
+          "xy_mm": [
+            21,
+            11.85
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        },
+        {
+          "xy_mm": [
+            27,
+            -11.85
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        },
+        {
+          "xy_mm": [
+            27,
+            11.85
+          ],
+          "section_mm": [
+            1.8,
+            1.8
+          ],
+          "obstruction_mm3": 0.0,
+          "pass": true
+        }
+      ],
+      "volume_mm3": 3133.50814282774,
+      "head_-12_collision_mm3": 0.0,
+      "head_12_collision_mm3": 0.0,
+      "tool_-12_collision_mm3": 0.0,
+      "tool_12_collision_mm3": 0.0,
+      "board_penetration_mm3": 0.0,
+      "contact_area_mm2_each": [
+        1.4400841557620225,
+        1.4400841557616997,
+        1.44007957786049,
+        1.4400795778603286
+      ],
+      "installed_collisions_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "acoustic_trim": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "electronics_strap_tray": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "thermal_angled_hood": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "REFERENCE_ARTWORK_LABEL_NOT_STL": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.001": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.002": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.003": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.004": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.005": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.006": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.007": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.008": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.009": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.010": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.011": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.012": 0.0,
+        "PURCHASED_M3_HEAD_VISUAL_ONLY.013": 0.0,
+        "PURCHASED_LED_VISUAL_ONLY": 0.0
+      },
+      "replacement_count": 1,
+      "pass": true
+    }
+  }
+]

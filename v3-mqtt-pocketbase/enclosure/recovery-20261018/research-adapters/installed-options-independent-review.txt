@@ -1,0 +1,142 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead . [90m[offset=0, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mSkill "ponytail" 
+> reviewer · cx/gpt-6.1-sol-review
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead build_mic_corner_support.py [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead check_mic_corner_installed.py [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead build_low_tray_spacer.py [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead research-adapters [90m[offset=0, limit=200][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead research-adapters/README.md [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead research-adapters/independent-support-audit.txt [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead research-adapters/corner-support-independent-plan.txt [90m[offset=0, limit=300][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead check_component_reservations.py [90m[offset=0, limit=300][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "tray|microphone_strap|27|30" [90min render_assembled.py · 10 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead render_assembled.py [90m[offset=32, limit=70][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead research-adapters/mic-corner-installed-checks.json [90m[offset=0, limit=200][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "tray|13.4|18mm|14mm|9mm" [90min fastener_ledger.js · 1 match[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead fastener_ledger.js [90m[offset=1, limit=95][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead /home/solrahk/pig-health-monitor/CANON.md [90m[offset=1, limit=60][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead research-adapters/optional-low-tray-checks.json [90m[offset=0, limit=120][0m
+> reviewer · cx/gpt-6.1-sol-review
+## Findings — severity order
+
+### 1. High — The installation gate can pass without any board bearing or retention
+**`check_mic_corner_installed.py:31–44`; `build_mic_corner_support.py:33–45`**
+
+The `pass` expression checks only **absence of solid intersections**. A floating PCB, a PCB shifted off the shoes, or shoes shortened below the PCB could still pass. Zero support–board intersection is appropriate for touching surfaces, but does not establish contact.
+
+The current nominal geometry **does provide positive bearing**, calculated from source:
+- Each shoe occupies local X **5.5…7**, Y **4.5…6**, mirrored at four corners.
+- A centered 14 × 12 mm board covers all four 1.5 × 1.5 mm faces: **9 mm² total nominal contact**.
+- However, the shoes terminate exactly at the nominal PCB edges; board tolerance, rounded corners and displacement can reduce that contact.
+- There are **no lateral stops or lift retention**. The old carrier is replaced, and its strap arrangement is not replaced by a demonstrated retention path.
+
+**Minimal next fix:** add explicit installed contact-plane/overlap assertions for all four shoes, including a small displacement/tolerance case. Define one removable board-retention method and inspect actual underside-safe contact zones before designing its contact points. Keep clearance and mechanical-approval statuses separate.
+
+### 2. Medium — The saved installed report contains bearing-test evidence that the current script cannot reproduce
+**`research-adapters/mic-corner-installed-checks.json:3–40`; `check_mic_corner_installed.py:38–45`**
+
+The JSON includes four `sampled_corner_bearing` results, but the current checker contains no ray sampling or other bearing test and never emits that field. Running this script would overwrite those results with a report lacking them.
+
+Even the saved center samples would prove only point hits—not positive-area installed bearing or tolerance robustness.
+
+**Minimal next fix:** implement the small bearing assertion in the checker and regenerate the report from that exact script. Until then, treat the saved sampled-bearing entries as **unreproducible from the reviewed source**, not current verification evidence.
+
+### 3. Medium — The low-tray option’s arithmetic is plausible, but its assembly is not what the reservation test actually checks
+**`build_low_tray_spacer.py:16–24`; `check_component_reservations.py:35–47`; `fastener_ledger.js:21`**
+
+The reservation experiment moves the tray rearward by 3 mm but leaves the **existing four 6 mm spacers** in place. It does not install the new 3 mm spacers or revised fasteners. The low-tray report’s clearance and bolt figures are hard-coded, rather than derived from that modified assembly.
+
+The nominal arithmetic is consistent:
+- Replace—not stack upon—the four 6 mm spacers with four 3 mm spacers.
+- Tray top moves from depth **12 to 9 mm**.
+- To the nominal lid plane at depth 30: **21 mm gross clearance**.
+- A 20 mm reservation occupies depth **9…29**, leaving **1 mm nominal margin**.
+- Grip reduces from **12 to 9 mm**.
+- With the existing ledger assumptions, minimum bolt length becomes **13.4 mm**; **14 mm** offers only **0.6 mm** excess over that minimum.
+
+Thus the option **nominally accommodates the 20 mm box**, but does not establish usable connector clearance, insulation, actual bolt/nut clearance, or integrated board fit. The unchanged default ledger still specifies 18 mm tray bolts.
+
+**Minimal next fix:** create one option-specific assembly check that replaces all four spacers, places the proposed bolt/washer/nut envelopes, and derives the stack figures. Explicitly specify **four candidate M3 × 14 mm bolts**, subject to actual hardware dimensions and available stock; do not silently retain the 18 mm bolts.
+
+## Transform assessment — correct for the stated nominal arrangement
+
+**`check_mic_corner_installed.py:15–17,32–36`**
+
+The −90° X rotation maps local `(x,y,z)` to world `(x,z,−y)` before translation. With depth `D = −world Y`:
+
+- Base local Z **0…3** becomes **D30…27**.
+- Legs local Z **3…11** become **D27…19**.
+- PCB occupies **D19…17.4**, meeting the shoe ends at **D19**.
+- Local Y reverses in world height, but the four symmetric shoes remain aligned with the centered board.
+
+The nearest shoe point is at radius `√(5.5² + 4.5²) ≈ 7.106 mm`, outside the **6.3 mm** support bore. No transform-sign error or nominal zero-bearing failure is apparent in this construction.
+
+**Still missing:** installed fastener capture/tool access, actual board corner and underside inspection, retention, microphone-port alignment, gasket geometry and acoustic testing. The reports appropriately flag several of these limitations; neither their `pass` flag nor a clear body box should be promoted to **integrated board approval**.
+
+**Scope:** read-only source and saved-report inspection; no files edited, no subagents used, and no Blender scripts executed.

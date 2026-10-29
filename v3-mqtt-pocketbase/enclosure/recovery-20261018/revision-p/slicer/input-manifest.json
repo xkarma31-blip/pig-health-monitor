@@ -1,0 +1,87 @@
+{
+  "main_tub": {
+    "stl_sha256": "f5152219d6976f380e1860400caf44d4a8bfeff5d35b1870740ea9d78c8efc12",
+    "gcode_sha256": "0aa68ac93b57046c130e516fd45db32b7d993b98609fae8e87695dbfb164b9a1",
+    "log_sha256": "77c0d7c4eec0066835e64aae7d9526fb0584a9be1d2adb9dc37af79953647c8b"
+  },
+  "main_lid": {
+    "stl_sha256": "3de0b601957fe48420371434df05db1afa5def114d90df4b79f86dd3aaf56550",
+    "gcode_sha256": "460d76f120c0702e2f9c00b9cc675e60421cf28b320b79d8e0888c1127a45fd6",
+    "log_sha256": "409a2f76a3c2f6d5a38a604e81c885e5cfa95ed3bf201d1022215bc7585c4117"
+  },
+  "thermal_tub": {
+    "stl_sha256": "ef5f2aa56b83c8cb7af040a7e7055b44766467e68dc6cc85f1e486b09ec1c2fa",
+    "gcode_sha256": "1a703604c4894b534d771d4856253d9b9b9a11bddb5acdeb39fe7fb5ba71f1ce",
+    "log_sha256": "63839294a97ab563e946afbef982405c4a21e9c5f4953b271e3060207440cc59"
+  },
+  "thermal_face": {
+    "stl_sha256": "4ceadefe5bfd91dd54fe3c8aa9005f13ef3b9bb738ec906be17c304bdeabf671",
+    "gcode_sha256": "78dc284dfe620e81e5e48682fd487ef489d8526e6a006ef5c084ca578ca75af7",
+    "log_sha256": "df6eaf05cb94c2768bad5f85f3fc79d28203e6161a39eaf3ed7496ad13275a9e"
+  },
+  "acoustic_tub": {
+    "stl_sha256": "5ae7ee3d9dba0228e6177644a0076a0f14a0f56859c3853c1b32f150bf991d5d",
+    "gcode_sha256": "25c106fed4b789f5f7d4404709eb32deb1a72188dedddf82d4b22b3dd690ab45",
+    "log_sha256": "78d2c320dc49ed51c892869b9afd464d82fc0c3166eafccec95170397041aa72"
+  },
+  "acoustic_face": {
+    "stl_sha256": "68dbcded253e22103736a3d6b49ac3a976e64bbc17a57883d49bcc7ab2741ded",
+    "gcode_sha256": "947faed67acd7d1ee15ba5def5c5ca7914066de27ba7648135c8d238b1d91ec5",
+    "log_sha256": "078b26fd2d052df1120068dbf638ed6bbd80a38f9cfc3e6b9135c0d04532d267"
+  },
+  "microphone_strap_carrier": {
+    "stl_sha256": "a3367779b55c4a209451834f9d90f65613ce9c836046a2535be0024dfa967422",
+    "gcode_sha256": "d92fa5bd8e395c07e35422bdc2993540c446c3e8d662985e5b6cb9f4f20a4f85",
+    "log_sha256": "3a33f331ba9af15a55958305b45ffdbae8bee1c712cda77783e4667d19416c53"
+  },
+  "thermal_strap_carrier": {
+    "stl_sha256": "f59a44bf1b194b1e0e8b0d6c19bd07fe3aeda5d4bfe5715a4a088b0424e61268",
+    "gcode_sha256": "84a47d512d728b111002bd35d4449f515e156c217d5dff28f391ed528e01f92b",
+    "log_sha256": "8051a2d84427d868d0d32db5cb55c20d669c640d2f217ff63590fb41d6246116"
+  },
+  "optical_trim": {
+    "stl_sha256": "4338e7d24baea8d695a9d34d9f3cb3ab050bc6c23cf49722835edac6e10b8424",
+    "gcode_sha256": "b2258df3dbe1ec1f6351ffe41721fa96af406b22e21ace46292b3531b75cff9d",
+    "log_sha256": "8a1d13a80973bde59bb7e96a922220e3ad121e26b4257a6fc21521c997dc555b"
+  },
+  "acoustic_trim": {
+    "stl_sha256": "66e4c1fa40218273361efa841f83c8708f4f8bb0a11c47ef414c05a72aeb5d5c",
+    "gcode_sha256": "a6475527801d7bbe683280e85fd31eba64e76dcd26c0e020fb24ae6ca2863fb6",
+    "log_sha256": "6310ae68403593869ae2a099b84de11d0b60bb97dad964bd61fdadc0d9579382"
+  },
+  "mounting_spine": {
+    "stl_sha256": "d8566155e0fc07dcff34381212ddc977850b7991b4ed6e28763f305110b5aebb",
+    "gcode_sha256": "b7956c7079732e28ad4cd758fac5b33867962756ea87c396f4687cafe92d28e6",
+    "log_sha256": "afb9d82fed4f19815fa7e1e31e8461fd2d71267aa9c3d633a46764c1a535e96e"
+  },
+  "sht_adjustable_carrier": {
+    "stl_sha256": "a3a898588a8937e33415ff05bedc24901993d5d87bcd0e62ec5bef1db2054dc1",
+    "gcode_sha256": "6e9edf6cba7045b4bab53dd0de5f282b8575b00b805c6b8434715b2e3c1a05aa",
+    "log_sha256": "62a19e419e0eaf90791be54820096e030a4f4052edf585a2147d7a39c292dbf8"
+  },
+  "sht_mount_arm": {
+    "stl_sha256": "3c1813784b9340e578b1bba883b837b08abdae78150f65e3528892259a039342",
+    "gcode_sha256": "cb59750167b260419051d114d651a3c1a574aaf79efafebf5466dab372887525",
+    "log_sha256": "630af493c694250a31a015919853ebf8f89483b178deb3affb3bcf2256ce7308"
+  },
+  "electronics_strap_tray": {
+    "stl_sha256": "90d80701e68ce12b23b3f8b404a4052a8e8b874499515530dc40881fef38486a",
+    "gcode_sha256": "a5a3bda8eb65d94ad8823cfff136576a36fd4e3f1db1c4eca09a81f3400d3506",
+    "log_sha256": "2e826817991c197a1f53c5022e2031341c41520688a9b9c7ba63aca72ba72955"
+  },
+  "tray_spacer_6mm": {
+    "stl_sha256": "2276b9fb58021060234ee1de8ecb141b61fc46c5e025bda1196be3e24dc824b0",
+    "gcode_sha256": "07d84ad70d1310218dbe986d980c602857e319b6e3220b8c5ff90356f5cdd0c4",
+    "log_sha256": "c882665c4ddb32c05470e1c6f0e92e090b3817e251118ece6fab4caf144a722b"
+  },
+  "thermal_raised_cradle": {
+    "stl_sha256": "9d2cebe08c75bc8f4e752c05fb70079562e01cc88b2fab0fb4d1bf77564fed2d",
+    "gcode_sha256": "661ceaeb3bf3a4cb85b642facfbc73611938b97e4d91bd2399253b5b5d8a6e59",
+    "log_sha256": "fa7555023598e5d4c1fe70945414b26e5d3ed5a224c6e497f181e6b21d1c6bdb"
+  },
+  "thermal_angled_hood": {
+    "stl_sha256": "10a79f3270e9c3dce5153311b4fb9ab0347b5ae139ae931b0e953363c1c19b9c",
+    "gcode_sha256": "76926b309dfab7c33c072d2bdca121bc157d5c5298094f510f105e591ede3567",
+    "log_sha256": "e0a988f8a6fb73dba359e340b750e4b5522cd89a65f993083e6af580900b3769"
+  }
+}

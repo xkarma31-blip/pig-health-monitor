@@ -1,0 +1,149 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o/START_HERE.md [90m[offset=1, limit=300][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mSkill "using-superpowers" 
+> reviewer · cx/gpt-6.1-sol-review
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o/REFERENCE_DEVIATIONS.md [90m[offset=1, limit=300][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o/LUG_DESIGN_DECISION.md [90m[offset=1, limit=300][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o/INTEGRATION_DECISIONS.md [90m[offset=1, limit=400][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead CANON.md [90m[offset=1, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o [90m[offset=1, limit=180][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o/reference-comparison.png [90m[offset=1, limit=1][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o/ASSEMBLY_CURRENT.md [90m[offset=1, limit=200][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o/PHYSICAL_VALIDATION_REQUIRED.md [90m[offset=1, limit=180][0m
+> reviewer · cx/gpt-6.1-sol-review
+## Completion-gap review
+
+**Revision O is a digitally checked prototype, not a completed high-fidelity original enclosure.** The remaining work is not all blocked by hardware measurements: reference reconciliation and joint-design decisions can proceed now. Conversely, a fitted optic, microphone interface, and board-specific retention cannot honestly be finalized from the present assumptions.
+
+This is a document-grounded review of the four requested files, cross-checked against the assembly and physical-validation ledgers. **I could not visually inspect `reference-comparison.png` because image input is unavailable in this session**, so I am not independently asserting additional visual discrepancies. No edits or subagents were used.
+
+References below are relative to `v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o/`.
+
+### 1. High — Resolve the reference-to-design gap rather than treating every discrepancy as a hardware blocker
+
+**Evidence:** `REFERENCE_DEVIATIONS.md:9–19,28–34`; `START_HERE.md:58–60`.
+
+The documented differences include missing collars, missing external closure details, a different thermal opening, visible acoustic fasteners, and a changed SHT silhouette. Recording those differences is useful, but does not resolve the established fidelity goal.
+
+**Actionable digital work now:**
+- Turn each documented difference into an explicit disposition: **restore**, **deliberately deviate**, or **blocked on a named input**.
+- Separate visible reference evidence from inferred function. In particular, an illustrated detail does not establish a twist lock, wall attachment, or specific hinge mechanism.
+- For each deliberate deviation, state whether the high-fidelity goal remains achievable or requires user acceptance of a changed design.
+
+**Completion criterion:** no significant documented reference difference remains merely an open observation.
+
+This is a design-definition gap, **not proof that an arbitrary geometry change is safe**.
+
+### 2. High — Decide the inter-module connection architecture before declaring the stacked silhouette finished
+
+**Evidence:** `REFERENCE_DEVIATIONS.md:9–11,30–32`; `LUG_DESIGN_DECISION.md:11–13`.
+
+The current rear spine provides attachment, but the documented reference has inter-module collars; the front can consequently suggest floating pods. This is a central enclosure-level fidelity issue, not a peripheral finish detail.
+
+**Actionable digital work now:**
+- Establish whether reference-like collars should be structural connections, non-load-bearing shrouds over the retained spine, or an explicitly accepted omission.
+- Compare those options against the **existing CAD**: pod spacing, cover removal, fastener access, and existing cable exits.
+- If retaining the spine, develop a reference-grounded collar/shroud proposal without representing it as a twist lock or inventing cable clearances.
+
+**What actually requires external input:** final cable passage and bend clearance require the selected cables/connectors; mounting strength requires load and installation requirements. Those inputs do **not** prevent the architecture decision or a clearly provisional CAD proposal.
+
+### 3. High — Resolve the closure-detail mismatch as a real design decision, not dummy hardware
+
+**Evidence:** `REFERENCE_DEVIATIONS.md:15–16,30–32`; `LUG_DESIGN_DECISION.md:3–15`.
+
+A through-bolted cover is materially different from the illustrated external hinge/latch details. Rejecting fake mechanisms and speculative wall ears is correct, but it leaves the fidelity discrepancy unresolved.
+
+**Actionable digital work now:**
+- Decide whether the bolted closure is an accepted deviation or whether a functional, reference-like closure is required.
+- For the latter, assess hinge placement, lid sweep, opening sequence, and conflicts with the spine/SHT support using existing geometry before committing to detailed hardware.
+- Keep the rejected wall-ear proposal rejected unless a wall-mount requirement is actually supplied.
+
+**External inputs:** purchased hinge/latch dimensions are needed **if purchased hardware is selected**; service-access and closure requirements need a design decision. Neither is grounds to add arbitrary ears or cosmetic hinges.
+
+### 4. Medium — Consolidate the sensor-interface blockers into specific unfinished design deliverables
+
+**Evidence:** `INTEGRATION_DECISIONS.md:14–19,28–34`; `ASSEMBLY_CURRENT.md:33–53`; `START_HERE.md:17–32,68–72`.
+
+The remaining interfaces are not simply awaiting “testing.” Some necessary design geometry is expressly absent:
+
+- **Microphone:** a breakout-specific, short sealed sound path/gasket interface; the carrier currently supplies retention only.
+- **Thermal:** a fitted sensor/aperture relationship using the actual pupil, lens variant, and placement.
+- **Strap:** a complete bend/head route compatible with the actual breakout, beyond the checked straight corridors.
+
+**Actionable digital work now:** identify the exact CAD deliverable and minimum required measurement for each interface. Preserve the existing relief repair; the documents do not establish another cutter-placement defect.
+
+**True blockers:** board identity and geometry, microphone port location and board-to-face gap, thermal pupil/optical geometry, and actual strap dimensions. **Do not finalize a decorative optic ring, gasket thickness, or tie bend from invented dimensions.** Once those inputs arrive, CAD work remains—it is not merely a print-and-test task.
+
+### 5. Medium — Complete the assembly representation without inventing installed electronics
+
+**Evidence:** `START_HERE.md:67–72`; `REFERENCE_DEVIATIONS.md:9–11,17–19`; `ASSEMBLY_CURRENT.md:54–58`.
+
+The assembly contains optional render hardware, no installed sensor/window, spare trims, and no fitted cables in the reference comparison. That limits what the presentation establishes about both fidelity and integration.
+
+**Actionable digital work now:**
+- Make installed printable parts, spare alternatives, optional visual hardware, and absent interfaces unmistakable in the assembly presentation.
+- Keep reference-correspondence views distinct from mechanical assembly views.
+- Represent known cable exits and their intended connections schematically; defer physical cable solids until their dimensions are known.
+- Do not use an optional trim or dark hardware render to imply a fitted grille, optic, membrane, or purchased hardware selection.
+
+This is a documentation/assembly-model completion task, not a reason to fabricate board models.
+
+## Priority boundary
+
+**Proceed now:** reference discrepancy dispositions → connection architecture → closure decision → explicit interface deliverables and missing-input list → honest assembly representation.
+
+**Wait for actual inputs:** board-specific seats and keep-outs, fitted thermal opening, acoustic gasket/path, full strap route, cable clearances, final fastener fit, and printer-dependent tolerances.
+
+**Do not add:** speculative wall ears, dummy hinges/latches, arbitrary restrictive rings or membranes, or new mounting/protection requirements.
+
+Passing meshes, sampled clearances, and slicer jobs support reproducibility and selected geometric checks. They do **not** close the documented fidelity gaps or establish an assembled, functional prototype (`START_HERE.md:34–43`; `REFERENCE_DEVIATIONS.md:30–34`).

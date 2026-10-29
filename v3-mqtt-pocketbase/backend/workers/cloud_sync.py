@@ -67,10 +67,8 @@ SYNCED_COLLECTIONS = ("telemetry", "alerts", "audio_events")
 BATCH = int(os.environ.get("SYNC_BATCH", "200"))
 INTERVAL_S = float(os.environ.get("SYNC_INTERVAL_S", "60"))
 TIMEOUT = float(os.environ.get("SYNC_TIMEOUT_S", "10"))
-# A record older than this is marked synced and dropped rather than uploaded
-# forever. Without it an offline Pi accumulates a backlog that takes days to
-# drain, and stale vitals are worse than no vitals.
-MAX_AGE_DAYS = float(os.environ.get("SYNC_MAX_AGE_DAYS", "7"))
+# Preserve historical readings, including questionable device timestamps.
+# Freshness is a presentation concern, never evidence of successful delivery.
 
 # Fields PocketBase generates; sending them back causes a validation error.
 SERVER_FIELDS = {"id", "created", "updated", "collectionId", "collectionName",
@@ -134,15 +132,20 @@ class PocketBase:
             return True
         return self.login()
 
-    def unsynced(self, collection: str) -> list[dict]:
+    def unsynced(self, collection: str) -> list[dict] | None:
         st, body = self._req(
             "GET", f"/api/collections/{collection}/records",
-            query=f"filter=(synced=false)&sort=-timestamp&perPage={BATCH}")
+            # Oldest first: a backlog larger than one batch must drain FIFO.
+            # Newest-first would keep displacing the oldest rows forever.
+            query=f"filter=(synced=false)&sort=+timestamp&perPage={BATCH}")
         if st != 200 or not isinstance(body, dict):
+            if st == 401:
+                self.token = None
             log.error("%s: fetch %s failed (HTTP %s) %s",
                       self.label, collection, st, body)
-            return []
-        return body.get("items", [])
+            return None
+        items = body.get("items")
+        return items if isinstance(items, list) else None
 
     def mark_synced(self, collection: str, rec_id: str) -> bool:
         st, _ = self._req("PATCH", f"/api/collections/{collection}/records/{rec_id}",
@@ -165,30 +168,35 @@ def strip_server_fields(rec: dict) -> dict:
     return {k: v for k, v in rec.items() if k not in SERVER_FIELDS}
 
 
-def is_too_old(rec: dict) -> bool:
-    ts = rec.get("timestamp")
-    if not isinstance(ts, (int, float)):
-        return False
-    age_days = (time.time() * 1000 - ts) / 86_400_000
-    return age_days > MAX_AGE_DAYS
+# In-memory quarantine for records the destination persistently rejects
+# (schema drift, validation failure). Bounded per process run so a permanently
+# broken record cannot dominate every pass with alarm fatigue. The record is
+# NEVER marked synced and never deleted — it stays visible on the source and
+# a worker restart re-tries it, which requires an operator to notice the
+# CRITICAL log and fix the schema instead of the data being silently lost.
+QUARANTINE_AFTER = int(os.environ.get("SYNC_QUARANTINE_AFTER", "5"))
+_quarantine: dict[tuple[str, str], int] = {}
 
 
 def sync_once(src: PocketBase, dst: PocketBase, dry_run: bool = False) -> dict:
-    stats = {"sent": 0, "skipped_old": 0, "failed": 0, "per_collection": {}}
+    stats = {"sent": 0, "failed": 0, "quarantined": 0, "per_collection": {}}
     for coll in SYNCED_COLLECTIONS:
         if not src.ensure():
             log.error("source unreachable — aborting this pass")
+            stats["failed"] += 1
             return stats
         records = src.unsynced(coll)
+        if records is None:
+            stats["failed"] += 1
+            continue
         n = 0
         for rec in records:
-            # A record that has been sitting unsynced for over a week is
-            # almost certainly stale vitals. Upload it and it tells a story
-            # about a moment that already passed; drop it honestly instead.
-            if is_too_old(rec):
-                stats["skipped_old"] += 1
-                if not dry_run:
-                    src.mark_synced(coll, rec["id"])
+            key = (coll, str(rec.get("id")))
+            attempts = _quarantine.get(key, 0)
+            # Back off after persistent rejection, but probe again once per
+            # cap window so a fixed destination recovers without a restart.
+            if attempts >= QUARANTINE_AFTER and attempts % QUARANTINE_AFTER != 0:
+                stats["quarantined"] += 1
                 continue
             payload = strip_server_fields(rec)
             payload["synced"] = True
@@ -199,16 +207,28 @@ def sync_once(src: PocketBase, dst: PocketBase, dry_run: bool = False) -> dict:
                 continue
             if not dst.ensure():
                 log.error("destination unreachable — aborting this pass")
+                stats["failed"] += 1
                 return stats
             if dst.insert(coll, payload):
                 # Only now mark the source. Marking first would lose rows on
                 # any failure between the two calls.
+                _quarantine.pop(key, None)
                 if src.mark_synced(coll, rec["id"]):
                     n += 1
                 else:
                     stats["failed"] += 1
             else:
+                _quarantine[key] = _quarantine.get(key, 0) + 1
                 stats["failed"] += 1
+                if _quarantine[key] >= QUARANTINE_AFTER and _quarantine[key] % QUARANTINE_AFTER == 0:
+                    stats["quarantined"] += 1
+                    log.critical(
+                        "QUARANTINED %s/%s after %d failed deliveries — "
+                        "destination persistently rejects it (schema drift?). "
+                        "Fix the destination schema; the source record is "
+                        "kept unsynced and never deleted. Payload: %s",
+                        coll, rec.get("id"), QUARANTINE_AFTER,
+                        json.dumps(payload)[:300])
         stats["per_collection"][coll] = n
         stats["sent"] += n
         if n:
@@ -248,7 +268,7 @@ def main() -> int:
     while True:
         try:
             st = sync_once(src, dst, dry_run=args.dry_run)
-            if st["sent"] or st["failed"] or st["skipped_old"]:
+            if st["sent"] or st["failed"] or st["quarantined"]:
                 log.info("pass: %s", json.dumps(st))
         except Exception as e:  # a worker that dies on one bad batch is useless
             log.error("pass failed: %s", e, exc_info=True)

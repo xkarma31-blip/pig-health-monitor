@@ -744,6 +744,171 @@ def read_code(c: Ctx, rel: str) -> dict:
 # ---------------------------------------------------------------------------
 
 
+def collect_architecture(c: Ctx) -> dict:
+    """Breakdown of system parts, functions, hardware wiring, protocols, packages, and architecture decisions."""
+    parts = [
+        {
+            "id": "mlx90640",
+            "name": "MLX90640 Thermal Sensor",
+            "tier": "Thermal Edge Perception",
+            "protocol": "I2C (0x33, /dev/i2c-1, baudrate 100k-400k)",
+            "hardware": "Pi 4B 40-pin GPIO",
+            "wiring": [
+                {"sensor_pin": "VIN", "pi_pin": "Pin 1 (3V3 Power - NEVER 5V!)", "note": "Power rail"},
+                {"sensor_pin": "GND", "pi_pin": "Pin 6 (Ground)", "note": "Common ground"},
+                {"sensor_pin": "SDA", "pi_pin": "Pin 3 (GPIO2 / I2C1_SDA)", "note": "4.7kΩ pull-up on long lines"},
+                {"sensor_pin": "SCL", "pi_pin": "Pin 5 (GPIO3 / I2C1_SCL)", "note": "4.7kΩ pull-up on long lines"}
+            ],
+            "packages": ["mlx9064x-driver (Melexis FIR)", "paho-mqtt >= 2.0.0", "i2c-tools"],
+            "setup_process": [
+                "1. Enable I2C via raspi-config or add 'dtparam=i2c_arm=on' to /boot/firmware/config.txt",
+                "2. Add non-root user to i2c group: sudo usermod -aG i2c $USER",
+                "3. Verify wiring via bus scan: i2cdetect -y 1 (check for address 0x33)",
+                "4. Test reading: python3 mlx_reader.py or python3 web_server.py --once"
+            ],
+            "function": "Reads 32x24 thermal pixel matrix at ~4Hz, runs spot hotspot/max/min calculation and fever detection (>39.5°C warning, >40°C danger).",
+            "code_path": "thermal-pi/mlx_reader.py",
+            "service": "pigpulse-thermal.service",
+            "data_destination": "MQTT pig/thermal-01/telemetry",
+            "status_key": "thermal"
+        },
+        {
+            "id": "esp32s3_mic",
+            "name": "ESP32-S3 Acoustic Node (INMP441 + SHT31)",
+            "tier": "Acoustic Edge & Ambient Node",
+            "protocol": "I2S (Audio) + I2C (Ambient) -> TCP Socket :9090 & MQTT :1883",
+            "hardware": "ESP32-S3 DevKitC-1 (Chip ID 9, USB 303a:1001) + INMP441 + SHT31",
+            "wiring": [
+                {"sensor_pin": "INMP441 VDD", "pi_pin": "3V3 (3.3V rail only)", "note": "Power"},
+                {"sensor_pin": "INMP441 GND", "pi_pin": "GND", "note": "Ground"},
+                {"sensor_pin": "INMP441 SCK (BCLK)", "pi_pin": "GPIO4", "note": "Bit Clock"},
+                {"sensor_pin": "INMP441 WS (LRCL)", "pi_pin": "GPIO5", "note": "Word Select / Left-Right Clock"},
+                {"sensor_pin": "INMP441 SD (Data Out)", "pi_pin": "GPIO6", "note": "Serial Data input to ESP32-S3"},
+                {"sensor_pin": "INMP441 L/R", "pi_pin": "GND", "note": "GND = Left Slot channel"},
+                {"sensor_pin": "SHT31 SDA / SCL", "pi_pin": "GPIO8 (SDA) / GPIO9 (SCL)", "note": "I2C Ambient Temp/Humidity (0x44)"}
+            ],
+            "packages": ["PlatformIO / Arduino-ESP32 Core", "PubSubClient", "arduinoFFT / EdgeImpulse TinyML"],
+            "setup_process": [
+                "1. Connect ESP32-S3 via USB-C to laptop/rig (native USB port)",
+                "2. Ensure strapping pins are free: avoid GPIO0, 3, 45, 46, 19, 20 for sensors",
+                "3. Flash firmware: pio run -t upload (configured with WiFi SSID and broker host)",
+                "4. Stream connects: Raw PCM audio over TCP :9090 to Pi, telemetry over MQTT"
+            ],
+            "function": "High-speed audio capture for swine cough & respiratory distress detection; streams PCM to TCP :9090 and publishes acoustic telemetry to MQTT.",
+            "code_path": "thermal-pi/esp_audio_ingest.py",
+            "service": "Hardware / Firmware (s3-mic-01)",
+            "data_destination": "TCP :9090 & MQTT pig/s3-mic-01/telemetry",
+            "status_key": "esp"
+        },
+        {
+            "id": "tapo_cctv",
+            "name": "Tapo CCTV Camera",
+            "tier": "Visual Verification Stream",
+            "protocol": "RTSP (rtsp://host:554/stream1) -> ffmpeg -> HTTP MJPEG (:8091) -> Web Proxy (:8080/cctv)",
+            "hardware": "Network Camera on Barn Local AP (192.168.69.x)",
+            "wiring": [
+                {"sensor_pin": "12V Power Adapter", "pi_pin": "Mains supply", "note": "Dedicated wall wart"},
+                {"sensor_pin": "Ethernet / Wi-Fi", "pi_pin": "Pi AP Network (192.168.69.1)", "note": "Isolated private barn subnet"}
+            ],
+            "packages": ["ffmpeg (transcoding RTSP H.264 to MJPEG)", "Python 3 standard library"],
+            "setup_process": [
+                "1. Enable RTSP streaming in Tapo mobile app settings",
+                "2. Set RTSP credentials in /etc/pigpulse/bridge.env (never in code!)",
+                "3. Start tapo_mjpeg_server daemon: systemctl start pigpulse-cctv.service",
+                "4. Stream available on Pi port 8091, proxied into web dashboard at /cctv"
+            ],
+            "function": "Provides live optical visual context to corroborate thermal hotspots and cough alerts; transcoded from RTSP to low-overhead web MJPEG.",
+            "code_path": "cctv/tapo_mjpeg_server.py",
+            "service": "pigpulse-cctv.service",
+            "data_destination": "Local MJPEG :8091 -> Web Dashboard :8080/cctv",
+            "status_key": "cctv"
+        },
+        {
+            "id": "mqtt_broker",
+            "name": "Mosquitto MQTT Broker",
+            "tier": "Central Event Bus",
+            "protocol": "MQTT 3.1.1 / 5.0 (TCP :1883, WebSockets :9001)",
+            "hardware": "Pi 4B / Laptop host service",
+            "wiring": [],
+            "packages": ["mosquitto", "mosquitto-clients"],
+            "setup_process": [
+                "1. Install: sudo apt-get install -y mosquitto mosquitto-clients",
+                "2. Configure listener 1883 on 0.0.0.0 with allow_anonymous true (or pass file)",
+                "3. Start service: sudo systemctl enable --now mosquitto",
+                "4. Verify listener: ss -tulpn | grep 1883"
+            ],
+            "function": "High-throughput asynchronous message bus decoupling edge producers from database writers. Topics follow pig/{deviceId}/{telemetry,alerts,status}.",
+            "code_path": "bridge/local_bridge.py",
+            "service": "mosquitto.service",
+            "data_destination": "local_bridge.py daemon",
+            "status_key": None
+        },
+        {
+            "id": "local_bridge",
+            "name": "Local MQTT-PocketBase Bridge",
+            "tier": "Data Transformation & Ingestion",
+            "protocol": "MQTT Consumer (paho) -> HTTP JSON REST API (:8090)",
+            "hardware": "Pi Python Daemon",
+            "wiring": [],
+            "packages": ["paho-mqtt >= 2.0.0", "urllib.request (stdlib)"],
+            "setup_process": [
+                "1. Source bridge environment (/etc/pigpulse/bridge.env)",
+                "2. Run bridge daemon: python3 backend/bridge/local_bridge.py",
+                "3. Logs output received MQTT packets and status 200 writes to PocketBase"
+            ],
+            "function": "Subscribes to 'pig/+/telemetry' and 'pig/+/alerts', validates schema, extracts thermal and audio statistics, and persists records to PocketBase collections.",
+            "code_path": "bridge/local_bridge.py",
+            "service": "pigpulse-bridge.service",
+            "data_destination": "PocketBase collections (telemetry, alerts)",
+            "status_key": None
+        },
+        {
+            "id": "pocketbase",
+            "name": "PocketBase Edge Database",
+            "tier": "Edge Persistence & Local REST API",
+            "protocol": "SQLite (WAL Mode) + HTTP REST API (:8090)",
+            "hardware": "ARM64 Go Executable on Pi",
+            "wiring": [],
+            "packages": ["PocketBase standalone binary (v0.22+)"],
+            "setup_process": [
+                "1. Download binary to /home/pigpulse/pocketbase/pocketbase",
+                "2. Run migrations: pb_migrations/ apply required tables (telemetry, alerts, pigs, devices)",
+                "3. Start daemon: ./pocketbase serve --http=0.0.0.0:8090",
+                "4. Admin console accessible locally at http://localhost:8090/_/"
+            ],
+            "function": "Stores sensor readings, alerts, animal profiles, and device registration. Zero external database dependencies; rock-solid SQLite persistence.",
+            "code_path": "home/pigpulse/pocketbase/pb_data/data.db",
+            "service": "pigpulse-pocketbase.service",
+            "data_destination": "SQLite data.db & Mobile App / Frontend queries",
+            "status_key": None
+        }
+    ]
+
+    # Parse DECISIONS.md
+    decisions_path = c.code_root.parent / "docs" / "DECISIONS.md"
+    decisions = []
+    if decisions_path.is_file():
+        try:
+            content = decisions_path.read_text(errors="replace")
+            for m in re.finditer(
+                r'##\s*(\d+)\.\s*(.+?)\n\*\*Decision:\*\*\s*(.+?)\n\*\*Rationale:\*\*\s*(.+?)(?=\n##|\Z)',
+                content, re.DOTALL
+            ):
+                decisions.append({
+                    "num": int(m.group(1)),
+                    "title": m.group(2).strip(),
+                    "decision": m.group(3).strip(),
+                    "rationale": m.group(4).strip()
+                })
+        except Exception:
+            pass
+
+    return {
+        "parts": parts,
+        "decisions": decisions
+    }
+
+
 def build_api(c: Ctx, port: int = 0, run_slow: bool = False) -> dict:
     """One snapshot of everything the pages need. Assembled on request."""
     return {
@@ -771,7 +936,10 @@ def api(c: Ctx, path: str, query: dict, port: int = 0) -> tuple[int, bytes]:
             "runtime": data["runtime"], "sensors": data["sensors"],
             "severity_counts": counts,
             "top": data["diagnostics"][:5],
+            "architecture": collect_architecture(c),
         })
+    if path == "/admin/api/architecture":
+        return 200, _json(collect_architecture(c))
     if path == "/admin/api/pocketbase":
         return 200, _json(collect_pocketbase(c))
     if path == "/admin/api/units":

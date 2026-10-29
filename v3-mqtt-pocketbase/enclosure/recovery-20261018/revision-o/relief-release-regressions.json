@@ -1,0 +1,10 @@
+{
+  "empty": 1,
+  "contradictory": 1,
+  "miss": 1,
+  "low_floor": 1,
+  "wrong_xy": 1,
+  "stale_hash": 1,
+  "swapped": 1,
+  "restored": 0
+}

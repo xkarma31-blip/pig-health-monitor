@@ -1,0 +1,46 @@
+[0m
+> reviewer · ag/gemini-3.8-flash-low
+### Visual Comparison: Approved Poster vs. Current 3D Enclosure Render
+
+---
+
+### 1. Aesthetic Correspondence & Core Features
+
+* **Charcoal Three-Module Silhouette**: 
+  * **Retained.** The stacked three-tiered layout (compact top module, large central body, horizontal bottom module) is preserved.
+  * The dark charcoal/matte slate-grey body finish remains consistent across all sections.
+
+* **Branding & Typography**:
+  * **Readable and Retained.** The two-tone logo text `"PigPulse"` (mint-green "Pig", muted sage "Pulse" with the arched signal icon over the 'u') and subtitle `"Edge Intelligence for Swine Health"` are clearly printed on the front face of the main body in matching relative placement.
+  * The small circular green indicator LED/pip below the branding is present in both.
+
+* **Dual Mint Ports**:
+  * **Retained.** The lower module features two circular apertures highlighted with prominent mint-green accent rings/bezels.
+
+---
+
+### 2. Concrete Discrepancies & Observed Mismatches
+
+#### **A. Inter-Module Interconnects & Spacing**
+* **Approved Poster**: The top and bottom modules connect directly to the main body via ruggedized, visible circular locking collars/quick-disconnect connectors centered between the modules.
+* **Current Render**: The three modules appear to "float" with no visible physical conduit, cables, or locking connectors bridging the top or bottom gaps.
+
+#### **B. Top Module Aperture & Beveling**
+* **Approved Poster**: Houses a forward/downward-canted, compact circular lens fixture set inside a rounded, hooded rectangular shroud with external corner fasteners.
+* **Current Render**: Features a wide rectangular cutout/recess with a sharp internal wedge/slant, lacking the distinct rounded hooded housing and centered lens bezel.
+
+#### **C. Acoustic / Bottom Module Detailing**
+* **Approved Poster**: 
+  * The two circular microphone ports have dark, perforated mesh/grilles flush with dark surrounds, while the mint accents in the design system represent connectors/status rather than thick outer gaskets on the front face.
+  * Shows bottom-facing/angled port geometry indicated in callouts.
+* **Current Render**: 
+  * Displays two thick, flat mint-green ring bezels on the front face with dark voids inside (no visible acoustic grille texture).
+  * Includes four visible countersunk screw points arranged in pairs around each port, which are absent on the front face of the poster's acoustic pod.
+
+#### **D. Mounting Fixture & Enclosure Hardware**
+* **Approved Poster**: Features integrated side flanges/lugs with dual-bolt clamp points on the left and right sides of the main body (designed for pole, post, or wall brackets).
+* **Current Render**: Has smooth, flat sides on the main enclosure (no lateral mounting ears/hinge lugs), and instead adds an articulated wall-mount bracket arm protruding off the rear-right side of the top/main junction.
+
+#### **E. Surface Fasteners & Chamfers**
+* **Approved Poster**: Has robust exterior corner screw bosses on the front perimeter and distinct molded seam lines/radii.
+* **Current Render**: Uses flat countersunk corner screw recesses directly on the front panel face, with simpler, sharper box geometry and minimal edge rounding compared to the molded look in the poster.

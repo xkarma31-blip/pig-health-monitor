@@ -1,0 +1,60 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure [90m[offset=0, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGlob "**/*" [90min v3-mqtt-pocketbase/enclosure/recovery-20261018 · 100 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/check_assembly.py [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-n/README.md [90m[offset=0, limit=400][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-n/ASSEMBLY_CURRENT.md [90m[offset=0, limit=400][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "thermal_tub|rotation|sht_mount_arm|mounting_spine" [90min v3-mqtt-pocketbase/enclosure/recovery-20261018/render_assembled.py · 12 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-n/fastener-ledger.json [90m[offset=0, limit=240][0m
+> reviewer · cx/gpt-6.1-sol-review
+## Finding
+
+**Low — Assembly ledger omits the SHT joint’s dimensional limits.**  
+`v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-n/ASSEMBLY_CURRENT.md:14–15,26`
+
+The guidance explicitly limits cradle hardware but supplies no equivalent SHT limit when directing installation of the arm and tubs. The SHT check assumes **radius 3.5 mm × forward depth 3 mm** (`check_assembly.py:93–98`), while the notch provides nominal **radius 3.8 mm × forward depth 6 mm** (`build_revision.py:132–133`). Thus the checked hardware has only **0.3 mm nominal radial clearance**. Hardware exceeding the notch radius or projecting past its depth can interfere with the thermal tub; the provisional bolt-length ledger alone does not establish these limits.
+
+README lines 7–12 disclose the assumed envelope and unmeasured hardware, mitigating this omission, but the assembly guidance should carry those constraints alongside the installation step. This is a documentation limitation, **not a demonstrated collision with the assumed hardware**.
+
+## Geometry checks — no concrete interference or connectivity defect found
+
+- **Assumed hardware clears:** The thermal tub’s assembled height offset is 80 mm, so local `y = −19` maps to height **61 mm**, matching the hardware axis. Local depth `z = −4…6` includes the hardware’s forward depth **0…3 mm**. The concentric radial margin is **3.8 − 3.5 = 0.3 mm**. Both envelopes are polygonal cylinders; even the notch’s nominal inscribed radius, `3.8 cos(π/48) ≈ 3.792 mm`, exceeds 3.5 mm.
+- **Cable exit remains separate:** Its axis is at `x = 0`, local depth 8 mm, radius 3 mm (`build_revision.py:135–136`). Its nearest x extent is ±3 mm; the notch nearest x extent is ±8.2 mm. This leaves **at least 5.2 mm x separation**. Their depth ranges overlap at 5…6 mm, but their x ranges do not.
+- **Rear mounting holes remain separate:** Floor holes are at `(x,y) = (±18,0)`, radius 1.7 mm. Each nearest notch center is `√(6² + 19²) ≈ 19.925 mm` away, leaving **19.925 − 3.8 − 1.7 ≈ 14.425 mm** between nominal circular boundaries.
+- **Floor stays connected:** The notches reach only to local `y = −15.2`, whereas the floor continues across the tub toward `y = +19`. Between the two notches, the nominal uncut central width is **24 − 2(3.8) = 16.4 mm**. These are edge cutouts, not cuts spanning the floor.
+
+**Verification boundary:** These conclusions follow from source geometry and assembly transforms; I did not rerun Blender or measure hardware. Socket/driver approach, nut retention, hand access, printed tolerances, and remaining structural strength are unmeasured—not established failures. No files were modified.

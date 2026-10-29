@@ -1,0 +1,104 @@
+{
+  "scene": "pcb25_4square_installed.blend",
+  "units": "mm",
+  "sensor_local_to_installed_world": [
+    [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      -0.25881898403167725,
+      -0.9659258127212524,
+      -23.5
+    ],
+    [
+      0.0,
+      0.9659258127212524,
+      -0.25881898403167725,
+      81.80000305175781
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "installed_world_to_sensor_local": [
+    [
+      1.0,
+      -0.0,
+      0.0,
+      -0.0
+    ],
+    [
+      -0.0,
+      -0.25881901383399963,
+      0.9659258723258972,
+      -85.09498596191406
+    ],
+    [
+      0.0,
+      -0.9659258723258972,
+      -0.25881901383399963,
+      -1.5278626680374146
+    ],
+    [
+      -0.0,
+      0.0,
+      -0.0,
+      1.0
+    ]
+  ],
+  "vertices_baked_world": true,
+  "object_matrices_identity": true,
+  "cradle_rotation_x_degrees": 15,
+  "construction_origin_mm": [
+    0.0,
+    1.7999999523162842,
+    6.5
+  ],
+  "variant_objects": [
+    "pcb25_4square",
+    "pcb25_4square_retainer",
+    "pcb25_4square_retainer.001",
+    "PCB envelope",
+    "ASSUMED package",
+    "M3_hex_nut_-30_-9",
+    "M3_hex_nut_-30_9",
+    "M3_hex_nut_30_-9",
+    "M3_hex_nut_30_9"
+  ],
+  "fixed_context_objects": [
+    "main_tub",
+    "main_lid",
+    "thermal_tub",
+    "thermal_face",
+    "thermal_raised_cradle",
+    "thermal_angled_hood",
+    "acoustic_tub",
+    "acoustic_face",
+    "mounting_spine",
+    "sht_mount_arm"
+  ],
+  "proxy_dimensions_mm": {
+    "pcb": [
+      25.4,
+      25.4,
+      1.6
+    ],
+    "package": [
+      12,
+      8,
+      2
+    ]
+  },
+  "fastener_contract": {
+    "M3": "Four M3x20 ultra-low-profile screws: head diameter <=5.0, height <=1.5; washer OD6 ID3.2 thickness0.5; DIN934 nuts AF5.5 thickness2.4 at construction z=-5.4..-3, behind thermal face. Standard socket heads do NOT fit. Verify face through-bores before assembly.",
+    "M2": "Four M2x5 thread-forming screws into 1.6mm pilots; 2mm minimum engagement, washer OD5 ID2.2 thickness0.3. Qualify pilot with printed coupon before assembly.",
+    "assembly": "Install/hold M3 nuts from underside before thermal face closure. Fit PCB and edge bars before hood. Do not substitute standard-height M3 heads."
+  }
+}

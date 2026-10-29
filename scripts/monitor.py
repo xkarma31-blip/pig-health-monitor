@@ -28,9 +28,11 @@ LINKS = {
 }
 
 LOCAL_PATHS = {
-    "concept": os.path.join(HOME, "pigpulse/docs/research/pig_health_monitor_concept_paper.md"),
-    "briefing": os.path.join(HOME, "pigpulse/docs/research/capstone_holistic_briefing.md"),
-    "matrix": os.path.join(HOME, "pigpulse/docs/reference/archive/capstone_decision_matrix.md"),
+    # Canonical repo is ~/pig-health-monitor. The old ~/pigpulse paths (and their
+    # docs/research/, docs/reference/ subpaths) no longer exist.
+    "concept": os.path.join(HOME, "pig-health-monitor/docs/pig_health_monitor_concept_paper.md"),
+    "briefing": os.path.join(HOME, "pig-health-monitor/docs/capstone_holistic_briefing.md"),
+    "matrix": os.path.join(HOME, "pig-health-monitor/docs/archive/capstone_decision_matrix.md"),
 }
 
 def fetch_gantt():
@@ -89,7 +91,7 @@ def ensure_chrome():
     subprocess.Popen(
         [chrome_cmd, "--headless=new", "--no-sandbox", "--disable-gpu",
          "--remote-debugging-port=9222", "--disable-dev-shm-usage",
-         "--user-data-dir=/tmp/chrome-monitor"],
+         "--user-data-dir=/home/solrahk/.cache/chrome-monitor"],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
     )
     
@@ -108,7 +110,7 @@ def ensure_chrome():
     subprocess.Popen(
         [chrome_cmd, "--no-sandbox", "--disable-gpu",
          "--remote-debugging-port=9222", "--disable-dev-shm-usage",
-         "--user-data-dir=/tmp/chrome-monitor"],
+         "--user-data-dir=/home/solrahk/.cache/chrome-monitor"],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
     )
     for _ in range(15):
@@ -122,67 +124,65 @@ def ensure_chrome():
     return False
 
 def fetch_onedrive():
-    """Extract via Playwright CDP from Word Online DOM."""
-    if not ensure_chrome():
-        return None, "Chrome not available (could not start)"
+    """Extract via Playwright persistent context (self-managed, no CDP).
+    
+    Fixed 2026-10-03: CDP-over-9222 browser wedged and timed out on every
+    navigation. launch_persistent_context is self-contained, ~50x faster
+    (1.8s vs timeout), and reuses the durable login profile.
+    """
+    from playwright.sync_api import sync_playwright
+    
+    ONEDRIVE_URL = ("https://1drv.ms/w/c/9272348ac87b5645/"
+                    "IQCEtQsZDLghS7v1TAh9S8D2AWTQ6GaFFxaCBOuRiKOsEpw?e=mBIrJ7")
+    PROFILE = os.path.expanduser("~/.cache/chrome-monitor")
     
     try:
-        from playwright.sync_api import sync_playwright
-
         with sync_playwright() as p:
-            browser = p.chromium.connect_over_cdp("http://127.0.0.1:9222")
-
-            # Always create a fresh page to avoid stale DOM with destroyed pages
-            page = browser.contexts[0].new_page()
-            page.goto("https://1drv.ms/w/c/9272348ac87b5645/IQCEtQsZDLghS7v1TAh9S8D2AWTQ6GaFFxaCBOuRiKOsEpw?e=mBIrJ7", wait_until="domcontentloaded", timeout=45000)
-            
-            # Wait for Word Online iframe to fully render (can take 10-15s)
-            page.wait_for_timeout(15000)
-            # Additional wait for the iframe element itself
+            ctx = p.chromium.launch_persistent_context(
+                user_data_dir=PROFILE, headless=True, timeout=60000,
+                args=["--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu",
+                      "--window-size=1920,1080"])
+            page = ctx.new_page()
             try:
-                page.wait_for_selector('iframe#WacFrame_Word_0', timeout=15000)
+                page.goto(ONEDRIVE_URL, wait_until="commit", timeout=60000)
             except Exception:
-                pass  # Will fail gracefully below if iframe never appears
-            page.wait_for_timeout(3000)  # Final buffer for lazy loading
-
-            # Extract via iframe — scroll through document to defeat lazy loading
-            all_pages = {}
-            seen_texts = set()  # Dedup by content hash
-            iframe = page.frame_locator('#WacFrame_Word_0')
+                pass  # commit often reports timeout even on success; keep going
             
-            # Use keyboard PageDown to scroll the document, then extract visible pages
-            for scroll_num in range(30):  # Max 30 scrolls for ~20 pages
+            # Wait for the Word Online iframe to mount
+            try:
+                page.wait_for_selector('iframe#WacFrame_Word_0', timeout=45000)
+            except Exception:
+                ctx.close()
+                return None, "OneDrive: Word iframe never rendered"
+            
+            iframe = page.frame_locator('#WacFrame_Word_0')
+            page.wait_for_timeout(9000)  # let Word Online finish hydrating
+            
+            seen = {}
+            for _ in range(30):
                 pages = iframe.locator('div.Page')
-                current_count = pages.count()
-                
-                # Extract visible pages
-                for i in range(current_count):
+                count = pages.count()
+                for i in range(count):
                     try:
-                        el = pages.nth(i)
-                        el.scroll_into_view_if_needed()
-                        page.wait_for_timeout(100)
-                        text = el.inner_text()
+                        text = pages.nth(i).inner_text(timeout=6000)
                         if text.strip():
-                            # Deduplicate by first 100 chars
                             key = text[:100].strip()
-                            if key not in seen_texts:
-                                seen_texts.add(key)
-                                all_pages[len(seen_texts)] = text.strip()
+                            if key not in seen:
+                                seen[key] = text.strip()
                     except Exception:
                         pass
-                
-                # Scroll document down using keyboard
-                page.keyboard.press('PageDown')
-                page.wait_for_timeout(500)
+                page.keyboard.press("PageDown")
+                page.wait_for_timeout(400)
             
-            full_text = "\n\n".join(all_pages.get(i, "") for i in sorted(all_pages.keys()))
+            full_text = "\n\n".join(seen[k] for k in sorted(seen))
+            ctx.close()
             
-            # Close the page to free memory
-            page.close()
-            
+            if len(full_text) < 500:
+                return None, f"OneDrive: extracted only {len(full_text)} chars"
             return full_text, None
     except Exception as e:
-        return None, str(e)
+        return None, f"OneDrive: {e}"
+
 
 def fetch_local(path):
     if not os.path.exists(path):

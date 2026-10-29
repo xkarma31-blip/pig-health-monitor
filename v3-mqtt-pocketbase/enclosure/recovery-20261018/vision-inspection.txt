@@ -1,0 +1,49 @@
+### 1. Logo Symbol & Typography
+* **Logo Symbol:** An integrated typographic mark. Two curved signal/pulse arcs (resembling broadcast or Wi-Fi waves) radiate upward and to the right directly from the top stem of the lowercase **"l"** in "PigPulse". (There is no standalone standalone mascot symbol in the primary header logo).
+* **Typography:**
+  * **Brand Mark:** Clean, geometric sans-serif (similar to *Inter* or *Plus Jakarta Sans*), Semi-Bold to Bold, Title Case (**"PigPulse"** with capital **P**s).
+  * **Headers/Labels:** Modern, uniform-stroke neutral sans-serif in Bold (headers) and Regular/Medium (captions and callouts).
+
+---
+
+### 2. Visible Color Palette
+* **Background:** Deep dark slate / near-black (`#0D1115` to `#12161A`).
+* **Brand / Accent Green:** Vibrant mint/emerald green (`#00E584` / `#10B981`) used for logo lettering, section titles, schematic borders, wire callouts, and icon glyphs.
+* **Secondary Text:** Pure White (`#FFFFFF`) for primary titles; Muted Cool Gray (`#9CA3AF`) for body copy and subtext.
+* **Enclosure Body:** Textured matte charcoal/black molded plastic (`#1F2328` to `#2B3036`).
+* **Internal Hardware Accents:**
+  * Battery: Bright industrial yellow shrink-wrap.
+  * Internal Wiring: Distinct insulated leads in Red, Black, Blue, and Yellow.
+  * Fasteners/Connectors: Bare metallic silver/stainless steel screws and matte black rubber/plastic twist-collars.
+
+---
+
+### 3. Enclosure Silhouette & Physical Details
+* **Stack Architecture:** Vertically stacked, three-tier modular assembly held via visible corner fastener pillars.
+* **Top Module:** Truncated block with a 45° downward-chamfered front face housing a single, centered, deeply recessed circular/square lens aperture.
+* **Main Middle Body:** Squarish industrial junction-box silhouette with rounded vertical corners, perimeter screw-boss ears/flanges extending outward, and a single tiny circular LED pinhole on the lower-center face.
+* **Bottom Module:** Wide rectangular block with rounded corners, featuring two identical, horizontally aligned, circular recessed mesh/acoustic ports.
+* **Inter-module Jointing:** Separated by exposed cylindrical twist-locking threaded barrel connectors and vertical hex-head/pan-head machine screws.
+
+---
+
+### 4. Proportions & Scale (Visible Callouts)
+* **Overall Envelope:** 200 mm (Total Height) × 120 mm (Width) × 35 mm (Depth).
+* **Height Distribution:**
+  * **Top Module:** ~18–20% of total height (~35–40 mm).
+  * **Main Body:** ~60% of total height (~120 mm); front profile is roughly 1:1 square.
+  * **Bottom Module:** ~20% of total height (~35–40 mm).
+* **Width Proportions:** The main body is the widest section (120 mm across flange points). The top and bottom modules are slightly narrower stepped blocks (~80–100 mm visible width).
+
+---
+
+### 5. Visible Elements vs. Unverified Text Claims
+* **What is visually verifiable:** 
+  * A 3-piece modular matte-black plastic housing with external mounting brackets (post, wall, ceiling configurations).
+  * Single downward-angled optical port on top.
+  * Dual circular front ports on bottom.
+  * Green printed circuit board with metallic RF/IC shielding cans, board-to-wire terminal plugs, and a yellow rectangular Li-Po pouch cell inside.
+  * Threaded industrial circular push/twist cable couplers.
+* **Text claims only (unverifiable from visual render alone):** 
+  * Specific chipsets (ESP32-S3, MLX90640, INMP441).
+  * Stated ratings and metrics (IP65 ingress certification, 7-day battery endurance, 110°×75° FOV, on-device TinyML processing, specific I²C/I²S pin allocations).

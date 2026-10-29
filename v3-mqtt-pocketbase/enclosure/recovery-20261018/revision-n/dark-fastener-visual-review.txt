@@ -1,0 +1,7 @@
+The fastener heads are dark gray/black rather than bright silver, blending with the matte casing while remaining clearly discernible via their recessed circular outlines and subtle specular highlights on the corners and lower module. 
+
+The green "PigPulse" logo and the full white tagline "Edge Intelligence for Swine Health" are sharply defined and completely readable across the main face. 
+
+On the lowest module, two circular mint-green rings are clearly visible, set around recessed circular apertures. 
+
+Regarding rendering artifacts, faint diagonal shading/banding runs faintly across the face of the central enclosure, likely due to low-angle lighting or slight geometry smoothing gradients. Minor aliasing is faintly present along the thin white text edges and the angled bracket arm, though surfaces, edges, and bevels are generally clean.

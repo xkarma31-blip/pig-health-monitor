@@ -1,0 +1,608 @@
+XDG_RUNTIME_DIR (/run/user/1000) is not owned by us (uid 0), but by uid 1000! (This could e.g. happen if you try to connect to a non-root PulseAudio as a root user, over the native protocol. Don't do that.)
+XDG_RUNTIME_DIR (/run/user/1000) is not owned by us (uid 0), but by uid 1000! (This could e.g. happen if you try to connect to a non-root PulseAudio as a root user, over the native protocol. Don't do that.)
+Blender 4.0.2
+Info: Total files 0 | Changed 0 | Failed 0
+Fra:1 Mem:48.05M (Peak 49.13M) | Time:00:00.35 | Syncing main_tub
+Fra:1 Mem:48.70M (Peak 49.13M) | Time:00:00.39 | Syncing main_lid
+Fra:1 Mem:48.91M (Peak 49.13M) | Time:00:00.39 | Syncing thermal_tub
+Fra:1 Mem:49.36M (Peak 49.36M) | Time:00:00.39 | Syncing thermal_face
+Fra:1 Mem:49.69M (Peak 49.69M) | Time:00:00.39 | Syncing acoustic_tub
+Fra:1 Mem:50.08M (Peak 50.08M) | Time:00:00.39 | Syncing acoustic_face
+Fra:1 Mem:50.63M (Peak 50.63M) | Time:00:00.39 | Syncing microphone_strap_carrier
+Fra:1 Mem:50.84M (Peak 50.84M) | Time:00:00.39 | Syncing thermal_strap_carrier
+Fra:1 Mem:51.02M (Peak 51.02M) | Time:00:00.39 | Syncing optical_trim
+Fra:1 Mem:51.10M (Peak 51.10M) | Time:00:00.39 | Syncing acoustic_trim
+Fra:1 Mem:51.18M (Peak 51.18M) | Time:00:00.39 | Syncing mounting_spine
+Fra:1 Mem:51.51M (Peak 51.51M) | Time:00:00.40 | Syncing sht_adjustable_carrier
+Fra:1 Mem:51.62M (Peak 51.62M) | Time:00:00.40 | Syncing sht_mount_arm
+Fra:1 Mem:51.86M (Peak 51.86M) | Time:00:00.40 | Syncing electronics_strap_tray
+Fra:1 Mem:52.05M (Peak 52.05M) | Time:00:00.40 | Syncing tray_spacer_6mm
+Fra:1 Mem:52.13M (Peak 52.13M) | Time:00:00.40 | Syncing thermal_raised_cradle
+Fra:1 Mem:52.27M (Peak 52.27M) | Time:00:00.40 | Syncing thermal_angled_hood
+Fra:1 Mem:52.40M (Peak 52.40M) | Time:00:00.40 | Syncing Camera
+Fra:1 Mem:52.40M (Peak 52.40M) | Time:00:00.40 | Syncing Area
+Fra:1 Mem:52.39M (Peak 52.40M) | Time:00:00.41 | Rendering 1 / 64 samples
+Fra:1 Mem:49.27M (Peak 52.40M) | Time:00:00.45 | Rendering 26 / 64 samples
+Fra:1 Mem:49.27M (Peak 52.40M) | Time:00:00.45 | Rendering 51 / 64 samples
+Fra:1 Mem:49.27M (Peak 52.40M) | Time:00:00.45 | Rendering 64 / 64 samples
+Saved: '/home/solrahk/pig-health-monitor/v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-n/mechanical-layout.png'
+Time: 00:01.33 (Saving: 00:00.30)
+
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+Info: Saved "mechanical-prototype.blend"
+{"status": "MECHANICAL PROTOTYPE \u2014 NOT HARDWARE FIT RELEASE", "units": "mm", "wall_nominal_mm": 3, "hardware_dimensions_measured": false, "slicer_checked": false, "parts": [{"name": "main_tub", "nonmanifold_edges": 0, "signed_volume_mm3": 80136.21110786677, "bounds_mm": [120.0, 112.0, 30.0]}, {"name": "main_lid", "nonmanifold_edges": 0, "signed_volume_mm3": 40144.91625547831, "bounds_mm": [120.0, 112.0, 3.0]}, {"name": "thermal_tub", "nonmanifold_edges": 0, "signed_volume_mm3": 19757.861335380618, "bounds_mm": [92.0, 38.0, 14.0]}, {"name": "thermal_face", "nonmanifold_edges": 0, "signed_volume_mm3": 6639.8319577323855, "bounds_mm": [92.0, 38.0, 3.0]}, {"name": "acoustic_tub", "nonmanifold_edges": 0, "signed_volume_mm3": 36498.564114048466, "bounds_mm": [100.0, 38.0, 30.0]}, {"name": "acoustic_face", "nonmanifold_edges": 0, "signed_volume_mm3": 10354.998197690764, "bounds_mm": [100.0, 38.0, 3.0]}, {"name": "microphone_strap_carrier", "nonmanifold_edges": 0, "signed_volume_mm3": 1469.0186109549477, "bounds_mm": [26.0, 26.0, 3.0]}, {"name": "thermal_strap_carrier", "nonmanifold_edges": 0, "signed_volume_mm3": 2303.120015975929, "bounds_mm": [68.0, 30.0, 3.0]}, {"name": "optical_trim", "nonmanifold_edges": 0, "signed_volume_mm3": 568.7017302833262, "bounds_mm": [34.0, 34.0, 2.0]}, {"name": "acoustic_trim", "nonmanifold_edges": 0, "signed_volume_mm3": 275.1782977488959, "bounds_mm": [18.0, 18.0, 2.0]}, {"name": "mounting_spine", "nonmanifold_edges": 0, "signed_volume_mm3": 45476.267499039044, "bounds_mm": [48.0, 196.0, 5.0]}, {"name": "sht_adjustable_carrier", "nonmanifold_edges": 0, "signed_volume_mm3": 2029.196705747975, "bounds_mm": [32.0, 32.0, 3.0]}, {"name": "sht_mount_arm", "nonmanifold_edges": 0, "signed_volume_mm3": 9808.07418310028, "bounds_mm": [120.0, 32.00040054321289, 13.0]}, {"name": "electronics_strap_tray", "nonmanifold_edges": 0, "signed_volume_mm3": 18008.718732689038, "bounds_mm": [82.0, 76.0, 3.0]}, {"name": "tray_spacer_6mm", "nonmanifold_edges": 0, "signed_volume_mm3": 173.58554888186524, "bounds_mm": [7.0, 7.0, 6.0]}, {"name": "thermal_raised_cradle", "nonmanifold_edges": 0, "signed_volume_mm3": 3014.291954139731, "bounds_mm": [68.0, 29.754262924194336, 11.831187725067139]}, {"name": "thermal_angled_hood", "nonmanifold_edges": 0, "signed_volume_mm3": 18493.234289313936, "bounds_mm": [92.0, 38.0, 21.091033935546875]}], "mesh_gate_pass": true}
+
+Blender quit
+{
+  "description": "Independent exported-STL topology and scale audit; not self-intersection/fit/strength certification",
+  "pass": true,
+  "results": [
+    {
+      "part": "main_tub",
+      "triangles": 9546,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "sha256": "3b6bd2645ea55cd4ddae5019db203022ec0dc45b36805503508c4f98c46a1f36",
+      "exported_bounds_mm": [
+        120,
+        112,
+        30
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 80136.21167933245,
+      "pass": true
+    },
+    {
+      "part": "main_lid",
+      "triangles": 3328,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "sha256": "80a90478dc4fdf046f707b575eb9dc0e946a1c3c4835d5443073651c4756c6b2",
+      "exported_bounds_mm": [
+        120,
+        112,
+        3
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 40144.916221840314,
+      "pass": true
+    },
+    {
+      "part": "thermal_tub",
+      "triangles": 7186,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "sha256": "ef5f2aa56b83c8cb7af040a7e7055b44766467e68dc6cc85f1e486b09ec1c2fa",
+      "exported_bounds_mm": [
+        92,
+        38,
+        14
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 19757.86133562689,
+      "pass": true
+    },
+    {
+      "part": "thermal_face",
+      "triangles": 5202,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "sha256": "4ceadefe5bfd91dd54fe3c8aa9005f13ef3b9bb738ec906be17c304bdeabf671",
+      "exported_bounds_mm": [
+        92,
+        38,
+        3
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 6639.831968670491,
+      "pass": true
+    },
+    {
+      "part": "acoustic_tub",
+      "triangles": 6398,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "sha256": "5ae7ee3d9dba0228e6177644a0076a0f14a0f56859c3853c1b32f150bf991d5d",
+      "exported_bounds_mm": [
+        100,
+        38,
+        30
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 36498.56410390816,
+      "pass": true
+    },
+    {
+      "part": "acoustic_face",
+      "triangles": 8704,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "sha256": "68dbcded253e22103736a3d6b49ac3a976e64bbc17a57883d49bcc7ab2741ded",
+      "exported_bounds_mm": [
+        100,
+        38,
+        3
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 10354.998191926326,
+      "pass": true
+    },
+    {
+      "part": "microphone_strap_carrier",
+      "triangles": 3288,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "sha256": "2c884c27b8ddffa7525d26952fafebb3729a4c98dd55b6317fc24e91a8a1bf5d",
+      "exported_bounds_mm": [
+        26,
+        26,
+        3
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 1469.0374966494867,
+      "pass": true
+    },
+    {
+      "part": "thermal_strap_carrier",
+      "triangles": 2824,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "sha256": "f59a44bf1b194b1e0e8b0d6c19bd07fe3aeda5d4bfe5715a4a088b0424e61268",
+      "exported_bounds_mm": [
+        68,
+        30,
+        3
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 2303.1198542186985,
+      "pass": true
+    },
+    {
+      "part": "optical_trim",
+      "triangles": 1152,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "sha256": "4338e7d24baea8d695a9d34d9f3cb3ab050bc6c23cf49722835edac6e10b8424",
+      "exported_bounds_mm": [
+        34,
+        34,
+        2
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 568.7017323092286,
+      "pass": true
+    },
+    {
+      "part": "acoustic_trim",
+      "triangles": 1152,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "sha256": "66e4c1fa40218273361efa841f83c8708f4f8bb0a11c47ef414c05a72aeb5d5c",
+      "exported_bounds_mm": [
+        18,
+        18,
+        2
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 275.17829872684683,
+      "pass": true
+    },
+    {
+      "part": "mounting_spine",
+      "triangles": 5308,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "sha256": "d8566155e0fc07dcff34381212ddc977850b7991b4ed6e28763f305110b5aebb",
+      "exported_bounds_mm": [
+        48,
+        196,
+        5
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 45476.26614233336,
+      "pass": true
+    },
+    {
+      "part": "sht_adjustable_carrier",
+      "triangles": 1640,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "sha256": "a3a898588a8937e33415ff05bedc24901993d5d87bcd0e62ec5bef1db2054dc1",
+      "exported_bounds_mm": [
+        32,
+        32,
+        3
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 2029.1996753821445,
+      "pass": true
+    },
+    {
+      "part": "sht_mount_arm",
+      "triangles": 3732,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "sha256": "3c1813784b9340e578b1bba883b837b08abdae78150f65e3528892259a039342",
+      "exported_bounds_mm": [
+        120,
+        32.00040054321289,
+        13
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 9808.074087348865,
+      "pass": true
+    },
+    {
+      "part": "electronics_strap_tray",
+      "triangles": 2892,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "sha256": "90d80701e68ce12b23b3f8b404a4052a8e8b874499515530dc40881fef38486a",
+      "exported_bounds_mm": [
+        82,
+        76,
+        3
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 18008.7194510743,
+      "pass": true
+    },
+    {
+      "part": "tray_spacer_6mm",
+      "triangles": 1152,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "sha256": "2276b9fb58021060234ee1de8ecb141b61fc46c5e025bda1196be3e24dc824b0",
+      "exported_bounds_mm": [
+        7,
+        7,
+        6
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 173.58555024598826,
+      "pass": true
+    },
+    {
+      "part": "thermal_raised_cradle",
+      "triangles": 2408,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "sha256": "9d2cebe08c75bc8f4e752c05fb70079562e01cc88b2fab0fb4d1bf77564fed2d",
+      "exported_bounds_mm": [
+        68,
+        29.754262924194336,
+        11.831188201904297
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 3014.2919782735053,
+      "pass": true
+    },
+    {
+      "part": "thermal_angled_hood",
+      "triangles": 2302,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "sha256": "10a79f3270e9c3dce5153311b4fb9ab0347b5ae139ae931b0e953363c1c19b9c",
+      "exported_bounds_mm": [
+        92,
+        38,
+        21.091033935546875
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 18493.23428931397,
+      "pass": true
+    }
+  ]
+}
+{
+  "basis": "CAD dimensions only; bolt length excludes head. Assumed washers total1mm, nut2.4mm, exposed thread1mm. Head envelopes separately constrained. No measured fit or nut-access proof.",
+  "rows": [
+    {
+      "joint": "Main and acoustic covers",
+      "count": 8,
+      "nominal_grip_mm": 33,
+      "assumed_bolt_length_mm": 40,
+      "minimum_length_under_assumptions_mm": 37.4,
+      "margin_mm": 2.6000000000000014,
+      "length_gate": true
+    },
+    {
+      "joint": "Thermal hood stack y=-13",
+      "count": 2,
+      "nominal_grip_mm": 28.252043405643363,
+      "assumed_bolt_length_mm": 35,
+      "minimum_length_under_assumptions_mm": 32.65204340564336,
+      "margin_mm": 2.3479565943566385,
+      "length_gate": true
+    },
+    {
+      "joint": "Thermal hood stack y=13",
+      "count": 2,
+      "nominal_grip_mm": 35.21872240885256,
+      "assumed_bolt_length_mm": 40,
+      "minimum_length_under_assumptions_mm": 39.618722408852555,
+      "margin_mm": 0.38127759114744464,
+      "length_gate": true
+    },
+    {
+      "joint": "Raised cradle to separator y=-9",
+      "count": 2,
+      "nominal_grip_mm": 9.788457268119895,
+      "assumed_bolt_length_mm": 16,
+      "minimum_length_under_assumptions_mm": 14.188457268119896,
+      "margin_mm": 1.8115427318801043,
+      "length_gate": true
+    },
+    {
+      "joint": "Raised cradle to separator y=9",
+      "count": 2,
+      "nominal_grip_mm": 14.611542731880103,
+      "assumed_bolt_length_mm": 20,
+      "minimum_length_under_assumptions_mm": 19.011542731880102,
+      "margin_mm": 0.9884572681198982,
+      "length_gate": true
+    },
+    {
+      "joint": "Spine to three tub floors",
+      "count": 6,
+      "nominal_grip_mm": 8,
+      "assumed_bolt_length_mm": 14,
+      "minimum_length_under_assumptions_mm": 12.4,
+      "margin_mm": 1.5999999999999996,
+      "length_gate": true
+    },
+    {
+      "joint": "SHT arm to spine",
+      "count": 2,
+      "nominal_grip_mm": 10,
+      "assumed_bolt_length_mm": 16,
+      "minimum_length_under_assumptions_mm": 14.4,
+      "margin_mm": 1.5999999999999996,
+      "length_gate": true
+    },
+    {
+      "joint": "SHT carrier to arm",
+      "count": 2,
+      "nominal_grip_mm": 16,
+      "assumed_bolt_length_mm": 22,
+      "minimum_length_under_assumptions_mm": 20.4,
+      "margin_mm": 1.6000000000000014,
+      "length_gate": true
+    },
+    {
+      "joint": "Electronics tray, spacers and floor",
+      "count": 4,
+      "nominal_grip_mm": 12,
+      "assumed_bolt_length_mm": 18,
+      "minimum_length_under_assumptions_mm": 16.4,
+      "margin_mm": 1.6000000000000014,
+      "length_gate": true
+    },
+    {
+      "joint": "Two microphone carriers to face",
+      "count": 8,
+      "nominal_grip_mm": 6,
+      "assumed_bolt_length_mm": 12,
+      "minimum_length_under_assumptions_mm": 10.4,
+      "margin_mm": 1.5999999999999996,
+      "length_gate": true
+    }
+  ],
+  "pass": true,
+  "limitations": [
+    "Longer bolts can collide with electronics; no universal safe bolt length.",
+    "Check available stock lengths and real washer/nut sizes; use only hardware within head-envelope checks.",
+    "Cut threads must be deburred; never infer physical engagement from CAD arithmetic."
+  ],
+  "input_stl_sha256": {
+    "main_tub": "3b6bd2645ea55cd4ddae5019db203022ec0dc45b36805503508c4f98c46a1f36",
+    "main_lid": "80a90478dc4fdf046f707b575eb9dc0e946a1c3c4835d5443073651c4756c6b2",
+    "thermal_tub": "ef5f2aa56b83c8cb7af040a7e7055b44766467e68dc6cc85f1e486b09ec1c2fa",
+    "thermal_face": "4ceadefe5bfd91dd54fe3c8aa9005f13ef3b9bb738ec906be17c304bdeabf671",
+    "acoustic_tub": "5ae7ee3d9dba0228e6177644a0076a0f14a0f56859c3853c1b32f150bf991d5d",
+    "acoustic_face": "68dbcded253e22103736a3d6b49ac3a976e64bbc17a57883d49bcc7ab2741ded",
+    "microphone_strap_carrier": "2c884c27b8ddffa7525d26952fafebb3729a4c98dd55b6317fc24e91a8a1bf5d",
+    "thermal_strap_carrier": "f59a44bf1b194b1e0e8b0d6c19bd07fe3aeda5d4bfe5715a4a088b0424e61268",
+    "optical_trim": "4338e7d24baea8d695a9d34d9f3cb3ab050bc6c23cf49722835edac6e10b8424",
+    "acoustic_trim": "66e4c1fa40218273361efa841f83c8708f4f8bb0a11c47ef414c05a72aeb5d5c",
+    "mounting_spine": "d8566155e0fc07dcff34381212ddc977850b7991b4ed6e28763f305110b5aebb",
+    "sht_adjustable_carrier": "a3a898588a8937e33415ff05bedc24901993d5d87bcd0e62ec5bef1db2054dc1",
+    "sht_mount_arm": "3c1813784b9340e578b1bba883b837b08abdae78150f65e3528892259a039342",
+    "electronics_strap_tray": "90d80701e68ce12b23b3f8b404a4052a8e8b874499515530dc40881fef38486a",
+    "tray_spacer_6mm": "2276b9fb58021060234ee1de8ecb141b61fc46c5e025bda1196be3e24dc824b0",
+    "thermal_raised_cradle": "9d2cebe08c75bc8f4e752c05fb70079562e01cc88b2fab0fb4d1bf77564fed2d",
+    "thermal_angled_hood": "10a79f3270e9c3dce5153311b4fb9ab0347b5ae139ae931b0e953363c1c19b9c"
+  }
+}
+XDG_RUNTIME_DIR (/run/user/1000) is not owned by us (uid 0), but by uid 1000! (This could e.g. happen if you try to connect to a non-root PulseAudio as a root user, over the native protocol. Don't do that.)
+XDG_RUNTIME_DIR (/run/user/1000) is not owned by us (uid 0), but by uid 1000! (This could e.g. happen if you try to connect to a non-root PulseAudio as a root user, over the native protocol. Don't do that.)
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+Import finished in 0.0057 sec.
+Import finished in 0.0042 sec.
+{"pass": true, "failed": []}
+Blender 4.0.2
+
+Blender quit
+XDG_RUNTIME_DIR (/run/user/1000) is not owned by us (uid 0), but by uid 1000! (This could e.g. happen if you try to connect to a non-root PulseAudio as a root user, over the native protocol. Don't do that.)
+XDG_RUNTIME_DIR (/run/user/1000) is not owned by us (uid 0), but by uid 1000! (This could e.g. happen if you try to connect to a non-root PulseAudio as a root user, over the native protocol. Don't do that.)
+Blender 4.0.2
+Info: Total files 1 | Changed 1 | Failed 0
+Fra:1 Mem:63.63M (Peak 64.71M) | Time:00:00.15 | Syncing main_tub
+Fra:1 Mem:64.80M (Peak 64.80M) | Time:00:00.23 | Syncing main_lid
+Fra:1 Mem:65.20M (Peak 65.20M) | Time:00:00.23 | Syncing thermal_tub
+Fra:1 Mem:66.06M (Peak 66.06M) | Time:00:00.23 | Syncing thermal_face
+Fra:1 Mem:66.69M (Peak 66.69M) | Time:00:00.23 | Syncing acoustic_tub
+Fra:1 Mem:67.45M (Peak 67.45M) | Time:00:00.24 | Syncing acoustic_face
+Fra:1 Mem:68.49M (Peak 68.52M) | Time:00:00.24 | Syncing microphone_strap_carrier
+Fra:1 Mem:68.89M (Peak 68.89M) | Time:00:00.24 | Syncing acoustic_trim
+Fra:1 Mem:69.04M (Peak 69.04M) | Time:00:00.24 | Syncing mounting_spine
+Fra:1 Mem:69.67M (Peak 69.67M) | Time:00:00.24 | Syncing sht_adjustable_carrier
+Fra:1 Mem:69.88M (Peak 69.88M) | Time:00:00.24 | Syncing sht_mount_arm
+Fra:1 Mem:70.33M (Peak 70.33M) | Time:00:00.24 | Syncing electronics_strap_tray
+Fra:1 Mem:70.68M (Peak 70.68M) | Time:00:00.24 | Syncing thermal_raised_cradle
+Fra:1 Mem:70.97M (Peak 70.97M) | Time:00:00.24 | Syncing thermal_angled_hood
+Fra:1 Mem:71.25M (Peak 71.25M) | Time:00:00.25 | Syncing acoustic_trim.001
+Fra:1 Mem:71.38M (Peak 71.38M) | Time:00:00.25 | Syncing tray_spacer_6mm.001
+Fra:1 Mem:71.53M (Peak 71.53M) | Time:00:00.25 | Syncing tray_spacer_6mm.002
+Fra:1 Mem:71.65M (Peak 71.65M) | Time:00:00.25 | Syncing tray_spacer_6mm.003
+Fra:1 Mem:71.78M (Peak 71.78M) | Time:00:00.25 | Syncing tray_spacer_6mm.004
+Fra:1 Mem:71.90M (Peak 71.90M) | Time:00:00.25 | Syncing microphone_strap_carrier.001
+Fra:1 Mem:72.25M (Peak 72.25M) | Time:00:00.25 | Syncing REFERENCE_ARTWORK_LABEL_NOT_STL
+Fra:1 Mem:72.40M (Peak 72.40M) | Time:00:00.30 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY
+Fra:1 Mem:72.47M (Peak 72.47M) | Time:00:00.33 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.001
+Fra:1 Mem:72.50M (Peak 72.50M) | Time:00:00.33 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.002
+Fra:1 Mem:72.53M (Peak 72.53M) | Time:00:00.33 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.003
+Fra:1 Mem:72.56M (Peak 72.56M) | Time:00:00.33 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.004
+Fra:1 Mem:72.59M (Peak 72.59M) | Time:00:00.33 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.005
+Fra:1 Mem:72.62M (Peak 72.62M) | Time:00:00.33 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.006
+Fra:1 Mem:72.65M (Peak 72.65M) | Time:00:00.33 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.007
+Fra:1 Mem:72.68M (Peak 72.68M) | Time:00:00.34 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.008
+Fra:1 Mem:72.71M (Peak 72.71M) | Time:00:00.34 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.009
+Fra:1 Mem:72.74M (Peak 72.74M) | Time:00:00.34 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.010
+Fra:1 Mem:72.77M (Peak 72.77M) | Time:00:00.34 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.011
+Fra:1 Mem:72.80M (Peak 72.80M) | Time:00:00.34 | Syncing PURCHASED_LED_VISUAL_ONLY
+Fra:1 Mem:72.82M (Peak 72.82M) | Time:00:00.34 | Syncing Area
+Fra:1 Mem:72.82M (Peak 72.82M) | Time:00:00.34 | Syncing Area.001
+Fra:1 Mem:72.82M (Peak 72.82M) | Time:00:00.34 | Syncing Camera
+Fra:1 Mem:70.33M (Peak 72.82M) | Time:00:00.37 | Rendering 1 / 64 samples
+Fra:1 Mem:65.17M (Peak 72.82M) | Time:00:00.42 | Rendering 26 / 64 samples
+Fra:1 Mem:65.17M (Peak 72.82M) | Time:00:00.43 | Rendering 51 / 64 samples
+Fra:1 Mem:65.17M (Peak 72.82M) | Time:00:00.43 | Rendering 64 / 64 samples
+Saved: '/home/solrahk/pig-health-monitor/v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-n/assembled-reference-label.png'
+Time: 00:02.23 (Saving: 00:00.34)
+
+Fra:1 Mem:64.91M (Peak 64.91M) | Time:00:00.07 | Syncing main_tub
+Fra:1 Mem:65.90M (Peak 65.93M) | Time:00:00.07 | Syncing main_lid
+Fra:1 Mem:66.25M (Peak 66.25M) | Time:00:00.07 | Syncing thermal_tub
+Fra:1 Mem:67.00M (Peak 67.00M) | Time:00:00.08 | Syncing thermal_face
+Fra:1 Mem:67.55M (Peak 67.55M) | Time:00:00.08 | Syncing acoustic_tub
+Fra:1 Mem:68.21M (Peak 68.21M) | Time:00:00.08 | Syncing acoustic_face
+Fra:1 Mem:69.12M (Peak 69.12M) | Time:00:00.08 | Syncing microphone_strap_carrier
+Fra:1 Mem:69.47M (Peak 69.47M) | Time:00:00.08 | Syncing acoustic_trim
+Fra:1 Mem:69.60M (Peak 69.60M) | Time:00:00.08 | Syncing mounting_spine
+Fra:1 Mem:70.15M (Peak 70.15M) | Time:00:00.08 | Syncing sht_adjustable_carrier
+Fra:1 Mem:70.33M (Peak 70.33M) | Time:00:00.08 | Syncing sht_mount_arm
+Fra:1 Mem:70.72M (Peak 70.72M) | Time:00:00.08 | Syncing electronics_strap_tray
+Fra:1 Mem:71.03M (Peak 71.03M) | Time:00:00.09 | Syncing thermal_raised_cradle
+Fra:1 Mem:71.29M (Peak 71.29M) | Time:00:00.09 | Syncing thermal_angled_hood
+Fra:1 Mem:71.54M (Peak 71.54M) | Time:00:00.09 | Syncing acoustic_trim.001
+Fra:1 Mem:71.66M (Peak 71.66M) | Time:00:00.09 | Syncing tray_spacer_6mm.001
+Fra:1 Mem:71.79M (Peak 71.79M) | Time:00:00.09 | Syncing tray_spacer_6mm.002
+Fra:1 Mem:71.92M (Peak 71.92M) | Time:00:00.09 | Syncing tray_spacer_6mm.003
+Fra:1 Mem:72.04M (Peak 72.04M) | Time:00:00.09 | Syncing tray_spacer_6mm.004
+Fra:1 Mem:72.17M (Peak 72.17M) | Time:00:00.09 | Syncing microphone_strap_carrier.001
+Fra:1 Mem:72.51M (Peak 72.51M) | Time:00:00.09 | Syncing REFERENCE_ARTWORK_LABEL_NOT_STL
+Fra:1 Mem:72.52M (Peak 72.52M) | Time:00:00.09 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY
+Fra:1 Mem:72.55M (Peak 72.55M) | Time:00:00.09 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.001
+Fra:1 Mem:72.57M (Peak 72.57M) | Time:00:00.09 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.002
+Fra:1 Mem:72.60M (Peak 72.60M) | Time:00:00.09 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.003
+Fra:1 Mem:72.62M (Peak 72.62M) | Time:00:00.09 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.004
+Fra:1 Mem:72.64M (Peak 72.64M) | Time:00:00.09 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.005
+Fra:1 Mem:72.67M (Peak 72.67M) | Time:00:00.09 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.006
+Fra:1 Mem:72.69M (Peak 72.69M) | Time:00:00.09 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.007
+Fra:1 Mem:72.72M (Peak 72.72M) | Time:00:00.09 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.008
+Fra:1 Mem:72.74M (Peak 72.74M) | Time:00:00.09 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.009
+Fra:1 Mem:72.76M (Peak 72.76M) | Time:00:00.09 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.010
+Fra:1 Mem:72.79M (Peak 72.79M) | Time:00:00.09 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.011
+Fra:1 Mem:72.81M (Peak 72.81M) | Time:00:00.09 | Syncing PURCHASED_LED_VISUAL_ONLY
+Fra:1 Mem:72.83M (Peak 72.83M) | Time:00:00.09 | Syncing Area
+Fra:1 Mem:72.83M (Peak 72.83M) | Time:00:00.09 | Syncing Area.001
+Fra:1 Mem:72.83M (Peak 72.83M) | Time:00:00.09 | Syncing Camera
+Fra:1 Mem:70.33M (Peak 72.83M) | Time:00:00.15 | Rendering 1 / 64 samples
+Fra:1 Mem:65.17M (Peak 72.83M) | Time:00:00.20 | Rendering 26 / 64 samples
+Fra:1 Mem:65.17M (Peak 72.83M) | Time:00:00.21 | Rendering 51 / 64 samples
+Fra:1 Mem:65.17M (Peak 72.83M) | Time:00:00.21 | Rendering 64 / 64 samples
+Saved: '/home/solrahk/pig-health-monitor/v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-n/front-review.png'
+Time: 00:02.10 (Saving: 00:00.25)
+
+Fra:1 Mem:64.91M (Peak 64.91M) | Time:00:00.04 | Syncing main_tub
+Fra:1 Mem:65.90M (Peak 65.93M) | Time:00:00.04 | Syncing main_lid
+Fra:1 Mem:66.25M (Peak 66.25M) | Time:00:00.04 | Syncing thermal_tub
+Fra:1 Mem:67.00M (Peak 67.00M) | Time:00:00.05 | Syncing thermal_face
+Fra:1 Mem:67.55M (Peak 67.55M) | Time:00:00.05 | Syncing acoustic_tub
+Fra:1 Mem:68.21M (Peak 68.21M) | Time:00:00.05 | Syncing acoustic_face
+Fra:1 Mem:69.12M (Peak 69.12M) | Time:00:00.05 | Syncing microphone_strap_carrier
+Fra:1 Mem:69.47M (Peak 69.47M) | Time:00:00.05 | Syncing acoustic_trim
+Fra:1 Mem:69.60M (Peak 69.60M) | Time:00:00.05 | Syncing mounting_spine
+Fra:1 Mem:70.15M (Peak 70.15M) | Time:00:00.05 | Syncing sht_adjustable_carrier
+Fra:1 Mem:70.33M (Peak 70.33M) | Time:00:00.05 | Syncing sht_mount_arm
+Fra:1 Mem:70.72M (Peak 70.72M) | Time:00:00.05 | Syncing electronics_strap_tray
+Fra:1 Mem:71.03M (Peak 71.03M) | Time:00:00.05 | Syncing thermal_raised_cradle
+Fra:1 Mem:71.29M (Peak 71.29M) | Time:00:00.05 | Syncing thermal_angled_hood
+Fra:1 Mem:71.54M (Peak 71.54M) | Time:00:00.06 | Syncing acoustic_trim.001
+Fra:1 Mem:71.66M (Peak 71.66M) | Time:00:00.06 | Syncing tray_spacer_6mm.001
+Fra:1 Mem:71.79M (Peak 71.79M) | Time:00:00.06 | Syncing tray_spacer_6mm.002
+Fra:1 Mem:71.92M (Peak 71.92M) | Time:00:00.06 | Syncing tray_spacer_6mm.003
+Fra:1 Mem:72.04M (Peak 72.04M) | Time:00:00.06 | Syncing tray_spacer_6mm.004
+Fra:1 Mem:72.17M (Peak 72.17M) | Time:00:00.06 | Syncing microphone_strap_carrier.001
+Fra:1 Mem:72.51M (Peak 72.51M) | Time:00:00.06 | Syncing REFERENCE_ARTWORK_LABEL_NOT_STL
+Fra:1 Mem:72.52M (Peak 72.52M) | Time:00:00.06 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY
+Fra:1 Mem:72.55M (Peak 72.55M) | Time:00:00.06 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.001
+Fra:1 Mem:72.57M (Peak 72.57M) | Time:00:00.06 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.002
+Fra:1 Mem:72.60M (Peak 72.60M) | Time:00:00.06 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.003
+Fra:1 Mem:72.62M (Peak 72.62M) | Time:00:00.06 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.004
+Fra:1 Mem:72.64M (Peak 72.64M) | Time:00:00.06 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.005
+Fra:1 Mem:72.67M (Peak 72.67M) | Time:00:00.06 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.006
+Fra:1 Mem:72.69M (Peak 72.69M) | Time:00:00.06 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.007
+Fra:1 Mem:72.72M (Peak 72.72M) | Time:00:00.06 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.008
+Fra:1 Mem:72.74M (Peak 72.74M) | Time:00:00.06 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.009
+Fra:1 Mem:72.76M (Peak 72.76M) | Time:00:00.06 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.010
+Fra:1 Mem:72.79M (Peak 72.79M) | Time:00:00.06 | Syncing PURCHASED_M3_HEAD_VISUAL_ONLY.011
+Fra:1 Mem:72.81M (Peak 72.81M) | Time:00:00.06 | Syncing PURCHASED_LED_VISUAL_ONLY
+Fra:1 Mem:72.83M (Peak 72.83M) | Time:00:00.06 | Syncing Area
+Fra:1 Mem:72.83M (Peak 72.83M) | Time:00:00.06 | Syncing Area.001
+Fra:1 Mem:72.83M (Peak 72.83M) | Time:00:00.06 | Syncing Camera
+Fra:1 Mem:70.33M (Peak 72.83M) | Time:00:00.09 | Rendering 1 / 64 samples
+Fra:1 Mem:65.17M (Peak 72.83M) | Time:00:00.13 | Rendering 26 / 64 samples
+Fra:1 Mem:65.17M (Peak 72.83M) | Time:00:00.13 | Rendering 51 / 64 samples
+Fra:1 Mem:65.17M (Peak 72.83M) | Time:00:00.14 | Rendering 64 / 64 samples
+Saved: '/home/solrahk/pig-health-monitor/v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-n/rear-attachment-review.png'
+Time: 00:01.75 (Saving: 00:00.24)
+
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+Import finished in 0.0189 sec.
+Import finished in 0.0059 sec.
+Import finished in 0.0223 sec.
+Import finished in 0.0097 sec.
+Import finished in 0.0108 sec.
+Import finished in 0.0163 sec.
+Import finished in 0.0079 sec.
+Import finished in 0.0050 sec.
+Import finished in 0.0028 sec.
+Import finished in 0.0025 sec.
+Import finished in 0.0110 sec.
+Import finished in 0.0030 sec.
+Import finished in 0.0092 sec.
+Import finished in 0.0052 sec.
+Import finished in 0.0024 sec.
+Import finished in 0.0124 sec.
+Import finished in 0.0043 sec.
+Info: Saved "assembled-review.blend"
+
+Blender quit
+XDG_RUNTIME_DIR (/run/user/1000) is not owned by us (uid 0), but by uid 1000! (This could e.g. happen if you try to connect to a non-root PulseAudio as a root user, over the native protocol. Don't do that.)
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+Info: Applied modifier was not first, result may not be as expected
+{"method": "Exact boolean intersection of assembled exported STL meshes", "not_tested": ["physical fit", "electronic component interference", "screw head/nut tool access", "self intersections"], "parts": {"acoustic_face": {"min": [-50.0, -33.0, -99.0], "max": [50.0, -30.0, -61.0]}, "electronics_strap_tray": {"min": [-41.0, -12.000001907348633, -38.0], "max": [41.0, -8.999998092651367, 38.0]}, "mounting_spine": {"min": [-24.0, -4.283715952624334e-06, -98.0], "max": [24.0, 5.000004291534424, 98.0]}, "thermal_tub": {"min": [-46.0, -14.000000953674316, 61.0], "max": [46.0, 8.305163987643027e-07, 99.0]}, "thermal_raised_cradle": {"min": [-34.0, -28.831180572509766, 65.12287139892578], "max": [34.0, -16.99999237060547, 94.87712860107422]}, "microphone_strap_carrier": {"min": [-37.0, -30.0, -93.0], "max": [-11.0, -27.0, -67.0]}, "acoustic_tub": {"min": [-50.0, -30.0, -99.0], "max": [50.0, 8.305163987643027e-07, -61.0]}, "thermal_face": {"min": [-46.0, -17.0, 61.0], "max": [46.0, -13.999999046325684, 99.0]}, "main_tub": {"min": [-60.0, -30.000001907348633, -56.0], "max": [60.0, 2.447837687213905e-06, 56.0]}, "sht_mount_arm": {"min": [-24.0, -3.0000007152557373, 44.99980163574219], "max": [96.0, 10.000000953674316, 77.00020599365234]}, "sht_adjustable_carrier": {"min": [64.0, -6.000000476837158, 45.0], "max": [96.0, -2.9999992847442627, 77.0]}, "thermal_angled_hood": {"min": [-46.0, -38.091033935546875, 61.0], "max": [46.0, -17.0, 99.0]}, "main_lid": {"min": [-60.0, -33.000003814697266, -56.0], "max": [60.0, -29.999998092651367, 56.0]}}, "pairs": [{"a": "main_tub", "b": "main_lid", "overlap_mm3": 0.0}, {"a": "thermal_tub", "b": "thermal_face", "overlap_mm3": 0.0}, {"a": "thermal_face", "b": "thermal_angled_hood", "overlap_mm3": 0.0}, {"a": "acoustic_tub", "b": "acoustic_face", "overlap_mm3": 0.0}, {"a": "mounting_spine", "b": "main_tub", "overlap_mm3": 0.0}, {"a": "mounting_spine", "b": "thermal_tub", "overlap_mm3": 0.0}, {"a": "mounting_spine", "b": "acoustic_tub", "overlap_mm3": 0.0}, {"a": "mounting_spine", "b": "sht_mount_arm", "overlap_mm3": 0.0}, {"a": "sht_mount_arm", "b": "sht_adjustable_carrier", "overlap_mm3": 0.0}, {"a": "main_tub", "b": "electronics_strap_tray", "overlap_mm3": 0.0}, {"a": "thermal_face", "b": "thermal_raised_cradle", "overlap_mm3": 0.0}, {"a": "thermal_angled_hood", "b": "thermal_raised_cradle", "overlap_mm3": 0.0}, {"a": "acoustic_face", "b": "microphone_strap_carrier", "overlap_mm3": 0.0}], "pair_intersection_gate": true, "installed_inventory_gate": true, "installed_inventory": {"expected": ["main_tub", "main_lid", "thermal_tub", "thermal_face", "thermal_angled_hood", "thermal_raised_cradle", "acoustic_tub", "acoustic_face", "mounting_spine", "sht_mount_arm", "sht_adjustable_carrier", "electronics_strap_tray", "microphone_strap_carrier", "microphone_strap_carrier.001", "acoustic_trim", "acoustic_trim.001", "tray_spacer_6mm.001", "tray_spacer_6mm.002", "tray_spacer_6mm.003", "tray_spacer_6mm.004"], "missing": [], "unexpectedly_hidden": []}, "installed_part_count": 20, "all_broadphase_candidate_pairs": [{"a": "main_tub", "b": "sht_mount_arm", "overlap_mm3": 0.0}, {"a": "main_tub", "b": "electronics_strap_tray", "overlap_mm3": 0.0}, {"a": "main_tub", "b": "tray_spacer_6mm.001", "overlap_mm3": 0.0}, {"a": "main_tub", "b": "tray_spacer_6mm.002", "overlap_mm3": 0.0}, {"a": "main_tub", "b": "tray_spacer_6mm.003", "overlap_mm3": 0.0}, {"a": "main_tub", "b": "tray_spacer_6mm.004", "overlap_mm3": 0.0}, {"a": "thermal_tub", "b": "sht_mount_arm", "overlap_mm3": 0.0}, {"a": "thermal_angled_hood", "b": "thermal_raised_cradle", "overlap_mm3": 0.0}, {"a": "acoustic_tub", "b": "microphone_strap_carrier", "overlap_mm3": 0.0}, {"a": "acoustic_tub", "b": "microphone_strap_carrier.001", "overlap_mm3": 0.0}, {"a": "mounting_spine", "b": "sht_mount_arm", "overlap_mm3": 0.0}], "all_installed_intersection_gate": true, "cradle_head_envelopes": [{"x": -30, "local_y": -9, "head_radius_mm": 3, "head_plus_washer_height_mm": 2.4, "hood_collision_mm3": 0.0, "cradle_collision_above_seat_mm3": 2.1054611487185145e-05}, {"x": -30, "local_y": 9, "head_radius_mm": 3, "head_plus_washer_height_mm": 2.4, "hood_collision_mm3": 0.0, "cradle_collision_above_seat_mm3": 6.566066403033285e-05}, {"x": 30, "local_y": -9, "head_radius_mm": 3, "head_plus_washer_height_mm": 2.4, "hood_collision_mm3": 0.0, "cradle_collision_above_seat_mm3": 1.4906396404976809e-05}, {"x": 30, "local_y": 9, "head_radius_mm": 3, "head_plus_washer_height_mm": 2.4, "hood_collision_mm3": 0.0, "cradle_collision_above_seat_mm3": 2.2697096694008455e-05}], "cradle_head_clearance_gate": true, "cradle_driver_envelopes": [{"x": -30, "local_y": -9, "radius_mm": 3.5, "length_mm": 40, "collisions_mm3": {"thermal_raised_cradle": 0.0, "thermal_face": 0.0, "thermal_tub": 0.0}}, {"x": -30, "local_y": 9, "radius_mm": 3.5, "length_mm": 40, "collisions_mm3": {"thermal_raised_cradle": 0.0, "thermal_face": 0.0, "thermal_tub": 0.0}}, {"x": 30, "local_y": -9, "radius_mm": 3.5, "length_mm": 40, "collisions_mm3": {"thermal_raised_cradle": 0.0, "thermal_face": 0.0, "thermal_tub": 0.0}}, {"x": 30, "local_y": 9, "radius_mm": 3.5, "length_mm": 40, "collisions_mm3": {"thermal_raised_cradle": 0.0, "thermal_face": 0.0, "thermal_tub": 0.0}}], "cradle_driver_gate": true, "sht_joint_hardware_envelopes": [{"x": -12, "height_mm": 61, "radius_mm": 3.5, "forward_depth_mm": 3, "thermal_wall_collision_mm3": 0.0}, {"x": 12, "height_mm": 61, "radius_mm": 3.5, "forward_depth_mm": 3, "thermal_wall_collision_mm3": 0.0}], "sht_joint_hardware_gate": true, "driver_access_assumption": "Hood removed; 7mm diameter x40mm axial cylinder above assumed head. Real driver tip, handle, approach and hand access untested.", "scene_sha256": "95bde02dc302e8d59b76da293f965fe7967b2550d40ad3c473938769b1f2f051", "scene_imported_stl_sha256": {"acoustic_face": "68dbcded253e22103736a3d6b49ac3a976e64bbc17a57883d49bcc7ab2741ded", "acoustic_trim": "66e4c1fa40218273361efa841f83c8708f4f8bb0a11c47ef414c05a72aeb5d5c", "acoustic_tub": "5ae7ee3d9dba0228e6177644a0076a0f14a0f56859c3853c1b32f150bf991d5d", "electronics_strap_tray": "90d80701e68ce12b23b3f8b404a4052a8e8b874499515530dc40881fef38486a", "main_lid": "80a90478dc4fdf046f707b575eb9dc0e946a1c3c4835d5443073651c4756c6b2", "main_tub": "3b6bd2645ea55cd4ddae5019db203022ec0dc45b36805503508c4f98c46a1f36", "microphone_strap_carrier": "2c884c27b8ddffa7525d26952fafebb3729a4c98dd55b6317fc24e91a8a1bf5d", "mounting_spine": "d8566155e0fc07dcff34381212ddc977850b7991b4ed6e28763f305110b5aebb", "optical_trim": "4338e7d24baea8d695a9d34d9f3cb3ab050bc6c23cf49722835edac6e10b8424", "sht_adjustable_carrier": "a3a898588a8937e33415ff05bedc24901993d5d87bcd0e62ec5bef1db2054dc1", "sht_mount_arm": "3c1813784b9340e578b1bba883b837b08abdae78150f65e3528892259a039342", "thermal_angled_hood": "10a79f3270e9c3dce5153311b4fb9ab0347b5ae139ae931b0e953363c1c19b9c", "thermal_face": "4ceadefe5bfd91dd54fe3c8aa9005f13ef3b9bb738ec906be17c304bdeabf671", "thermal_raised_cradle": "9d2cebe08c75bc8f4e752c05fb70079562e01cc88b2fab0fb4d1bf77564fed2d", "thermal_strap_carrier": "f59a44bf1b194b1e0e8b0d6c19bd07fe3aeda5d4bfe5715a4a088b0424e61268", "thermal_tub": "ef5f2aa56b83c8cb7af040a7e7055b44766467e68dc6cc85f1e486b09ec1c2fa", "tray_spacer_6mm": "2276b9fb58021060234ee1de8ecb141b61fc46c5e025bda1196be3e24dc824b0"}, "stl_sha256": {"sht_mount_arm": "3c1813784b9340e578b1bba883b837b08abdae78150f65e3528892259a039342", "mounting_spine": "d8566155e0fc07dcff34381212ddc977850b7991b4ed6e28763f305110b5aebb", "acoustic_trim": "66e4c1fa40218273361efa841f83c8708f4f8bb0a11c47ef414c05a72aeb5d5c", "thermal_face": "4ceadefe5bfd91dd54fe3c8aa9005f13ef3b9bb738ec906be17c304bdeabf671", "main_tub": "3b6bd2645ea55cd4ddae5019db203022ec0dc45b36805503508c4f98c46a1f36", "thermal_strap_carrier": "f59a44bf1b194b1e0e8b0d6c19bd07fe3aeda5d4bfe5715a4a088b0424e61268", "thermal_angled_hood": "10a79f3270e9c3dce5153311b4fb9ab0347b5ae139ae931b0e953363c1c19b9c", "thermal_tub": "ef5f2aa56b83c8cb7af040a7e7055b44766467e68dc6cc85f1e486b09ec1c2fa", "optical_trim": "4338e7d24baea8d695a9d34d9f3cb3ab050bc6c23cf49722835edac6e10b8424", "microphone_strap_carrier": "2c884c27b8ddffa7525d26952fafebb3729a4c98dd55b6317fc24e91a8a1bf5d", "acoustic_tub": "5ae7ee3d9dba0228e6177644a0076a0f14a0f56859c3853c1b32f150bf991d5d", "electronics_strap_tray": "90d80701e68ce12b23b3f8b404a4052a8e8b874499515530dc40881fef38486a", "sht_adjustable_carrier": "a3a898588a8937e33415ff05bedc24901993d5d87bcd0e62ec5bef1db2054dc1", "thermal_raised_cradle": "9d2cebe08c75bc8f4e752c05fb70079562e01cc88b2fab0fb4d1bf77564fed2d", "tray_spacer_6mm": "2276b9fb58021060234ee1de8ecb141b61fc46c5e025bda1196be3e24dc824b0", "main_lid": "80a90478dc4fdf046f707b575eb9dc0e946a1c3c4835d5443073651c4756c6b2", "acoustic_face": "68dbcded253e22103736a3d6b49ac3a976e64bbc17a57883d49bcc7ab2741ded"}, "freshness_limit": "Hashes bind this report to files present during audit; render scene provenance must also be checked against its import manifest."}
+Blender 4.0.2
+Read blend: "/home/solrahk/pig-health-monitor/v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-n/assembled-review.blend"
+
+Blender quit
+{"pass":true,"parts":17,"assemblyPairs":13}
+{"pass":true,"parts":17,"assemblyPairs":13}

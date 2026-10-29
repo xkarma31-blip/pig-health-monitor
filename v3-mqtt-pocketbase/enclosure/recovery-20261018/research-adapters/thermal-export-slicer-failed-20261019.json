@@ -1,0 +1,95 @@
+{
+  "pass": false,
+  "parts": [
+    {
+      "name": "pcb25_4x17_78_rear_insert",
+      "components": 1,
+      "nonmanifold": 2,
+      "volume_mm3": 2768.61315755247,
+      "stl_sha256": "067497ad5510daf9a478425cc7cba1d205512fb1a1410868a81909f02de045eb",
+      "sliced": true,
+      "gcode_sha256": "f2ce91962adbbc97c4baa9dc7f92788617c76ec23a83caee2d565d1de1230b87",
+      "pass": false
+    },
+    {
+      "name": "pcb25_4x17_78_retainer_1",
+      "components": 1,
+      "nonmanifold": 0,
+      "volume_mm3": 187.6347315246113,
+      "stl_sha256": "8363c7de08019b61b990db5ffcf691db25f5f38c4f29d0deebe2424a71e6fa77",
+      "sliced": true,
+      "gcode_sha256": "27a7a43ef7b3f86aab18c83c5adcf9cc5eded410abe377edac7fe8fc563549bf",
+      "pass": true
+    },
+    {
+      "name": "pcb25_4x17_78_retainer_2",
+      "components": 1,
+      "nonmanifold": 0,
+      "volume_mm3": 191.54375491697678,
+      "stl_sha256": "fad30ba94f7543ba61a89e2ab87c8534b5eade56fa49a3885be8cadd56f131da",
+      "sliced": true,
+      "gcode_sha256": "c92c7df7cda025423dde61d6ffbd0c8adfcfc292a582df5e308afdcbedd98f96",
+      "pass": true
+    },
+    {
+      "name": "pcb25_4square_rear_insert",
+      "components": 1,
+      "nonmanifold": 1,
+      "volume_mm3": 3002.7637286669524,
+      "stl_sha256": "32ebc7eee3302c4a93c3277c17bf2afc92355ec5c802324e5d5f9a98e599d205",
+      "sliced": true,
+      "gcode_sha256": "2f9c9c11fe9b19216f07e1d4dac5604a8c03fdd7c8977cf63dd081d1c8b9736b",
+      "pass": false
+    },
+    {
+      "name": "pcb25_4square_retainer_1",
+      "components": 1,
+      "nonmanifold": 0,
+      "volume_mm3": 213.1489323410865,
+      "stl_sha256": "a22fba12c85819af25ef969c90da3964cc1b85cfe1a7272ef447ae5aa52c14b8",
+      "sliced": true,
+      "gcode_sha256": "4d1674d6e06b999fdde0343b40a787cf2c05375d66464ab650c44cfcd62b9f02",
+      "pass": true
+    },
+    {
+      "name": "pcb25_4square_retainer_2",
+      "components": 1,
+      "nonmanifold": 0,
+      "volume_mm3": 213.1489353885152,
+      "stl_sha256": "2cac1a820d54b0c5f179a732baa0a1d97b9d27a2b099d72e132adabc586efe10",
+      "sliced": true,
+      "gcode_sha256": "ef3047807ff8ac6cff9a83580b39abc2f82fa73b184935260fa97680e3454854",
+      "pass": true
+    },
+    {
+      "name": "pcb28x16_rear_insert",
+      "components": 1,
+      "nonmanifold": 3,
+      "volume_mm3": 2616.8326402714206,
+      "stl_sha256": "32a2d9528ccbe3eadbc346e80efb0c03188603456e45b622c0ba4e0ba7a75340",
+      "sliced": true,
+      "gcode_sha256": "bddb9ba97039bac7dddfb7568025d2b14d2551fc3d261956a3bf2a1e14c42613",
+      "pass": false
+    },
+    {
+      "name": "pcb28x16_retainer_1",
+      "components": 1,
+      "nonmanifold": 0,
+      "volume_mm3": 205.68785106674807,
+      "stl_sha256": "d7188caa101e5063244796060525dc55b0de0b8945d12e1fec00e7bd2b12b061",
+      "sliced": true,
+      "gcode_sha256": "7a5994975349f6657af20112d9f10381872a78a686c768f2f912d1673d81f3ae",
+      "pass": true
+    },
+    {
+      "name": "pcb28x16_retainer_2",
+      "components": 1,
+      "nonmanifold": 0,
+      "volume_mm3": 205.6877824920068,
+      "stl_sha256": "bca8f5c04de1dfc98471658df3b4e0d4ec194eec5e9dad96c6c188968f6dcdb0",
+      "sliced": true,
+      "gcode_sha256": "2b8d5f6e16fe274d27c5f582f2210806c04555c87c92472bf0eee5ed9327f876",
+      "pass": true
+    }
+  ]
+}

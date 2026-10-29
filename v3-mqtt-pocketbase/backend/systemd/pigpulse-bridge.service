@@ -16,8 +16,10 @@ WorkingDirectory=/home/pigpulse/bridge
 #   sudo tee /etc/pigpulse/bridge.env >/dev/null <<EOF
 #   PB_EMAIL=...            # PocketBase admin identity
 #   PB_PASSWORD=...         # PocketBase admin password
-#   POCKETBASE_URL=http://127.0.0.1:8090
+#   POCKETBASE_URL=http://192.168.69.1:8090
 #   MQTT_BROKER=127.0.0.1
+# POCKETBASE_URL must be the AP address, NOT 127.0.0.1: pigpulse-pocketbase
+# binds 192.168.69.1 exclusively, so loopback is refused.
 #   EOF
 #   sudo chown root:pigpulse /etc/pigpulse/bridge.env
 #   sudo chmod 0640 /etc/pigpulse/bridge.env

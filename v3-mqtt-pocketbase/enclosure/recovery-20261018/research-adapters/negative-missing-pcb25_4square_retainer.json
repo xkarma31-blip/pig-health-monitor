@@ -1,0 +1,59 @@
+{
+  "pass": false,
+  "inventory_check": {
+    "expected": [
+      "acoustic_face",
+      "acoustic_trim",
+      "acoustic_trim.001",
+      "acoustic_tub",
+      "electronics_strap_tray",
+      "main_lid",
+      "main_tub",
+      "microphone_strap_carrier",
+      "microphone_strap_carrier.001",
+      "mounting_spine",
+      "pcb25_4square",
+      "pcb25_4square_retainer",
+      "pcb25_4square_retainer.001",
+      "sht_adjustable_carrier",
+      "sht_mount_arm",
+      "thermal_angled_hood",
+      "thermal_face",
+      "thermal_raised_cradle",
+      "thermal_tub",
+      "tray_spacer_6mm.001",
+      "tray_spacer_6mm.002",
+      "tray_spacer_6mm.003",
+      "tray_spacer_6mm.004"
+    ],
+    "actual": [
+      "acoustic_face",
+      "acoustic_trim",
+      "acoustic_trim.001",
+      "acoustic_tub",
+      "electronics_strap_tray",
+      "main_lid",
+      "main_tub",
+      "microphone_strap_carrier",
+      "microphone_strap_carrier.001",
+      "mounting_spine",
+      "pcb25_4square",
+      "pcb25_4square_retainer.001",
+      "sht_adjustable_carrier",
+      "sht_mount_arm",
+      "thermal_angled_hood",
+      "thermal_face",
+      "thermal_raised_cradle",
+      "thermal_tub",
+      "tray_spacer_6mm.001",
+      "tray_spacer_6mm.002",
+      "tray_spacer_6mm.003",
+      "tray_spacer_6mm.004"
+    ],
+    "missing": [
+      "pcb25_4square_retainer"
+    ],
+    "unexpected": [],
+    "pass": false
+  }
+}

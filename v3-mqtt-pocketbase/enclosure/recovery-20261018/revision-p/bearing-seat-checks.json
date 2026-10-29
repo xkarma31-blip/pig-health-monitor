@@ -1,0 +1,98 @@
+{
+  "assumption": "2.1\u20133mm radial annulus, 24 samples per radius; 0.025mm height tolerance; normal Z>0.999",
+  "pass": true,
+  "results": [
+    {
+      "part": "thermal_raised_cradle",
+      "center": [
+        -30,
+        -9
+      ],
+      "expected_seat_z_mm": 6.788457268119895,
+      "sample_count": 72,
+      "bearing_pass": true,
+      "failed_samples": []
+    },
+    {
+      "part": "thermal_raised_cradle",
+      "center": [
+        -30,
+        9
+      ],
+      "expected_seat_z_mm": 11.611542731880103,
+      "sample_count": 72,
+      "bearing_pass": true,
+      "failed_samples": []
+    },
+    {
+      "part": "thermal_raised_cradle",
+      "center": [
+        30,
+        -9
+      ],
+      "expected_seat_z_mm": 6.788457268119895,
+      "sample_count": 72,
+      "bearing_pass": true,
+      "failed_samples": []
+    },
+    {
+      "part": "thermal_raised_cradle",
+      "center": [
+        30,
+        9
+      ],
+      "expected_seat_z_mm": 11.611542731880103,
+      "sample_count": 72,
+      "bearing_pass": true,
+      "failed_samples": []
+    },
+    {
+      "part": "thermal_angled_hood",
+      "center": [
+        -40,
+        -13
+      ],
+      "expected_seat_z_mm": 11.252043405643363,
+      "sample_count": 72,
+      "bearing_pass": true,
+      "failed_samples": []
+    },
+    {
+      "part": "thermal_angled_hood",
+      "center": [
+        -40,
+        13
+      ],
+      "expected_seat_z_mm": 18.218722408852553,
+      "sample_count": 72,
+      "bearing_pass": true,
+      "failed_samples": []
+    },
+    {
+      "part": "thermal_angled_hood",
+      "center": [
+        40,
+        -13
+      ],
+      "expected_seat_z_mm": 11.252043405643363,
+      "sample_count": 72,
+      "bearing_pass": true,
+      "failed_samples": []
+    },
+    {
+      "part": "thermal_angled_hood",
+      "center": [
+        40,
+        13
+      ],
+      "expected_seat_z_mm": 18.218722408852553,
+      "sample_count": 72,
+      "bearing_pass": true,
+      "failed_samples": []
+    }
+  ],
+  "input_sha256": {
+    "thermal_raised_cradle": "9d2cebe08c75bc8f4e752c05fb70079562e01cc88b2fab0fb4d1bf77564fed2d",
+    "thermal_angled_hood": "10a79f3270e9c3dce5153311b4fb9ab0347b5ae139ae931b0e953363c1c19b9c"
+  }
+}

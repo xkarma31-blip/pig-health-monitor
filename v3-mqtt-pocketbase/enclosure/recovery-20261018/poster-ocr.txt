@@ -1,0 +1,128 @@
+PigPulse
+
+Edge Intelligence for Swine Health
+
+Real-time cough detection +
+thermal monitoring for early
+disease detection.
+
+‘Wide-a%ea thermal
+‘monitoring (110° FOV)
+
+‘Acoustic cough
+detection (dual mic)
+
+On-deviceTinyML
+inference
+
+ESP-NOW long-range
+‘connectivity
+
+P65 dustproof &
+waterproof
+
+Long battery life
+(up 107 days)
+
+IP65
+RATED
+
+®
+®
+
+7
+
+35mm
+
+120 mm ———+|
+I
+
+MLS060Teral Carers
+110" 75" We FOV
+Dovmar-ngid fr ful
+pen coverage
+
+Onevice Tey rence
+Wi /ESPNOW
+
+LsPo Brmery37V 2000mAn
+‘ServctobleEndoace
+
+EXPLODED VIEW (3-PART MODULAR DESIGN)
+
+INTERNAL VIEW (MAIN BODY)
+
+SP32-S3,
+Main Board
+
+16MB Flash
+
+‘aMB PSRAM
+
+Power
+Management IC.
+
+LicPo Battery
+3.7V 2000mAh
+
+1P6S Gasket Seal
+(Rear Cover)
+
+Pa
+
+Hl Caz,
+sil
+
+DIMENSIONS (mm)
+
+MOUNTING OPTIONS (3 WAYS)
+
+Lock —>
+Tum clockwise
+
+|
+@) reste
+
+a
+
+LOCKING WATERPROOF CONNECTORS
+Secure, reliable, IP6S-rated connector fr all module interfaces
+
+Sane
+
+e
+
+— umtock
+“Tun counterclockwise
+tounlock
+
+©
+
+a
+
+Vieraton
+) resistant
+
+Corresion
+Resistant
+
+DEPLOYED IN SWINE PEN
+Wide thermal coverage + acoustic monitoring |
+
+~ 5 Aeoustic Coverage
+from Dual Microphones
+
+MODULES (DETACHABLE) ‘CONNECTION DIAGRAM
+( Tmemmat moouce “ACOUSTIC MODULE a
+(Top) (Bottom) THERMAL ACOUSTI
+EAL MAIN BODY onthe
+k Sms 7 t
+x. Trower
+‘ie J i ND
+tee Raione Acad Sees the invisible Thinks on the edge. Hears what matters > ESP-NOW
+Wide area thermal TinyMt inference Dual mies capture “> Lang Range Cernminicoton
+monitoring, + connectivity cough sounds.
+EASY MAINTENANCE (r A FARM-READY | >\\ EDGE Al PROCESSING (em) RuABLe connecriviry toneearrery ure | DESIGNED FOR SMALLHOLDERS
+Detachable modules for ( ) Dustproof, waterproof, {a} TinyML models run (ZY) sP-NOW for long-range, ( F Up to 7 days operation | Low-cost, easy to deploy,
+‘nick cleaning, replacement | \\2// UV-resistant, built to entirely on-<device \% / low-power, mesh-ready «UD 7 Gepending on usage practical technology for
+& servicing 2 withstand harsh farms. = No cloud required. = communication and settings) local farmers.

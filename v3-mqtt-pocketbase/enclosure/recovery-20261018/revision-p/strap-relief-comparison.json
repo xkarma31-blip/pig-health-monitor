@@ -1,0 +1,384 @@
+{
+  "method": "18 downward rays through outward escape channels; requires >=1.15mm nominal face-side clearance at sampled locations.",
+  "limitations": "Not continuous route proof; tie thickness,width,bend radius and locking head unmeasured. Slot bends and real print fit untested.",
+  "results": [
+    {
+      "revision": "revision-n",
+      "valid": true,
+      "pass": false,
+      "samples": [
+        {
+          "xy": [
+            -11.2,
+            -2
+          ],
+          "floor_z_mm": 2.937868118286133,
+          "clearance_mm": 0.06213188171386719,
+          "valid": true,
+          "pass": false
+        },
+        {
+          "xy": [
+            -11.2,
+            0
+          ],
+          "floor_z_mm": 2.9378678798675537,
+          "clearance_mm": 0.06213212013244629,
+          "valid": true,
+          "pass": false
+        },
+        {
+          "xy": [
+            -11.2,
+            2
+          ],
+          "floor_z_mm": 2.9378678798675537,
+          "clearance_mm": 0.06213212013244629,
+          "valid": true,
+          "pass": false
+        },
+        {
+          "xy": [
+            -11.8,
+            -2
+          ],
+          "floor_z_mm": 3.0,
+          "clearance_mm": 0.0,
+          "valid": true,
+          "pass": false
+        },
+        {
+          "xy": [
+            -11.8,
+            0
+          ],
+          "floor_z_mm": 3.0,
+          "clearance_mm": 0.0,
+          "valid": true,
+          "pass": false
+        },
+        {
+          "xy": [
+            -11.8,
+            2
+          ],
+          "floor_z_mm": 3.0,
+          "clearance_mm": 0.0,
+          "valid": true,
+          "pass": false
+        },
+        {
+          "xy": [
+            -12.4,
+            -2
+          ],
+          "floor_z_mm": 3.0,
+          "clearance_mm": 0.0,
+          "valid": true,
+          "pass": false
+        },
+        {
+          "xy": [
+            -12.4,
+            0
+          ],
+          "floor_z_mm": 3.0,
+          "clearance_mm": 0.0,
+          "valid": true,
+          "pass": false
+        },
+        {
+          "xy": [
+            -12.4,
+            2
+          ],
+          "floor_z_mm": 3.0,
+          "clearance_mm": 0.0,
+          "valid": true,
+          "pass": false
+        },
+        {
+          "xy": [
+            11.2,
+            -2
+          ],
+          "floor_z_mm": 2.9378678798675537,
+          "clearance_mm": 0.06213212013244629,
+          "valid": true,
+          "pass": false
+        },
+        {
+          "xy": [
+            11.2,
+            0
+          ],
+          "floor_z_mm": 2.9378678798675537,
+          "clearance_mm": 0.06213212013244629,
+          "valid": true,
+          "pass": false
+        },
+        {
+          "xy": [
+            11.2,
+            2
+          ],
+          "floor_z_mm": 2.937868118286133,
+          "clearance_mm": 0.06213188171386719,
+          "valid": true,
+          "pass": false
+        },
+        {
+          "xy": [
+            11.8,
+            -2
+          ],
+          "floor_z_mm": 3.0,
+          "clearance_mm": 0.0,
+          "valid": true,
+          "pass": false
+        },
+        {
+          "xy": [
+            11.8,
+            0
+          ],
+          "floor_z_mm": 3.0,
+          "clearance_mm": 0.0,
+          "valid": true,
+          "pass": false
+        },
+        {
+          "xy": [
+            11.8,
+            2
+          ],
+          "floor_z_mm": 3.0,
+          "clearance_mm": 0.0,
+          "valid": true,
+          "pass": false
+        },
+        {
+          "xy": [
+            12.4,
+            -2
+          ],
+          "floor_z_mm": 3.0,
+          "clearance_mm": 0.0,
+          "valid": true,
+          "pass": false
+        },
+        {
+          "xy": [
+            12.4,
+            0
+          ],
+          "floor_z_mm": 3.0,
+          "clearance_mm": 0.0,
+          "valid": true,
+          "pass": false
+        },
+        {
+          "xy": [
+            12.4,
+            2
+          ],
+          "floor_z_mm": 3.0,
+          "clearance_mm": 0.0,
+          "valid": true,
+          "pass": false
+        }
+      ]
+    },
+    {
+      "revision": "revision-p",
+      "valid": true,
+      "pass": true,
+      "samples": [
+        {
+          "xy": [
+            -11.2,
+            -2
+          ],
+          "floor_z_mm": 1.7378675937652588,
+          "clearance_mm": 1.2621324062347412,
+          "valid": true,
+          "pass": true
+        },
+        {
+          "xy": [
+            -11.2,
+            0
+          ],
+          "floor_z_mm": 1.7378675937652588,
+          "clearance_mm": 1.2621324062347412,
+          "valid": true,
+          "pass": true
+        },
+        {
+          "xy": [
+            -11.2,
+            2
+          ],
+          "floor_z_mm": 1.737868070602417,
+          "clearance_mm": 1.262131929397583,
+          "valid": true,
+          "pass": true
+        },
+        {
+          "xy": [
+            -11.8,
+            -2
+          ],
+          "floor_z_mm": 1.7999999523162842,
+          "clearance_mm": 1.2000000476837158,
+          "valid": true,
+          "pass": true
+        },
+        {
+          "xy": [
+            -11.8,
+            0
+          ],
+          "floor_z_mm": 1.7999999523162842,
+          "clearance_mm": 1.2000000476837158,
+          "valid": true,
+          "pass": true
+        },
+        {
+          "xy": [
+            -11.8,
+            2
+          ],
+          "floor_z_mm": 1.7999999523162842,
+          "clearance_mm": 1.2000000476837158,
+          "valid": true,
+          "pass": true
+        },
+        {
+          "xy": [
+            -12.4,
+            -2
+          ],
+          "floor_z_mm": 1.8000001907348633,
+          "clearance_mm": 1.1999998092651367,
+          "valid": true,
+          "pass": true
+        },
+        {
+          "xy": [
+            -12.4,
+            0
+          ],
+          "floor_z_mm": 1.7999999523162842,
+          "clearance_mm": 1.2000000476837158,
+          "valid": true,
+          "pass": true
+        },
+        {
+          "xy": [
+            -12.4,
+            2
+          ],
+          "floor_z_mm": 1.7999999523162842,
+          "clearance_mm": 1.2000000476837158,
+          "valid": true,
+          "pass": true
+        },
+        {
+          "xy": [
+            11.2,
+            -2
+          ],
+          "floor_z_mm": 1.737868070602417,
+          "clearance_mm": 1.262131929397583,
+          "valid": true,
+          "pass": true
+        },
+        {
+          "xy": [
+            11.2,
+            0
+          ],
+          "floor_z_mm": 1.737868070602417,
+          "clearance_mm": 1.262131929397583,
+          "valid": true,
+          "pass": true
+        },
+        {
+          "xy": [
+            11.2,
+            2
+          ],
+          "floor_z_mm": 1.737868070602417,
+          "clearance_mm": 1.262131929397583,
+          "valid": true,
+          "pass": true
+        },
+        {
+          "xy": [
+            11.8,
+            -2
+          ],
+          "floor_z_mm": 1.7999999523162842,
+          "clearance_mm": 1.2000000476837158,
+          "valid": true,
+          "pass": true
+        },
+        {
+          "xy": [
+            11.8,
+            0
+          ],
+          "floor_z_mm": 1.7999999523162842,
+          "clearance_mm": 1.2000000476837158,
+          "valid": true,
+          "pass": true
+        },
+        {
+          "xy": [
+            11.8,
+            2
+          ],
+          "floor_z_mm": 1.7999999523162842,
+          "clearance_mm": 1.2000000476837158,
+          "valid": true,
+          "pass": true
+        },
+        {
+          "xy": [
+            12.4,
+            -2
+          ],
+          "floor_z_mm": 1.7999999523162842,
+          "clearance_mm": 1.2000000476837158,
+          "valid": true,
+          "pass": true
+        },
+        {
+          "xy": [
+            12.4,
+            0
+          ],
+          "floor_z_mm": 1.7999999523162842,
+          "clearance_mm": 1.2000000476837158,
+          "valid": true,
+          "pass": true
+        },
+        {
+          "xy": [
+            12.4,
+            2
+          ],
+          "floor_z_mm": 1.8000001907348633,
+          "clearance_mm": 1.1999998092651367,
+          "valid": true,
+          "pass": true
+        }
+      ]
+    }
+  ],
+  "input_sha256": {
+    "revision-n": "2c884c27b8ddffa7525d26952fafebb3729a4c98dd55b6317fc24e91a8a1bf5d",
+    "revision-p": "a3367779b55c4a209451834f9d90f65613ce9c836046a2535be0024dfa967422"
+  }
+}

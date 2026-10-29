@@ -1,0 +1,189 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGlob "*" [90min . · 100 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead /home/solrahk/pig-health-monitor/CANON.md [90m[offset=1, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "coupon|rail|INMP|SHT|fastener|bore" [90min . · 110 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead build_revision.py [90m[offset=160, limit=72][0m
+> reviewer · cx/gpt-6.1-sol-review
+## Review conclusion
+
+**Spanning the microphone’s Ø12 aperture with adapter material is avoidable for a centred 14 × 12 mm board.** Four independent corner supports can bear its underside while remaining outside radius 6, connected by an outer perimeter frame.
+
+**The PCB itself still spans the aperture.** Keeping printed supports out of the bore does not establish microphone-port alignment, underside-component clearance, or acoustic performance.
+
+No files edited; no subagents used. Coordinates below are **proposed nominal geometry**, not a verified hardware fit.
+
+## Findings, in severity order
+
+1. **High — Retention must include a positive carrier-to-adapter joint.**  
+   The existing microphone provides two 2 × 8 mm slots, and the SHT carrier provides two 3 × 12 mm slots. These can anchor removable adapters independently of the existing mounting bolts. A rail merely resting on either carrier is not retained.  
+   References: `build_revision.py:167–177`, `build_revision.py:213–218`.
+
+2. **High — The previous elevated microphone rail proposal is not transferable to a 14 × 12 mm PCB.**  
+   Corner lands inside the actual board footprint are needed; supports beyond x = ±7 cannot bear that centred board. An unobstructed central bore does **not** require abandoning underside support.  
+   Reference: `revision-p/component-adapter-design-independent-review.txt:125–138`.
+
+3. **High — Safe PCB contact locations remain unknown.**  
+   All proposed shoes require inspection of actual board undersides, edge plating, solder joints, connectors and inlet/sensing-element position. **No claim is made that these corner pads are clear.**
+
+4. **Medium — Attachment underside access and installed clearances are unverified.**  
+   Slot capture requires room for retaining bars and screw ends beneath the carrier. The microphone also has face-side slot escapes that remove part of its upper thickness; do not assume an intact 3 mm bearing section there.  
+   Reference: `build_revision.py:174–177`.
+
+---
+
+## 1. Microphone: exact corner-support calculation
+
+Use the bore centre as `(0,0)`, board long dimension along x:
+
+- Board: `x = −7…+7`, `y = −6…+6`.
+- Aperture: `x² + y² < 36`.
+- Proposed shoe centres: **`(±6, ±5)`**.
+
+Each centre is at:
+
+\[
+r=\sqrt{6^2+5^2}=\sqrt{61}=7.810\text{ mm}
+\]
+
+That proves only the **centre** is outside the bore. The entire shoe must also clear it.
+
+### Proposed rectangular contact faces: 2 × 2 mm
+
+For the upper-right shoe:
+
+- x: **5…7**
+- y: **4…6**
+- Nearest point to the origin: **(5,4)**.
+
+Therefore:
+
+\[
+r_{\min}=\sqrt{5^2+4^2}=\sqrt{41}=6.403\text{ mm}
+\]
+
+**Nominal radial clearance: 0.403 mm.** All four mirrored shoes are wholly outside radius 6 and bear the board’s corner regions.
+
+However, these faces extend exactly to the nominal PCB edges. A more tolerant starting shoe is **1.6 × 1.6 mm**, with the same centres:
+
+- Upper-right face: `x = 5.2…6.8`, `y = 4.2…5.8`.
+- Minimum radius: `√44.68 = 6.684 mm`.
+- Bore clearance: **0.684 mm**.
+- Nominal PCB-edge inset: **0.2 mm**.
+
+**Recommendation:** start with the 1.6 mm faces, subject to board inspection. Their smaller bearing area and resulting contact pressure need testing.
+
+### Independent supports connected outside the aperture
+
+A concrete base layout:
+
+- Continuous perimeter frame: **inner radius 6.5 mm, outer radius 9 mm**.
+- Four separate upright shoe supports at `(±6,±5)`.
+- Each upright footprint: **1.6 × 1.6 mm**, matching the contact-face projection.
+- Each upright joins the perimeter frame beneath it.
+- No crossbar through the central aperture.
+- Side attachment lugs extend from the frame toward the existing slots at x = ±10.
+
+The corner-support footprint lies between approximately **r = 6.684 and 8.935 mm**, so it fits entirely on this nominal annular frame. This provides a direct load path:
+
+**PCB corner → shoe → individual upright → outer frame → slot clamps → carrier.**
+
+The 6.5 mm inner radius gives **0.5 mm nominal radial clearance** to the existing bore. Include fillets, shoe latches, screw tips and print compensation in that keep-out—not just the principal solids.
+
+### Positive removable attachment
+
+Use the existing microphone slots, **not the four bolts at `(±10,±10)`**:
+
+- Clamp screw axes: **`(−10,0)` and `(10,0)`**.
+- Candidate screws: **M1.6**, because the slots are only 2 mm nominally wide; verify printed clearance.
+- Each screw clamps an adapter lug to a **separate threaded backing bar below the slot**.
+- Candidate backing-bar footprint: **4 mm in x × 6 mm in y**, centred on its slot.
+- Add an underside locating tongue on each lug, nominally **1.6 × 5.5 mm**, entering the slot to resist shear and rotation.
+
+These are **preassembled backing bars**, not assumed quarter-turn nuts: carrier removal may be necessary to install them. Both backing bars and their screw ends must clear the installed acoustic face. If they do not, this attachment is not approved without a clearance change.
+
+**Do not use the existing shallow tail escapes as if they were captive-nut pockets.**
+
+---
+
+## 2. SHT: one carrier-specific base, two interchangeable contact sets
+
+Existing geometry:
+
+- Carrier: **32 × 32 × 3 mm**.
+- Air opening: **`x,y = −8…8`**.
+- Slots: x = ±12, each **3 × 12 mm**.
+- Existing attachment bolts: **`(0,±12)`**.
+
+References: `build_revision.py:213–218`.
+
+### Base and attachment
+
+Use a **U-shaped peripheral base**, leaving the bolt/tool corridors at `(0,±12)` open:
+
+- Left spine: `x = −14…−10`, `y = −8…8`.
+- Right spine: `x = 10…14`, `y = −8…8`.
+- Connecting crossmember: `x = −14…14`, `y = 8.5…10.5`.
+- Central opening remains unbridged at base level.
+
+Positive attachment:
+
+- Screw axes: **`(±12,0)`**, through the existing slots.
+- Candidate **M2 screws** with separate threaded backing bars.
+- Candidate backing bars: **5 mm in x × 10 mm in y**.
+- Locating tongues: approximately **2.5 × 9 mm**, fitted to the measured printed slots.
+
+The crossmember ends at y = 10.5, only **1.5 mm** from the upper existing bolt axis at y = 12. Therefore provide a **local clearance scallop centred at `(0,12)`**, sized to the measured head/washer **and driver envelope**. Do not approve it based on screw-shank clearance alone.
+
+### Interchangeable board-contact sets
+
+For each board, use four individually replaceable shoes or two replaceable outrigger assemblies carrying four shoes.
+
+**12 × 12 mm SHT board**
+
+- Board bounds: `x,y = ±6`.
+- Shoe centres: **`(±5,±5)`**.
+- Contact faces: **1.6 × 1.6 mm**.
+- Upper-right contact footprint: `4.2…5.8` in both axes.
+
+These contacts lie **inside the carrier’s 16 × 16 mm air opening**. Consequently, they require **raised inward cantilevers** from the peripheral base. Unlike the microphone solution, this layout cannot claim that all support material stays outside the existing aperture.
+
+**25.5 × 17.7 mm SHT board**
+
+- Board bounds: x = ±12.75, y = ±8.85.
+- Shoe centres: **`(±11.5,±7.6)`**.
+- Contact faces: **1.6 × 1.6 mm**.
+- Upper-right footprint: x = `10.7…12.3`, y = `6.8…8.4`.
+- Nominal outer-edge margins: **0.45 mm** in both axes.
+
+Those contacts sit outside the central opening in x and can be supported from the side spines without an inward bridge across the opening.
+
+For both variants, support elevation must be selected from measured underside protrusions and installed hardware—not a guessed universal stand-off height.
+
+---
+
+## 3. Interchangeable shoes and board retention
+
+**Make interchangeability mechanically captured:**
+
+- Each shoe slides into a keyed/dovetail receiver.
+- A removable end stop or small screw **outside the PCB footprint** prevents withdrawal.
+- Do not rely solely on a friction-fit cap or adhesive pad.
+- Keep the microphone’s receivers and stops outside its aperture keep-out.
+
+Separately retain the PCB using removable corner clips or an inspected-position strap. The shoes carry downward load; retention prevents lift and lateral escape. Clips must not press unknown components, obstruct the microphone inlet, or cover the SHT sensing region.
+
+## Required checks before accepting replacement coupons
+
+- Actual PCB dimensions, corner shapes and underside contact-zone inspection.
+- Full installed fastener, backing-bar and driver-envelope interference checks.
+- Printed slot fit and minimum remaining section around the microphone escapes.
+- Coplanarity of all four shoes; avoid rocking or preload-induced PCB bending.
+- Retention and vibration tests, including removal/reinstallation.
+- Microphone inlet alignment and comparative acoustic test.
+- SHT airflow/exposure and response check.
+
+**Bottom line:** four corner supports at `(±6,±5)` are geometrically valid for the nominal 14 × 12 microphone board. A finite **1.6 × 1.6 mm** contact footprint provides **0.684 mm nominal clearance** to radius 6, and an outside-aperture perimeter frame can connect all four supports. That is a sound geometric replacement direction—not proof of safe underside contact or completed fit.

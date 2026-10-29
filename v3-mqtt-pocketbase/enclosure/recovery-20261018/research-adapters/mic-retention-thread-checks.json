@@ -1,0 +1,257 @@
+{
+  "blender_version": "4.0.2",
+  "status": "nominal geometry only; physical retention NOT qualified",
+  "cord_assumption": "0.5 mm round polyester lacing cord purchasing family; unmeasured, no vendor research",
+  "scene_mesh_count_checked": 48,
+  "original_scene_geometry_unchanged": true,
+  "loops": [
+    {
+      "side": "left",
+      "x_sign": -1,
+      "closed_loop_local_mm": [
+        [
+          -9.2,
+          -5.25,
+          9.5
+        ],
+        [
+          -5.1,
+          -5.25,
+          9.5
+        ],
+        [
+          -5.1,
+          -6.65,
+          9.5
+        ],
+        [
+          -5.1,
+          -6.65,
+          13.0
+        ],
+        [
+          -6.65,
+          -6.65,
+          13.0
+        ],
+        [
+          -6.65,
+          6.65,
+          13.0
+        ],
+        [
+          -5.1,
+          6.65,
+          13.0
+        ],
+        [
+          -5.1,
+          6.65,
+          9.5
+        ],
+        [
+          -5.1,
+          5.25,
+          9.5
+        ],
+        [
+          -9.2,
+          5.25,
+          9.5
+        ]
+      ],
+      "swept_radius_mm": 0.25,
+      "knot_tail_envelope_radius_mm": 0.9,
+      "collision_hits": [],
+      "pass": true
+    },
+    {
+      "side": "left",
+      "x_sign": 1,
+      "closed_loop_local_mm": [
+        [
+          9.2,
+          -5.25,
+          9.5
+        ],
+        [
+          5.1,
+          -5.25,
+          9.5
+        ],
+        [
+          5.1,
+          -6.65,
+          9.5
+        ],
+        [
+          5.1,
+          -6.65,
+          13.0
+        ],
+        [
+          6.65,
+          -6.65,
+          13.0
+        ],
+        [
+          6.65,
+          6.65,
+          13.0
+        ],
+        [
+          5.1,
+          6.65,
+          13.0
+        ],
+        [
+          5.1,
+          6.65,
+          9.5
+        ],
+        [
+          5.1,
+          5.25,
+          9.5
+        ],
+        [
+          9.2,
+          5.25,
+          9.5
+        ]
+      ],
+      "swept_radius_mm": 0.25,
+      "knot_tail_envelope_radius_mm": 0.9,
+      "collision_hits": [],
+      "pass": true
+    },
+    {
+      "side": "right",
+      "x_sign": -1,
+      "closed_loop_local_mm": [
+        [
+          -9.2,
+          -5.25,
+          9.5
+        ],
+        [
+          -5.1,
+          -5.25,
+          9.5
+        ],
+        [
+          -5.1,
+          -6.65,
+          9.5
+        ],
+        [
+          -5.1,
+          -6.65,
+          13.0
+        ],
+        [
+          -6.65,
+          -6.65,
+          13.0
+        ],
+        [
+          -6.65,
+          6.65,
+          13.0
+        ],
+        [
+          -5.1,
+          6.65,
+          13.0
+        ],
+        [
+          -5.1,
+          6.65,
+          9.5
+        ],
+        [
+          -5.1,
+          5.25,
+          9.5
+        ],
+        [
+          -9.2,
+          5.25,
+          9.5
+        ]
+      ],
+      "swept_radius_mm": 0.25,
+      "knot_tail_envelope_radius_mm": 0.9,
+      "collision_hits": [],
+      "pass": true
+    },
+    {
+      "side": "right",
+      "x_sign": 1,
+      "closed_loop_local_mm": [
+        [
+          9.2,
+          -5.25,
+          9.5
+        ],
+        [
+          5.1,
+          -5.25,
+          9.5
+        ],
+        [
+          5.1,
+          -6.65,
+          9.5
+        ],
+        [
+          5.1,
+          -6.65,
+          13.0
+        ],
+        [
+          6.65,
+          -6.65,
+          13.0
+        ],
+        [
+          6.65,
+          6.65,
+          13.0
+        ],
+        [
+          5.1,
+          6.65,
+          13.0
+        ],
+        [
+          5.1,
+          6.65,
+          9.5
+        ],
+        [
+          5.1,
+          5.25,
+          9.5
+        ],
+        [
+          9.2,
+          5.25,
+          9.5
+        ]
+      ],
+      "swept_radius_mm": 0.25,
+      "knot_tail_envelope_radius_mm": 0.9,
+      "collision_hits": [],
+      "pass": true
+    }
+  ],
+  "pass": true,
+  "method": "32-sided swept cylinders plus spherical bend envelopes; exact Boolean volume against every combined-scene mesh, nominal solid PCB and radius-6.3 full-depth sound keepout; 1e-5 mm3 reporting threshold",
+  "limitations": [
+    "No component, copper, solder or actual board measurements supplied",
+    "No knot security, tension, abrasion, creep, vibration or acoustic testing",
+    "No assembly insertion-motion or cord self-collision qualification",
+    "Knot/tail sphere is a reserved maximum, not a simulated tied knot"
+  ]
+}

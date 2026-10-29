@@ -1,0 +1,85 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead . [90m[offset=1, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead build_combined_research_scene.py [90m[offset=1, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead check_combined_research_scene.py [90m[offset=1, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "spine|slot" [90min build_revision.py · 16 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead build_revision.py [90m[offset=190, limit=85][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "mounting_spine|transform_apply|def finish" [90min build_revision.py · 6 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead research-adapters/combined-research-checks.json [90m[offset=1, limit=35][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "mounting_spine|location|rotation" [90min render_assembled.py · 23 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead build_revision.py [90m[offset=28, limit=55][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m⚙ [0mexecute {"code":"return search({query:'blender execute python',limit:2});"} 
+> reviewer · cx/gpt-6.1-sol-review
+[0m⚙ [0mexecute {"code":"return search({query:'terminal command',limit:2});"} 
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead research-adapters/combined-research-inventory.json [90m[offset=95, limit=60][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m⚙ [0mexecute {"code":"return tools[\"blender-mcp\"].execute_blender_code({code:\"import struct, pathlib\\np=pathlib.Path('/home/solrahk/pig-health-monitor/v3-mqtt-pocketbase/enclosure/recovery-20261018/research-adapters/research_spine_tray_access.stl')\\nb=p.read_bytes(); n=struct.unpack_from('<I',b,80)[0]; vs=[struct.unpack_from('<3f',b,84+i*50+12+j*12) for i in range(n) for j in range(3)]\\nresult={'triangles':n,'bounds':[(min(v[k] for v in vs),max(v[k] for v in vs)) for k in range(3)],'near_slot':sorted(set(tuple(round(t,4) for t in v) for v in vs if 10<v[0]<21 and 20<v[1]<50))[:160]}\"});"} 
+> reviewer · cx/gpt-6.1-sol-review
+[0m⚙ [0mexecute {"code":"return tools[\"blender-mcp\"].execute_blender_code({code:\"import struct,pathlib,collections\\nb=pathlib.Path('/home/solrahk/pig-health-monitor/v3-mqtt-pocketbase/enclosure/recovery-20261018/research-adapters/research_spine_tray_access.stl').read_bytes();n=struct.unpack_from('<I',b,80)[0];vs=[struct.unpack_from('<3f',b,84+i*50+12+j*12) for i in range(n) for j in range(3)]\\nresult={'slot_vertices':sorted(set(tuple(round(t,3) for t in v) for v in vs if 19.9<=v[0]<=20.1 and 0<v[1]<60))}\"});"} 
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead build_mic_corner_support.py [90m[offset=1, limit=180][0m
+> reviewer · cx/gpt-6.1-sol-review
+## Findings — severity order
+
+### 1. Medium — Spine acceptance still has no ligament/strap-load check
+**References:** `build_combined_research_scene.py:32–43`; `check_combined_research_scene.py:112–130`
+
+The repaired spine is accepted on manifoldness, connected-island count and positive volume only. Those conditions do not establish that material between an access bore, a strap slot and the outside edge can carry strap tension or mounting loads.
+
+Importantly, **I did not find evidence that the current access holes actually break into the strap slots**. Reading the current exported STL—not just the original generator—gives:
+
+- Spine bounds: **48 × 196 × 5 mm**, with manufacturing Z **0–5 mm**.
+- Access bores: centers **(±15, ±25)**, radius **3.8 mm**.
+- Adjacent strap slots: approximately X **16–20 mm**, longitudinal extent **37.5–52.5 mm**, mirrored.
+- Bore-to-slot longitudinal separation is at least **8.7 mm** before accounting for the slot’s slight edge relief.
+- Bore-to-side-edge separation is **5.2 mm**.
+- The slot’s outboard retaining rail is nominally **4 mm**, slightly reduced at its relieved surfaces.
+
+Thus, calling this a newly created “near-zero ligament” would be unsupported. The concrete remaining gap is that the checker cannot reject an unsafe ligament if later changes enlarge or move these holes. The **4 mm slot rail** is also a separate load-bearing feature that the topology check does not qualify.
+
+**Missing test:** explicit minimum material distances around bores/slots, plus a stated strap-load/material/print-orientation acceptance criterion. No physical strength conclusion follows from the existing pass.
+
+### 2. Medium — Export reproducibility is not covered by the combined acceptance gate
+**References:** `build_combined_research_scene.py:47–57`; `check_combined_research_scene.py:9–11,112–130`
+
+The checker tests the spine inside the saved `.blend`; it never reads `research_spine_tray_access.stl`. Therefore its pass does not detect an outdated, missing, incorrectly transformed or otherwise divergent manufacturing export.
+
+**The current export itself is not showing the previous coordinate problem:** its measured bounds are **X −24…24, Y −98…98, Z 0…5 mm**. Clearing the detached copy’s world matrix is consistent with the intended manufacturing coordinates here. I would not flag that repair as currently broken.
+
+The remaining reproducibility defect is the absent round-trip assertion: there is no check that reinstalling the exported STL with the recorded spine transform reproduces the checked installed geometry, including the four access bores.
+
+**Missing test:** read the exported STL independently, validate manufacturing bounds and bore positions, and compare its transformed geometry with the installed spine. Tie that result to the overall pass.
+
+### 3. Low — Missing inventory can abort before the inventory gate reports it
+**Reference:** `check_combined_research_scene.py:10–16`
+
+`parts=[bpy.data.objects[n] for n in names]` runs before missing/unexpected inventory is evaluated. A genuinely deleted expected object raises `KeyError`, so the checker cannot produce its intended missing-inventory report or overwrite an existing results JSON.
+
+This is fail-closed at process level, **not a false passing execution**, but a previously generated `"pass": true` report can remain on disk after the failed run.
+
+**Missing test:** remove an expected object and verify a fresh, explicit failing report is emitted rather than leaving the previous report as the only artifact.
+
+## Repairs that should not be re-reported as unresolved
+
+The latest source now includes:
+
+- Actual visible printed-inventory comparison in the overall pass.
+- Separate shaft, rear-head, rear-driver and nut/washer envelope checks.
+- Finite **1.5 × 1.5 mm** microphone corner-bearing witnesses, rather than point-only contact.
+- Multiple tunnel rays across width and height.
+- Explicit limitations on purchased hardware and retention assumptions.
+
+The tunnel rays still establish **sampled straight clearance**, not a swept tie/head/bend envelope (`check_combined_research_scene.py:100–108`); that limitation is already acknowledged by `build_mic_corner_support.py:49–52`, so I would not present it as a newly discovered physical interference.
+
+**Bottom line:** I found remaining acceptance/reproducibility defects, but **no demonstrated current bore-to-slot breakthrough or current STL coordinate shift**. The existing `"pass": true` is a geometric candidate check, not structural or actual-hardware approval. No files were modified and no subagents were used.

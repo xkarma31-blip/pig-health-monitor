@@ -1,0 +1,178 @@
+{
+  "assumptions": "Centered point pupil,roof-normal axis,ideal110x75degree rectilinear cone; hood,cradle,separator,tub in common construction frame. Counts are part-ray intersections,not unique rays. Setback values exploratory,not measured sensor positions.",
+  "results": [
+    {
+      "ideal_axis_setback_mm": 5,
+      "rays": 441,
+      "blocked_count": 0,
+      "unique_blocked_rays": 0,
+      "part_intersections": {
+        "thermal_angled_hood": 0,
+        "thermal_raised_cradle": 0,
+        "thermal_face": 0,
+        "thermal_tub": 0
+      },
+      "example_hits": []
+    },
+    {
+      "ideal_axis_setback_mm": 9.5,
+      "rays": 441,
+      "blocked_count": 0,
+      "unique_blocked_rays": 0,
+      "part_intersections": {
+        "thermal_angled_hood": 0,
+        "thermal_raised_cradle": 0,
+        "thermal_face": 0,
+        "thermal_tub": 0
+      },
+      "example_hits": []
+    },
+    {
+      "ideal_axis_setback_mm": 12,
+      "rays": 441,
+      "blocked_count": 0,
+      "unique_blocked_rays": 0,
+      "part_intersections": {
+        "thermal_angled_hood": 0,
+        "thermal_raised_cradle": 0,
+        "thermal_face": 0,
+        "thermal_tub": 0
+      },
+      "example_hits": []
+    },
+    {
+      "ideal_axis_setback_mm": 16,
+      "rays": 441,
+      "blocked_count": 0,
+      "unique_blocked_rays": 0,
+      "part_intersections": {
+        "thermal_angled_hood": 0,
+        "thermal_raised_cradle": 0,
+        "thermal_face": 0,
+        "thermal_tub": 0
+      },
+      "example_hits": []
+    },
+    {
+      "ideal_axis_setback_mm": 22,
+      "rays": 441,
+      "blocked_count": 237,
+      "unique_blocked_rays": 216,
+      "part_intersections": {
+        "thermal_angled_hood": 216,
+        "thermal_raised_cradle": 21,
+        "thermal_face": 0,
+        "thermal_tub": 0
+      },
+      "example_hits": [
+        {
+          "sample": [
+            0,
+            0
+          ],
+          "part": "thermal_angled_hood",
+          "hit_mm": [
+            -27.280799865722656,
+            14.908203125,
+            16.994640350341797
+          ]
+        },
+        {
+          "sample": [
+            0,
+            0
+          ],
+          "part": "thermal_raised_cradle",
+          "hit_mm": [
+            -19.619333267211914,
+            12.320515632629395,
+            10.747410774230957
+          ]
+        },
+        {
+          "sample": [
+            0,
+            1
+          ],
+          "part": "thermal_angled_hood",
+          "hit_mm": [
+            -27.28080940246582,
+            13.492385864257812,
+            16.615280151367188
+          ]
+        },
+        {
+          "sample": [
+            0,
+            2
+          ],
+          "part": "thermal_angled_hood",
+          "hit_mm": [
+            -27.28079605102539,
+            12.076560974121094,
+            16.23590087890625
+          ]
+        },
+        {
+          "sample": [
+            0,
+            3
+          ],
+          "part": "thermal_angled_hood",
+          "hit_mm": [
+            -27.280807495117188,
+            10.660743713378906,
+            15.856538772583008
+          ]
+        },
+        {
+          "sample": [
+            0,
+            4
+          ],
+          "part": "thermal_angled_hood",
+          "hit_mm": [
+            -27.280799865722656,
+            9.244921684265137,
+            15.477169036865234
+          ]
+        },
+        {
+          "sample": [
+            0,
+            5
+          ],
+          "part": "thermal_angled_hood",
+          "hit_mm": [
+            -27.280797958374023,
+            7.8291015625,
+            15.097797393798828
+          ]
+        },
+        {
+          "sample": [
+            0,
+            6
+          ],
+          "part": "thermal_angled_hood",
+          "hit_mm": [
+            -27.280803680419922,
+            6.413280963897705,
+            14.718435287475586
+          ]
+        }
+      ]
+    }
+  ],
+  "physical_fov_verified": false,
+  "provenance": {
+    "blender_version": "4.0.2",
+    "input_stl_sha256": {
+      "thermal_angled_hood": "10a79f3270e9c3dce5153311b4fb9ab0347b5ae139ae931b0e953363c1c19b9c",
+      "thermal_raised_cradle": "9d2cebe08c75bc8f4e752c05fb70079562e01cc88b2fab0fb4d1bf77564fed2d",
+      "thermal_face": "4ceadefe5bfd91dd54fe3c8aa9005f13ef3b9bb738ec906be17c304bdeabf671",
+      "thermal_tub": "ef5f2aa56b83c8cb7af040a7e7055b44766467e68dc6cc85f1e486b09ec1c2fa"
+    },
+    "controls": "Identity imports,orthonormal basis,mating Z planes,central aperture miss and off-aperture roof hit asserted"
+  }
+}

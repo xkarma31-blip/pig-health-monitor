@@ -1,0 +1,220 @@
+{
+  "status": "installed P exported geometry local audit; release candidate",
+  "ear_bounds_x_mm": [
+    -70,
+    -56
+  ],
+  "bore_x_mm": -65.5,
+  "bore_y_mm": [
+    -32,
+    32
+  ],
+  "tub_ear_depth_mm": [
+    26,
+    30
+  ],
+  "lid_ear_depth_mm": [
+    0,
+    3
+  ],
+  "checks": [
+    {
+      "part": "main_tub",
+      "connected_components": 1,
+      "nonmanifold_edges": 0,
+      "volume_mm3": 81288.78288548462
+    },
+    {
+      "part": "main_lid",
+      "connected_components": 1,
+      "nonmanifold_edges": 0,
+      "volume_mm3": 40928.13276500124
+    }
+  ],
+  "sampled_lid_lift": [
+    {
+      "lift_mm": 0,
+      "intersection_mm3": 0.0
+    },
+    {
+      "lift_mm": 0.05,
+      "intersection_mm3": 0.0
+    },
+    {
+      "lift_mm": 0.5,
+      "intersection_mm3": 0.0
+    },
+    {
+      "lift_mm": 2,
+      "intersection_mm3": 0.0
+    },
+    {
+      "lift_mm": 5,
+      "intersection_mm3": 0.0
+    },
+    {
+      "lift_mm": 15,
+      "intersection_mm3": 0.0
+    },
+    {
+      "lift_mm": 35,
+      "intersection_mm3": 0.0
+    }
+  ],
+  "assumed_hardware_envelopes": [
+    {
+      "station_y_mm": -32,
+      "role": "head",
+      "radius_mm": 3,
+      "depth_range_mm": [
+        33,
+        35.4
+      ],
+      "intersection_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0
+      }
+    },
+    {
+      "station_y_mm": -32,
+      "role": "nut",
+      "radius_mm": 3.5,
+      "depth_range_mm": [
+        23,
+        26
+      ],
+      "intersection_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0
+      }
+    },
+    {
+      "station_y_mm": -32,
+      "role": "driver",
+      "radius_mm": 3.5,
+      "depth_range_mm": [
+        35.4,
+        65.4
+      ],
+      "intersection_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0
+      }
+    },
+    {
+      "station_y_mm": 32,
+      "role": "head",
+      "radius_mm": 3,
+      "depth_range_mm": [
+        33,
+        35.4
+      ],
+      "intersection_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0
+      }
+    },
+    {
+      "station_y_mm": 32,
+      "role": "nut",
+      "radius_mm": 3.5,
+      "depth_range_mm": [
+        23,
+        26
+      ],
+      "intersection_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0
+      }
+    },
+    {
+      "station_y_mm": 32,
+      "role": "driver",
+      "radius_mm": 3.5,
+      "depth_range_mm": [
+        35.4,
+        65.4
+      ],
+      "intersection_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0
+      }
+    }
+  ],
+  "aligned_shaft_probes": [
+    {
+      "station_y_mm": -32,
+      "shaft_radius_mm": 1.5,
+      "intersection_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0
+      }
+    },
+    {
+      "station_y_mm": 32,
+      "shaft_radius_mm": 1.5,
+      "intersection_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0
+      }
+    }
+  ],
+  "bearing_seats": [
+    {
+      "part": "main_tub",
+      "station_y_mm": -32,
+      "outer_radius_mm": 3.5,
+      "samples": 96,
+      "pass": true
+    },
+    {
+      "part": "main_lid",
+      "station_y_mm": -32,
+      "outer_radius_mm": 3,
+      "samples": 96,
+      "pass": true
+    },
+    {
+      "part": "main_tub",
+      "station_y_mm": 32,
+      "outer_radius_mm": 3.5,
+      "samples": 96,
+      "pass": true
+    },
+    {
+      "part": "main_lid",
+      "station_y_mm": 32,
+      "outer_radius_mm": 3,
+      "samples": 96,
+      "pass": true
+    }
+  ],
+  "boolean_controls": [
+    {
+      "translation_mm": 1,
+      "expected_mm3": 4,
+      "measured_mm3": 3.9999999999999996,
+      "pass": true
+    },
+    {
+      "translation_mm": 5,
+      "expected_mm3": 0,
+      "measured_mm3": 0.0,
+      "pass": true
+    }
+  ],
+  "input_sha256": {
+    "main_tub": "f5152219d6976f380e1860400caf44d4a8bfeff5d35b1870740ea9d78c8efc12",
+    "main_lid": "3de0b601957fe48420371434df05db1afa5def114d90df4b79f86dd3aaf56550"
+  },
+  "output_sha256": {
+    "main_tub": "f5152219d6976f380e1860400caf44d4a8bfeff5d35b1870740ea9d78c8efc12",
+    "main_lid": "3de0b601957fe48420371434df05db1afa5def114d90df4b79f86dd3aaf56550"
+  },
+  "limitations": [
+    "No load or print fit test",
+    "No sealing claim",
+    "Hardware envelopes assumed; no full installed assembly audit",
+    "Visible side-boss function in poster unknown"
+  ]
+}

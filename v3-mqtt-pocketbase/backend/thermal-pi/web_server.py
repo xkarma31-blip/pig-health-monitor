@@ -74,6 +74,14 @@ _read_ms = 0
 _fps_ema = 0.0
 _last_t = 0.0
 _last_error = "starting"
+
+# The technician console is an OPTIONAL, additive module. These two
+# module-level names are the contract between main() (which decides whether
+# the console could be imported) and Handler._admin() (which serves /admin).
+# They MUST live at module scope: a Handler can run before, during or after
+# main()'s import attempt, and a function-local would be invisible to it.
+admin_console = None
+_console_error: str | None = None
 _cached: dict | None = None
 _publisher = thermal_publish.ThermalPublisher()
 
@@ -96,6 +104,34 @@ def i2c_addrs_cached() -> str:
     except Exception as e:  # missing bus, permissions, bus wedged
         text = f"scan error: {e}"
     _i2c_cache = (now, text)
+    return text
+
+
+I2C_PROBE_BUSES = ("/dev/i2c-1", "/dev/i2c-0")
+_i2c_probe_cache = None
+
+
+def i2c_probe_all_cached() -> str:
+    """Scan every I2C bus, not just the configured one.
+
+    A sensor wired to i2c-0 (GPIO0/1, header pins 27/28) instead of i2c-1
+    (GPIO2/3, pins 3/5) produces a permanent Errno 121 on the configured bus
+    while a single-bus scan reports "(none)" and never reveals where the device
+    actually is. This answers that in one hit.
+    """
+    global _i2c_probe_cache
+    now = time.monotonic()
+    if _i2c_probe_cache and now - _i2c_probe_cache[0] < I2C_SCAN_TTL_S:
+        return _i2c_probe_cache[1]
+    parts = []
+    for bus in I2C_PROBE_BUSES:
+        try:
+            addrs = i2c_scanDiag.scan_bus(bus)
+            parts.append(f"{bus}=" + (" ".join(f"0x{a:02X}" for a in addrs) or "-"))
+        except Exception as e:  # absent bus, no permission, wedged
+            parts.append(f"{bus}=({type(e).__name__})")
+    text = " ".join(parts)
+    _i2c_probe_cache = (now, text)
     return text
 
 
@@ -322,12 +358,14 @@ class Handler(BaseHTTPRequestHandler):
                 f"Address: 0x{config.MLX90640_ADDR:02X}",
                 f"Emissivity: {config.EMISSIVITY}",
                 f"Frame age s: {_reader.frame_age_s():.1f}",
-                f"I2C addrs: {addr_s}",
+                f"I2C addrs (configured bus): {addr_s}",
+                f"I2C all buses: {i2c_probe_all_cached()}",
                 f"Network mode: {net_mode}",
                 f"Local IPv4: {', '.join(local_ips) or 'unknown'}",
                 f"Dashboard URL: {url_hint}",
                 f"ESP32-S3 mic: {esp_state}",
                 f"Thermal MQTT: {_publisher.status()}",
+                "",
                 f"Last error: {_last_error}",
             ]
             self._send(200, "text/plain; charset=utf-8", ("\n".join(lines) + "\n").encode())
@@ -358,7 +396,26 @@ class Handler(BaseHTTPRequestHandler):
         self._send(404, "text/plain", b"Not found")
 
     def _admin(self, path: str, query: dict) -> None:
-        import admin_console
+        # 2026-09-30: this import was OUTSIDE the try block below, so a
+        # missing admin_console.py raised straight out of do_GET and killed
+        # the connection with a traceback. Now it degrades to a 503 that
+        # names the actual cause, so "no console" can never be mistaken for
+        # "no sensor data" and the thermal tier keeps serving.
+        if admin_console is None:
+            self._send(
+                503,
+                "text/plain; charset=utf-8",
+                (
+                    "The technician console is not available on this device.\n\n"
+                    f"Reason: {_console_error or 'admin_console unavailable'}\n\n"
+                    "This does NOT affect sensor data. /data, /health, the\n"
+                    "ESP :9090 ingest and MQTT publishing are all still live.\n"
+                    "To restore /admin, deploy admin_console.py next to\n"
+                    "web_server.py in /home/pigpulse/thermal-pi/ and restart\n"
+                    "pigpulse-thermal.service.\n"
+                ).encode(),
+            )
+            return
 
         c = admin_console.ctx()
         if path.startswith("/admin/api/"):
@@ -372,8 +429,8 @@ class Handler(BaseHTTPRequestHandler):
             self._send(code, "application/json", body)
             return
 
-        # /admin  ->  Overview; everything else is a page shell from static/admin/
-        rel = "index.html" if path == "/admin" else path[len("/admin/"):]
+        # /admin/  ->  Overview; everything else is a page shell from static/admin/
+        rel = "index.html" if path in ("/admin", "/admin/") else path[len("/admin/"):]
         if not rel or ".." in rel or rel.startswith("/") or "\\" in rel:
             self._send(404, "text/plain", b"Not found")
             return
@@ -554,7 +611,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
-    global _cached
+    global _cached, admin_console, _console_error
     ap = argparse.ArgumentParser(description="PigPulse MLX90640 web (Pi 4B)")
     ap.add_argument("--host", default=config.WEB_HOST)
     ap.add_argument("--port", type=int, default=config.WEB_PORT)
@@ -590,9 +647,43 @@ def main() -> None:
         print(json.dumps(reading, indent=2))
         return
 
-    import admin_console
-    ctx = admin_console.configure(args.dev_source)
-    dev_root: Path | None = ctx.dev_source
+    # The technician console is OPTIONAL. It must never be able to take down
+    # the sensor tier.
+    #
+    # 2026-09-30: this was a bare `import admin_console`, unconditional. The
+    # SD card carried a web_server.py that imported it but did NOT ship the
+    # file, so the process died with ModuleNotFoundError at startup, hit
+    # Restart=on-failure / RestartSec=5, and crash-looped forever -- taking
+    # the MLX90640 loop, the ESP :9090 ingest and the MQTT publisher down
+    # with it. The dashboard, the alarm path and the whole barn monitoring
+    # product died because a read-only console module was absent.
+    #
+    # /admin now degrades to 503 instead. Missing console == no admin UI,
+    # never "no sensor data".
+    # Module-scope globals (declared at line ~77 and rebound here via the
+    # `global` statement) -- do NOT re-annotate, Python forbids an annotated
+    # global declaration.
+    admin_console = None
+    _console_error = None
+    try:
+        import admin_console as _admin_console_mod
+
+        admin_console = _admin_console_mod
+        ctx = admin_console.configure(args.dev_source)
+    except ModuleNotFoundError as exc:
+        _console_error = f"admin_console not importable: {exc}"
+        print(f"[web] WARNING: {_console_error}", flush=True)
+        print("[web] continuing WITHOUT /admin console -- sensors, ESP "
+              "ingest and MQTT publishing are unaffected", flush=True)
+        print("[web] fix by deploying admin_console.py alongside "
+              "web_server.py to /home/pigpulse/thermal-pi/", flush=True)
+    except Exception as exc:  # noqa: BLE001 - console must never be fatal
+        _console_error = f"admin_console failed to configure: {exc}"
+        print(f"[web] WARNING: {_console_error}", flush=True)
+
+    dev_root: Path | None = getattr(
+        getattr(admin_console, "ctx", lambda: None)(), "dev_source", None
+    ) if admin_console is not None else None
     if dev_root is not None:
         print(f"[web] DEV-SNAPSHOT mode: console data source = {dev_root}")
         if not dev_root.is_dir():
@@ -620,7 +711,6 @@ def main() -> None:
                 break
             time.sleep(0.1)
 
-    httpd = ThreadingHTTPServer((args.host, args.port), Handler)
     tls_cert = getattr(config, "TLS_CERT", "")
     tls_key = getattr(config, "TLS_KEY", "")
     if tls_cert and tls_key and Path(tls_cert).is_file():
@@ -628,9 +718,11 @@ def main() -> None:
         ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         ctx.minimum_version = ssl.TLSVersion.TLSv1_2
         ctx.load_cert_chain(tls_cert, tls_key)
-        httpd.socket = ctx.wrap_socket(httpd.socket, server_side=True)
+        from tls_server import ThreadedTLSServer
+        httpd = ThreadedTLSServer((args.host, args.port), Handler, ctx)
         print(f"[web] HTTPS on https://{args.host}:{args.port}/  (Ctrl+C to stop)")
     else:
+        httpd = ThreadingHTTPServer((args.host, args.port), Handler)
         print(f"[web] http://{args.host}:{args.port}/  (TLS_CERT unset)")
     try:
         httpd.serve_forever()

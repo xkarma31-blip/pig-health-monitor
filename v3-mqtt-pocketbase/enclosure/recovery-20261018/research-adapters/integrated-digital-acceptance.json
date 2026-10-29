@@ -1,0 +1,16 @@
+{
+  "pass": true,
+  "gates": {
+    "thermal": true,
+    "combined": true,
+    "printed_quantity": true,
+    "manufacturing_contract": true,
+    "regression_controls": true,
+    "cord_scenario": true,
+    "selected_wire_routes": true,
+    "left_mic": true,
+    "right_mic": true
+  },
+  "scope": "Research-dimensioned digital prototype; no physical fit, IP, load or sensor-performance certification",
+  "original_poster_sha256": "023d26a14c579d38401fee80d479b10d36004891dff9fdcba4fb7f281399102f"
+}

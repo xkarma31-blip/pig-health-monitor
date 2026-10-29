@@ -349,6 +349,7 @@ function pill(id, ok, text) {
 let cctvDown = false;
 function cctvOk() {
   cctvDown = false;
+  if (cctv._retrying) { clearInterval(cctv._retrying); cctv._retrying = null; }
   document.getElementById('cctvOffline').style.display = 'none';
   document.getElementById('cctv').style.visibility = 'visible';
   pill('cctvPill', true, 'CCTV live');
@@ -358,6 +359,13 @@ function cctvFail() {
   document.getElementById('cctvOffline').style.display = 'grid';
   document.getElementById('cctv').style.visibility = 'hidden';
   pill('cctvPill', false, 'CCTV offline');
+  // Auto-reconnect: a dropped MJPEG (service restart, wifi hiccup) used to
+  // freeze the last frame forever. Retry every 3 s until load fires again.
+  if (!cctv._retrying) {
+    cctv._retrying = setInterval(() => {
+      cctv.src = '/cctv?ts=' + Date.now();
+    }, 3000);
+  }
 }
 cctv.addEventListener('load', () => {
   if (!cctv.naturalWidth) return cctvFail();

@@ -1,0 +1,807 @@
+{
+  "pass": true,
+  "installed_printed_instances": 20,
+  "inventory_check": {
+    "expected": [
+      "acoustic_face",
+      "acoustic_trim",
+      "acoustic_trim.001",
+      "acoustic_tub",
+      "electronics_strap_tray",
+      "main_lid",
+      "main_tub",
+      "microphone_strap_carrier",
+      "microphone_strap_carrier.001",
+      "mounting_spine",
+      "sht_adjustable_carrier",
+      "sht_mount_arm",
+      "thermal_angled_hood",
+      "thermal_face",
+      "thermal_raised_cradle",
+      "thermal_tub",
+      "tray_spacer_6mm.001",
+      "tray_spacer_6mm.002",
+      "tray_spacer_6mm.003",
+      "tray_spacer_6mm.004"
+    ],
+    "actual": [
+      "acoustic_face",
+      "acoustic_trim",
+      "acoustic_trim.001",
+      "acoustic_tub",
+      "electronics_strap_tray",
+      "main_lid",
+      "main_tub",
+      "microphone_strap_carrier",
+      "microphone_strap_carrier.001",
+      "mounting_spine",
+      "sht_adjustable_carrier",
+      "sht_mount_arm",
+      "thermal_angled_hood",
+      "thermal_face",
+      "thermal_raised_cradle",
+      "thermal_tub",
+      "tray_spacer_6mm.001",
+      "tray_spacer_6mm.002",
+      "tray_spacer_6mm.003",
+      "tray_spacer_6mm.004"
+    ],
+    "missing": [],
+    "unexpected": [],
+    "pass": true
+  },
+  "unchecked_component": [
+    "Actual PCB underside components, cable and tie bends remain unmeasured"
+  ],
+  "component_reservations": [
+    {
+      "label": "ESP chosen 30x24x20 envelope",
+      "printed_intersections_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "thermal_angled_hood": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "sht_adjustable_carrier": 0.0,
+        "electronics_strap_tray": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "acoustic_trim": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0
+      },
+      "pass": true
+    },
+    {
+      "label": "left mic nominal PCB",
+      "printed_intersections_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "thermal_angled_hood": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "sht_adjustable_carrier": 0.0,
+        "electronics_strap_tray": 0.0,
+        "microphone_strap_carrier": 6.973743438609681e-06,
+        "microphone_strap_carrier.001": 0.0,
+        "acoustic_trim": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0
+      },
+      "pass": true
+    },
+    {
+      "label": "right mic nominal PCB",
+      "printed_intersections_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "thermal_angled_hood": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "sht_adjustable_carrier": 0.0,
+        "electronics_strap_tray": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "microphone_strap_carrier.001": 6.973743438609681e-06,
+        "acoustic_trim": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0
+      },
+      "pass": true
+    },
+    {
+      "label": "SHT nominal PCB",
+      "printed_intersections_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "thermal_angled_hood": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "sht_adjustable_carrier": 0.0,
+        "electronics_strap_tray": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "acoustic_trim": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0
+      },
+      "pass": true
+    }
+  ],
+  "pair_count": 190,
+  "collisions": [],
+  "limits": [
+    "Printed-part geometry only; thermal remains P",
+    "No physical fit, cable routing or structural approval"
+  ],
+  "tray_head_driver_envelopes": [
+    {
+      "axis_mm": [
+        -15,
+        -25
+      ],
+      "role": "rear_head",
+      "assumed_radius_mm": 3.0,
+      "depth_interval_mm": [
+        -2.4,
+        0
+      ],
+      "printed_intersections_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "thermal_angled_hood": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "sht_adjustable_carrier": 0.0,
+        "electronics_strap_tray": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "acoustic_trim": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0
+      },
+      "pass": true
+    },
+    {
+      "axis_mm": [
+        -15,
+        -25
+      ],
+      "role": "rear_driver",
+      "assumed_radius_mm": 3.5,
+      "depth_interval_mm": [
+        -24,
+        -2.4
+      ],
+      "printed_intersections_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "thermal_angled_hood": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "sht_adjustable_carrier": 0.0,
+        "electronics_strap_tray": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "acoustic_trim": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0
+      },
+      "pass": true
+    },
+    {
+      "axis_mm": [
+        -15,
+        -25
+      ],
+      "role": "shaft",
+      "assumed_radius_mm": 1.5,
+      "depth_interval_mm": [
+        0,
+        14
+      ],
+      "printed_intersections_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "thermal_angled_hood": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "sht_adjustable_carrier": 0.0,
+        "electronics_strap_tray": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "acoustic_trim": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0
+      },
+      "pass": true
+    },
+    {
+      "axis_mm": [
+        -15,
+        -25
+      ],
+      "role": "nut_washer",
+      "assumed_radius_mm": 3.5,
+      "depth_interval_mm": [
+        9,
+        12.4
+      ],
+      "printed_intersections_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "thermal_angled_hood": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "sht_adjustable_carrier": 0.0,
+        "electronics_strap_tray": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "acoustic_trim": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0
+      },
+      "pass": true
+    },
+    {
+      "axis_mm": [
+        -15,
+        25
+      ],
+      "role": "rear_head",
+      "assumed_radius_mm": 3.0,
+      "depth_interval_mm": [
+        -2.4,
+        0
+      ],
+      "printed_intersections_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "thermal_angled_hood": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "sht_adjustable_carrier": 0.0,
+        "electronics_strap_tray": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "acoustic_trim": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0
+      },
+      "pass": true
+    },
+    {
+      "axis_mm": [
+        -15,
+        25
+      ],
+      "role": "rear_driver",
+      "assumed_radius_mm": 3.5,
+      "depth_interval_mm": [
+        -24,
+        -2.4
+      ],
+      "printed_intersections_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "thermal_angled_hood": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "sht_adjustable_carrier": 0.0,
+        "electronics_strap_tray": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "acoustic_trim": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0
+      },
+      "pass": true
+    },
+    {
+      "axis_mm": [
+        -15,
+        25
+      ],
+      "role": "shaft",
+      "assumed_radius_mm": 1.5,
+      "depth_interval_mm": [
+        0,
+        14
+      ],
+      "printed_intersections_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "thermal_angled_hood": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "sht_adjustable_carrier": 0.0,
+        "electronics_strap_tray": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "acoustic_trim": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0
+      },
+      "pass": true
+    },
+    {
+      "axis_mm": [
+        -15,
+        25
+      ],
+      "role": "nut_washer",
+      "assumed_radius_mm": 3.5,
+      "depth_interval_mm": [
+        9,
+        12.4
+      ],
+      "printed_intersections_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "thermal_angled_hood": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "sht_adjustable_carrier": 0.0,
+        "electronics_strap_tray": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "acoustic_trim": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0
+      },
+      "pass": true
+    },
+    {
+      "axis_mm": [
+        15,
+        -25
+      ],
+      "role": "rear_head",
+      "assumed_radius_mm": 3.0,
+      "depth_interval_mm": [
+        -2.4,
+        0
+      ],
+      "printed_intersections_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "thermal_angled_hood": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "sht_adjustable_carrier": 0.0,
+        "electronics_strap_tray": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "acoustic_trim": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0
+      },
+      "pass": true
+    },
+    {
+      "axis_mm": [
+        15,
+        -25
+      ],
+      "role": "rear_driver",
+      "assumed_radius_mm": 3.5,
+      "depth_interval_mm": [
+        -24,
+        -2.4
+      ],
+      "printed_intersections_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "thermal_angled_hood": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "sht_adjustable_carrier": 0.0,
+        "electronics_strap_tray": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "acoustic_trim": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0
+      },
+      "pass": true
+    },
+    {
+      "axis_mm": [
+        15,
+        -25
+      ],
+      "role": "shaft",
+      "assumed_radius_mm": 1.5,
+      "depth_interval_mm": [
+        0,
+        14
+      ],
+      "printed_intersections_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "thermal_angled_hood": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "sht_adjustable_carrier": 0.0,
+        "electronics_strap_tray": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "acoustic_trim": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0
+      },
+      "pass": true
+    },
+    {
+      "axis_mm": [
+        15,
+        -25
+      ],
+      "role": "nut_washer",
+      "assumed_radius_mm": 3.5,
+      "depth_interval_mm": [
+        9,
+        12.4
+      ],
+      "printed_intersections_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "thermal_angled_hood": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "sht_adjustable_carrier": 0.0,
+        "electronics_strap_tray": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "acoustic_trim": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0
+      },
+      "pass": true
+    },
+    {
+      "axis_mm": [
+        15,
+        25
+      ],
+      "role": "rear_head",
+      "assumed_radius_mm": 3.0,
+      "depth_interval_mm": [
+        -2.4,
+        0
+      ],
+      "printed_intersections_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "thermal_angled_hood": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "sht_adjustable_carrier": 0.0,
+        "electronics_strap_tray": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "acoustic_trim": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0
+      },
+      "pass": true
+    },
+    {
+      "axis_mm": [
+        15,
+        25
+      ],
+      "role": "rear_driver",
+      "assumed_radius_mm": 3.5,
+      "depth_interval_mm": [
+        -24,
+        -2.4
+      ],
+      "printed_intersections_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "thermal_angled_hood": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "sht_adjustable_carrier": 0.0,
+        "electronics_strap_tray": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "acoustic_trim": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0
+      },
+      "pass": true
+    },
+    {
+      "axis_mm": [
+        15,
+        25
+      ],
+      "role": "shaft",
+      "assumed_radius_mm": 1.5,
+      "depth_interval_mm": [
+        0,
+        14
+      ],
+      "printed_intersections_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "thermal_angled_hood": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "sht_adjustable_carrier": 0.0,
+        "electronics_strap_tray": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "acoustic_trim": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0
+      },
+      "pass": true
+    },
+    {
+      "axis_mm": [
+        15,
+        25
+      ],
+      "role": "nut_washer",
+      "assumed_radius_mm": 3.5,
+      "depth_interval_mm": [
+        9,
+        12.4
+      ],
+      "printed_intersections_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0,
+        "thermal_tub": 0.0,
+        "thermal_face": 0.0,
+        "thermal_angled_hood": 0.0,
+        "thermal_raised_cradle": 0.0,
+        "acoustic_tub": 0.0,
+        "acoustic_face": 0.0,
+        "mounting_spine": 0.0,
+        "sht_mount_arm": 0.0,
+        "sht_adjustable_carrier": 0.0,
+        "electronics_strap_tray": 0.0,
+        "microphone_strap_carrier": 0.0,
+        "microphone_strap_carrier.001": 0.0,
+        "acoustic_trim": 0.0,
+        "acoustic_trim.001": 0.0,
+        "tray_spacer_6mm.001": 0.0,
+        "tray_spacer_6mm.002": 0.0,
+        "tray_spacer_6mm.003": 0.0,
+        "tray_spacer_6mm.004": 0.0
+      },
+      "pass": true
+    }
+  ],
+  "combined_mic_bearing": [
+    {
+      "xy_mm": [
+        -6.25,
+        -5.25
+      ],
+      "area_mm2": 2.249999949708581,
+      "pass": true
+    },
+    {
+      "xy_mm": [
+        -6.25,
+        5.25
+      ],
+      "area_mm2": 2.249999949708581,
+      "pass": true
+    },
+    {
+      "xy_mm": [
+        6.25,
+        -5.25
+      ],
+      "area_mm2": 2.249999949708581,
+      "pass": true
+    },
+    {
+      "xy_mm": [
+        6.25,
+        5.25
+      ],
+      "area_mm2": 2.249999949708581,
+      "pass": true
+    }
+  ],
+  "combined_mic_tunnels": [
+    {
+      "side": -1,
+      "y_mm": -5.25,
+      "pass": true
+    },
+    {
+      "side": -1,
+      "y_mm": 5.25,
+      "pass": true
+    },
+    {
+      "side": 1,
+      "y_mm": -5.25,
+      "pass": true
+    },
+    {
+      "side": 1,
+      "y_mm": 5.25,
+      "pass": true
+    }
+  ],
+  "research_spine_topology": {
+    "nonmanifold_edges": 0,
+    "islands": 1,
+    "volume_mm3": 44570.430944120104
+  },
+  "research_spine_nominal_ligaments_mm": {
+    "access_bore_to_outer_side": 5.2,
+    "access_bore_to_nearest_strap_slot_y": 8.7,
+    "note": "Nominal planar geometry, not measured printed strength or fatigue"
+  },
+  "spine_ligament_design_gate": {
+    "minimum_chosen_mm": 4.0,
+    "pass": true,
+    "scope": "Nominal layout regression guard only; no structural load rating"
+  },
+  "spine_export_roundtrip": {
+    "bounds_error_mm": 0.0,
+    "intersection_mm3": 44570.43094036724,
+    "expected_volume_mm3": 44570.430944120104,
+    "pass": true
+  }
+}

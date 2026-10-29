@@ -1,0 +1,94 @@
+{
+  "assumption": "2.1\u20133mm radial annulus, 24 samples per radius; 0.025mm height tolerance; normal Z>0.999",
+  "pass": true,
+  "results": [
+    {
+      "part": "thermal_raised_cradle",
+      "center": [
+        -30,
+        -9
+      ],
+      "expected_seat_z_mm": 6.788457268119895,
+      "sample_count": 72,
+      "bearing_pass": true,
+      "failed_samples": []
+    },
+    {
+      "part": "thermal_raised_cradle",
+      "center": [
+        -30,
+        9
+      ],
+      "expected_seat_z_mm": 11.611542731880103,
+      "sample_count": 72,
+      "bearing_pass": true,
+      "failed_samples": []
+    },
+    {
+      "part": "thermal_raised_cradle",
+      "center": [
+        30,
+        -9
+      ],
+      "expected_seat_z_mm": 6.788457268119895,
+      "sample_count": 72,
+      "bearing_pass": true,
+      "failed_samples": []
+    },
+    {
+      "part": "thermal_raised_cradle",
+      "center": [
+        30,
+        9
+      ],
+      "expected_seat_z_mm": 11.611542731880103,
+      "sample_count": 72,
+      "bearing_pass": true,
+      "failed_samples": []
+    },
+    {
+      "part": "thermal_angled_hood",
+      "center": [
+        -40,
+        -13
+      ],
+      "expected_seat_z_mm": 11.252043405643363,
+      "sample_count": 72,
+      "bearing_pass": true,
+      "failed_samples": []
+    },
+    {
+      "part": "thermal_angled_hood",
+      "center": [
+        -40,
+        13
+      ],
+      "expected_seat_z_mm": 18.218722408852553,
+      "sample_count": 72,
+      "bearing_pass": true,
+      "failed_samples": []
+    },
+    {
+      "part": "thermal_angled_hood",
+      "center": [
+        40,
+        -13
+      ],
+      "expected_seat_z_mm": 11.252043405643363,
+      "sample_count": 72,
+      "bearing_pass": true,
+      "failed_samples": []
+    },
+    {
+      "part": "thermal_angled_hood",
+      "center": [
+        40,
+        13
+      ],
+      "expected_seat_z_mm": 18.218722408852553,
+      "sample_count": 72,
+      "bearing_pass": true,
+      "failed_samples": []
+    }
+  ]
+}

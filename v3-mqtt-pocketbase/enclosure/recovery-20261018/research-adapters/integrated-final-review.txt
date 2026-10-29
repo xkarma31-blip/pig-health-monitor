@@ -1,0 +1,45 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead . [90m[offset=0, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead check_combined_research_scene.py [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead build_combined_research_scene.py [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead check_mic_corner_installed.py [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead check_thermal_installed_hardware.py [90m[offset=0, limit=260][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead package_research_options.sh [90m[offset=0, limit=240][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead verify_research_options.sh [90m[offset=0, limit=200][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead verify_thermal_research.sh [90m[offset=0, limit=180][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead research-adapters/combined-thermal-inventory.json [90m[offset=0, limit=45][0m
+> reviewer · cx/gpt-6.1-sol-review
+## Findings, in severity order
+
+1. **High — Thermal printable inventory is derived from the scene being tested, so missing thermal parts can pass.**  
+   **`check_combined_research_scene.py:12–22`**, **`build_combined_research_scene.py:69–74`**  
+   The base inventory has an external expected list, but thermal additions are whatever objects currently carry the requested variant tag. Removing a carrier or retainer from the saved scene removes it from both `expected` and `actual`; the inventory gate therefore still passes. The builder also silently ignores unavailable appended objects rather than asserting that every metadata entry was loaded. Collision-free absence is not an inventory test.  
+   **Missing digital requirement:** a fixed, independently specified thermal printable-name/quantity contract, with negative tests deleting each of the three thermal printables. The six nonprintable check does not protect these parts.
+
+2. **High — The installed microphone checker repairs the installation before checking it, masking transform regressions.**  
+   **`check_mic_corner_installed.py:17–25`**  
+   In combined mode, the checker retrieves the installed support and then overwrites its rotation and location with the intended values. A saved combined scene containing a translated or rotated support can consequently receive a passing microphone report for a different, corrected scene. The local bearing/tunnel tests are insensitive to installation position, making this especially important.  
+   **Missing digital requirement:** validate the saved transform without changing it, and include a negative test perturbing each installed support’s position/rotation.
+
+3. **Medium — Thermal nonprintable acceptance is a count-and-clearance test, not a hardware identity or geometry contract.**  
+   **`build_combined_research_scene.py:75–77`**, **`check_combined_research_scene.py:171–181`**  
+   Prefix matching determines which appended objects are nonprintable, and the combined gate only requires six tagged objects with no printed intersections. Six substituted, misplaced, or undersized proxies can satisfy that gate. It does not assert the expected PCB, package, and four nut identities, dimensions, or placements. The independent thermal hardware checker provides stronger evidence for its own input scene, but this script does not establish that the appended combined geometry is identical to that accepted input.  
+   **Missing digital requirement:** bind the combined thermal objects to independently accepted source geometry and transforms, or revalidate their nominal hardware contract in the combined scene. Add substitution/displacement negative tests. This is a digital evidence gap, not a request for measured hardware.
+
+4. **Medium — Combined manufacturing-export equivalence is checked only for the spine.**  
+   **`check_combined_research_scene.py:153–169`**, **`build_combined_research_scene.py:10,25–29,59–62`**  
+   The spine gets an installed-transform STL roundtrip check, but the installed SHT carrier inherited from the source `.blend` does not get equivalent verification against its deliverable STL. A stale source assembly paired with a newer/different SHT STL can retain a clean combined collision report while the actual printable differs. Mic supports and spacers are imported directly from their STLs during building, which reduces this risk for those parts, but the checker does not bind its saved scene to their current exports either.  
+   **Missing digital requirement:** an explicit installed-instance → printable-file → quantity mapping and geometry/hash equivalence for every unique printable, including two mic instances and four spacer instances. **23 installed instances / 253 pairs establishes pair coverage, not manufacturing inventory equivalence.**
+
+### Scope and verification
+
+Read-only source audit; no files modified, no subagents used, and no Blender checks executed. These findings concern missing digital acceptance guarantees. They do **not** treat unmeasured acoustic coupling, cable bends, physical fit, or purchased hardware measurements as blockers.

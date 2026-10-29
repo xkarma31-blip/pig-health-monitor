@@ -1,0 +1,1098 @@
+{
+  "pass": false,
+  "mutation": [
+    "displaced",
+    "ASSUMED package"
+  ],
+  "blender": "4.2.3 LTS",
+  "scene": "/home/solrahk/pig-health-monitor/v3-mqtt-pocketbase/enclosure/recovery-20261018/research-adapters/combined-thermal-candidate.blend",
+  "scene_sha256": "bee6adc565dec11eca556fc840e305372706a05c613ce6a72f2af591d60151ff",
+  "accepted_source_sha256": "6cd0a7acc7d245a0a0d101fd01a3058821745e86db8c8a215c6c6845853c429f",
+  "source_acceptance_pass": true,
+  "acceptance_report_sha256": "db234ee107ccfc7e4c99a1d6475a8d577b2e1ecb9bde27962e68e0ace8e90ab1",
+  "transform_metadata_sha256": "e0558627432efd77ba039c687550daf04c57bef76b9de9807b9537c28ae6ca54",
+  "scope": "Digital export identity only; no physical hardware approval",
+  "inventory": {
+    "expected_quantity": 23,
+    "actual_quantity": 23,
+    "missing": [],
+    "unexpected": []
+  },
+  "thermal": [
+    {
+      "name": "pcb25_4square",
+      "pass": true,
+      "topology_equal": true,
+      "world_vertex_error_mm": 0.0,
+      "matrix_error": 0.0
+    },
+    {
+      "name": "pcb25_4square_retainer",
+      "pass": true,
+      "topology_equal": true,
+      "world_vertex_error_mm": 0.0,
+      "matrix_error": 0.0
+    },
+    {
+      "name": "pcb25_4square_retainer.001",
+      "pass": true,
+      "topology_equal": true,
+      "world_vertex_error_mm": 0.0,
+      "matrix_error": 0.0
+    },
+    {
+      "name": "PCB envelope",
+      "pass": true,
+      "topology_equal": true,
+      "world_vertex_error_mm": 0.0,
+      "matrix_error": 0.0
+    },
+    {
+      "name": "ASSUMED package",
+      "pass": false,
+      "topology_equal": true,
+      "world_vertex_error_mm": 2.0,
+      "matrix_error": 2.0
+    },
+    {
+      "name": "M3_hex_nut_-30_-9",
+      "pass": true,
+      "topology_equal": true,
+      "world_vertex_error_mm": 0.0,
+      "matrix_error": 0.0
+    },
+    {
+      "name": "M3_hex_nut_-30_9",
+      "pass": true,
+      "topology_equal": true,
+      "world_vertex_error_mm": 0.0,
+      "matrix_error": 0.0
+    },
+    {
+      "name": "M3_hex_nut_30_-9",
+      "pass": true,
+      "topology_equal": true,
+      "world_vertex_error_mm": 0.0,
+      "matrix_error": 0.0
+    },
+    {
+      "name": "M3_hex_nut_30_9",
+      "pass": true,
+      "topology_equal": true,
+      "world_vertex_error_mm": 0.0,
+      "matrix_error": 0.0
+    }
+  ],
+  "manufacturing": [
+    {
+      "instance": "main_tub",
+      "file": "revision-p/main_tub.stl",
+      "quantity": 1,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -4.371138828673793e-08,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          -4.371138828673793e-08,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "f5152219d6976f380e1860400caf44d4a8bfeff5d35b1870740ea9d78c8efc12",
+      "bounds_error_mm": 3.814697265625e-06,
+      "installed_volume_mm3": 81288.78280100913,
+      "export_volume_mm3": 81288.78285683246,
+      "intersection_mm3": 81288.78280100925,
+      "symmetric_difference_mm3": 5.5823096772655845e-05,
+      "installed_geometry_sha256": "4a6213781ab4acea99c486394c7c557081a462333ee4ea5c1dee7f8483761bad",
+      "roundtrip_geometry_sha256": "55cac0974991a7ced92b896a07e37508db58ed7eeefe592daf708b98971ac5d7",
+      "triangle_hash_equal": false,
+      "vertex_distance_mm": 6.8770432335441e-06,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "main_lid",
+      "file": "revision-p/main_lid.stl",
+      "quantity": 1,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -4.371138828673793e-08,
+          -1.0,
+          -30.0
+        ],
+        [
+          0.0,
+          1.0,
+          -4.371138828673793e-08,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "3de0b601957fe48420371434df05db1afa5def114d90df4b79f86dd3aaf56550",
+      "bounds_error_mm": 1.9073486328125e-06,
+      "installed_volume_mm3": 40928.13803427435,
+      "export_volume_mm3": 40928.137342945,
+      "intersection_mm3": 40928.13803427448,
+      "symmetric_difference_mm3": 0,
+      "installed_geometry_sha256": "604ee7777d6587ee1fed9589b0080a4ff4acbfc7cb0371e8e80ba4701c4cff19",
+      "roundtrip_geometry_sha256": "604ee7777d6587ee1fed9589b0080a4ff4acbfc7cb0371e8e80ba4701c4cff19",
+      "triangle_hash_equal": true,
+      "vertex_distance_mm": 7.62939453125e-06,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "thermal_tub",
+      "file": "revision-p/thermal_tub.stl",
+      "quantity": 1,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -4.371138828673793e-08,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          -4.371138828673793e-08,
+          80.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "ef5f2aa56b83c8cb7af040a7e7055b44766467e68dc6cc85f1e486b09ec1c2fa",
+      "bounds_error_mm": 9.5367431640625e-07,
+      "installed_volume_mm3": 19757.86141987483,
+      "export_volume_mm3": 19757.861301588426,
+      "intersection_mm3": 19757.861419874873,
+      "symmetric_difference_mm3": 0,
+      "installed_geometry_sha256": "ab567779516d1eb5c48522467cc97c66455c81765e7ba699842fad14229679c1",
+      "roundtrip_geometry_sha256": "5bf79dbddeab5ca4c0eb491b5a02d1e17e5d154471c11e9c77431d2f93e1ea3e",
+      "triangle_hash_equal": false,
+      "vertex_distance_mm": 7.95843698142562e-06,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "thermal_face",
+      "file": "revision-p/thermal_face.stl",
+      "quantity": 1,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -4.371138828673793e-08,
+          -1.0,
+          -14.0
+        ],
+        [
+          0.0,
+          1.0,
+          -4.371138828673793e-08,
+          80.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "4ceadefe5bfd91dd54fe3c8aa9005f13ef3b9bb738ec906be17c304bdeabf671",
+      "bounds_error_mm": 1.9073486328125e-06,
+      "installed_volume_mm3": 6639.832090296222,
+      "export_volume_mm3": 6639.831925284237,
+      "intersection_mm3": 6639.832090296202,
+      "symmetric_difference_mm3": 0,
+      "installed_geometry_sha256": "ec4b15ae20021653822b7e62ac5f18a62d8bedace203bb0ac2afdbed9ac74a0c",
+      "roundtrip_geometry_sha256": "f971537daf521508dcc1b66dd6776297f4fb496cc3562002ac7b7a72f7c3cc5f",
+      "triangle_hash_equal": false,
+      "vertex_distance_mm": 7.864199687901419e-06,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "thermal_angled_hood",
+      "file": "revision-p/thermal_angled_hood.stl",
+      "quantity": 1,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -4.371138828673793e-08,
+          -1.0,
+          -17.0
+        ],
+        [
+          0.0,
+          1.0,
+          -4.371138828673793e-08,
+          80.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "10a79f3270e9c3dce5153311b4fb9ab0347b5ae139ae931b0e953363c1c19b9c",
+      "bounds_error_mm": 1.9073486328125e-06,
+      "installed_volume_mm3": 18493.23418560143,
+      "export_volume_mm3": 18493.23471135481,
+      "intersection_mm3": 18493.234185601395,
+      "symmetric_difference_mm3": 0.0005257534503471106,
+      "installed_geometry_sha256": "de139fd3d8ba61c5d86df0a6a3b9a5edd972e756b89343296b97cf7ae86b1a0a",
+      "roundtrip_geometry_sha256": "de139fd3d8ba61c5d86df0a6a3b9a5edd972e756b89343296b97cf7ae86b1a0a",
+      "triangle_hash_equal": true,
+      "vertex_distance_mm": 8.529922524758149e-06,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "thermal_raised_cradle",
+      "file": "revision-p/thermal_raised_cradle.stl",
+      "quantity": 1,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -4.371138828673793e-08,
+          -1.0,
+          -17.0
+        ],
+        [
+          0.0,
+          1.0,
+          -4.371138828673793e-08,
+          80.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "9d2cebe08c75bc8f4e752c05fb70079562e01cc88b2fab0fb4d1bf77564fed2d",
+      "bounds_error_mm": 1.9073486328125e-06,
+      "installed_volume_mm3": 3014.2901404546133,
+      "export_volume_mm3": 3014.291890872409,
+      "intersection_mm3": 3014.2901404546183,
+      "symmetric_difference_mm3": 0.0017504177858427283,
+      "installed_geometry_sha256": "e89490912bb632907edd600370794fe0204c7d38fa83e330cd6425f189510c89",
+      "roundtrip_geometry_sha256": "e89490912bb632907edd600370794fe0204c7d38fa83e330cd6425f189510c89",
+      "triangle_hash_equal": true,
+      "vertex_distance_mm": 7.864199687901419e-06,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "acoustic_tub",
+      "file": "revision-p/acoustic_tub.stl",
+      "quantity": 1,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -4.371138828673793e-08,
+          -1.0,
+          0.0
+        ],
+        [
+          0.0,
+          1.0,
+          -4.371138828673793e-08,
+          -80.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "5ae7ee3d9dba0228e6177644a0076a0f14a0f56859c3853c1b32f150bf991d5d",
+      "bounds_error_mm": 3.814697265625e-06,
+      "installed_volume_mm3": 36498.56387442464,
+      "export_volume_mm3": 36498.56346932408,
+      "intersection_mm3": 36498.56387437586,
+      "symmetric_difference_mm3": 0,
+      "installed_geometry_sha256": "d7fe80741bb3ece8c2659dac13b1591d784debb5ab6f61f3d78ab9bd3df9daac",
+      "roundtrip_geometry_sha256": "d4dc09bb0ae074ef78272573e87d03d19349e09c07ef41c03601d95943cecb1a",
+      "triangle_hash_equal": false,
+      "vertex_distance_mm": 7.955330147524364e-06,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "acoustic_face",
+      "file": "revision-p/acoustic_face.stl",
+      "quantity": 1,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -4.371138828673793e-08,
+          -1.0,
+          -30.0
+        ],
+        [
+          0.0,
+          1.0,
+          -4.371138828673793e-08,
+          -80.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "68dbcded253e22103736a3d6b49ac3a976e64bbc17a57883d49bcc7ab2741ded",
+      "bounds_error_mm": 1.9073486328125e-06,
+      "installed_volume_mm3": 10354.998446923477,
+      "export_volume_mm3": 10354.998271201475,
+      "intersection_mm3": 10354.99844692346,
+      "symmetric_difference_mm3": 0,
+      "installed_geometry_sha256": "21aac16fd5f7c68a99d62a5e108be4e159ce5971a9f3ceafbd3bf9d20caa844f",
+      "roundtrip_geometry_sha256": "1a17da3081380e8ec15d26ee9e004f2be236583953a1be31820129ab6f8b9126",
+      "triangle_hash_equal": false,
+      "vertex_distance_mm": 8.529922524758149e-06,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "mounting_spine",
+      "file": "research-adapters/research_spine_tray_access.stl",
+      "quantity": 1,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -4.371138828673793e-08,
+          -1.0,
+          5.0
+        ],
+        [
+          0.0,
+          1.0,
+          -4.371138828673793e-08,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "61b24625e0a43675366618da374dac334263cb61fbb4588fe0b4bb720994063e",
+      "bounds_error_mm": 3.337860107421875e-06,
+      "installed_volume_mm3": 44570.43102343871,
+      "export_volume_mm3": 44570.43100961858,
+      "intersection_mm3": 44570.43102953705,
+      "symmetric_difference_mm3": 0,
+      "installed_geometry_sha256": "75f68fd3bff6f6201d03c568f7b80517510adcbc2a4878ca72b71a5d060c1f94",
+      "roundtrip_geometry_sha256": "f718222cf99e638159d8ba56bb80ce1a242191dc879e727b04704908f2fb8481",
+      "triangle_hash_equal": false,
+      "vertex_distance_mm": 1.1920928955078125e-05,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "sht_mount_arm",
+      "file": "revision-p/sht_mount_arm.stl",
+      "quantity": 1,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -4.371138828673793e-08,
+          -1.0,
+          10.0
+        ],
+        [
+          0.0,
+          1.0,
+          -4.371138828673793e-08,
+          61.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "3c1813784b9340e578b1bba883b837b08abdae78150f65e3528892259a039342",
+      "bounds_error_mm": 3.814697265625e-06,
+      "installed_volume_mm3": 9808.074048835766,
+      "export_volume_mm3": 9808.074104990323,
+      "intersection_mm3": 9808.074048835744,
+      "symmetric_difference_mm3": 5.615460031549446e-05,
+      "installed_geometry_sha256": "429886eb20214395316ab14dcc3fcac884a763fa9497521152937bf6ad978512",
+      "roundtrip_geometry_sha256": "429886eb20214395316ab14dcc3fcac884a763fa9497521152937bf6ad978512",
+      "triangle_hash_equal": true,
+      "vertex_distance_mm": 7.864199687901419e-06,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "sht_adjustable_carrier",
+      "file": "research-adapters/sht-25.5x17.7.stl",
+      "quantity": 1,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          80.0
+        ],
+        [
+          0.0,
+          -4.371138828673793e-08,
+          -1.0,
+          -3.0
+        ],
+        [
+          0.0,
+          1.0,
+          -4.371138828673793e-08,
+          61.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "b13dd1047083a9e8cc3fecd13350ac75625ce5e877a4d4b52ea3ed50d6e3c15f",
+      "bounds_error_mm": 9.5367431640625e-07,
+      "installed_volume_mm3": 3133.508025521854,
+      "export_volume_mm3": 3133.507994329479,
+      "intersection_mm3": 3133.508025416029,
+      "symmetric_difference_mm3": 0,
+      "installed_geometry_sha256": "8824bfcc4d9b50fd3ae9520c18a75e354bfd6cbc9f72803ae391bf984775231d",
+      "roundtrip_geometry_sha256": "8824bfcc4d9b50fd3ae9520c18a75e354bfd6cbc9f72803ae391bf984775231d",
+      "triangle_hash_equal": true,
+      "vertex_distance_mm": 7.76234628574457e-06,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "electronics_strap_tray",
+      "file": "revision-p/electronics_strap_tray.stl",
+      "quantity": 1,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -4.371138828673793e-08,
+          -1.0,
+          -6.0
+        ],
+        [
+          0.0,
+          1.0,
+          -4.371138828673793e-08,
+          0.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "90d80701e68ce12b23b3f8b404a4052a8e8b874499515530dc40881fef38486a",
+      "bounds_error_mm": 1.430511474609375e-06,
+      "installed_volume_mm3": 18008.71916271999,
+      "export_volume_mm3": 18008.719289450015,
+      "intersection_mm3": 18008.71915420274,
+      "symmetric_difference_mm3": 0.00014376452600117773,
+      "installed_geometry_sha256": "2588196ffe3b678c1534c9c0581dcc889dd27a9e43d5728b3c12fa82b0d17ce6",
+      "roundtrip_geometry_sha256": "2588196ffe3b678c1534c9c0581dcc889dd27a9e43d5728b3c12fa82b0d17ce6",
+      "triangle_hash_equal": true,
+      "vertex_distance_mm": 4.76837158203125e-06,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "microphone_strap_carrier",
+      "file": "research-adapters/mic_14x12_corner_support.stl",
+      "quantity": 2,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          -24.0
+        ],
+        [
+          0.0,
+          -4.371138828673793e-08,
+          1.0,
+          -30.0
+        ],
+        [
+          0.0,
+          -1.0,
+          -4.371138828673793e-08,
+          -80.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "d473fd0da831e62814f187aeeb9e52d83bfcb60a5595f64a6796adff0f3b2132",
+      "bounds_error_mm": 1.9073486328125e-06,
+      "installed_volume_mm3": 1716.3020596728002,
+      "export_volume_mm3": 1716.302058372099,
+      "intersection_mm3": 1716.3020596728002,
+      "symmetric_difference_mm3": 0,
+      "installed_geometry_sha256": "82b133cd0a3789cc0206dd4e0c987a2be61de2c71cf963e467ee3cabb7d50708",
+      "roundtrip_geometry_sha256": "82b133cd0a3789cc0206dd4e0c987a2be61de2c71cf963e467ee3cabb7d50708",
+      "triangle_hash_equal": true,
+      "vertex_distance_mm": 7.62939453125e-06,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "acoustic_trim",
+      "file": "revision-p/acoustic_trim.stl",
+      "quantity": 2,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          -24.0
+        ],
+        [
+          0.0,
+          -4.371138828673793e-08,
+          -1.0,
+          -33.0
+        ],
+        [
+          0.0,
+          1.0,
+          -4.371138828673793e-08,
+          -80.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "66e4c1fa40218273361efa841f83c8708f4f8bb0a11c47ef414c05a72aeb5d5c",
+      "bounds_error_mm": 0.0,
+      "installed_volume_mm3": 275.17835016893423,
+      "export_volume_mm3": 275.1783321445441,
+      "intersection_mm3": 275.1783501689357,
+      "symmetric_difference_mm3": 0,
+      "installed_geometry_sha256": "f3382bda60f4ed3b028f6bbcef3865f56742cfc16a714c184aebd3ee9731a14f",
+      "roundtrip_geometry_sha256": "f3382bda60f4ed3b028f6bbcef3865f56742cfc16a714c184aebd3ee9731a14f",
+      "triangle_hash_equal": true,
+      "vertex_distance_mm": 8.529922524758149e-06,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "microphone_strap_carrier.001",
+      "file": "research-adapters/mic_14x12_corner_support.stl",
+      "quantity": 2,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          24.0
+        ],
+        [
+          0.0,
+          -4.371138828673793e-08,
+          1.0,
+          -30.0
+        ],
+        [
+          0.0,
+          -1.0,
+          -4.371138828673793e-08,
+          -80.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "d473fd0da831e62814f187aeeb9e52d83bfcb60a5595f64a6796adff0f3b2132",
+      "bounds_error_mm": 1.9073486328125e-06,
+      "installed_volume_mm3": 1716.3020596728043,
+      "export_volume_mm3": 1716.3020583721004,
+      "intersection_mm3": 1716.3020596728043,
+      "symmetric_difference_mm3": 0,
+      "installed_geometry_sha256": "03512f41228eb40fe5fb3c419420322206acd040cdb316bfa8d9291094cb2838",
+      "roundtrip_geometry_sha256": "03512f41228eb40fe5fb3c419420322206acd040cdb316bfa8d9291094cb2838",
+      "triangle_hash_equal": true,
+      "vertex_distance_mm": 7.62939453125e-06,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "acoustic_trim.001",
+      "file": "revision-p/acoustic_trim.stl",
+      "quantity": 2,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          24.0
+        ],
+        [
+          0.0,
+          -4.371138828673793e-08,
+          -1.0,
+          -33.0
+        ],
+        [
+          0.0,
+          1.0,
+          -4.371138828673793e-08,
+          -80.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "66e4c1fa40218273361efa841f83c8708f4f8bb0a11c47ef414c05a72aeb5d5c",
+      "bounds_error_mm": 0.0,
+      "installed_volume_mm3": 275.17835016893554,
+      "export_volume_mm3": 275.1783321445451,
+      "intersection_mm3": 275.1783501689357,
+      "symmetric_difference_mm3": 0,
+      "installed_geometry_sha256": "1fdddafbccd68897b42565cfc0852763dd5cdcaab0f0a7bb4fab68ab1f73bf1a",
+      "roundtrip_geometry_sha256": "1fdddafbccd68897b42565cfc0852763dd5cdcaab0f0a7bb4fab68ab1f73bf1a",
+      "triangle_hash_equal": true,
+      "vertex_distance_mm": 8.529922524758149e-06,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "tray_spacer_6mm.001",
+      "file": "research-adapters/optional_tray_spacer_3mm.stl",
+      "quantity": 4,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          -15.0
+        ],
+        [
+          0.0,
+          -4.371138828673793e-08,
+          -1.0,
+          -3.0
+        ],
+        [
+          0.0,
+          1.0,
+          -4.371138828673793e-08,
+          -25.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "6157f9de9fad5a90801be6c11252a53d975c8f3b88636dfd7e72f7332f79c671",
+      "bounds_error_mm": 4.76837158203125e-07,
+      "installed_volume_mm3": 88.07427663228901,
+      "export_volume_mm3": 88.0742765336625,
+      "intersection_mm3": 88.07427663228907,
+      "symmetric_difference_mm3": 0,
+      "installed_geometry_sha256": "018e8cb69ccfd50ae8ccdd7a4a702e6a72a1bf6893c119ab722937c1f6f82e0e",
+      "roundtrip_geometry_sha256": "018e8cb69ccfd50ae8ccdd7a4a702e6a72a1bf6893c119ab722937c1f6f82e0e",
+      "triangle_hash_equal": true,
+      "vertex_distance_mm": 1.9073486328125e-06,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "tray_spacer_6mm.002",
+      "file": "research-adapters/optional_tray_spacer_3mm.stl",
+      "quantity": 4,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          -15.0
+        ],
+        [
+          0.0,
+          -4.371138828673793e-08,
+          -1.0,
+          -3.0
+        ],
+        [
+          0.0,
+          1.0,
+          -4.371138828673793e-08,
+          25.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "6157f9de9fad5a90801be6c11252a53d975c8f3b88636dfd7e72f7332f79c671",
+      "bounds_error_mm": 4.76837158203125e-07,
+      "installed_volume_mm3": 88.07427663228904,
+      "export_volume_mm3": 88.07427653366254,
+      "intersection_mm3": 88.07427663228904,
+      "symmetric_difference_mm3": 0,
+      "installed_geometry_sha256": "eafe0b30624a5f88a69c32536983c277d59e7f2a7e26c249d3f48f1d16fbec91",
+      "roundtrip_geometry_sha256": "eafe0b30624a5f88a69c32536983c277d59e7f2a7e26c249d3f48f1d16fbec91",
+      "triangle_hash_equal": true,
+      "vertex_distance_mm": 1.9073486328125e-06,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "tray_spacer_6mm.003",
+      "file": "research-adapters/optional_tray_spacer_3mm.stl",
+      "quantity": 4,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          15.0
+        ],
+        [
+          0.0,
+          -4.371138828673793e-08,
+          -1.0,
+          -3.0
+        ],
+        [
+          0.0,
+          1.0,
+          -4.371138828673793e-08,
+          -25.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "6157f9de9fad5a90801be6c11252a53d975c8f3b88636dfd7e72f7332f79c671",
+      "bounds_error_mm": 4.76837158203125e-07,
+      "installed_volume_mm3": 88.07427663228628,
+      "export_volume_mm3": 88.07427653366533,
+      "intersection_mm3": 88.07427663228624,
+      "symmetric_difference_mm3": 0,
+      "installed_geometry_sha256": "b7b72b2d2c4ff8fe8b0e4b069d228c071507116c1d4104e59e212a47aec8c29e",
+      "roundtrip_geometry_sha256": "b7b72b2d2c4ff8fe8b0e4b069d228c071507116c1d4104e59e212a47aec8c29e",
+      "triangle_hash_equal": true,
+      "vertex_distance_mm": 1.9073486328125e-06,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "tray_spacer_6mm.004",
+      "file": "research-adapters/optional_tray_spacer_3mm.stl",
+      "quantity": 4,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          15.0
+        ],
+        [
+          0.0,
+          -4.371138828673793e-08,
+          -1.0,
+          -3.0
+        ],
+        [
+          0.0,
+          1.0,
+          -4.371138828673793e-08,
+          25.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "6157f9de9fad5a90801be6c11252a53d975c8f3b88636dfd7e72f7332f79c671",
+      "bounds_error_mm": 4.76837158203125e-07,
+      "installed_volume_mm3": 88.07427663228637,
+      "export_volume_mm3": 88.07427653366527,
+      "intersection_mm3": 88.07427663228628,
+      "symmetric_difference_mm3": 0,
+      "installed_geometry_sha256": "757fc64d8f4eea7e4a251f9991d6be055d011ec9d1aadd44d9099e74f30eacbd",
+      "roundtrip_geometry_sha256": "757fc64d8f4eea7e4a251f9991d6be055d011ec9d1aadd44d9099e74f30eacbd",
+      "triangle_hash_equal": true,
+      "vertex_distance_mm": 1.9073486328125e-06,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "pcb25_4square",
+      "file": "research-adapters/pcb25_4square_rear_insert.stl",
+      "quantity": 1,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -0.25881898403167725,
+          -0.9659258127212524,
+          -23.5
+        ],
+        [
+          0.0,
+          0.9659258127212524,
+          -0.25881898403167725,
+          81.80000305175781
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "ebd231a435e650de34262102f5e51c0849dc394f5e320a9c009aad4e21f3cbcc",
+      "bounds_error_mm": 7.62939453125e-06,
+      "installed_volume_mm3": 3002.7644065543545,
+      "export_volume_mm3": 3002.763688758798,
+      "intersection_mm3": 3002.8981415511503,
+      "symmetric_difference_mm3": 0,
+      "installed_geometry_sha256": "d6afac203b6e7074e35755e77a405468237f10b1cbef2f7b371931f9a8fe2ca0",
+      "roundtrip_geometry_sha256": "a6d1de3aa8781eb09629ce693cbda422b3f1b89ceb789ac47c142ac8c07f7d78",
+      "triangle_hash_equal": false,
+      "vertex_distance_mm": 7.864199687901419e-06,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "pcb25_4square_retainer",
+      "file": "research-adapters/pcb25_4square_retainer_1.stl",
+      "quantity": 1,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -0.25881898403167725,
+          -0.9659258127212524,
+          -23.5
+        ],
+        [
+          0.0,
+          0.9659258127212524,
+          -0.25881898403167725,
+          81.80000305175781
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "c6775cf7eb9aa88e829ee943232b7e654734108f9b5e8649b634fc5fb161617a",
+      "bounds_error_mm": 1.9073486328125e-06,
+      "installed_volume_mm3": 213.14891778415395,
+      "export_volume_mm3": 213.14887835376723,
+      "intersection_mm3": 213.14878350196352,
+      "symmetric_difference_mm3": 0.0002291339941393744,
+      "installed_geometry_sha256": "da34f3f0393afa9e5312dd4a2512ee0ae0ae14fb5384faf56ada1dda17caa026",
+      "roundtrip_geometry_sha256": "da34f3f0393afa9e5312dd4a2512ee0ae0ae14fb5384faf56ada1dda17caa026",
+      "triangle_hash_equal": true,
+      "vertex_distance_mm": 3.814697265625e-06,
+      "matrix_error": 0.0
+    },
+    {
+      "instance": "pcb25_4square_retainer.001",
+      "file": "research-adapters/pcb25_4square_retainer_2.stl",
+      "quantity": 1,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -0.25881898403167725,
+          -0.9659258127212524,
+          -23.5
+        ],
+        [
+          0.0,
+          0.9659258127212524,
+          -0.25881898403167725,
+          81.80000305175781
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": true,
+      "file_sha256": "ee998b88b6626b897ac6dd05308cb8bb55c65388471d58c41a7a4acf2d7f08a1",
+      "bounds_error_mm": 1.9073486328125e-06,
+      "installed_volume_mm3": 213.14891703450309,
+      "export_volume_mm3": 213.14887766066664,
+      "intersection_mm3": 213.14878281799218,
+      "symmetric_difference_mm3": 0.00022905918535798264,
+      "installed_geometry_sha256": "3ed2054dfb180c4ddc4ff7096c75b442c0ea75877a126f8d61251471df2af33e",
+      "roundtrip_geometry_sha256": "3ed2054dfb180c4ddc4ff7096c75b442c0ea75877a126f8d61251471df2af33e",
+      "triangle_hash_equal": true,
+      "vertex_distance_mm": 3.814697265625e-06,
+      "matrix_error": 0.0
+    }
+  ],
+  "thermal_tag_inventory_pass": true,
+  "file_quantities": {
+    "research-adapters/mic_14x12_corner_support.stl": 2,
+    "research-adapters/optional_tray_spacer_3mm.stl": 4,
+    "research-adapters/pcb25_4square_rear_insert.stl": 1,
+    "research-adapters/pcb25_4square_retainer_1.stl": 1,
+    "research-adapters/pcb25_4square_retainer_2.stl": 1,
+    "research-adapters/research_spine_tray_access.stl": 1,
+    "research-adapters/sht-25.5x17.7.stl": 1,
+    "revision-p/acoustic_face.stl": 1,
+    "revision-p/acoustic_trim.stl": 2,
+    "revision-p/acoustic_tub.stl": 1,
+    "revision-p/electronics_strap_tray.stl": 1,
+    "revision-p/main_lid.stl": 1,
+    "revision-p/main_tub.stl": 1,
+    "revision-p/sht_mount_arm.stl": 1,
+    "revision-p/thermal_angled_hood.stl": 1,
+    "revision-p/thermal_face.stl": 1,
+    "revision-p/thermal_raised_cradle.stl": 1,
+    "revision-p/thermal_tub.stl": 1
+  }
+}

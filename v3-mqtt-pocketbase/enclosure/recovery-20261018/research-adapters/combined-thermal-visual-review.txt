@@ -1,0 +1,62 @@
+[0m
+> build · ag/gemini-3.8-flash-low
+[0m✱ [0mGlob "*" [90m100 matches[0m
+> build · ag/gemini-3.8-flash-low
+[0m✱ [0mGlob "**/*thermal-installed.png" [90m1 match[0m
+> build · ag/gemini-3.8-flash-low
+[0m✱ [0mGlob "**/*original-poster.png" [90m1 match[0m
+> build · ag/gemini-3.8-flash-low
+[0m→ [0mRead original-poster.png 
+> build · ag/gemini-3.8-flash-low
+[0m→ [0mRead research-adapters/combined-thermal-installed.png 
+> build · ag/gemini-3.8-flash-low
+### Visual Inspection Report: Integrated Candidate vs. Original Artwork
+
+**Inspected Assets:**
+- Candidate: `research-adapters/combined-thermal-installed.png`
+- Reference: `original-poster.png`
+
+---
+
+### 1. Concrete Visible Defects (Geometry, Fit & Mesh)
+
+1. **Optical Trim / Window Cutout Intersection on Thermal Module:**
+   - The white/light adapter frame (thermal aperture adapter) visually clips through the rectangular window opening of the top module faceplate.
+   - The top flange and bottom bar of the adapter frame sit flush or slightly protrude beyond the exterior face bevel without an intentional bezel recess or clear perimeter margin.
+
+2. **Acoustic Face Trim Ring Orientation & Recess:**
+   - In the candidate, the dual green circular trims protrude forward past the module face plane with deep center bore voids.
+   - On the original poster, the dual circular microphone ports sit fully recessed beneath outer dark chamfered apertures with flush inner mesh grills.
+
+3. **Fastener Hole Depth & Counterbore Geometry:**
+   - The 4 corner fastener points on the main lid and modules appear as flat cylindrical blind indentations/stamps rather than deep counterbored pockets or through-holes suitable for standard socket-head fasteners.
+
+---
+
+### 2. Required Mechanical Adaptations (Intentional / Functional Changes)
+
+1. **SHT Sensor Mount Extension:**
+   - **Observed:** An outboard horizontal arm carrying a single primary base plate and an outboard support frame extending from the right upper flank.
+   - **Context:** In accordance with specifications, this is an intentional single base plus outboard support frame (not a duplicate part), required to position the environmental sensor outside the enclosed thermal/acoustic envelope for ambient air exposure.
+
+2. **Thermal Module Internal Fastening / Adapter Plate:**
+   - **Observed:** The white internal bracket/adapter frame installed directly behind the thermal face cutout to secure the MLX90640 sensor.
+   - **Context:** Internal rear inserts/mounting provisions adapted to mechanically capture the discrete sensor breakout board behind the front aperture.
+
+3. **Modular Inter-Module Spacing & Standoffs:**
+   - Modules sit separated along the vertical axis with dedicated clearance gaps to accommodate wiring pass-through and modular assembly fixtures.
+
+---
+
+### 3. Source Aesthetic Deviations (Stylistic / Rendering Differences)
+
+1. **Surface Finish & Material Shading:**
+   - **Poster:** Matte textured industrial plastic with subtle edge highlights, molded parting lines, and specularity.
+   - **Candidate:** Uniform flat charcoal/dark slate clay shading with minimal texture mapping or edge wear.
+
+2. **Branding & Graphic Typography:**
+   - **Poster:** "PigPulse" logo with thin subtitle ("Edge Intelligence for Swine Health") and a distinct green LED indicator lens below.
+   - **Candidate:** Graphic imprint is larger and bolder relative to lid face dimensions; LED dot is rendered as a simple green sphere rather than a flush translucent light pipe.
+
+3. **Module Proportions & Chamfers:**
+   - Corner fillets on the main body and top module in the candidate have a slightly sharper radius than the softer, molded-tooling draft angles seen on the poster’s exploded and internal view renders.

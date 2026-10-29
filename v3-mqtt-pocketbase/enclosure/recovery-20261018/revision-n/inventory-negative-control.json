@@ -1,0 +1,10 @@
+{
+  "negative_control": {
+    "gate": false,
+    "count": 20,
+    "hidden": [
+      "microphone_strap_carrier.001"
+    ]
+  },
+  "original_scene_restored": true
+}

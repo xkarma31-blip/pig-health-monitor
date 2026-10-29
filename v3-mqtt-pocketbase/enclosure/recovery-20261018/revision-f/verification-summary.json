@@ -1,0 +1,120 @@
+{
+  "export_gate": true,
+  "assembly_pair_gate": true,
+  "slicer": "PrusaSlicer 2.7.2",
+  "profile": "assumed PETG 235/80;0.4 nozzle;0.2 layers;220x220 bed;hood buildplate supports",
+  "parts": [
+    {
+      "part": "main_tub",
+      "export_success": true,
+      "warning": false,
+      "layers": 149,
+      "toolpath_moves": 226795
+    },
+    {
+      "part": "main_lid",
+      "export_success": true,
+      "warning": false,
+      "layers": 14,
+      "toolpath_moves": 19216
+    },
+    {
+      "part": "thermal_tub",
+      "export_success": true,
+      "warning": false,
+      "layers": 69,
+      "toolpath_moves": 96291
+    },
+    {
+      "part": "thermal_face",
+      "export_success": true,
+      "warning": false,
+      "layers": 14,
+      "toolpath_moves": 27017
+    },
+    {
+      "part": "acoustic_tub",
+      "export_success": true,
+      "warning": false,
+      "layers": 149,
+      "toolpath_moves": 209453
+    },
+    {
+      "part": "acoustic_face",
+      "export_success": true,
+      "warning": false,
+      "layers": 14,
+      "toolpath_moves": 42878
+    },
+    {
+      "part": "microphone_strap_carrier",
+      "export_success": true,
+      "warning": false,
+      "layers": 14,
+      "toolpath_moves": 17442
+    },
+    {
+      "part": "thermal_strap_carrier",
+      "export_success": true,
+      "warning": false,
+      "layers": 14,
+      "toolpath_moves": 18679
+    },
+    {
+      "part": "optical_trim",
+      "export_success": true,
+      "warning": false,
+      "layers": 9,
+      "toolpath_moves": 3359
+    },
+    {
+      "part": "acoustic_trim",
+      "export_success": true,
+      "warning": false,
+      "layers": 9,
+      "toolpath_moves": 3197
+    },
+    {
+      "part": "mounting_spine",
+      "export_success": true,
+      "warning": false,
+      "layers": 24,
+      "toolpath_moves": 54545
+    },
+    {
+      "part": "sht_adjustable_carrier",
+      "export_success": true,
+      "warning": false,
+      "layers": 14,
+      "toolpath_moves": 13907
+    },
+    {
+      "part": "sht_mount_arm",
+      "export_success": true,
+      "warning": false,
+      "layers": 64,
+      "toolpath_moves": 35246
+    },
+    {
+      "part": "electronics_strap_tray",
+      "export_success": true,
+      "warning": false,
+      "layers": 14,
+      "toolpath_moves": 23906
+    },
+    {
+      "part": "tray_spacer_6mm",
+      "export_success": true,
+      "warning": false,
+      "layers": 29,
+      "toolpath_moves": 4085
+    },
+    {
+      "part": "thermal_angled_hood",
+      "export_success": true,
+      "warning": false,
+      "layers": 137,
+      "toolpath_moves": 95709
+    }
+  ]
+}

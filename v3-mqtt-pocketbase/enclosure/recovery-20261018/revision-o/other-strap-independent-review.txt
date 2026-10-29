@@ -1,0 +1,46 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/render_assembled.py [90m[offset=0, limit=500][0m
+> reviewer · cx/gpt-6.1-sol-review
+## Result: no concrete modeled interference in the requested strap paths
+
+**The SHT landing does not seal the carrier’s strap exits.** It blocks a straight-through rearward approach, but an **8 mm open gap** remains for a strap to turn and exit sideways. The electronics tray similarly has **6 mm clearance** above the main-tub floor.
+
+### SHT carrier slots versus landing/standoffs
+
+References: `build_revision.py:204–220`; `render_assembled.py:61–70`.
+
+Using assembly depth measured along the original construction Z axis:
+
+- Carrier occupies depth **3–6 mm**.
+- Landing occupies depth **−10 to −5 mm**.
+- Standoffs occupy depth **−5 to 3 mm**.
+- Thus the landing-to-carrier underside clearance is **8 mm**, not zero.
+
+The slots at carrier-local **x = ±12, y = −6…+6** have footprints:
+- x **10.5…13.5** or **−13.5…−10.5**
+- y **−6…+6**
+
+The standoffs are centered at carrier-local **(0, ±12)** with radius **3.5 mm**. They do **not** intersect either slot footprint or the outward route from either slot to the adjacent carrier edge at x = ±16.
+
+**Concrete obstruction, but not a blocked strap path:** the full 32 × 32 mm landing lies behind both slots (`build_revision.py:217`). Consequently, a straight rearward ray through either slot eventually hits the landing. That does **not** establish interference with a strap routed through the slot and turned outward in the 8 mm gap. No strap solid or bend-radius requirement is modeled, so claiming that turn is impossible would be unsupported.
+
+### Electronics tray slots versus spacers/main tub
+
+References: `build_revision.py:108–123,223–233`; `render_assembled.py:62,77–84`.
+
+- Main-tub floor occupies depth **0–3 mm**.
+- Tray occupies depth **9–12 mm**.
+- The underside gap is therefore **6 mm**.
+- Spacers span depth **3–9 mm**, centered at **(±15, ±25)**, radius **3.5 mm**.
+- Tray slots occupy x **±32 ±1.5**, with y ranges **−26…−10** and **10…26**.
+
+The spacers do **not** intersect these slot footprints. The slots and their outward paths to the tray edges at x = ±41 are also inside the tub’s inner sidewalls at x = ±57. No modeled wall or spacer closes those lateral routes.
+
+The tub floor **does obstruct direct rearward access** beneath the tray slots: the tub’s own strap openings at x = ±28, y = −7…+7 do not align with the tray slots (`build_revision.py:111–112`). This is **not a solid collision or sealed strap exit**: straps can turn within the 6 mm under-tray cavity, including by prethreading before tray installation.
+
+**Validation limitation:** this is a source-coordinate audit, not an executed mesh-intersection test. Neither script models the straps or tests their routing clearance; the mesh gate at `build_revision.py:298–310` checks individual-part manifoldness/volume only.
+
+No files modified; no subagents used.

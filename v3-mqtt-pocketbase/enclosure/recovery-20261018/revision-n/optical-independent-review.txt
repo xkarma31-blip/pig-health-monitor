@@ -1,0 +1,70 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/check_optical_cone.py [90m[offset=1, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/check_optical_alignment.py [90m[offset=1, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-n/MANUFACTURER_RESEARCH.md [90m[offset=1, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGlob "**/*" [90min v3-mqtt-pocketbase/enclosure/recovery-20261018 · 150 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mSkill "ponytail" 
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "thermal_angled_hood|thermal_raised_cradle|thermal_face|thermal_tub|15|rotation" [90min v3-mqtt-pocketbase/enclosure/recovery-20261018 · 100 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py [90m[offset=20, limit=75][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py [90m[offset=228, limit=80][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m⚙ [0mexecute {"code":"return search({query:'execute terminal shell command',limit:2});"} 
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-n/optical-cone-exploration.json [90m[offset=1, limit=60][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/render_assembled.py [90m[offset=16, limit=30][0m
+> reviewer · cx/gpt-6.1-sol-review
+## Verdict
+
+**I found no concrete frame, rotation, ray-API, or counting error that invalidates the reported discrete-ray results.** The manufacturer note appropriately limits their meaning. These are conditional geometric obstruction tests—not physical FOV certification.
+
+Review was read-only, with no subagents. I inspected the scripts, saved cone report, and supporting construction/assembly code; **I did not rerun Blender or independently reproduce the numerical counts.** References below are relative to `v3-mqtt-pocketbase/enclosure/recovery-20261018/`.
+
+## Findings, in severity order
+
+### Low — Missing regression checks for the geometric assumptions
+**References:** `check_optical_cone.py:11–22,33`; `check_optical_alignment.py:19–26,42–49`
+
+Neither script asserts the assumptions that make its casts meaningful: imported object transforms, the assembled mating planes, orthonormal basis, or a known blocked/unblocked control ray. Consequently, an import/build change could silently alter the experiment while still producing plausible JSON.
+
+This is a **test-coverage gap, not evidence that the present results are wrong**. Minimal useful controls would check identity import transforms, the expected common-frame planes, and one analytically known hit/miss.
+
+### Low — Reports lack geometry/version provenance
+**References:** `check_optical_cone.py:40–42`; `check_optical_alignment.py:30–35,54–56`; `revision-n/MANUFACTURER_RESEARCH.md:76–91`
+
+The reports do not record input STL hashes or Blender version. The research note quotes exact counts, but those artifacts alone cannot establish which mesh bytes produced them. Regenerating an STL without rerunning the sweeps could leave apparently current numerical evidence.
+
+Again, this weakens **reproducibility**, not the underlying ray mathematics.
+
+## Specific checks
+
+- **Common frame is consistent.**  
+  `check_optical_cone.py:11–16` places the face at `z=-3…0`, tub at `z=-17…-3`, and hood/cradle at their construction coordinates. This matches the thermal assembly offsets: tub `0`, face `14`, hood/cradle `17`, after subtracting the shared `17 mm` assembly translation. The shifts are not an accidental extra displacement.
+
+- **Roof-normal axis has the correct sign.**  
+  The roof is constructed as `z=16+y*tan(15°)` (`build_revision.py:231–234`). Its outward normal is proportional to `(0,-tan(15°),1)`, matching `check_optical_cone.py:19`. There is no missing additional 15° rotation.
+
+- **The basis is orthonormal, although its vertical sign is unconventional.**  
+  `horizontal.cross(axis)` produces `(0,-cos(15°),-sin(15°))` (`check_optical_cone.py:20–21`). This makes `(horizontal, vertical, axis)` left-handed. **That does not invalidate these tests:** the rectangular sampling and offset sets are symmetric, and both angular signs are tested. It does mean signed “vertical” and “yaw” labels should not automatically be interpreted using a conventional camera coordinate system.
+
+- **Alignment rotates the whole ray basis correctly.**  
+  `check_optical_alignment.py:19–25` rotates the complete direction, not merely its central axis. Pupil position stays fixed during the pointing sweep, a coherent choice for angular sensitivity. Because no case combines nonzero yaw and pitch, rotation-order concerns do not affect the published cases.
+
+- **No demonstrated `Object.ray_cast` coordinate-space misuse.**  
+  The call at `check_optical_cone.py:33` is Blender’s object-space ray API. The script imports STL meshes into an empty scene and applies assembly offsets directly to vertices rather than object locations. With the expected identity import transforms, ray coordinates and mesh coordinates therefore share the same space. This is **not** the erroneous pattern of passing world rays to arbitrarily transformed objects. Nor does the call require a CAD-solid intersection API to answer triangle obstruction.
+
+- **Counting is explicitly distinguished.**  
+  `check_optical_cone.py:32–38` counts one hit per part per sampled ray; `blocked_count` can therefore exceed the number of blocked rays. `unique_blocked_rays` correctly deduplicates samples, and the report states the distinction. Alignment’s `any(...)` (`check_optical_alignment.py:26,49`) correctly counts each blocked ray once.
+
+- **Scope statements are honest.**  
+  `revision-n/MANUFACTURER_RESEARCH.md:17–21,76–93` explicitly rejects hard-boundary FOV interpretation, universal safe setbacks, measured mounting tolerance, and exhaustive combined extremes. Its 30-case and 60-case totals match the loops. Fractions such as `77/441` describe **sampled rays**, not sensitivity-weighted throughput or percentage loss of physical FOV.
+
+**Bottom line:** no supported basis for declaring the results invalid because of transforms or the ray API. The concrete weaknesses are missing regression controls and provenance—not an identified geometric computation bug.

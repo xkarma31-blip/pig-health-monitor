@@ -1,0 +1,40 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/fastener_ledger.js [90m[offset=1, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mSkill "ce-code-review" 
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py [90m[offset=1, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-m/ASSEMBLY_CURRENT.md [90m[offset=1, limit=1000][0m
+> reviewer · cx/gpt-6.1-sol-review
+**No concrete nominal-grip arithmetic mistakes found in the three requested files.** In particular, the SHT carrier, hood bearing-pocket adjustment, cradle pads, and washer allowance are internally consistent.
+
+References below are relative to `v3-mqtt-pocketbase/enclosure/recovery-20261018/`.
+
+### Arithmetic checks
+
+- **SHT carrier to arm — 16 mm grip is correct.**  
+  `build_revision.py:206–212` defines a 5 mm arm/landing and an 8 mm standoff centered at z=9, so the standoff runs from z=5 to z=13. The carrier is 3 mm thick (`build_revision.py:196`). The nominal assembled stack is therefore **5 + 8 + 3 = 16 mm**, not 13 mm.  
+  `fastener_ledger.js:19` uses 16 mm; its 22 mm bolt has **1.6 mm margin** against the stated 20.4 mm minimum.
+
+- **Thermal hood — grip correctly ends at the recessed bearing plane, not the unrecessed roof.**  
+  The pocket floor is `16 + (y − 3.6) × tan(15°) − 0.3` (`build_revision.py:274–275`). The ledger uses exactly that plane plus the 14 mm tub and 3 mm separator (`fastener_ledger.js:15`; tub and separator thicknesses at `build_revision.py:129,135`, with the lid definition at lines 91–92).  
+  Resulting grips and minimum lengths:
+  - y=−13: **28.252 mm grip**, **32.652 mm minimum**, 35 mm selection.
+  - y=+13: **35.219 mm grip**, **39.619 mm minimum**, 40 mm selection.  
+  The upper margin is approximately **0.381 mm**, matching `revision-m/ASSEMBLY_CURRENT.md:12–13`.
+
+- **Cradle — the 3 mm platform must not be added again above the pad height.**  
+  The stand cylinders extend from z=0 to `9.2 + y × tan(15°)` (`build_revision.py:257–258`). That is an absolute pad-top elevation above the separator, not a standoff length to which the platform thickness must subsequently be added. The ledger correctly adds only the 3 mm separator (`fastener_ledger.js:16`):
+  - y=−9: **9.788 mm grip**, **14.188 mm minimum**, 16 mm selection.
+  - y=+9: **14.612 mm grip**, **19.012 mm minimum**, 20 mm selection.
+
+- **Washers — no double counting in the ledger.**  
+  `fastener_ledger.js:8–9` adds **1 mm total washer thickness + 2.4 mm nut + 1 mm exposed thread** once, after the CAD grip. The grip expressions do not already include washers. The cradle’s **6 mm diameter × 2.4 mm head/washer envelope** (`revision-m/ASSEMBLY_CURRENT.md:14–15`; `build_revision.py:255–256`) is a separate clearance constraint, not another axial allowance to add to bolt length. Bolt length is explicitly measured excluding the head (`fastener_ledger.js:22`).
+
+### Testing gap
+
+`fastener_ledger.js:14–21` duplicates CAD dimensions as hard-coded constants; its gate checks only whether the selected length exceeds those constants plus the allowance (`lines 9–12,23`). It does **not** test that those constants still agree with `build_revision.py`. A regression test comparing the nominal bearing planes and assembled stack dimensions would catch future drift—especially for the SHT standoff and thermal pocket/cradle formulas.
+
+Read-only inspection only; no files edited or generating scripts run. These conclusions concern nominal source arithmetic, **not physical fit, hardware engagement, or access**.

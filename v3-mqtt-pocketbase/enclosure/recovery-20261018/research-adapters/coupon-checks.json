@@ -1,0 +1,77 @@
+{
+  "parts": [
+    {
+      "part": "sht_elevated_support",
+      "nonmanifold_edges": 0,
+      "volume_mm3": 1667.9999999999998,
+      "bearing_height_mm": 8,
+      "target_board_plan_mm": [
+        30,
+        24
+      ],
+      "rail_x_centers_mm": [
+        -12,
+        12
+      ],
+      "rail_width_mm": 4,
+      "status": "uninstalled research coupon; exact underside-safe areas unknown",
+      "warning": "Small-board variants require separate base attachment; do not place small mic rails into existing radius6 sound path without revised acoustic interface"
+    },
+    {
+      "part": "mic_elevated_support",
+      "nonmanifold_edges": 0,
+      "volume_mm3": 858.0,
+      "bearing_height_mm": 8,
+      "target_board_plan_mm": [
+        22,
+        16
+      ],
+      "rail_x_centers_mm": [
+        -8.5,
+        8.5
+      ],
+      "rail_width_mm": 3,
+      "status": "uninstalled research coupon; exact underside-safe areas unknown",
+      "warning": "Small-board variants require separate base attachment; do not place small mic rails into existing radius6 sound path without revised acoustic interface"
+    },
+    {
+      "part": "sht_12mm_support_coupon",
+      "nonmanifold_edges": 0,
+      "volume_mm3": 423.0,
+      "bearing_height_mm": 8,
+      "target_board_plan_mm": [
+        12,
+        12
+      ],
+      "rail_x_centers_mm": [
+        -4.5,
+        4.5
+      ],
+      "rail_width_mm": 2,
+      "status": "uninstalled research coupon; exact underside-safe areas unknown",
+      "warning": "Small-board variants require separate base attachment; do not place small mic rails into existing radius6 sound path without revised acoustic interface"
+    },
+    {
+      "part": "mic_14x12_support_coupon",
+      "nonmanifold_edges": 0,
+      "volume_mm3": 441.0,
+      "bearing_height_mm": 8,
+      "target_board_plan_mm": [
+        14,
+        12
+      ],
+      "rail_x_centers_mm": [
+        -5.5,
+        5.5
+      ],
+      "rail_width_mm": 2,
+      "status": "uninstalled research coupon; exact underside-safe areas unknown",
+      "warning": "Small-board variants require separate base attachment; do not place small mic rails into existing radius6 sound path without revised acoustic interface"
+    }
+  ],
+  "limits": [
+    "Not yet checked against installed hardware",
+    "Strap capture route and support contact require review",
+    "No optical/acoustic/airflow or strength approval"
+  ]
+}

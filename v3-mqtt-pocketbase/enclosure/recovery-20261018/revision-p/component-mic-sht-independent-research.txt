@@ -1,0 +1,100 @@
+[0m
+> reviewer · ag/gemini-3.8-flash-low
+[0m◈ [0mWeb Search via Parallel ""INMP441" breakout board dimensions "mm" OR "size"" 
+> reviewer · ag/gemini-3.8-flash-low
+[0m◈ [0mWeb Search via Parallel ""INMP441" "breakout" OR "module" "mm" "dimensions" OR "size" ("rectangular" OR "round" OR "circular" OR "purple" OR "black")" 
+> reviewer · ag/gemini-3.8-flash-low
+[0m◈ [0mWeb Search via Parallel ""GY-SHT31" OR "GY-SHT45" dimensions "mm" OR "size"" 
+> reviewer · ag/gemini-3.8-flash-low
+[0m◈ [0mWeb Search via Parallel ""GY-SHT31-D" OR "GY-SHT31" "mm" ("12.7" OR "12" OR "13" OR "14" OR "19" OR "11") "size" OR "dimension"" 
+> reviewer · ag/gemini-3.8-flash-low
+[0m◈ [0mWeb Search via Parallel ""GY-SHT45" OR "GY-SHT40" OR "GY-SHT30" "mm" "size" OR "dimensions" AliExpress OR Taobao OR vendor" 
+> reviewer · ag/gemini-3.8-flash-low
+[0m◈ [0mWeb Search via Parallel ""GY-SHT31" "mm" ("12" OR "13" OR "14" OR "15" OR "16" OR "17" OR "18" OR "19" OR "20") "size" OR "dimensions" OR "board size"" 
+> reviewer · ag/gemini-3.8-flash-low
+[0m◈ [0mWeb Search via Parallel ""GY-SHT31-D" OR "GY-SHT31" "mm" "pinout" ("VIN" "GND" "SCL" "SDA") "dimensions"" 
+> reviewer · ag/gemini-3.8-flash-low
+### 1. INMP441 Microphone Breakout Variants
+
+#### Variant A: Generic 6-Pin Rectangular Breakout (Black PCB, Dual 3-Pin Rows)
+* **Live Vendor / Documentation Source:**
+  * AliExpress Product Specification Reference: [AliExpress Article on INMP441 Dimensions](https://www.aliexpress.com/s/wiki-ssr/article/inmp441-microphone-dimensions)
+  * Distributor Spec: [iFuture Technology INMP441 Module](https://ifuturetech.org/product/inmp441-mems-high-precision-omnidirectional-microphone-module)
+* **Quoted Dimensions:**
+  * AliExpress documentation: *"The module measures 15.5 × 12.5 × 3.5 mm"*
+  * iFuture Technology listing: *"Module Board Size: ≈ 14 mm x 12 mm"*, *"Dimensions: 14 × 14 × 5 mm"* (packaged/envelope)
+* **Board vs. Chip vs. Installed Headers Breakdown:**
+  * **Bare PCB outline:** ~14.0 mm to 15.5 mm (Length) × 12.0 mm to 12.5 mm (Width). Typical bare FR4 thickness is 1.0 mm to 1.6 mm.
+  * **Component / Chip package:** TDK/InvenSense INMP441 LGA package is 4.72 mm × 3.76 mm × 1.00 mm (Datasheet: [InvenSense / TDK INMP441 DS-INMP441-00](https://product.tdk.com/en/search/sw_piezo/mic/mems-mic/info?part_no=INMP441)).
+  * **Installed headers (Height/Depth):** Standard straight 2.54 mm pin headers measure ~11.5 mm total overall pin length (plastic spacer ~2.5 mm, mating pin ~6.0 mm, solder tail ~3.0 mm). Installed perpendicular to the PCB, total height is 11.0 mm to 12.5 mm; right-angle headers or surface wiring reduce this to the plastic standoff profile (~2.5 mm to 3.5 mm above the board).
+
+---
+
+#### Variant B: Circular / Round Breakout (Purple or Black PCB)
+* **Live Vendor / Documentation Source:**
+  * [Accio / Commercial Component Breakout Analysis](https://www.accio.com/business/inmp441-dimensions)
+* **Quoted Dimensions:**
+  * Module footprint: *"Approximately 14.2 mm in diameter and 2 mm in height"* (bare board with SMT passives).
+* **Board vs. Chip vs. Installed Headers Breakdown:**
+  * **Bare PCB outline:** Circular disk, Diameter ~14.2 mm; bare PCB thickness 1.0 mm to 1.6 mm.
+  * **Component / Chip package:** Central LGA IC: 4.72 mm × 3.76 mm × 1.00 mm.
+  * **Installed headers:** Through-hole pads on a 2.54 mm pitch. When fitted with standard pin headers, vertical height extends ~8.5 mm on the mating side plus ~1.5 mm to 2.0 mm solder fillet/tail protrusion on the opposing face.
+
+---
+
+### 2. SHT31 / SHT45 Breakout Variants
+
+#### Variant A: Generic GY-SHT31-D / GY-SHT45 Dual-Hole Rectangular Board (Purple/Blue PCB, 6-Pin)
+* **Live Vendor / Documentation Source:**
+  * Factory / Supplier Spec: [YJJ / Ecer GY-SHT31-D Module Spec Sheet](https://www.ecer.com/corp/details-uuu9ddr-p1kdm7w-yjj-sht31-dis-b2-5ks-gy-sht31-d-temperature-and-humidity-sensor-probe-module-module-for-air-i2c-iic-communication.html)
+  * Vendor Listing: [Easyelecmodule SHT31 Sensor Module](https://easyelecmodule.com/product/sht31-temperature-and-humidity-sensor-module)
+* **Quoted Dimensions:**
+  * YJJ/Ecer factory documentation: *"Overall dimensions: 19mm x 16mm"*, *"Installation hole size: 2mm"*, *"Installation hole spacing: 15mm"*, *"Communication interface: Breakout 2.54mm - 6-pin I2C"*.
+  * Easyelecmodule compact breakout: *"Dimensions: 12.0 × 12.0 mm"*, *"Size: 12MM\*12MM"*.
+* **Board vs. Chip vs. Installed Headers Breakdown:**
+  * **Bare PCB outline:** 19.0 mm (Length) × 16.0 mm (Width) for the standard dual-mounting-hole GY version (or 12.0 mm × 12.0 mm on miniature 4-pin breakout formats). PCB thickness is typically 1.6 mm.
+  * **Component / Chip package:**
+    * **Sensirion SHT31-DIS:** 8-DFN package measuring 2.5 mm × 2.5 mm × 0.9 mm (Datasheet: [Sensirion SHT3x-DIS](https://sensirion.com/media/documents/213E6A3B/63A5A569/Datasheet_SHT3x_DIS.pdf)).
+    * **Sensirion SHT45:** 4-pin DFN package measuring 1.5 mm × 1.5 mm × 0.5 mm (Datasheet: [Sensirion SHT4x Series](https://sensirion.com/products/catalog/SHT45)).
+  * **Installed headers:** A 6-pin single-row 2.54 mm pitch header adds ~2.5 mm insulator height above the board, with ~6.0 mm pin engagement length, producing an installed height of 10.0 mm to 12.5 mm depending on pin insertion depth and solder tail trim.
+
+---
+
+#### Variant B: Branded Benchmark Breakout (Adafruit SHT31-D / SHT45 STEMMA QT Form Factor)
+* **Live Vendor / Documentation Source:**
+  * [Adafruit Sensirion SHT31-D (Product ID 2857)](https://www.adafruit.com/product/2857)
+  * [Adafruit Sensirion SHT45 with PTFE Filter (Product ID 6174)](http://adafruit.com/product/6174)
+* **Quoted Dimensions:**
+  * SHT31-D Breakout: *"12.7mm x 18mm x 2.6mm / 0.5\" x 0.7\" x 0.1\""* (Length × Width × Max height without headers).
+  * SHT45 Breakout with PTFE: *"25.5mm x 17.7mm x 4.8mm / 1.0\" x 0.7\" x 0.2\""* (Length × Width × Max height including JST SH connectors and PTFE membrane).
+* **Board vs. Chip vs. Installed Headers Breakdown:**
+  * **Bare PCB outline:** 17.7 mm to 18.0 mm wide × 12.7 mm to 25.5 mm long; 1.6 mm substrate thickness.
+  * **Component / Chip package:** SHT31-DIS (2.5 × 2.5 × 0.9 mm) or SHT45 (1.5 × 1.5 × 0.5 mm, plus 0.1 mm PTFE filter if fitted).
+  * **Installed headers / Connectors:** Surface-mount horizontal JST-SH (STEMMA QT) connectors stand ~3.0 mm to 3.5 mm tall. Standard 0.1" through-hole header pins extend the assembly to a total height of ~11.5 mm to 13.0 mm.
+
+---
+
+### 3. CAD Envelopes & Engineering Allowances
+
+#### A. Conservative CAD Envelopes (Worst-Case Physical Boundary)
+When sizing enclosures, retaining clips, or interior clearance volumes without knowing the exact supplier lot:
+
+* **INMP441 Breakout:**
+  * **Envelope Box (Rectangular):** **16.5 mm (L) × 13.5 mm (W) × 13.5 mm (H)** (assuming vertical straight header pins installed, bottom solder tails untrimmed).
+  * **Envelope Cylinder (Round):** **Ø15.5 mm × 13.5 mm (H)**.
+  * *Acoustic clearance note:* The INMP441 is a bottom-port microphone. The breakout PCB has a sound port hole (typically Ø0.8 mm to Ø1.2 mm). An unblocked path or gasket sealing zone of at least Ø2.5 mm around the PCB port must be preserved in the CAD envelope.
+
+* **GY-SHT31 / GY-SHT45 Breakout:**
+  * **Envelope Box (Full 6-pin GY module):** **20.0 mm (L) × 17.0 mm (W) × 13.5 mm (H)** (with straight headers installed) or **6.0 mm (H)** if using a right-angle header or direct-soldered wire harness.
+  * **Mounting Hole Centers:** Center-to-center spacing is nominally 15.0 mm for boards with two 2.0 mm screw holes.
+  * *Environmental clearance note:* SHT sensing windows require passive convective exposure; do not seal the top face flush against a solid enclosure wall.
+
+---
+
+#### B. Separately Defined Arbitrary Engineering Allowances
+Arbitrary safety margins recommended for 3D printing (FDM/SLA) and assembly variations:
+
+1. **PCB Edge Routing / V-Cut Tolerance:** **+0.3 mm to +0.5 mm** on board length and width to absorb non-deburred breakout tabs or panelization mouse bites.
+2. **Component & Solder Joint Clearance:** **+0.8 mm to +1.2 mm** on the board face for hand-soldered joints, wire solder balls, or bulky flux residue.
+3. **FDM 3D Print Shrinkage & Wall Fit:** **+0.35 mm radial clearance** (0.7 mm diametrical) for internal pocket walls to prevent binding due to printer calibration variance.
+4. **Wiring & Connector Bend Radius Allowance:** **+15.0 mm to +20.0 mm** along the header axis if using pre-crimped DuPont jumper wires, or **+6.0 mm** if direct-soldering stranded wires with heat-shrink strain relief.

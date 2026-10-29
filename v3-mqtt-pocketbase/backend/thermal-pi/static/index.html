@@ -191,7 +191,7 @@
       </div>
 
       <div class="panel controls">
-        <div class="controlTitle">Mic — INMP441</div>
+          <div class="controlTitle">Mic — ESP32-S3 barn mic</div>
 
         <div class="control">
           <div class="micHead">
@@ -547,7 +547,8 @@ async function micToggleLive() {
       btn.classList.remove('liveOn');
       micSetModeText(null);
     } else {
-      const mode = await PigPulseMic.start("/esp/stream");
+      const s = await fetch('/esp/status', {cache: 'no-store'}).then(r => r.json());
+      const mode = await PigPulseMic.start("/esp/stream", s.rate || 16000);
       btn.textContent = 'STOP LISTENING';
       btn.classList.add('liveOn');
       micSetModeText(mode);
@@ -562,12 +563,31 @@ async function micToggleLive() {
     micRefresh();
   }
 }
-function micRecord(n) {
+async function micRecord(n) {
   const rec = document.getElementById('micRec');
-  rec.textContent = 'Recording ' + n + ' s — download starts when done.';
+  const recBtn = document.getElementById('micRecBtn');
+  recBtn.disabled = true;
+  rec.textContent = 'Recording in progress... (takes ~25s for ESP to stream chunks)';
   rec.classList.add('busy');
-  window.location.href = '/esp/record?seconds=' + n + '&ts=' + Date.now();
-  setTimeout(() => { rec.classList.remove('busy'); micRefresh(); }, (n + 3) * 1000);
+  try {
+    const res = await fetch('/esp/record?seconds=' + n + '&ts=' + Date.now());
+    if (!res.ok) throw new Error(await res.text() || res.statusText);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `esp_mic_${n}s_${Date.now()}.wav`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    rec.textContent = 'Recorded successfully! Downloaded ' + (blob.size / 1024 | 0) + ' KB.';
+  } catch (err) {
+    rec.textContent = 'Record failed: ' + err.message;
+  } finally {
+    rec.classList.remove('busy');
+    recBtn.disabled = false;
+    micRefresh();
+  }
 }
 if (window.PigPulseMic) {
   setInterval(micRefresh, 700);

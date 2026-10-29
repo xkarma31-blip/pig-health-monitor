@@ -1,0 +1,79 @@
+{
+  "pass": true,
+  "checks": [
+    {
+      "side": -1,
+      "slot_leg_overlap_mm3": 0.0,
+      "pass": true
+    },
+    {
+      "side": -1,
+      "corridor_overlap_mm3": 0.0,
+      "blocked_junction_and_edge_controls": [
+        true,
+        true
+      ],
+      "pass": true
+    },
+    {
+      "side": -1,
+      "floor_probe_volume_mm3": 4.8,
+      "retained_mm3": 4.800000190734863,
+      "pass": true
+    },
+    {
+      "side": 1,
+      "slot_leg_overlap_mm3": 0.0,
+      "pass": true
+    },
+    {
+      "side": 1,
+      "corridor_overlap_mm3": 0.0,
+      "blocked_junction_and_edge_controls": [
+        true,
+        true
+      ],
+      "pass": true
+    },
+    {
+      "side": 1,
+      "floor_probe_volume_mm3": 4.8,
+      "retained_mm3": 4.800000190734863,
+      "pass": true
+    },
+    {
+      "bolt_axis": [
+        -10,
+        -10
+      ],
+      "annulus_radius_mm": 2.5,
+      "pass": true
+    },
+    {
+      "bolt_axis": [
+        -10,
+        10
+      ],
+      "annulus_radius_mm": 2.5,
+      "pass": true
+    },
+    {
+      "bolt_axis": [
+        10,
+        -10
+      ],
+      "annulus_radius_mm": 2.5,
+      "pass": true
+    },
+    {
+      "bolt_axis": [
+        10,
+        10
+      ],
+      "annulus_radius_mm": 2.5,
+      "pass": true
+    }
+  ],
+  "limits": "Finite straight tail corridor only; no actual tie dimensions,bend,locking head,board or acoustic coupling verified. Floor probe is selected region,not whole-part strength.",
+  "input_stl_sha256": "a3367779b55c4a209451834f9d90f65613ce9c836046a2535be0024dfa967422"
+}

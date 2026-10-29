@@ -1,0 +1,50 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018 [90m[offset=1, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "strap|escape|relief|revision-o|finish" [90min v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py · 35 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/check_strap_relief.py [90m[offset=1, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py [90m[offset=1, limit=180][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/render_assembled.py [90m[offset=1, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o [90m[offset=1, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m⚙ [0mexecute {"code":"return search({query:'execute shell command',limit:2});"} 
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o/START_HERE.md [90m[offset=1, limit=120][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o/strap-relief-comparison.json [90m[offset=170, limit=70][0m
+> reviewer · cx/gpt-6.1-sol-review
+## Findings, in severity order
+
+**P2 — The relief test can pass disconnected outbound channels.**  
+`v3-mqtt-pocketbase/enclosure/recovery-20261018/check_strap_relief.py:15–20`  
+All probes are vertical rays at `|x| = 11.2, 11.8, 12.4`, with `y = −2, 0, 2`. They do not inspect the connection to the through-slot at `|x| = 11`, or the exit through the carrier edge at `|x| = 13`. A remaining wall at either junction could pinch/block a tail while all 18 probes still pass. The report correctly disclaims continuous-route proof, but this remains missing regression coverage for the repair’s central purpose.
+
+**Action:** Test a continuous finite-width clearance corridor from each through-slot to beyond the outside edge, using the finished/exported mesh. Include deliberate blocked-slot-junction and blocked-edge negative controls—not just revision N’s absent relief.
+
+**P2 — No regression checks protect the sound bore, bolt lands, or retained floor.**  
+`v3-mqtt-pocketbase/enclosure/recovery-20261018/check_strap_relief.py:17–21`  
+The only acceptance condition is an upper bound on the first downward hit. It establishes neither a minimum remaining floor thickness nor exclusion of relief from the sound bore and bolt-bearing regions. An excessively deep or enlarged cutter could therefore pass this check despite compromising those features.
+
+**Action:** Independently check retained material thickness and protected bore/bolt-land envelopes on the finished STL. Add overdeep and overwide cutter negative controls. Keep these separate from tie-clearance acceptance.
+
+## Geometry assessment
+
+For the **specified source geometry**, I do **not** identify a concrete disconnected-route or bore/bolt intersection defect:
+
+- `build_revision.py:158–168`: the positive-side slot spans `x = 9…11`; its escape cutter spans `x = 9.5…14.5`. Thus there is **1.5 mm overlap**, and the cutter extends **1.5 mm beyond** the carrier edge at `x = 13`. The negative side is symmetric.
+- The cutter removes material above **z = 1.8**, producing **1.2 mm nominal face-side clearance** beneath the mating face at z = 3.
+- The escape region remains outside the **6 mm-radius sound bore**. Bolt rows at `y = ±10` are separated from the cutter’s `y = ±4` boundary; the 1.7 mm-radius bolt holes are not intersected.
+- `finish()` applies a **0.35 mm bevel** after subtraction (`build_revision.py:66–75,169`). The saved O ray results show approximately **1.8 mm floors**, with about **1.738 mm** at the slot-side bevel samples. These support local relief after finishing, **not a continuous-route proof**.
+
+## Render and scope limitations
+
+`render_assembled.py:63–76` places both carriers at assembled depth **27…30**, with the acoustic face starting at **30**. This is consistent with putting the relief on the mating side; the render does not inadvertently reverse it.
+
+However, the assembly contains **no strap, bend, locking-head, or microphone-board envelope**. Its views cannot establish threading feasibility, installed tail/head placement, or clearance around actual hardware. No physical fit, printability-in-practice, acoustic coupling, or measured hardware compatibility is established here.
+
+**Bottom line:** The nominal O cutters are connected and avoid the specified bore and bolt holes by construction. The actionable deficiencies are in regression verification, rather than an identified cutter-placement defect. No files modified; no subagents used.

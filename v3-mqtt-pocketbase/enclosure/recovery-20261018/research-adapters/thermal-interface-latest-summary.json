@@ -1,0 +1,109 @@
+{
+  "source_report": "thermal-installed-hardware-checks-20261019T023444056715Z.json",
+  "source_sha256": "f3d8cb77ed39eb013956f381899e82a7cbd282ed378b09756dc09e5f2d4999dc",
+  "acceptance": true,
+  "variants": [
+    {
+      "scene": "pcb25_4square_installed.blend",
+      "gates": {
+        "connected_solids": true,
+        "four_mount_load_paths": true,
+        "fastened_retainers": true,
+        "exact_pcb_bearing": true,
+        "hardware_and_tool_clearance": true,
+        "m3_threaded_receiver_established": true
+      },
+      "collisions": 0,
+      "mount_contact_samples": [
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        },
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        },
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        },
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        }
+      ]
+    },
+    {
+      "scene": "pcb25_4x17_78_installed.blend",
+      "gates": {
+        "connected_solids": true,
+        "four_mount_load_paths": true,
+        "fastened_retainers": true,
+        "exact_pcb_bearing": true,
+        "hardware_and_tool_clearance": true,
+        "m3_threaded_receiver_established": true
+      },
+      "collisions": 0,
+      "mount_contact_samples": [
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        },
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        },
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        },
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        }
+      ]
+    },
+    {
+      "scene": "pcb28x16_installed.blend",
+      "gates": {
+        "connected_solids": true,
+        "four_mount_load_paths": true,
+        "fastened_retainers": true,
+        "exact_pcb_bearing": true,
+        "hardware_and_tool_clearance": true,
+        "m3_threaded_receiver_established": true
+      },
+      "collisions": 0,
+      "mount_contact_samples": [
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        },
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        },
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        },
+        {
+          "pass": true,
+          "successful": 288,
+          "total": 288
+        }
+      ]
+    }
+  ]
+}

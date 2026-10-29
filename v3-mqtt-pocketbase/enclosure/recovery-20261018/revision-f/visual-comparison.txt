@@ -1,0 +1,4 @@
+data: {"id":"chatcmpl-h7XUasvXHNycjuMPto2dsAs","object":"chat.completion.chunk","created":1792325005,"model":"gemini-3.8-flash-n","choices":[{"index":0,"delta":{"role":"assistant"},"finish_reason":null}]}
+
+data: {"id":"chatcmpl-h7XUasvXHNycjuMPto2dsAs","object":"chat.completion.chunk","created":1792325005,"model":"gemini-3.8-flash-n","choices":[{"index":0,"delta":{"reasoning_content":"The task involves comparing an approved poster design with a prototype, specifically focusing on the label tagline, dual lower apertures, and angled hood. I need to identify matches and differences based on those features.\n\n\n"},"finish_reason":null}]}
+

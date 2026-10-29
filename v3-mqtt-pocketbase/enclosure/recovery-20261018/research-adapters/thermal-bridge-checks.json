@@ -1,0 +1,52 @@
+{
+  "status": "research thermal bridge coupon only, not installed",
+  "size_mm": [
+    68,
+    30,
+    2
+  ],
+  "central_opening_mm": [
+    42,
+    12
+  ],
+  "mount_axes_mm": [
+    [
+      -30,
+      -9
+    ],
+    [
+      -30,
+      9
+    ],
+    [
+      30,
+      -9
+    ],
+    [
+      30,
+      9
+    ]
+  ],
+  "source_board_plan_examples_mm": [
+    [
+      28,
+      16
+    ],
+    [
+      25.4,
+      25.4
+    ],
+    [
+      25.8,
+      17.8
+    ]
+  ],
+  "nonmanifold_edges": 0,
+  "volume_mm3": 2999.4830000759284,
+  "limits": [
+    "Reduced opening could obstruct optical free zone; do not install without ray/placement check",
+    "Planar coupon not yet adapted to15degree tilted cradle/pads",
+    "PCB underside contact and straps/connector clearance unknown",
+    "Additional2mm changes bolt stack and pupil position"
+  ]
+}

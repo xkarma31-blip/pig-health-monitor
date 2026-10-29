@@ -1,0 +1,142 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018 [90m[offset=1, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/package_revision_o.sh [90m[offset=1, limit=300][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o/START_HERE.md [90m[offset=1, limit=300][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/verify_revision.sh [90m[offset=1, limit=300][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/check_strap_relief.py [90m[offset=1, limit=300][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py [90m[offset=1, limit=90][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "ROOT|read|open|import|\.py|\.png|\.json|\.ini" [90min v3-mqtt-pocketbase/enclosure/recovery-20261018/render_assembled.py · 18 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/slice_revision.sh [90m[offset=1, limit=220][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/check_strap_corridor.py [90m[offset=1, limit=65][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "require|readFile|\.py|\.js|\.blend|revision-|root|ROOT" [90min v3-mqtt-pocketbase/enclosure/recovery-20261018/check_assembly.py · 4 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/summarize_verification.js [90m[offset=1, limit=220][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/check_exports.js [90m[offset=1, limit=130][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "read|load|exec|import|ROOT /|ROOT/" [90min v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py · 11 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/check_bearing_seats.py [90m[offset=1, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m⚙ [0mexecute {"code":"return search({query:'execute command shell',limit:2});"} 
+> reviewer · cx/gpt-6.1-sol-review
+[0m⚙ [0mexecute {"code":"return await tools[\"blender-mcp\"].execute_blender_code({code:\"import zipfile\\np='/home/solrahk/pig-health-monitor/v3-mqtt-pocketbase/enclosure/recovery-20261018/pigpulse-revision-o-reviewed-prototype.zip'\\nwith zipfile.ZipFile(p) as z:\\n names=z.namelist()\\n result={'root_files':[n for n in names if '/' not in n], 'n_files':[n for n in names if n.startswith('revision-n/')], 'count':len(names)}\"});"} 
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/check_grip_surfaces.py [90m[offset=1, limit=160][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/fastener_ledger.js [90m[offset=1, limit=90][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o/ASSEMBLY_CURRENT.md [90m[offset=1, limit=180][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "\.py|\.sh|\.js|revision-[a-n]/|\.png|reproduc|blender|Prusa" [90min v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o · 22 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o/START_HERE.md [90m[offset=55, limit=60][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o/PACKAGE_SMOKE_TEST.md [90m[offset=1, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o [90m[offset=1, limit=130][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m⚙ [0mexecute {"code":"return await tools[\"blender-mcp\"].execute_blender_code({code:\"import zipfile,json\\np='/home/solrahk/pig-health-monitor/v3-mqtt-pocketbase/enclosure/recovery-20261018/pigpulse-revision-o-reviewed-prototype.zip'\\nwith zipfile.ZipFile(p) as z:\\n print(json.dumps({'root_files':[n for n in z.namelist() if '/' not in n],'n_files':[n for n in z.namelist() if n.startswith('revision-n/')]}))\"});"} 
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/package_revision_o.sh [90m[offset=1, limit=40][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/restore_slicer_runtime.sh [90m[offset=1, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m⚙ [0mexecute {"code":"return await tools[\"blender-mcp\"].execute_blender_code({code:\"import zipfile,json,pathlib\\nr=pathlib.Path('/home/solrahk/pig-health-monitor/v3-mqtt-pocketbase/enclosure/recovery-20261018')\\nwith zipfile.ZipFile(r/'pigpulse-revision-o-reviewed-prototype.zip') as z:\\n print(json.dumps({'source_differences':[n for n in z.namelist() if '/' not in n and (r/n).exists() and z.read(n)!=(r/n).read_bytes()], 'archive_start_here':z.read('revision-o/START_HERE.md').decode()}))\"});"} 
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o/PHYSICAL_VALIDATION_REQUIRED.md [90m[offset=1, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/REFERENCE_AND_HARDWARE.md [90m[offset=1, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+## Release audit findings
+
+Paths below are relative to `v3-mqtt-pocketbase/enclosure/recovery-20261018/`.
+
+**The current ZIP includes the mandatory workflow’s local source/data dependencies.** I inspected its member list: verification scripts, artwork, the N carrier negative-control STL, and `restore_slicer_runtime.sh` are present. Missing historical optical helpers are **not** release blockers for the O workflow.
+
+### 1. Medium — Fresh-machine reproduction still depends on an undocumented prerequisite sequence
+**References:** `START_HERE.md:4–6,60–64`; `slice_revision.sh:6–8`; `restore_slicer_runtime.sh:7–11`
+
+The advertised reproduction command is `bash verify_revision.sh revision-o`, but slicing defaults to a transient executable under `/tmp/opencode/pigpulse-slicer/runtime/`. On a clean machine or after that runtime disappears, verification stops at the executable check.
+
+The restoration helper is included, so this is **not a missing archive file**. The contradiction is presenting the helper as optional while the default mandatory workflow needs either that runtime restored or `PRUSA_SLICER` configured. The helper also downloads a selected dependency subset, relying on remaining system libraries; it is not a portable, fully specified environment.
+
+The instructions should distinguish self-contained project inputs from external prerequisites: compatible Blender, Node, PrusaSlicer and its libraries, plus packaging utilities.
+
+### 2. Medium — Packaging can succeed without enforcing the mandatory strap-relief negative-control gate
+**References:** `package_revision_o.sh:6`; `verify_revision.sh:14`; `check_strap_relief.py:9–28`; `summarize_verification.js:9–13,38–53`
+
+Verification explicitly requires N to fail and O to pass the relief probe. Packaging only invokes the summary, and the summary does not read or validate `strap-relief-comparison.json` or either probe input’s provenance.
+
+Consequently, packaging does not establish that this mandatory check passed for the current inputs. The hash-bound corridor gate provides separate O geometry evidence, but it does not establish the N negative-control result.
+
+**Missing regression coverage:** packaging should be tested against a missing/stale relief report and a changed negative-control STL, with rejection expected.
+
+### 3. Low — Archive smoke testing does not establish full mandatory-workflow reproducibility
+**References:** `revision-o/PACKAGE_SMOKE_TEST.md:3–13`; `verify_revision.sh:10–20`; `package_revision_o.sh:18`
+
+The unpacked smoke test runs export, relief and corridor checks only. It does not exercise the fresh build, rendering, assembly checks, slicer restoration/slicing, or final summary. ZIP integrity testing likewise checks archive readability, not dependency closure or executable reproduction.
+
+The smoke-test document correctly disclaims a full build. Nevertheless, the remaining release-test gap is a complete run from an extracted archive with prerequisites explicitly provisioned. **I did not run that workflow**, because it writes regenerated outputs.
+
+## Resolved/non-findings
+
+- **N negative-control dependency is included:** `package_revision_o.sh:16` supplies precisely the STL consumed by `check_strap_relief.py:9–11`.
+- **G-code omission is intentional and explained:** `START_HERE.md:55–59` instructs users to regenerate it before summarizing. That is not itself contradictory.
+- **Historical optical helpers need not be archived** for the mandatory O runner; it does not invoke them.
+- The files changed during inspection: the initial packaging-script read lacked `restore_slicer_runtime.sh`, whereas a subsequent read and the inspected ZIP both included it. The conclusions above describe the **later inspected state**, not an immutable snapshot.
+
+## Remaining gap to the original-reference goal
+
+Revision O is a **digitally checked enclosure prototype with a localized strap-channel repair**, not a demonstrated reference-faithful, hardware-fitted manufacturing release.
+
+- Reference identity approval and exact visual details remain unresolved in `REFERENCE_AND_HARDWARE.md:14–27,45–51`.
+- Actual boards and the thermal window are not modeled: `revision-o/START_HERE.md:47–49`.
+- Complete tie bends, locking-head placement and breakout compatibility remain unverified: `revision-o/START_HERE.md:19–32`.
+- Acoustic coupling still needs a breakout-specific gasket/interface and response testing: `revision-o/ASSEMBLY_CURRENT.md:40–45`.
+- Actual optical placement, fastener tolerances, electronics clearance, mounting loads and environmental suitability remain open: `revision-o/PHYSICAL_VALIDATION_REQUIRED.md:8–39`.
+
+**No physical printing, assembly, sensor-performance or field validation was established by this audit.** No files were edited and no subagents were used.

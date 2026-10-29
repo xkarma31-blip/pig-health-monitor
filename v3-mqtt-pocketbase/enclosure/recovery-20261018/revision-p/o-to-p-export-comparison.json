@@ -1,0 +1,70 @@
+[
+  {
+    "part": "main_tub",
+    "unchanged_from_o": false
+  },
+  {
+    "part": "main_lid",
+    "unchanged_from_o": false
+  },
+  {
+    "part": "thermal_tub",
+    "unchanged_from_o": true
+  },
+  {
+    "part": "thermal_face",
+    "unchanged_from_o": true
+  },
+  {
+    "part": "acoustic_tub",
+    "unchanged_from_o": true
+  },
+  {
+    "part": "acoustic_face",
+    "unchanged_from_o": true
+  },
+  {
+    "part": "microphone_strap_carrier",
+    "unchanged_from_o": true
+  },
+  {
+    "part": "thermal_strap_carrier",
+    "unchanged_from_o": true
+  },
+  {
+    "part": "optical_trim",
+    "unchanged_from_o": true
+  },
+  {
+    "part": "acoustic_trim",
+    "unchanged_from_o": true
+  },
+  {
+    "part": "mounting_spine",
+    "unchanged_from_o": true
+  },
+  {
+    "part": "sht_adjustable_carrier",
+    "unchanged_from_o": true
+  },
+  {
+    "part": "sht_mount_arm",
+    "unchanged_from_o": true
+  },
+  {
+    "part": "electronics_strap_tray",
+    "unchanged_from_o": true
+  },
+  {
+    "part": "tray_spacer_6mm",
+    "unchanged_from_o": true
+  },
+  {
+    "part": "thermal_raised_cradle",
+    "unchanged_from_o": true
+  },
+  {
+    "part": "thermal_angled_hood",
+    "unchanged_from_o": true
+  }
+]

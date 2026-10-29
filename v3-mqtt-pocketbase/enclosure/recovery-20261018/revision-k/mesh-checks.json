@@ -1,0 +1,180 @@
+{
+  "status": "MECHANICAL PROTOTYPE \u2014 NOT HARDWARE FIT RELEASE",
+  "units": "mm",
+  "wall_nominal_mm": 3,
+  "hardware_dimensions_measured": false,
+  "slicer_checked": false,
+  "parts": [
+    {
+      "name": "main_tub",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 80136.21110786677,
+      "bounds_mm": [
+        120.0,
+        112.0,
+        30.0
+      ]
+    },
+    {
+      "name": "main_lid",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 40144.91625547831,
+      "bounds_mm": [
+        120.0,
+        112.0,
+        3.0
+      ]
+    },
+    {
+      "name": "thermal_tub",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 20010.29657786925,
+      "bounds_mm": [
+        92.0,
+        38.0,
+        14.0
+      ]
+    },
+    {
+      "name": "thermal_face",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 6639.8319577323855,
+      "bounds_mm": [
+        92.0,
+        38.0,
+        3.0
+      ]
+    },
+    {
+      "name": "acoustic_tub",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 36498.564114048466,
+      "bounds_mm": [
+        100.0,
+        38.0,
+        30.0
+      ]
+    },
+    {
+      "name": "acoustic_face",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 10354.998197690764,
+      "bounds_mm": [
+        100.0,
+        38.0,
+        3.0
+      ]
+    },
+    {
+      "name": "microphone_strap_carrier",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 1469.0186109549477,
+      "bounds_mm": [
+        26.0,
+        26.0,
+        3.0
+      ]
+    },
+    {
+      "name": "thermal_strap_carrier",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 2303.120015975929,
+      "bounds_mm": [
+        68.0,
+        30.0,
+        3.0
+      ]
+    },
+    {
+      "name": "optical_trim",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 568.7017302833262,
+      "bounds_mm": [
+        34.0,
+        34.0,
+        2.0
+      ]
+    },
+    {
+      "name": "acoustic_trim",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 275.1782977488959,
+      "bounds_mm": [
+        18.0,
+        18.0,
+        2.0
+      ]
+    },
+    {
+      "name": "mounting_spine",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 45476.267499039044,
+      "bounds_mm": [
+        48.0,
+        196.0,
+        5.0
+      ]
+    },
+    {
+      "name": "sht_adjustable_carrier",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 2029.196705747975,
+      "bounds_mm": [
+        32.0,
+        32.0,
+        3.0
+      ]
+    },
+    {
+      "name": "sht_mount_arm",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 9808.07418310028,
+      "bounds_mm": [
+        120.0,
+        32.00040054321289,
+        13.0
+      ]
+    },
+    {
+      "name": "electronics_strap_tray",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 18008.718732689038,
+      "bounds_mm": [
+        82.0,
+        76.0,
+        3.0
+      ]
+    },
+    {
+      "name": "tray_spacer_6mm",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 173.58554888186524,
+      "bounds_mm": [
+        7.0,
+        7.0,
+        6.0
+      ]
+    },
+    {
+      "name": "thermal_raised_cradle",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 3015.988170280232,
+      "bounds_mm": [
+        68.0,
+        29.741039276123047,
+        12.326042652130127
+      ]
+    },
+    {
+      "name": "thermal_angled_hood",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 18617.847294529114,
+      "bounds_mm": [
+        92.0,
+        38.0,
+        21.091033935546875
+      ]
+    }
+  ],
+  "mesh_gate_pass": true
+}

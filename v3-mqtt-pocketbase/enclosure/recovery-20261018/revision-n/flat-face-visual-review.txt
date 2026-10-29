@@ -1,0 +1,5 @@
+The main broad face of the central enclosure remains visibly defective. While it displays a soft vertical lighting gradient, there is a conspicuous, faint diagonal line cutting across the upper-left quadrant to the left of the logo, indicating an unresolved polygonal seam or shading artifact rather than smooth geometry. 
+
+The green "PigPulse" logo and the full white tagline, "Edge Intelligence for Swine Health," are sharp, centered, and fully legible. 
+
+The physical hardware features are clearly visible, including the four corner screws on the main enclosure, the small green indicator light below the text, the upper and lower sensor modules with their mounting fasteners, the circular green-ringed ports, and the side mounting bracket.

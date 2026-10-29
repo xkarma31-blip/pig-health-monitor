@@ -1,0 +1,17 @@
+{
+  "nonmanifold_edges": 0,
+  "volume_mm3": 88.07427988783954,
+  "nominal_height_mm": 3,
+  "optional_tray_top_depth_mm": 9,
+  "gross_clearance_to_lid_mm": 21,
+  "nominal_20mm_stack_margin_mm": 1,
+  "bolt_stack_grip_mm": 9,
+  "candidate_bolt_length_mm": 14,
+  "minimum_length_under_prior_assumptions_mm": 13.4,
+  "limits": [
+    "Only1mm nominal top margin before tolerances and cables",
+    "3mm underside gap requires electrical/solder protrusion assessment",
+    "Use four spacers; change tray bolts rather than retain18mm bolt blindly",
+    "Not a physical fit or universal header compatibility claim"
+  ]
+}

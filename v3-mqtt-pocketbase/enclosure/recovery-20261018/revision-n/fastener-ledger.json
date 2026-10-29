@@ -1,0 +1,120 @@
+{
+  "basis": "CAD dimensions only; bolt length excludes head. Assumed washers total1mm, nut2.4mm, exposed thread1mm. Head envelopes separately constrained. No measured fit or nut-access proof.",
+  "rows": [
+    {
+      "joint": "Main and acoustic covers",
+      "count": 8,
+      "nominal_grip_mm": 33,
+      "assumed_bolt_length_mm": 40,
+      "minimum_length_under_assumptions_mm": 37.4,
+      "margin_mm": 2.6000000000000014,
+      "length_gate": true
+    },
+    {
+      "joint": "Thermal hood stack y=-13",
+      "count": 2,
+      "nominal_grip_mm": 28.252043405643363,
+      "assumed_bolt_length_mm": 35,
+      "minimum_length_under_assumptions_mm": 32.65204340564336,
+      "margin_mm": 2.3479565943566385,
+      "length_gate": true
+    },
+    {
+      "joint": "Thermal hood stack y=13",
+      "count": 2,
+      "nominal_grip_mm": 35.21872240885256,
+      "assumed_bolt_length_mm": 40,
+      "minimum_length_under_assumptions_mm": 39.618722408852555,
+      "margin_mm": 0.38127759114744464,
+      "length_gate": true
+    },
+    {
+      "joint": "Raised cradle to separator y=-9",
+      "count": 2,
+      "nominal_grip_mm": 9.788457268119895,
+      "assumed_bolt_length_mm": 16,
+      "minimum_length_under_assumptions_mm": 14.188457268119896,
+      "margin_mm": 1.8115427318801043,
+      "length_gate": true
+    },
+    {
+      "joint": "Raised cradle to separator y=9",
+      "count": 2,
+      "nominal_grip_mm": 14.611542731880103,
+      "assumed_bolt_length_mm": 20,
+      "minimum_length_under_assumptions_mm": 19.011542731880102,
+      "margin_mm": 0.9884572681198982,
+      "length_gate": true
+    },
+    {
+      "joint": "Spine to three tub floors",
+      "count": 6,
+      "nominal_grip_mm": 8,
+      "assumed_bolt_length_mm": 14,
+      "minimum_length_under_assumptions_mm": 12.4,
+      "margin_mm": 1.5999999999999996,
+      "length_gate": true
+    },
+    {
+      "joint": "SHT arm to spine",
+      "count": 2,
+      "nominal_grip_mm": 10,
+      "assumed_bolt_length_mm": 16,
+      "minimum_length_under_assumptions_mm": 14.4,
+      "margin_mm": 1.5999999999999996,
+      "length_gate": true
+    },
+    {
+      "joint": "SHT carrier to arm",
+      "count": 2,
+      "nominal_grip_mm": 16,
+      "assumed_bolt_length_mm": 22,
+      "minimum_length_under_assumptions_mm": 20.4,
+      "margin_mm": 1.6000000000000014,
+      "length_gate": true
+    },
+    {
+      "joint": "Electronics tray, spacers and floor",
+      "count": 4,
+      "nominal_grip_mm": 12,
+      "assumed_bolt_length_mm": 18,
+      "minimum_length_under_assumptions_mm": 16.4,
+      "margin_mm": 1.6000000000000014,
+      "length_gate": true
+    },
+    {
+      "joint": "Two microphone carriers to face",
+      "count": 8,
+      "nominal_grip_mm": 6,
+      "assumed_bolt_length_mm": 12,
+      "minimum_length_under_assumptions_mm": 10.4,
+      "margin_mm": 1.5999999999999996,
+      "length_gate": true
+    }
+  ],
+  "pass": true,
+  "limitations": [
+    "Longer bolts can collide with electronics; no universal safe bolt length.",
+    "Check available stock lengths and real washer/nut sizes; use only hardware within head-envelope checks.",
+    "Cut threads must be deburred; never infer physical engagement from CAD arithmetic."
+  ],
+  "input_stl_sha256": {
+    "main_tub": "3b6bd2645ea55cd4ddae5019db203022ec0dc45b36805503508c4f98c46a1f36",
+    "main_lid": "80a90478dc4fdf046f707b575eb9dc0e946a1c3c4835d5443073651c4756c6b2",
+    "thermal_tub": "ef5f2aa56b83c8cb7af040a7e7055b44766467e68dc6cc85f1e486b09ec1c2fa",
+    "thermal_face": "4ceadefe5bfd91dd54fe3c8aa9005f13ef3b9bb738ec906be17c304bdeabf671",
+    "acoustic_tub": "5ae7ee3d9dba0228e6177644a0076a0f14a0f56859c3853c1b32f150bf991d5d",
+    "acoustic_face": "68dbcded253e22103736a3d6b49ac3a976e64bbc17a57883d49bcc7ab2741ded",
+    "microphone_strap_carrier": "2c884c27b8ddffa7525d26952fafebb3729a4c98dd55b6317fc24e91a8a1bf5d",
+    "thermal_strap_carrier": "f59a44bf1b194b1e0e8b0d6c19bd07fe3aeda5d4bfe5715a4a088b0424e61268",
+    "optical_trim": "4338e7d24baea8d695a9d34d9f3cb3ab050bc6c23cf49722835edac6e10b8424",
+    "acoustic_trim": "66e4c1fa40218273361efa841f83c8708f4f8bb0a11c47ef414c05a72aeb5d5c",
+    "mounting_spine": "d8566155e0fc07dcff34381212ddc977850b7991b4ed6e28763f305110b5aebb",
+    "sht_adjustable_carrier": "a3a898588a8937e33415ff05bedc24901993d5d87bcd0e62ec5bef1db2054dc1",
+    "sht_mount_arm": "3c1813784b9340e578b1bba883b837b08abdae78150f65e3528892259a039342",
+    "electronics_strap_tray": "90d80701e68ce12b23b3f8b404a4052a8e8b874499515530dc40881fef38486a",
+    "tray_spacer_6mm": "2276b9fb58021060234ee1de8ecb141b61fc46c5e025bda1196be3e24dc824b0",
+    "thermal_raised_cradle": "9d2cebe08c75bc8f4e752c05fb70079562e01cc88b2fab0fb4d1bf77564fed2d",
+    "thermal_angled_hood": "10a79f3270e9c3dce5153311b4fb9ab0347b5ae139ae931b0e953363c1c19b9c"
+  }
+}

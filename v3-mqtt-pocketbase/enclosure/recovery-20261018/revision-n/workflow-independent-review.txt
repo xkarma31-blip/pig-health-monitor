@@ -1,0 +1,81 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018 [90m[offset=1, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/verify_revision.sh [90m[offset=1, limit=300][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/slice_revision.sh [90m[offset=1, limit=300][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/summarize_verification.js [90m[offset=1, limit=400][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/render_assembled.py [90m[offset=1, limit=400][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/check_assembly.py [90m[offset=1, limit=500][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/check_grip_surfaces.py [90m[offset=1, limit=160][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/fastener_ledger.js [90m[offset=1, limit=180][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-n [90m[offset=1, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+### Findings, highest severity first
+
+1. **P2 — Slicer manifest can certify stale G-code as belonging to current STLs.**  
+   `v3-mqtt-pocketbase/enclosure/recovery-20261018/slice_revision.sh:16–32`  
+   Existing `.gcode` files are retained, and input hashes are taken only **after the entire slicing loop**. A slicer invocation that returns zero without replacing its output can therefore leave old G-code that gets paired with the current STL hash. Likewise, changing an STL after its slice completes but before manifest creation binds the earlier toolpath to the newer STL. The summary’s hash checks then pass because they validate that newly manufactured association, not the input actually consumed.  
+   **Action:** snapshot/hash inputs before slicing, use fresh per-run output paths, verify each output was produced, and reject input changes before publishing the manifest. Add regressions for a zero-exit/no-output slicer and an input changed mid-loop.
+
+2. **P2 — Overall verification omits the existing fastener-length gate.**  
+   `v3-mqtt-pocketbase/enclosure/recovery-20261018/verify_revision.sh:9–15` and `summarize_verification.js:29–40`  
+   The workflow neither regenerates `fastener-ledger.json` nor reads its `pass` value. Consequently, insufficient assumed bolt lengths—or a stale ledger left over from earlier geometry—cannot prevent `verification-summary.json` from reporting `pass: true`. The head-clearance and driver checks do not establish bolt engagement.  
+   **Action:** generate a revision-specific ledger during verification and include its result and geometry provenance in the final gate. Test that a failing or missing ledger prevents overall success.
+
+3. **P2 — Hiding an installed part silently removes it from the comprehensive collision gate.**  
+   `v3-mqtt-pocketbase/enclosure/recovery-20261018/check_assembly.py:49–59` and `summarize_verification.js:38–40`  
+   Installed-part membership is inferred from `hide_render`, rather than an explicit assembly inventory. Accidentally hiding a printable object excludes it from all-pairs checking; the summary reports `installed_part_count` but never validates it or the expected object names. For duplicated parts outside the hand-selected pairs, this can suppress the only collision check while preserving a successful summary and valid STL provenance.  
+   **Action:** validate an explicit expected installed-object inventory, including duplicates, independently of rendering visibility. Add a regression hiding/removing one duplicated carrier or spacer.
+
+**Renderer provenance caveat:** `render_assembled.py:16–18` does publish the external manifest before saving the blend, but this alone is **not** an established false-positive path: `summarize_verification.js:12` also checks the manifest embedded in the saved scene and the audited blend hash. An interrupted renderer leaving an older blend with different STL provenance should fail that gate.
+
+Read-only inspection; no files changed or Blender/slicer execution performed.

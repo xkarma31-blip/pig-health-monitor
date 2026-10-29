@@ -1,0 +1,61 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead . [90m[offset=0, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead build_mic_corner_support.py [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead check_mic_corner_installed.py [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead research-adapters/mic-corner-checks.json [90m[offset=0, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mSkill "ponytail" 
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead research-adapters/mic-corner-installed-checks.json [90m[offset=0, limit=180][0m
+> reviewer · cx/gpt-6.1-sol-review
+## Findings — severity order
+
+### 1. High — All four tie tunnels terminate inside the bearing legs
+**`build_mic_corner_support.py:33–41`**
+
+The tunnel cutter does not reach the inward face of the adjacent corner leg:
+
+- Positive-X leg occupies **X = 5.5…7 mm**.
+- Its stop occupies **X = 7…8.5 mm**.
+- The 4 mm tunnel cutter centered at X = 7.75 reaches only **X = 5.75…9.75 mm**.
+
+That leaves a **0.25 mm solid wall at X = 5.5…5.75**, across the tunnel’s Y/Z opening. The negative-X side has the mirrored defect. Consequently, these are outward-opening **blind pockets**, not through-tunnels: a tie inserted from outside cannot emerge underneath the PCB and continue around it. Prethreading does not solve the closed end.
+
+**Practical completion:** extend each cut beyond the inward leg face, then check that a continuous reserved tie-width/thickness envelope actually connects the openings to a route over the board. This can be completed using a declared purchased-tie envelope; actual hardware measurements are not necessary just to reserve that space.
+
+### 2. Medium — Installed checker can pass despite unusable retention and weakened/disconnected seat geometry
+**`check_mic_corner_installed.py:38–49`**
+
+The acceptance condition checks four center-point seat rays and solid intersections only. It does **not** test:
+
+- Through-connectivity of the tie tunnels—the defect above passes these checks.
+- A continuous tie route, including bends and a reserved head location.
+- Finite bearing area under the PCB.
+- A connected load path from each bearing seat into the base.
+- Manifoldness of the imported support.
+
+A ray hitting a tiny remaining seat, or even a detached seat island, can satisfy the present bearing test. Non-intersection is not evidence of retention.
+
+**Practical completion:** add explicit geometric acceptance checks for tunnel exit/connectivity, reserved tie-route clearance, finite corner contact patches, and seat-to-base connectivity. Keep acoustic/component validation separate rather than making it a prerequisite for this nominal-envelope completion.
+
+### 3. Low — Saved installed-check report is not reproducible from the current checker
+**`research-adapters/mic-corner-installed-checks.json:3–36`**, **`check_mic_corner_installed.py:45–52`**
+
+The saved report contains `assumed_rear_hardware` results, but the current checker neither constructs those hardware envelopes nor emits that field. Its saved `pass: true` therefore should not be presented as current-script evidence of rear-fastener clearance.
+
+**Practical completion:** regenerate the report from the current checker and clearly distinguish any separately performed hardware-envelope audit.
+
+## Geometry that looks sound on the nominal model
+
+- **Positive board bearing exists:** each 1.5 × 1.5 mm seat lies within the centered 14 × 12 mm board footprint, giving **9 mm² total nominal contact** at local **Z = 11 mm**.
+- **The legs clear the central bore:** their nearest corners are at radius √(5.5² + 4.5²) ≈ **7.11 mm**, outside the **6.3 mm** bore.
+- **No obvious root severance:** the tunnel cuts at Z = 8.8…10.2 mm, above the base, leaving lower leg roots intact. The seats retain material above the tunnels.
+- The saved build report records **zero nonmanifold edges**. I found no additional concrete manifold defect from the construction code; the blind tunnels can themselves be perfectly manifold.
+
+**Bottom line:** nominal board support is credible, but the added tie retention is not usable as drawn. Fixing the blind pockets and validating a declared tie envelope is the immediate completion work—not obtaining actual board measurements.
+
+**Limits:** read-only source/artifact audit; no files modified, no subagents, and no Blender rerun. Actual component-safe contact, board tolerances, printed strength, and acoustic coupling remain separate physical-validation limits.

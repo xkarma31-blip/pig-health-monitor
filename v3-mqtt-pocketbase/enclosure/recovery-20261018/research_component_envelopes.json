@@ -1,0 +1,30 @@
+{
+  "provenance": "Published examples plus explicitly chosen design allowances; NOT measured hardware",
+  "units": "mm",
+  "esp_supermini": {
+    "published_plan_examples": [[22.5,18],[23.5,18]],
+    "published_height_example_without_headers": 4.32,
+    "reservation_plan": [30,24],
+    "depth_scenarios": [12,20],
+    "note": "20mm scenario does not fit current18mm tray-to-lid gross space"
+  },
+  "mlx90640": {
+    "published_plan_examples": [[28,16],[25.4,25.4],[25.8,17.8]],
+    "published_overall_height_examples": [10.5,16],
+    "reservation_plan": [34,30],
+    "height_scenarios": [16,20],
+    "note": "Plan reservation includes chosen margins; board support and optical pupil require separate geometry"
+  },
+  "inmp441": {
+    "vendor_conflicting_plan_examples": [[14,12],[14,14]],
+    "reservation_plan": [22,20],
+    "depth_scenarios": [12,20],
+    "note": "Published5mm dimension is not proof of header/socket installed height"
+  },
+  "sht_family": {
+    "published_plan_examples": [[12,12],[18,12.7],[25.5,17.7]],
+    "reservation_plan": [30,24],
+    "depth_scenarios": [12,20],
+    "note": "GY-SHT45 exact geometry unresolved; reserve space without assigning a false identity"
+  }
+}

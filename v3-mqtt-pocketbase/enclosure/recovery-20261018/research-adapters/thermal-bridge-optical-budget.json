@@ -1,0 +1,254 @@
+{
+  "opening_mm": [
+    42,
+    12
+  ],
+  "chosen_edge_margin_mm": 1,
+  "rows": [
+    {
+      "variant": "narrow",
+      "nominal_fov_deg": [
+        55,
+        35
+      ],
+      "pupil_setback_mm": 0,
+      "nominal_ray_half_extent_mm": [
+        0,
+        0
+      ],
+      "remaining_margin_mm": [
+        20,
+        5
+      ],
+      "sampled_centered_budget_clear": true
+    },
+    {
+      "variant": "narrow",
+      "nominal_fov_deg": [
+        55,
+        35
+      ],
+      "pupil_setback_mm": 2,
+      "nominal_ray_half_extent_mm": [
+        1.0411341011034925,
+        0.630597577757967
+      ],
+      "remaining_margin_mm": [
+        18.95886589889651,
+        4.369402422242033
+      ],
+      "sampled_centered_budget_clear": true
+    },
+    {
+      "variant": "narrow",
+      "nominal_fov_deg": [
+        55,
+        35
+      ],
+      "pupil_setback_mm": 4,
+      "nominal_ray_half_extent_mm": [
+        2.082268202206985,
+        1.261195155515934
+      ],
+      "remaining_margin_mm": [
+        17.917731797793014,
+        3.738804844484066
+      ],
+      "sampled_centered_budget_clear": true
+    },
+    {
+      "variant": "narrow",
+      "nominal_fov_deg": [
+        55,
+        35
+      ],
+      "pupil_setback_mm": 6,
+      "nominal_ray_half_extent_mm": [
+        3.1234023033104776,
+        1.8917927332739009
+      ],
+      "remaining_margin_mm": [
+        16.876597696689522,
+        3.108207266726099
+      ],
+      "sampled_centered_budget_clear": true
+    },
+    {
+      "variant": "narrow",
+      "nominal_fov_deg": [
+        55,
+        35
+      ],
+      "pupil_setback_mm": 8,
+      "nominal_ray_half_extent_mm": [
+        4.16453640441397,
+        2.522390311031868
+      ],
+      "remaining_margin_mm": [
+        15.835463595586031,
+        2.477609688968132
+      ],
+      "sampled_centered_budget_clear": true
+    },
+    {
+      "variant": "narrow",
+      "nominal_fov_deg": [
+        55,
+        35
+      ],
+      "pupil_setback_mm": 12,
+      "nominal_ray_half_extent_mm": [
+        6.246804606620955,
+        3.7835854665478017
+      ],
+      "remaining_margin_mm": [
+        13.753195393379045,
+        1.2164145334521983
+      ],
+      "sampled_centered_budget_clear": true
+    },
+    {
+      "variant": "narrow",
+      "nominal_fov_deg": [
+        55,
+        35
+      ],
+      "pupil_setback_mm": 16,
+      "nominal_ray_half_extent_mm": [
+        8.32907280882794,
+        5.044780622063736
+      ],
+      "remaining_margin_mm": [
+        11.67092719117206,
+        -0.0447806220637359
+      ],
+      "sampled_centered_budget_clear": false
+    },
+    {
+      "variant": "wide",
+      "nominal_fov_deg": [
+        110,
+        75
+      ],
+      "pupil_setback_mm": 0,
+      "nominal_ray_half_extent_mm": [
+        0,
+        0
+      ],
+      "remaining_margin_mm": [
+        20,
+        5
+      ],
+      "sampled_centered_budget_clear": true
+    },
+    {
+      "variant": "wide",
+      "nominal_fov_deg": [
+        110,
+        75
+      ],
+      "pupil_setback_mm": 2,
+      "nominal_ray_half_extent_mm": [
+        2.856296013484229,
+        1.5346539759579207
+      ],
+      "remaining_margin_mm": [
+        17.14370398651577,
+        3.4653460240420793
+      ],
+      "sampled_centered_budget_clear": true
+    },
+    {
+      "variant": "wide",
+      "nominal_fov_deg": [
+        110,
+        75
+      ],
+      "pupil_setback_mm": 4,
+      "nominal_ray_half_extent_mm": [
+        5.712592026968458,
+        3.0693079519158415
+      ],
+      "remaining_margin_mm": [
+        14.287407973031542,
+        1.9306920480841585
+      ],
+      "sampled_centered_budget_clear": true
+    },
+    {
+      "variant": "wide",
+      "nominal_fov_deg": [
+        110,
+        75
+      ],
+      "pupil_setback_mm": 6,
+      "nominal_ray_half_extent_mm": [
+        8.568888040452686,
+        4.603961927873762
+      ],
+      "remaining_margin_mm": [
+        11.431111959547314,
+        0.3960380721262382
+      ],
+      "sampled_centered_budget_clear": true
+    },
+    {
+      "variant": "wide",
+      "nominal_fov_deg": [
+        110,
+        75
+      ],
+      "pupil_setback_mm": 8,
+      "nominal_ray_half_extent_mm": [
+        11.425184053936915,
+        6.138615903831683
+      ],
+      "remaining_margin_mm": [
+        8.574815946063085,
+        -1.138615903831683
+      ],
+      "sampled_centered_budget_clear": false
+    },
+    {
+      "variant": "wide",
+      "nominal_fov_deg": [
+        110,
+        75
+      ],
+      "pupil_setback_mm": 12,
+      "nominal_ray_half_extent_mm": [
+        17.137776080905372,
+        9.207923855747524
+      ],
+      "remaining_margin_mm": [
+        2.862223919094628,
+        -4.207923855747524
+      ],
+      "sampled_centered_budget_clear": false
+    },
+    {
+      "variant": "wide",
+      "nominal_fov_deg": [
+        110,
+        75
+      ],
+      "pupil_setback_mm": 16,
+      "nominal_ray_half_extent_mm": [
+        22.85036810787383,
+        12.277231807663366
+      ],
+      "remaining_margin_mm": [
+        -2.8503681078738303,
+        -7.277231807663366
+      ],
+      "sampled_centered_budget_clear": false
+    }
+  ],
+  "limits": [
+    "Analytical centered planar aperture only; no whole assembly ray test",
+    "No real pupil placement inferred from overall product height",
+    "Nominal FOV is not a hard optical cutoff; source sensitivity and angle tolerances matter",
+    "Bridge tilt,finite thickness,alignment offsets and actual lens shape excluded"
+  ],
+  "conclusion": "Bridge cannot be treated as generic wide-angle adapter across unknown pupil setbacks"
+}

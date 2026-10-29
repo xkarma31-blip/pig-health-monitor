@@ -1,0 +1,90 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead probe_split_boss_concept.py [90m[offset=1, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead revision-o/split-boss-experiment/concept-checks.json [90m[offset=1, limit=400][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mSkill "ponytail" 
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead /home/solrahk/pig-health-monitor/CANON.md [90m[offset=1, limit=60][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "split.boss|separately preserved|revision.p|bearing" [90min . · 57 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead check_bearing_seats.py [90m[offset=1, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+## Verdict
+
+**Not enough evidence to promote this to a validated revision P closure.** Preserving it separately as **P—experimental/unvalidated** is reasonable, provided O remains untouched and none of O’s assembly-validation claims are inherited.
+
+The JSON establishes reported topology and sampled non-interference—not a demonstrated usable bolted joint. **Bore continuity/alignment and bearing support are indeed omitted.**
+
+Paths below are relative to `v3-mqtt-pocketbase/enclosure/recovery-20261018/`.
+
+### 1. High — No installed shaft test or actual bore-alignment gate
+
+**References:** `probe_split_boss_concept.py:34–35,61–75,86`; `revision-o/split-boss-experiment/concept-checks.json:7–18,60–138`
+
+The script commands both cutters at `x=-64, y=±32`, then translates the lid by Z only. Thus **the intended cutter axes are nominally aligned**. However, it never verifies that the resulting exported parts have continuous, unobstructed, coaxial bores.
+
+The hardware checks include only head, nut and driver cylinders. All can clear even if material blocks the screw path between them. The recorded `bore_x_mm` and `bore_y_mm` are constants, not measured results.
+
+**Minimal remedy:** At each station, intersect an installed shaft/clearance-cylinder gauge with both assembled parts over the entire grip path. Require negligible intersection, then repeat against re-imported concept STLs. Record the assembled axis, tested diameter, axial interval and tolerance. Include a deliberately offset/blocked-bore negative control.
+
+### 2. High — Zero hardware intersection does not establish a supported seat
+
+**References:** `probe_split_boss_concept.py:27–32,70–75,86`; `revision-o/split-boss-experiment/concept-checks.json:60–138`
+
+The head starts at Z=33, nominally touching the assembled lid-ear top; the nut ends at Z=26, nominally touching the tub-ear underside. A volume-intersection test cannot distinguish a properly supported fastener from one floating over missing material. No contact-area, flatness or support check exists.
+
+There is also a concrete edge-margin concern:
+
+- Ear nominal X extent: `[-68,-56]`.
+- Bore center X: `-64`—only **4 mm from the outside edge**.
+- Assumed nut radius: **3.5 mm**, leaving only **0.5 mm nominal outer margin**.
+- The ear has a **1 mm bevel**, so full support of that circular envelope on the flat underside cannot simply be assumed.
+
+The final support depends on the unioned source geometry; this script does not measure it.
+
+**Minimal remedy:** Ray-check the actual head and nut/washer bearing footprints at Z=33 and Z=26, in opposite directions, requiring material, expected height and flat normals. Reuse the approach in `check_bearing_seats.py`, with these stations. Move the bore inward or locally preserve/enlarge the flat seat if support fails.
+
+### 3. Medium — “One component, manifold” is not a boss-attachment-strength test
+
+**References:** `probe_split_boss_concept.py:33,36–46,86`; `revision-o/split-boss-experiment/concept-checks.json:20–32`
+
+The connectivity traversal is valid as an **edge-connected mesh graph** check. Together with zero nonmanifold edges, it is useful screening. But it does not establish a sufficient ear-to-shell attachment: a very thin neck or small attachment patch can still pass.
+
+There is no comparison against the original part, no attachment cross-section measurement, and no minimum ligament criterion around the bore. These results therefore cannot support “structurally viable boss.”
+
+**Minimal remedy:** Check a few sections through each ear root and bore ligament, enforce explicitly chosen minimum thickness/attachment dimensions, and compare with the source mesh. Keep load capability unvalidated until a representative printed coupon is tested.
+
+### 4. Medium — Six lift positions do not cover removal, and the closed position is missing
+
+**References:** `probe_split_boss_concept.py:63–68,86`; `revision-o/split-boss-experiment/concept-checks.json:34–58`
+
+The sweep checks only `0.05, 0.5, 2, 5, 15, 35 mm`. It omits **zero lift**, so interference at the nominal closed position is not gated. Discrete clear positions also do not prove a collision-free path between them.
+
+Only tub versus lid is tested. This says nothing about installed internals, nearby parts, screw withdrawal, nut access or the service sequence.
+
+**Minimal remedy:** Add the closed pose and a conservative swept-volume test for the intended straight lift, or bounded sufficiently fine sampling with its limitations stated. Explicitly say whether fasteners are removed first. Check the relevant installed assembly before claiming service/removal clearance.
+
+### 5. Medium — The report is not bound to the exported geometry, and world-space correctness lacks a regression check
+
+**References:** `probe_split_boss_concept.py:48–59,77–84`; `revision-o/split-boss-experiment/concept-checks.json:1–19`
+
+The Boolean helper does **not inherently ignore world space**: Blender Boolean modifiers account for relative object transforms, and `intersection()` retains both objects’ transforms. Reading the Boolean result’s mesh-local volume is acceptable **for unit-scale objects**; translation alone does not change volume. I would **not label all recorded zeros a demonstrated local/world-coordinate bug from this code alone**.
+
+However, the helper assumes unit-scale volume semantics, does not validate its output, and has no known-overlap control. Tests run on in-memory meshes, not re-imported exports, and the JSON contains no input/output hashes or assembled transforms. It cannot independently establish which preserved STLs were checked.
+
+**Minimal remedy:** Assert unit scales or calculate volume from world-transformed vertices; add translated overlap/non-overlap controls and require valid intersection output. Re-import and test the exported STLs, recording their hashes and assembly transforms.
+
+## Promotion decision
+
+Keep this as a **feasibility experiment**, not an approved closure. Before promoting P beyond that label, the smallest meaningful gate is:
+
+1. Re-imported-export shaft continuity/alignment checks.
+2. Actual head and nut bearing-support checks.
+3. Closed-pose and lift-path checks.
+4. Defined hardware, grip length/thread engagement and nut/driver access assumptions.
+5. Hash-bound results, followed by a physical fit/load coupon.
+
+**Read-only audit; no files modified, no subagents used.** Findings are from source/report inspection; I did not rerun Blender or independently measure the STL surfaces.

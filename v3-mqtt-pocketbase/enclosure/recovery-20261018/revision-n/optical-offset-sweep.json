@@ -1,0 +1,560 @@
+{
+  "basis": "Exploratory wide-FOV placement sensitivity: chosen2mm offsets,not measured tolerances. Individual angular extremes,not exhaustive combined worst case.",
+  "limitations": [
+    "Actual lens variant,pupil,orientation and assembly tolerance unknown",
+    "No sensitivity tails,radiometry,finite pupil,PCB,cables or hardware model",
+    "Zero ray obstruction is NOT physical FOV or temperature accuracy proof"
+  ],
+  "results": [
+    {
+      "setback_mm": 9.5,
+      "offset_horizontal_mm": -2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 0,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 9.5,
+      "offset_horizontal_mm": -2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": -5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 9.5,
+      "offset_horizontal_mm": -2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 9.5,
+      "offset_horizontal_mm": -2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 0,
+      "pitch_deg": -5,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 9.5,
+      "offset_horizontal_mm": -2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 0,
+      "pitch_deg": 5,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 9.5,
+      "offset_horizontal_mm": 2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 0,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 9.5,
+      "offset_horizontal_mm": 2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": -5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 9.5,
+      "offset_horizontal_mm": 2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 9.5,
+      "offset_horizontal_mm": 2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 0,
+      "pitch_deg": -5,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 9.5,
+      "offset_horizontal_mm": 2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 0,
+      "pitch_deg": 5,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 9.5,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": -2,
+      "yaw_deg": 0,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 9.5,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": -2,
+      "yaw_deg": -5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 9.5,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": -2,
+      "yaw_deg": 5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 9.5,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": -2,
+      "yaw_deg": 0,
+      "pitch_deg": -5,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 9.5,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": -2,
+      "yaw_deg": 0,
+      "pitch_deg": 5,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 9.5,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": 2,
+      "yaw_deg": 0,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 9.5,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": 2,
+      "yaw_deg": -5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 9.5,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": 2,
+      "yaw_deg": 5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 9.5,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": 2,
+      "yaw_deg": 0,
+      "pitch_deg": -5,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 9.5,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": 2,
+      "yaw_deg": 0,
+      "pitch_deg": 5,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 12,
+      "offset_horizontal_mm": -2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 0,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 12,
+      "offset_horizontal_mm": -2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": -5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 12,
+      "offset_horizontal_mm": -2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 12,
+      "offset_horizontal_mm": -2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 0,
+      "pitch_deg": -5,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 12,
+      "offset_horizontal_mm": -2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 0,
+      "pitch_deg": 5,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 12,
+      "offset_horizontal_mm": 2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 0,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 12,
+      "offset_horizontal_mm": 2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": -5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 12,
+      "offset_horizontal_mm": 2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 12,
+      "offset_horizontal_mm": 2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 0,
+      "pitch_deg": -5,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 12,
+      "offset_horizontal_mm": 2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 0,
+      "pitch_deg": 5,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 12,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": -2,
+      "yaw_deg": 0,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 12,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": -2,
+      "yaw_deg": -5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 12,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": -2,
+      "yaw_deg": 5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 12,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": -2,
+      "yaw_deg": 0,
+      "pitch_deg": -5,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 12,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": -2,
+      "yaw_deg": 0,
+      "pitch_deg": 5,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 12,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": 2,
+      "yaw_deg": 0,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 12,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": 2,
+      "yaw_deg": -5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 12,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": 2,
+      "yaw_deg": 5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 12,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": 2,
+      "yaw_deg": 0,
+      "pitch_deg": -5,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 12,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": 2,
+      "yaw_deg": 0,
+      "pitch_deg": 5,
+      "rays": 441,
+      "blocked_rays": 0
+    },
+    {
+      "setback_mm": 16,
+      "offset_horizontal_mm": -2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 0,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 21
+    },
+    {
+      "setback_mm": 16,
+      "offset_horizontal_mm": -2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": -5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 27
+    },
+    {
+      "setback_mm": 16,
+      "offset_horizontal_mm": -2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 65
+    },
+    {
+      "setback_mm": 16,
+      "offset_horizontal_mm": -2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 0,
+      "pitch_deg": -5,
+      "rays": 441,
+      "blocked_rays": 48
+    },
+    {
+      "setback_mm": 16,
+      "offset_horizontal_mm": -2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 0,
+      "pitch_deg": 5,
+      "rays": 441,
+      "blocked_rays": 48
+    },
+    {
+      "setback_mm": 16,
+      "offset_horizontal_mm": 2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 0,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 21
+    },
+    {
+      "setback_mm": 16,
+      "offset_horizontal_mm": 2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": -5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 65
+    },
+    {
+      "setback_mm": 16,
+      "offset_horizontal_mm": 2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 27
+    },
+    {
+      "setback_mm": 16,
+      "offset_horizontal_mm": 2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 0,
+      "pitch_deg": -5,
+      "rays": 441,
+      "blocked_rays": 48
+    },
+    {
+      "setback_mm": 16,
+      "offset_horizontal_mm": 2,
+      "offset_vertical_mm": 0,
+      "yaw_deg": 0,
+      "pitch_deg": 5,
+      "rays": 441,
+      "blocked_rays": 48
+    },
+    {
+      "setback_mm": 16,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": -2,
+      "yaw_deg": 0,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 21
+    },
+    {
+      "setback_mm": 16,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": -2,
+      "yaw_deg": -5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 63
+    },
+    {
+      "setback_mm": 16,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": -2,
+      "yaw_deg": 5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 63
+    },
+    {
+      "setback_mm": 16,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": -2,
+      "yaw_deg": 0,
+      "pitch_deg": -5,
+      "rays": 441,
+      "blocked_rays": 77
+    },
+    {
+      "setback_mm": 16,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": -2,
+      "yaw_deg": 0,
+      "pitch_deg": 5,
+      "rays": 441,
+      "blocked_rays": 20
+    },
+    {
+      "setback_mm": 16,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": 2,
+      "yaw_deg": 0,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 21
+    },
+    {
+      "setback_mm": 16,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": 2,
+      "yaw_deg": -5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 63
+    },
+    {
+      "setback_mm": 16,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": 2,
+      "yaw_deg": 5,
+      "pitch_deg": 0,
+      "rays": 441,
+      "blocked_rays": 63
+    },
+    {
+      "setback_mm": 16,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": 2,
+      "yaw_deg": 0,
+      "pitch_deg": -5,
+      "rays": 441,
+      "blocked_rays": 20
+    },
+    {
+      "setback_mm": 16,
+      "offset_horizontal_mm": 0,
+      "offset_vertical_mm": 2,
+      "yaw_deg": 0,
+      "pitch_deg": 5,
+      "rays": 441,
+      "blocked_rays": 77
+    }
+  ],
+  "provenance": {
+    "blender_version": "4.0.2",
+    "input_stl_sha256": {
+      "thermal_angled_hood": "10a79f3270e9c3dce5153311b4fb9ab0347b5ae139ae931b0e953363c1c19b9c",
+      "thermal_raised_cradle": "9d2cebe08c75bc8f4e752c05fb70079562e01cc88b2fab0fb4d1bf77564fed2d",
+      "thermal_face": "4ceadefe5bfd91dd54fe3c8aa9005f13ef3b9bb738ec906be17c304bdeabf671",
+      "thermal_tub": "ef5f2aa56b83c8cb7af040a7e7055b44766467e68dc6cc85f1e486b09ec1c2fa"
+    },
+    "controls": "Identity imports,orthonormal basis,mating Z planes,central aperture miss and off-aperture roof hit asserted"
+  }
+}

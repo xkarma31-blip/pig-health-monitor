@@ -1,0 +1,20 @@
+{
+  "pcb25_4x17_78": {
+    "reopened": true,
+    "metadata_matches": true,
+    "baked_identity_transforms": true,
+    "object_count": 19
+  },
+  "pcb25_4square": {
+    "reopened": true,
+    "metadata_matches": true,
+    "baked_identity_transforms": true,
+    "object_count": 19
+  },
+  "pcb28x16": {
+    "reopened": true,
+    "metadata_matches": true,
+    "baked_identity_transforms": true,
+    "object_count": 19
+  }
+}

@@ -1,0 +1,168 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGlob "**/*" [90min . · 100 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mSkill "using-superpowers" 
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGlob "revision-p/*" [90min . · 67 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead revision-p/component-envelope-independent-cad-review.txt [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead build_revision.py [90m[offset=1, limit=330][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead render_assembled.py [90m[offset=48, limit=40][0m
+> reviewer · cx/gpt-6.1-sol-review
+## Review conclusion
+
+**Use three removable mechanical adapters: a thermal bridge saddle, an elevated SHT rail carrier, and an elevated open-centre microphone saddle.** Each must carry its board on **underside bearing lands**, with adjustable straps providing retention—not suspend the board between straps or grip only its thin edges.
+
+These are **research-stage dimensional estimates derived from the source**, not measured board fits or independently verified mesh clearances. I read `build_revision.py`, the revision-P component review, and the assembly transforms. No files were changed; no subagents were used.
+
+All references below are relative to the current directory.
+
+## Findings, in severity order
+
+### High — thermal board currently has no bearing surface
+
+The 34 × 24 board lies entirely inside the cradle’s 46 × 26 opening. Straps alone would leave it suspended. The 15° cradle and nearby hood also rule out casually adding a thick platform above it.
+
+**References:** `build_revision.py:259–277`, `build_revision.py:281–283`; `revision-p/component-envelope-independent-cad-review.txt:50–64`.
+
+**Recommendation:** a low-profile bridge saddle seated on the existing cradle’s side lands, positively captured through its existing strap slots.
+
+### High — SHT and microphone need actual raised supports, not merely longer straps
+
+The assumed board footprints overlap the existing carrier fasteners. Raising only the straps leaves the boards resting on hardware or hanging above the carrier. Raising the bearing rails, with a defined load path into the existing carriers, resolves the mechanical issue provisionally.
+
+**References:** SHT `build_revision.py:213–229`; microphone `build_revision.py:167–177`.
+
+**Recommendation:** start with board undersides **8 mm away from the existing board-facing surfaces**, adjustable upward only after checking the complete installed hardware. This is a provisional clearance allowance, not a certified keep-out.
+
+### Medium — the functional openings do not establish usable sensor paths
+
+An unobstructed printed opening is not proof of an unobstructed optical cone, an aligned microphone inlet, or adequate SHT airflow. Board component locations remain unknown.
+
+**References:** `build_revision.py:149–150`, `build_revision.py:168`, `build_revision.py:214`, `build_revision.py:255–258`.
+
+**Recommendation:** retain open-centre adapters, keep straps out of functional regions, and make board location adjustable before committing dimensions.
+
+---
+
+## Coordinate convention
+
+Use a **local frame for each carrier**, not assembled world coordinates:
+
+- **x, y:** the carrier’s plan axes.
+- **h:** distance from the existing board-facing surface toward the supported board.
+- Boards initially centred at `(0, 0)`.
+- Thermal coordinates follow the cradle’s **15° inclined plane**; h is normal to that plane.
+- For the microphone, positive h points **rearward into the acoustic tub**. It does not mean forward through the face.
+
+The thermal cradle’s original planar coordinates and its vertical bolt axes are not interchangeable after rotation. Its attachment must follow the existing inclined slots, rather than inventing a matching vertical hole pattern.
+
+## 1. Thermal: removable bridge saddle
+
+**Target board:** x = `−17…17`, y = `−12…12`.
+
+### Concrete starting geometry
+
+- Two continuous bridge rails:
+  - x = `−25…25`
+  - y = `−11…−8` and `8…11`
+  - nominal thickness **2.5 mm**, with their undersides seated at h = 0 on the existing side lands.
+- These rails give the board **3 mm-wide underside bearing strips**, each extending across its 34 mm width. They do not rely on the board edges catching a lip.
+- End connectors:
+  - x = `23…25` and `−25…−23`
+  - y = `−11…11`.
+- Attachment ears extend from those end connectors toward the existing slot centres `(±27, 0)`, restricted initially to y = `−4…4`.
+- Fit purchased adjustable ties through the existing **2 × 10 mm slots** and corresponding adapter eyes. Route them around solid material so that they **capture the adapter against lifting**, rather than merely squeeze it sideways.
+- Use the inside shoulders adjacent to the opening as locating stops, with approximately **0.3–0.5 mm trial clearance**. Do not assume a friction fit will retain it on the slope.
+
+The side-land bearing is approximately x = `23…25` at each end of each rail. This is modest: retain it as an explicit coupon/load-test item, not a proven structural joint.
+
+### Board retention and optics
+
+Provide two adjustable board straps running in x over the supported strips near y = `±9.5`. Put buckles and tails outside the board footprint. Small removable side stops may limit sliding; they must not replace the underside supports.
+
+This leaves a nominal **34 × 16 mm clear region beneath the board**, between y = `−8…8`. **That is only a candidate optical clearance**, not an approved field of view. If the sensor, optical cone, or underside components occupy either bearing strip, move or reshape the rails after measurement.
+
+**Do not add a full plate or a crossbar across the centre.** Keep the board/sensor stack projecting through the existing optical opening as necessary; the hood does not provide 16 mm clearance over the surrounding platform.
+
+**Attachment references:** `build_revision.py:259–276`.  
+**Hood constraint:** `build_revision.py:281–283`.
+
+## 2. SHT: elevated twin rails with slot-captured feet
+
+**Target board:** x = `−15…15`, y = `−12…12`.
+
+### Concrete starting geometry
+
+- Bearing rails under the board:
+  - x = `−14…−10` and `10…14`
+  - y = `−10…10`
+  - top bearing surfaces at **h = 8 mm**.
+- Four short supporting feet, initially near `(±12, ±4)`, connect the rails to the existing carrier.
+- Capture the feet/adapter through the existing slots centred at `(±12, 0)`, using purchased adjustable ties or small through-slot clamp bars.
+- Use broad feet with shoulders that straddle the slot; **do not place a narrow column directly over an empty slot**.
+- Avoid the assumed radius-3.5 mm hardware cylinders around `(0, ±12)` throughout the support structure.
+
+These rail positions leave the existing x/y = `±8` air opening unbridged and support the PCB underside well inside its perimeter.
+
+### Retention and airflow
+
+Route one adjustable strap over each rail, approximately parallel to y at x = `±12`. Keep the sensing element and its air access clear. Add loose-clearance end stops only where actual connectors allow.
+
+An 8 mm open gap beneath the board preserves an airflow route from the existing opening, **but a board centred over the opening still shades it**. Sensor position must determine final orientation; do not treat the footprint as an airflow model.
+
+**References:** slots/opening `build_revision.py:213–218`; lower standoffs `build_revision.py:223–229`.
+
+## 3. Microphone: rearward elevated open-centre saddle
+
+**Target board:** x = `−11…11`, y = `−10…10`, relative to each microphone carrier.
+
+### Concrete starting geometry
+
+- Two underside bearing rails:
+  - x = `−10…−7` and `7…10`
+  - y = `−6…6`
+  - board-facing bearing surfaces **h = 8 mm rearward** of the existing carrier surface.
+- Support each rail using a broad central foot near `(±10, 0)`, positively captured through the existing **2 × 8 mm slots**.
+- Keep the feet within approximately y = `−4…4`, away from bolt axes `(±10, ±10)`.
+- Use side shoulders or a slot-engaging locating tongue to resist lateral movement; ties provide lift retention.
+- Keep all adapter structure outside the central **Ø12 acoustic bore**.
+
+The resulting bearing strips sit under the board, rather than catching its outer edges. Their x positions remain outside the nominal radius-6 sound opening.
+
+### Retention and acoustic path
+
+Put adjustable straps over the two bearing rails, running in y near x = `±8.5`. Keep the centre free.
+
+For a **bottom-port microphone**, use a removable, compliant acoustic collar from the existing aperture to the measured microphone inlet. The collar must not carry the board’s mechanical load. An unsealed 8 mm gap could admit internal sound and change response; simply leaving a hole is insufficient.
+
+For a top-port or displaced inlet, this straight-through arrangement is **not established**.
+
+At h = 8 mm, a 12 mm rearward board envelope consumes approximately **20 of the gross 24 mm available**, leaving only about **4 mm before cables, straps, rear hardware and tolerances**. If that stack does not fit, revise hardware orientation or packaging—do not squeeze the board against it.
+
+**References:** `build_revision.py:167–177`; assembly placement `render_assembled.py:58–76`.
+
+## Unsupported assumptions — explicitly unresolved
+
+1. **Board identities and dimensions:** 34 × 24, 30 × 24 and 22 × 20 are assumed envelopes, not measured products.
+2. **Safe underside bearing zones:** the proposed rail locations may encounter solder joints, components or exposed conductors. Use suitable insulating pads only after inspecting the actual undersides.
+3. **Hardware envelope:** radius 3.5 mm and roughly 6 mm protrusion are provisional. Nuts, washers, thread tips and installation orientation need measurement.
+4. **Optics:** sensor position, pupil height, field of view and allowable rail intrusion are unknown.
+5. **SHT airflow:** sensing-element location, response requirements and weather protection are unknown.
+6. **Microphone:** port type/location, seal requirements and acceptable acoustic response changes are unknown.
+7. **Strap routing:** slot access, bend radius, buckle size and assembly sequence have not been physically demonstrated. Mic slots may require prethreading before fastening the carrier.
+8. **Manufacturing and loads:** material, print orientation, creep, vibration and required strap preload are unspecified. The suggested rail sizes are starting estimates, not strength calculations.
+9. **Assembly clearance:** exported meshes, actual hood clearance and full connector/wire envelopes have not been independently collision-tested here.
+
+## Missing verification before approval
+
+- **Load-path test:** dummy board masses must rest on rails with straps slack; tightening must not bow the PCB.
+- **Positive-capture test:** adapters must resist lifting and sliding without depending on friction alone.
+- **Installed-hardware collision check:** include complete fasteners, straps, connectors and tool access.
+- **Functional-path checks:** optical cone clearance; SHT exposure/response; microphone alignment, sealing and comparative response.
+- **Service test:** remove each board and adapter without modifying the enclosure or trapping strap tails.
+
+**Minimal direction:** retain the existing enclosure and carriers; add only the three open support adapters and purchased retention hardware. No exact PCB hole pattern, no printed electronics, and no board suspended across an opening by its edges or straps.

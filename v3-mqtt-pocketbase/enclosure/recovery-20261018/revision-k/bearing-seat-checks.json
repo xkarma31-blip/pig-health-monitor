@@ -1,0 +1,258 @@
+{
+  "assumption": "2.1\u20133mm radial annulus, 24 samples per radius; 0.025mm height tolerance; normal Z>0.999",
+  "pass": false,
+  "results": [
+    {
+      "part": "thermal_raised_cradle",
+      "center": [
+        -30,
+        -9
+      ],
+      "expected_seat_z_mm": 6.788457268119895,
+      "sample_count": 72,
+      "bearing_pass": false,
+      "failed_samples": [
+        {
+          "hit": true,
+          "height": 6.815601348876953,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 6.840084075927734,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 6.81707763671875,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 6.837924957275391,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 6.9190216064453125,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 6.947261810302734,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 6.920711517333984,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 6.841197967529297,
+          "flat_normal": false
+        }
+      ]
+    },
+    {
+      "part": "thermal_raised_cradle",
+      "center": [
+        -30,
+        9
+      ],
+      "expected_seat_z_mm": 11.611542731880103,
+      "sample_count": 72,
+      "bearing_pass": false,
+      "failed_samples": [
+        {
+          "hit": true,
+          "height": 11.638893127441406,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 11.66305923461914,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 11.640167236328125,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 11.6611328125,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 11.741432189941406,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 11.769317626953125,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 11.742904663085938,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 11.663963317871094,
+          "flat_normal": false
+        }
+      ]
+    },
+    {
+      "part": "thermal_raised_cradle",
+      "center": [
+        30,
+        -9
+      ],
+      "expected_seat_z_mm": 6.788457268119895,
+      "sample_count": 72,
+      "bearing_pass": false,
+      "failed_samples": [
+        {
+          "hit": true,
+          "height": 6.814296722412109,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 6.838039398193359,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 6.814292907714844,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 6.8375244140625,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 6.917823791503906,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 6.945213317871094,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 6.917827606201172,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 6.8375244140625,
+          "flat_normal": false
+        }
+      ]
+    },
+    {
+      "part": "thermal_raised_cradle",
+      "center": [
+        30,
+        9
+      ],
+      "expected_seat_z_mm": 11.611542731880103,
+      "sample_count": 72,
+      "bearing_pass": false,
+      "failed_samples": [
+        {
+          "hit": true,
+          "height": 11.641990661621094,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 11.665569305419922,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 11.641983032226562,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 11.665061950683594,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 11.744819641113281,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 11.772029876708984,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 11.744827270507812,
+          "flat_normal": false
+        },
+        {
+          "hit": true,
+          "height": 11.665061950683594,
+          "flat_normal": false
+        }
+      ]
+    },
+    {
+      "part": "thermal_angled_hood",
+      "center": [
+        -40,
+        -13
+      ],
+      "expected_seat_z_mm": 11.252043405643363,
+      "sample_count": 72,
+      "bearing_pass": true,
+      "failed_samples": []
+    },
+    {
+      "part": "thermal_angled_hood",
+      "center": [
+        -40,
+        13
+      ],
+      "expected_seat_z_mm": 18.218722408852553,
+      "sample_count": 72,
+      "bearing_pass": true,
+      "failed_samples": []
+    },
+    {
+      "part": "thermal_angled_hood",
+      "center": [
+        40,
+        -13
+      ],
+      "expected_seat_z_mm": 11.252043405643363,
+      "sample_count": 72,
+      "bearing_pass": true,
+      "failed_samples": []
+    },
+    {
+      "part": "thermal_angled_hood",
+      "center": [
+        40,
+        13
+      ],
+      "expected_seat_z_mm": 18.218722408852553,
+      "sample_count": 72,
+      "bearing_pass": true,
+      "failed_samples": []
+    }
+  ]
+}

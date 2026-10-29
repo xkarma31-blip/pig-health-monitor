@@ -1,0 +1,7 @@
+* **Logo Orientation:** Readable and oriented the correct-way up (upright and legible).
+* **Top Hood Angle:** The top hood face is angled downwards/tilted forward relative to the vertical front plane of the main enclosure.
+* **Detached Objects & Assembly Issues:**
+  * **Main Front Cover:** Detached and floating forward, leaving an open air gap between it and the main housing.
+  * **Lower Sensor Plate:** Detached, hovering forward and slightly offset below the base rather than sitting flush.
+  * **Top Hood Face:** Layered components show visible gaps/offsets rather than fully seated mating surfaces.
+  * **Right Mounting Flange:** Extends out to the side with an exposed standoff/peg, appearing floating or asymmetric without a visible left counterpart.

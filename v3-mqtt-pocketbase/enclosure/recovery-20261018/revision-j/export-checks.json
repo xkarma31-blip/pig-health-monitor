@@ -1,0 +1,244 @@
+{
+  "description": "Independent exported-STL topology and scale audit; not self-intersection/fit/strength certification",
+  "pass": true,
+  "results": [
+    {
+      "part": "main_tub",
+      "triangles": 9032,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "exported_bounds_mm": [
+        120,
+        112,
+        30
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 80558.47247609886,
+      "pass": true
+    },
+    {
+      "part": "main_lid",
+      "triangles": 3008,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "exported_bounds_mm": [
+        120,
+        112,
+        3
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 40152.63895631235,
+      "pass": true
+    },
+    {
+      "part": "thermal_tub",
+      "triangles": 5870,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "exported_bounds_mm": [
+        92,
+        38,
+        14
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 20210.925655834046,
+      "pass": true
+    },
+    {
+      "part": "thermal_face",
+      "triangles": 4864,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "exported_bounds_mm": [
+        92,
+        38,
+        3
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 6680.006168941822,
+      "pass": true
+    },
+    {
+      "part": "acoustic_tub",
+      "triangles": 5876,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "exported_bounds_mm": [
+        100,
+        38,
+        30
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 36921.486333363195,
+      "pass": true
+    },
+    {
+      "part": "acoustic_face",
+      "triangles": 8348,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "exported_bounds_mm": [
+        100,
+        38,
+        3
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 10396.979404255198,
+      "pass": true
+    },
+    {
+      "part": "microphone_strap_carrier",
+      "triangles": 3288,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "exported_bounds_mm": [
+        26,
+        26,
+        3
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 1469.0374966494867,
+      "pass": true
+    },
+    {
+      "part": "thermal_strap_carrier",
+      "triangles": 2824,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "exported_bounds_mm": [
+        68,
+        30,
+        3
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 2303.1198542186985,
+      "pass": true
+    },
+    {
+      "part": "optical_trim",
+      "triangles": 1152,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "exported_bounds_mm": [
+        34,
+        34,
+        2
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 568.7017323092286,
+      "pass": true
+    },
+    {
+      "part": "acoustic_trim",
+      "triangles": 1152,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "exported_bounds_mm": [
+        18,
+        18,
+        2
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 275.17829872684683,
+      "pass": true
+    },
+    {
+      "part": "mounting_spine",
+      "triangles": 5308,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "exported_bounds_mm": [
+        48,
+        196,
+        5
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 45476.26614233336,
+      "pass": true
+    },
+    {
+      "part": "sht_adjustable_carrier",
+      "triangles": 1640,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "exported_bounds_mm": [
+        32,
+        32,
+        3
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 2029.1996753821445,
+      "pass": true
+    },
+    {
+      "part": "sht_mount_arm",
+      "triangles": 3732,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "exported_bounds_mm": [
+        120,
+        32.00040054321289,
+        13
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 9808.074087348865,
+      "pass": true
+    },
+    {
+      "part": "electronics_strap_tray",
+      "triangles": 2892,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "exported_bounds_mm": [
+        82,
+        76,
+        3
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 18008.7194510743,
+      "pass": true
+    },
+    {
+      "part": "tray_spacer_6mm",
+      "triangles": 1152,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "exported_bounds_mm": [
+        7,
+        7,
+        6
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 173.58555024598826,
+      "pass": true
+    },
+    {
+      "part": "thermal_raised_cradle",
+      "triangles": 6848,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "exported_bounds_mm": [
+        68,
+        29.741039276123047,
+        12.326042175292969
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 3015.9789423783436,
+      "pass": true
+    },
+    {
+      "part": "thermal_angled_hood",
+      "triangles": 2112,
+      "components": 1,
+      "nonmanifold_edges": 0,
+      "exported_bounds_mm": [
+        92,
+        38,
+        21.091033935546875
+      ],
+      "scale_matches_blender": true,
+      "signed_volume_mm3": 18617.847294529205,
+      "pass": true
+    }
+  ]
+}

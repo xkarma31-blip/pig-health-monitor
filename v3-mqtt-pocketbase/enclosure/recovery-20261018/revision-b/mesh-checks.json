@@ -1,0 +1,110 @@
+{
+  "status": "MECHANICAL PROTOTYPE \u2014 NOT HARDWARE FIT RELEASE",
+  "units": "mm",
+  "wall_nominal_mm": 3,
+  "hardware_dimensions_measured": false,
+  "slicer_checked": false,
+  "parts": [
+    {
+      "name": "main_tub",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 80751.69667110416,
+      "bounds_mm": [
+        120.0,
+        112.0,
+        30.0
+      ]
+    },
+    {
+      "name": "main_lid",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 40152.63417106029,
+      "bounds_mm": [
+        120.0,
+        112.0,
+        3.0
+      ]
+    },
+    {
+      "name": "thermal_tub",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 34798.06363296795,
+      "bounds_mm": [
+        92.0,
+        38.0,
+        30.0
+      ]
+    },
+    {
+      "name": "thermal_face",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 8552.894246522432,
+      "bounds_mm": [
+        92.0,
+        38.0,
+        3.0
+      ]
+    },
+    {
+      "name": "acoustic_tub",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 37006.0685415684,
+      "bounds_mm": [
+        100.0,
+        38.0,
+        30.0
+      ]
+    },
+    {
+      "name": "acoustic_face",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 10606.883546135092,
+      "bounds_mm": [
+        100.0,
+        38.0,
+        3.0
+      ]
+    },
+    {
+      "name": "optical_trim",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 568.7017302833262,
+      "bounds_mm": [
+        34.0,
+        34.0,
+        2.0
+      ]
+    },
+    {
+      "name": "acoustic_trim",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 275.1782977488959,
+      "bounds_mm": [
+        18.0,
+        18.0,
+        2.0
+      ]
+    },
+    {
+      "name": "mounting_spine",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 45566.823441958644,
+      "bounds_mm": [
+        48.0,
+        196.0,
+        5.0
+      ]
+    },
+    {
+      "name": "sht_adjustable_carrier",
+      "nonmanifold_edges": 0,
+      "signed_volume_mm3": 2029.196705747975,
+      "bounds_mm": [
+        32.0,
+        32.0,
+        3.0
+      ]
+    }
+  ],
+  "mesh_gate_pass": true
+}

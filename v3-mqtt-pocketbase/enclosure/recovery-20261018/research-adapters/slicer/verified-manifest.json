@@ -1,0 +1,40 @@
+{
+  "pass": true,
+  "parts": [
+    {
+      "name": "sht-12x12",
+      "pass": true,
+      "stl_sha256": "5ebb123bdbedf72849a92d6b6183f2a8a1d53516aff785fe987473dbccb06507",
+      "log_sha256": "a2ac2dfe4f778d0d9c4b37fa896fa36cd395ed69e43a99267a47e791d1194c20",
+      "gcode_sha256": "fc30d1541a979cfd2d61facf686112f3e5ab04c5cc289aa5e9c5a27d8d8f8884"
+    },
+    {
+      "name": "sht-18x12.7",
+      "pass": true,
+      "stl_sha256": "d34b323797731ff180e553f5b11f637055bd50169f4b73d7753a383a4e050c13",
+      "log_sha256": "959f447e6e0d223407d1409e00f7bd24200658d3fb27e1330735ec86a003c821",
+      "gcode_sha256": "084970a93d7ae87b153cc5bb975bb94621a2788955700dc00e59c8d51d2029e9"
+    },
+    {
+      "name": "sht-25.5x17.7",
+      "pass": true,
+      "stl_sha256": "b13dd1047083a9e8cc3fecd13350ac75625ce5e877a4d4b52ea3ed50d6e3c15f",
+      "log_sha256": "1c856164a37f1903ced4435cb8f0bf7983014cb349eb13ccd02db2c23d054556",
+      "gcode_sha256": "d242f5aabd5fb9cefa58d7768f8ffebacd1b466daa7d96c515784a93f9061883"
+    },
+    {
+      "name": "mic_14x12_corner_support",
+      "pass": true,
+      "stl_sha256": "d473fd0da831e62814f187aeeb9e52d83bfcb60a5595f64a6796adff0f3b2132",
+      "log_sha256": "294a4de511bd3489f64472aa8d5124c33a55c36c269b89743a82be1e22c34fd2",
+      "gcode_sha256": "de37898fe8d11398c073c3711a95e0991b00489359eaef88a46babe8bbdb0c92"
+    },
+    {
+      "name": "research_spine_tray_access",
+      "pass": true,
+      "stl_sha256": "61b24625e0a43675366618da374dac334263cb61fbb4588fe0b4bb720994063e",
+      "log_sha256": "3cb90200a72dfe466afff04b67cbe8e54f0d7714a98fe4ca28afcd3a38a22ae1",
+      "gcode_sha256": "4b65a00878ca2365fc5fd2eecc038157926806aeb43a5b438e00a98f6df2bcb6"
+    }
+  ]
+}

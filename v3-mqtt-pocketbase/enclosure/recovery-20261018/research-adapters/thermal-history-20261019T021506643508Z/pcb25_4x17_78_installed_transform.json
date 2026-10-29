@@ -1,0 +1,95 @@
+{
+  "scene": "pcb25_4x17_78_installed.blend",
+  "units": "mm",
+  "sensor_local_to_installed_world": [
+    [
+      1.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    [
+      0.0,
+      -0.25881898403167725,
+      -0.9659258127212524,
+      -23.5
+    ],
+    [
+      0.0,
+      0.9659258127212524,
+      -0.25881898403167725,
+      80.0
+    ],
+    [
+      0.0,
+      0.0,
+      0.0,
+      1.0
+    ]
+  ],
+  "installed_world_to_sensor_local": [
+    [
+      1.0,
+      -0.0,
+      0.0,
+      -0.0
+    ],
+    [
+      -0.0,
+      -0.25881901383399963,
+      0.9659258723258972,
+      -83.35631561279297
+    ],
+    [
+      0.0,
+      -0.9659258723258972,
+      -0.25881901383399963,
+      -1.9937382936477661
+    ],
+    [
+      -0.0,
+      0.0,
+      -0.0,
+      1.0
+    ]
+  ],
+  "vertices_baked_world": true,
+  "object_matrices_identity": true,
+  "cradle_rotation_x_degrees": 15,
+  "construction_origin_mm": [
+    0.0,
+    0.0,
+    6.5
+  ],
+  "variant_objects": [
+    "pcb25_4x17_78",
+    "pcb25_4x17_78_retainer",
+    "pcb25_4x17_78_retainer.001",
+    "PCB envelope",
+    "ASSUMED package"
+  ],
+  "fixed_context_objects": [
+    "main_tub",
+    "main_lid",
+    "thermal_tub",
+    "thermal_face",
+    "thermal_raised_cradle",
+    "thermal_angled_hood",
+    "acoustic_tub",
+    "acoustic_face",
+    "mounting_spine",
+    "sht_mount_arm"
+  ],
+  "proxy_dimensions_mm": {
+    "pcb": [
+      25.4,
+      17.78,
+      1.6
+    ],
+    "package": [
+      12,
+      8,
+      2
+    ]
+  }
+}

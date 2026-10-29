@@ -1,0 +1,180 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead . [90m[offset=1, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead build_revision.py [90m[offset=1, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead render_assembled.py [90m[offset=1, limit=280][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead check_thermal_bridge_optical_budget.js [90m[offset=1, limit=200][0m
+> reviewer · cx/gpt-6.1-sol-review
+## Recommendation
+
+Use a **rear board-plane carrier**, with the sensor package projecting forward through an opening—not a smaller bridge placed in front of the pupil. Keep the enclosure mounting interface, but replace the unsupported central span with **board-specific rear seating surfaces and positive retention**.
+
+This is a conditional architecture recommendation, **not optical or hardware-fit approval**. The published dimensions you supplied establish useful envelope cases, but not mounting-hole positions, underside keepouts, package location, or entrance-pupil position.
+
+Read-only review completed against the actual `build_revision.py`, `render_assembled.py`, and existing planar optical-budget checker. No files modified; no subagents used.
+
+## Findings, in severity order
+
+### 1. High — Existing cradle does not seat the cited small boards
+
+**References:** `build_revision.py:259–262`, also `build_revision.py:180–186`.
+
+The raised cradle has a **46 × 26 mm opening**. In their stated orientations:
+
+- Adafruit PCB **25.4 × 17.78 mm** fits entirely within that opening.
+- SparkFun **25.4 × 25.4 mm** likewise fits.
+- Waveshare **28 × 16 mm** likewise fits.
+
+The surrounding ring therefore provides no intended rear PCB bearing surface for these centered envelopes. Strap slots at x = ±27 mm do not solve this by themselves: retention needs an explicit contact/load path, not a strap spanning an unsupported board.
+
+**Next-design requirement:** show actual rear contact patches, a forward-retention feature, and an anti-slide feature. Do not infer usable bearing areas from rectangular PCB outlines alone.
+
+### 2. High — A forward 42 × 12 mm bridge trades mechanical support for wide-FOV obstruction
+
+**Reference:** `check_thermal_bridge_optical_budget.js:3–11`.
+
+For a hypothetical centered pupil, perpendicular aperture, and 8 mm pupil-to-aperture distance:
+
+- Wide **110° × 75°** nominal field requires half-extents of approximately **11.43 × 6.14 mm**.
+- The opening supplies **21 × 6 mm** half-clearance.
+
+Thus the vertical nominal edge ray already fails by approximately **0.14 mm**, even with zero manufacturing/alignment margin. With the checker’s 1 mm edge allowance, the deficit is approximately **1.14 mm**.
+
+This result is conditional on that simplified geometry. It does **not** prove the assembled tilted hood clears or clips identically.
+
+**Next-design requirement:** put seating material behind the candidate pupil, and evaluate every remaining forward obstruction independently.
+
+### 3. Medium — Current geometry uses a tilted platform and a differently defined aperture
+
+**References:** `build_revision.py:263–269`, `build_revision.py:281–283`; `render_assembled.py:55–69`.
+
+The raised platform is rotated **15° about X**, translated, and baked into its exported coordinates. The hood roof slopes at 15°, but its **46 × 26 mm opening is cut by an unrotated box**.
+
+Consequently, “roof opening setback” is not one universal axial distance, and 46 × 26 is not automatically an aperture measured perpendicular to the sensor axis. A centered perpendicular-plane calculation is only a screening test.
+
+The assembled mapping is:
+
+\[
+(x,y,z)_\text{construction}\rightarrow(x,-17-z,80+y)_\text{world}
+\]
+
+for the hood and raised cradle. A new carrier must use this mapping consistently; applying another 15° rotation in the renderer would double-tilt already baked geometry.
+
+### 4. Medium — Appearance review does not establish board fit or optical clearance
+
+**References:** `render_assembled.py:55–85`, `build_revision.py:298–319`.
+
+The assembly imports the printed components but provides no thermal PCB/package/pupil proxy here. The mesh gate checks manifoldness and positive volume—not PCB retention, component collisions, insertion access, or optical occlusion.
+
+Also, the older `thermal_strap_carrier` remains positioned in the assembly but is hidden for rendering at `render_assembled.py:71`. Future collision tests must explicitly classify it as inactive rather than accidentally testing both carrier alternatives.
+
+**Missing tests:** transformed PCB/package envelopes, supported contact areas, insertion/removal, fastening access, and full-assembly optical intersection tests.
+
+## Minimal coherent parametric experiment
+
+### A. One shared mount, interchangeable rear-support inserts
+
+Retain the existing mounting pattern **x = ±30, y = ±9 mm** (`build_revision.py:270–276`) as the experiment’s enclosure interface.
+
+Test one carrier architecture:
+
+1. Outer mounting frame and standoffs.
+2. Two rear bearing rails or several rear seating pads.
+3. Board-specific locating stops.
+4. Removable edge retainers, positioned only over verified component-free PCB edges.
+5. Central package/underside keepout.
+
+Use interchangeable inserts for the three PCB envelopes rather than a supposedly universal clamp. Mounting holes and contact patches remain provisional until the corresponding board drawings or measurements establish them.
+
+The support should carry the PCB from its **rear face**, while the package projects toward the hood. Avoid a retaining crossbar across the sensor’s forward field.
+
+### B. Explicit local planes
+
+Define a sensor-local frame:
+
+- \(u\): PCB horizontal axis.
+- \(v\): PCB vertical axis.
+- \(w\): forward optical-axis direction.
+- PCB front face: \(w=0\).
+- PCB rear face: \(w=-t_\mathrm{PCB}\).
+- Rear support material: at or behind \(w=-t_\mathrm{PCB}\), except explicitly modeled edge-retention features.
+- Hypothetical pupil: \(P=(\delta_u,\delta_v,p)\).
+
+For correspondence with the existing tilted platform, use:
+
+\[
+r(u,v,w)=O+R_x(15^\circ)(u,v,w)
+\]
+
+where \(O\) is the selected **PCB-front-plane origin**, not an ambiguously named platform origin. Then apply the renderer’s assembly transform.
+
+Do not derive \(p\) from the supplied **16 mm narrow / 10.5 mm wide overall product heights**. Those are envelope constraints, not pupil measurements.
+
+### C. Small, explicit sweep
+
+Use the following as **hypothetical sensitivity cases**, not claimed device dimensions:
+
+- PCB envelopes: **25.4 × 17.78**, **25.4 × 25.4**, **28 × 16 mm**.
+- Pupil positions relative to PCB front:  
+  \(p=\{-2,0,2,4,8,12\}\) mm.
+- Lateral pupil offsets:  
+  \(\delta_u,\delta_v=\{-2,0,+2\}\) mm.
+- Nominal FOV cases: **55° × 35°**, **110° × 75°**.
+- Hypothetical roof-center axial setbacks: **0, 2, 4, 6, 8 mm**.
+- Report clearance both without allowance and with **1 mm geometric allowance**.
+
+Board placement, pupil position, and roof setback are linked: choose a pupil case and setback, then solve the board translation. **Do not vary all three independently.** Reject mechanically impossible placements rather than retaining their optical results.
+
+The negative pupil case deliberately challenges the assumption that every rear-support feature is behind the optical origin.
+
+### D. Geometric gates
+
+**Mechanical first**
+
+- Each board has positive-area intended bearing contacts; no reliance on edge coincidence.
+- Rear components, solder joints, connectors and cable bends clear the support.
+- Retainers prevent forward lift and lateral escape without crossing sensitive components.
+- Insertion and tool-access paths exist.
+- Carrier, fasteners and package clear the tub, separator and hood.
+- Report disconnected mesh islands and minimum load-bearing ligaments, not just manifoldness.
+
+**Optical second**
+
+For a perpendicular screening plane a distance \(d\ge0\) ahead of the pupil:
+
+\[
+a_u \ge |\delta_u|+d\tan(H/2)+m
+\]
+\[
+a_v \ge |\delta_v|+d\tan(V/2)+m
+\]
+
+Use this only where the plane and axis assumptions hold.
+
+For the actual assembly:
+
+- Transform pupil and ray directions into the same frame as the meshes.
+- Test forward rays against **all active printed parts and fastener envelopes**.
+- Include aperture entrance and exit surfaces: thickness matters.
+- Check edge/corner rays and a field grid; corners alone can miss internal obstructions.
+- For a stronger geometric gate, test mesh intersection against the filled rectangular angular frustum, with the chosen clearance allowance.
+- Report the obstructing part, location and angular case—not merely “FOV passed.”
+
+An entirely rearward support cannot intersect this idealized forward frustum. That is the architectural advantage—but edge clamps, a recessed pupil, hood walls and package geometry still require testing.
+
+## Decision rule
+
+Advance the rear-support concept only if at least one **mechanically feasible** board placement clears the selected hypothetical optical cases with stated margins. Record failures and the feasible range.
+
+The defensible outcome is:
+
+> “This insert supports this PCB envelope and clears these modeled pupil/FOV/offset cases.”
+
+It is **not**:
+
+> “Rear mounting makes all MLX90640 variants optically compatible.”
+
+The smallest useful next experiment is therefore **one rear-carrier concept, three board inserts, and one shared mechanical/optical parameter sweep**—not another forward bridge or a full enclosure redesign.

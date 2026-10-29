@@ -1,0 +1,12 @@
+{
+  "negative_control": {
+    "revision": "k",
+    "pass": false,
+    "failed_seats": 4
+  },
+  "repaired": {
+    "revision": "l",
+    "pass": true,
+    "failed_seats": 0
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "basis": "CAD dimensions only; bolt length excludes head. Assumed washers total1mm, nut2.4mm, exposed thread1mm. Head envelopes separately constrained. No measured fit or nut-access proof.",
+  "rows": [
+    {
+      "joint": "Main and acoustic covers",
+      "count": 8,
+      "nominal_grip_mm": 33,
+      "assumed_bolt_length_mm": 40,
+      "minimum_length_under_assumptions_mm": 37.4,
+      "margin_mm": 2.6000000000000014,
+      "length_gate": true
+    },
+    {
+      "joint": "Thermal hood stack y=-13",
+      "count": 2,
+      "nominal_grip_mm": 28.252043405643363,
+      "assumed_bolt_length_mm": 35,
+      "minimum_length_under_assumptions_mm": 32.65204340564336,
+      "margin_mm": 2.3479565943566385,
+      "length_gate": true
+    },
+    {
+      "joint": "Thermal hood stack y=13",
+      "count": 2,
+      "nominal_grip_mm": 35.21872240885256,
+      "assumed_bolt_length_mm": 40,
+      "minimum_length_under_assumptions_mm": 39.618722408852555,
+      "margin_mm": 0.38127759114744464,
+      "length_gate": true
+    },
+    {
+      "joint": "Raised cradle to separator y=-9",
+      "count": 2,
+      "nominal_grip_mm": 9.788457268119895,
+      "assumed_bolt_length_mm": 16,
+      "minimum_length_under_assumptions_mm": 14.188457268119896,
+      "margin_mm": 1.8115427318801043,
+      "length_gate": true
+    },
+    {
+      "joint": "Raised cradle to separator y=9",
+      "count": 2,
+      "nominal_grip_mm": 14.611542731880103,
+      "assumed_bolt_length_mm": 20,
+      "minimum_length_under_assumptions_mm": 19.011542731880102,
+      "margin_mm": 0.9884572681198982,
+      "length_gate": true
+    },
+    {
+      "joint": "Spine to three tub floors",
+      "count": 6,
+      "nominal_grip_mm": 8,
+      "assumed_bolt_length_mm": 14,
+      "minimum_length_under_assumptions_mm": 12.4,
+      "margin_mm": 1.5999999999999996,
+      "length_gate": true
+    },
+    {
+      "joint": "SHT arm to spine",
+      "count": 2,
+      "nominal_grip_mm": 10,
+      "assumed_bolt_length_mm": 16,
+      "minimum_length_under_assumptions_mm": 14.4,
+      "margin_mm": 1.5999999999999996,
+      "length_gate": true
+    },
+    {
+      "joint": "SHT carrier to arm",
+      "count": 2,
+      "nominal_grip_mm": 16,
+      "assumed_bolt_length_mm": 22,
+      "minimum_length_under_assumptions_mm": 20.4,
+      "margin_mm": 1.6000000000000014,
+      "length_gate": true
+    },
+    {
+      "joint": "Electronics tray, spacers and floor",
+      "count": 4,
+      "nominal_grip_mm": 12,
+      "assumed_bolt_length_mm": 18,
+      "minimum_length_under_assumptions_mm": 16.4,
+      "margin_mm": 1.6000000000000014,
+      "length_gate": true
+    },
+    {
+      "joint": "Two microphone carriers to face",
+      "count": 8,
+      "nominal_grip_mm": 6,
+      "assumed_bolt_length_mm": 12,
+      "minimum_length_under_assumptions_mm": 10.4,
+      "margin_mm": 1.5999999999999996,
+      "length_gate": true
+    }
+  ],
+  "pass": true,
+  "limitations": [
+    "Longer bolts can collide with electronics; no universal safe bolt length.",
+    "Check available stock lengths and real washer/nut sizes; use only hardware within head-envelope checks.",
+    "Cut threads must be deburred; never infer physical engagement from CAD arithmetic."
+  ]
+}

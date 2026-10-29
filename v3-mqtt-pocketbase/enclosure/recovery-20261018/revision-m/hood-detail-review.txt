@@ -1,0 +1,16 @@
+Based on a close-up inspection of the thermal hood geometry in the provided rendering:
+
+### Outside Vertical Corners: Fillets vs. Chamfers
+* **Corner Geometry:** The outside vertical corners (visible clearly at the front face's outer boundary, top-right, and bottom edges) are resolved as **small curved fillets** rather than single flat chamfers. 
+* **Transition:** The silhouette exhibits continuous curvature tangent to the adjacent side and front faces, lacking the hard planar break lines characteristic of a single straight chamfer.
+
+### Evaluation of Polygonal Faceting
+* **Hood Surfaces:** The previous judgment attributing coarse polygonal faceting to the thermal hood itself is **not supported**. 
+  * The broad, angled top surface is an intentional, single flat planar roof.
+  * The transition along the rounded edges renders smoothly without discrete chordal segments or visible polygon edges across the hood's main shell.
+* **Fastener Heads:** A mild polygon tessellation is only visible on the circular perimeters of the small screw heads (visible as subtle segmented steps on the circular bolt rims), but the hood body itself shows standard CAD surface curvature.
+
+### Concrete Visible Limitations & Artifacts
+1. **Shading / Edge Artifact on Right Flank:** On the right lateral face of the hood, a faint vertical discontinuity or seam line is visible slightly behind the front bezel parting line, likely a mesh boundary or multi-body interface artifact.
+2. **Bolt Perimeter Tessellation:** The cylindrical screw heads show slight polygonization along their rim contours under close inspection.
+3. **Internal Aperture Occlusion:** The internal angled slats/baffles behind the window show hard, unfilleted edges with low-contrast shading, making exact internal clearance difficult to resolve visually.

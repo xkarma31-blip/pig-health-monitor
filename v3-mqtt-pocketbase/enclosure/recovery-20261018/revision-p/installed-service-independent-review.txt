@@ -1,0 +1,69 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead check_p_closure_assembly.py [90m[offset=1, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead . [90m[offset=1, limit=200][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "inventory|closure|nut|lid|BOOLEAN|volume" [90min check_assembly.py · 8 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead check_assembly.py [90m[offset=1, limit=180][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "closure|rear_nut|35.4|23|(-64" [90min build_revision.py · 0 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "closure|35\.4|nut_tool|nut.*pocket|closure_" [90min . · 16 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead build_revision.py [90m[offset=95, limit=50][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "main_lid|main_tub|rotation|location|closure" [90min render_assembled.py · 24 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead render_assembled.py [90m[offset=95, limit=52][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead revision-p/closure-installed-service-checks.json [90m[offset=1, limit=70][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead revision-p/closure-installed-service-checks.json [90m[offset=68, limit=35][0m
+> reviewer · cx/gpt-6.1-sol-review
+## Findings, in severity order
+
+### 1. High — All closure envelopes use the wrong bolt axis
+**`check_p_closure_assembly.py:33`**
+
+The probes are centered at **X = −64**, but the P closure holes are at **X = −65.5** (`build_revision.py:108`), consistent with the assembled screw proxies (`render_assembled.py:135`). All three roles at both stations are therefore displaced by **1.5 mm**.
+
+This can introduce collisions on the tub side and miss interference on the opposite side. In particular, the saved rear-tool/tub intersection cannot be treated as a result for the actual modeled hole axis.
+
+**Minimal fix:** Change the probe center to `-65.5`, preferably using a shared closure-axis constant. The cylinder’s rotation is consistent with local depth mapping to world −Y; its **center**, rather than its orientation, is incorrect.
+
+### 2. Medium — Unfiltered Boolean intersections can classify contact residue as interference
+**`check_p_closure_assembly.py:14–23, 35–38`**
+
+Unlike `check_assembly.py:18–24`, this helper does not reject pairs lacking positive three-dimensional AABB penetration before applying the Exact Boolean.
+
+The nut interval **D = 23–26** ends exactly on the tub ear’s rear seating plane, **D = 26** (`build_revision.py:132`). That is an intentional contact case, not by itself volumetric interference. A Boolean residue at that plane can incorrectly fail the `0.01 mm³` gate. The companion assembly checker explicitly documents and guards against this solver behavior.
+
+**Minimal fix:** Reuse the world-space AABB penetration guard from `check_assembly.py` before the Boolean. Keep contact classified separately from positive overlap; do not describe the guard’s tolerance as proven clearance.
+
+**Missing regression tests:** Disjoint solids, face-touching solids, and solids with known positive penetration. The saved report currently returns zero for the nut/tub pair, so this is a concrete unguarded contact case, **not evidence that this particular saved result already contains contact residue**.
+
+### 3. Medium — “Installed inventory” excludes purchased hardware, including the closure head envelope
+**`check_p_closure_assembly.py:12, 29–35, 46`**
+
+The imported `expected` list is explicitly the **installed printable mesh** inventory (`check_assembly.py:47–53`). It does not include the purchased screw-head proxies created in `render_assembled.py:112–135`.
+
+Also, the role list checks the driver, rear tool and nut, but omits the assumed **head/washer envelope at D = 33–35.4** used by the earlier closure concept (`probe_split_boss_concept.py:111`). Starting the driver at D = 35.4 does not test whether that installed head envelope intersects another part.
+
+**Minimal fix:** Add a separate assumed head/washer-envelope check against the printable inventory. Explicitly report excluded purchased hardware and electronics. For lid-lift samples, maintain an explicit removal/exclusion list: omitting removed closure fasteners is appropriate, but it should not silently imply that all remaining installed hardware was checked. Do not indiscriminately add visual-only proxies as authoritative hardware geometry.
+
+### 4. Medium — An empty or incomplete inherited inventory can produce a vacuous pass
+**`check_p_closure_assembly.py:12, 35–38, 46–50`**
+
+The script trusts the JSON’s `expected` list without checking that it contains the required installed parts or matches this scene. If it is empty, every hit dictionary is empty and every `all(...)` returns `True`; a shortened list silently omits obstacles. Missing *listed* objects instead raise `KeyError`, but omitted entries are undetected.
+
+The output scene hash does not validate the inventory input against that scene.
+
+**Minimal fix:** Require a nonempty inventory containing the canonical required printable names, validate mesh existence and intended visibility, and compare the source assembly report’s `scene_sha256` with the loaded file. Include that validation in the final gate.
+
+**Missing regression tests:** Empty inventory, omitted required part, missing scene object, and stale assembly-report hash.
+
+---
+
+**Scope:** Read-only source and saved-report inspection; no edits, no subagents, and no Blender execution. The lid motion uses the expected world −Y direction, but these checks concern only the listed discrete positions and assumed envelopes—not continuous swept-path or physical clearance.

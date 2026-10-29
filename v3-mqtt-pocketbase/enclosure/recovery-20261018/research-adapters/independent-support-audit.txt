@@ -1,0 +1,84 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead . [90m[offset=0, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead build_research_adapters.py [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead check_component_reservations.py [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead research_component_envelopes.json [90m[offset=0, limit=500][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "mic_|sht_|aperture|carrier" [90min build_revision.py · 28 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead check_assembly.py [90m[offset=1, limit=230][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead build_revision.py [90m[offset=155, limit=80][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "microphone_strap|sht_adjustable|rotation|acoustic_face" [90min render_assembled.py · 15 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+## Findings, highest severity first
+
+**Audit scope:** Read-only source inspection of the two requested scripts, with the existing carrier geometry and assembly transforms as context. No files modified, no subagents used. Dimensions below are derived from the construction code—not physical fit measurements or newly executed mesh-intersection tests.
+
+### 1. High — Neither coupon provides bearing for the smaller sourced boards
+**`build_research_adapters.py:24–30`**
+
+The rails are sized for the larger reservation envelopes, not the actual smaller PCB examples:
+
+- **Mic:** rails occupy local X **−10…−7** and **7…10 mm**. A centered **14 × 12 mm** INMP board occupies X **−7…7 mm**, giving **zero-width bearing contact** at the rail edges. Rotating it puts its 12 mm dimension across a 14 mm opening, leaving no contact at all.
+- **SHT:** rails occupy X **−14…−10** and **10…14 mm**. A centered **12 × 12 mm** board spans X **−6…6**, leaving a **4 mm gap to each rail**.
+
+For comparison, the larger **22 × 20 mm mic reservation** and **30 × 24 mm SHT reservation** overlap the rails, but those are clearance allowances, not evidence of PCB material or safe underside contact. In particular, the mic coupon is only **16 mm long** beneath a nominal 20 mm reservation.
+
+**Consequence:** A tie could retain a small board without supporting it; tightening could pull it into the opening or load the sensor, solder joints, or headers. Manifold geometry does not resolve this.
+
+**Recommendation:** Separate clearance-envelope dimensions from actual bearing dimensions. Require positive-area contact on identified PCB-safe regions for each supported board size and orientation.
+
+### 2. High — The mic end bridge intrudes into the existing acoustic aperture
+**`build_research_adapters.py:31`**, with aperture geometry at **`build_revision.py:167–168`**
+
+For the mic coupon, the bridge occupies local Y **5…8 mm**, crosses the centerline, and is **3 mm high**. The existing carrier has a centered **Ø12 mm opening**.
+
+With the coupon centered and aligned on that carrier, the bridge crosses the circular opening between Y **5 and 6 mm**. Thus the comment that the bridge is “OUTSIDE central sensor path” is not true for the existing aperture.
+
+**Consequence:** The coupon introduces a partial obstruction into a deliberately open acoustic path. This is a geometric intrusion; its acoustic effect remains unmeasured.
+
+**Recommendation:** Keep all bridge material outside an explicit acoustic keep-out, including alignment and print tolerances. Moving the bridge outward must also account for the carrier’s bolt rows—it cannot be treated as an isolated correction.
+
+### 3. Medium — Coupon feet and bridges are not grounded against carrier slots and attachment hardware
+**`build_research_adapters.py:27–33`**, **`check_component_reservations.py:34–47`**
+
+Under the natural centered, axis-aligned placement:
+
+- **SHT:** each 4 mm-wide rail spans X **10…14 mm** in magnitude, while the existing strap slot spans **10.5…13.5 mm** over Y **−6…6** (`build_revision.py:215–216`). Only **0.5 mm-wide strips** remain on either side of the slot in that region. “Broad feet bridge slots” therefore hides a narrow, tolerance-sensitive landing.
+- **SHT bridge:** Y **9…12 mm** reaches the carrier attachment centered at **(0,12)** with a **1.7 mm bore radius** (`build_revision.py:217–218`). Its footprint overlaps the attachment opening and the region needed by a fastener. No installed head/nut envelope or installation sequence is defined.
+- **Mic:** the rails partially overlie the slots at X **±10**, and the outward tail-escape relief further changes the landing surface (`build_revision.py:169–177`). The bridge at Y **5…8** also approaches the bolt row at Y **10**; head/washer clearance cannot be established from bore clearance alone.
+
+The reservation checker never imports or positions either coupon. Its tests therefore cannot detect these conflicts or establish a viable mounting arrangement.
+
+**Recommendation:** Define a coupon-to-carrier transform and fastening sequence first. Then check actual foot contact, unsupported spans, existing strap paths, and purchased head/washer/nut/tool envelopes. The SHT bore overlap is concrete in the centered layout; exact hardware collision volumes require the missing placement and hardware specification.
+
+### 4. Medium — Verification tests free volume, not board support or assembled adapter fit
+**`check_component_reservations.py:26–47`**, **`build_research_adapters.py:34–44`**
+
+The reservation checker checks solid boxes against installed printed parts. The coupon builder checks only nonmanifold edges and positive volume. Neither checks:
+
+- The **14 × 12 mm mic** or **12 × 12 mm SHT** board.
+- Positive-area PCB bearing at the claimed **8 mm** seat.
+- Board motion or loss of contact under retention.
+- Coupon-to-carrier intersections, aperture intrusion, or fastening access.
+- Component/header clearance beneath the PCB.
+
+The scripts explicitly label their outputs as research, which is appropriate, but their current checks cannot substantiate a support strategy. Also, `width` and `inner_x` in the coupon case tuples are unused (`build_research_adapters.py:24`), so changing those apparent sizing parameters would not adjust the rail opening.
+
+## Recommended adjustable / cross-family strategy
+
+Use **carrier-specific bases with replaceable or adjustable PCB contact inserts**, rather than one fixed rail opening derived from the maximum reservation:
+
+1. **Retain distinct mic and SHT interfaces.** Their acoustic/airflow openings, mounting holes, and strap routing impose different constraints.
+2. **Provide inward-adjustable edge shoes or interchangeable saddles** for the actual small and large PCB families. Size their bearing ledges from PCB dimensions and safe underside regions—not reservation margins.
+3. **Keep the mic port keep-out explicit.** Support board edges without bridging the acoustic opening. SHT supports should similarly avoid the sensing region and preserve airflow.
+4. **Use positive lateral stops and light retention.** Ties should retain an already supported board, not supply its missing bearing.
+5. **Gate every configuration with contact and clearance tests:** small and large boards, both intended orientations, tolerance extremes, safe bearing area, sensor keep-outs, carrier landing, fastener envelopes, and tie routing.
+
+**Bottom line:** These are connected, potentially printable coupon shapes, but they are not yet demonstrated board supports. The small-board bearing failure and mic aperture intrusion are directly visible from the dimensions; assembled carrier/hardware compatibility remains an untested requirement.

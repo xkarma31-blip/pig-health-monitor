@@ -1,0 +1,120 @@
+{
+  "status": "Approximate reservation experiment, NOT measured boards or fit certification",
+  "results": [
+    {
+      "name": "esp_body",
+      "reservation_mm": [
+        30,
+        12,
+        24
+      ],
+      "world_center_mm": [
+        0,
+        -18,
+        0
+      ],
+      "collisions_mm3": {},
+      "clear_of_printed_parts": true
+    },
+    {
+      "name": "esp_socketed",
+      "reservation_mm": [
+        30,
+        20,
+        24
+      ],
+      "world_center_mm": [
+        0,
+        -22,
+        0
+      ],
+      "collisions_mm3": {
+        "main_lid": 1440.0000000000002
+      },
+      "clear_of_printed_parts": false
+    },
+    {
+      "name": "esp_socketed_low_profile_tray_hypothesis",
+      "reservation_mm": [
+        30,
+        20,
+        24
+      ],
+      "world_center_mm": [
+        0,
+        -19,
+        0
+      ],
+      "collisions_mm3": {},
+      "clear_of_printed_parts": true
+    },
+    {
+      "name": "mic_left_body",
+      "reservation_mm": [
+        22,
+        12,
+        20
+      ],
+      "world_center_mm": [
+        -24,
+        -21,
+        -80
+      ],
+      "collisions_mm3": {},
+      "clear_of_printed_parts": true
+    },
+    {
+      "name": "mic_right_body",
+      "reservation_mm": [
+        22,
+        12,
+        20
+      ],
+      "world_center_mm": [
+        24,
+        -21,
+        -80
+      ],
+      "collisions_mm3": {},
+      "clear_of_printed_parts": true
+    },
+    {
+      "name": "sht_body",
+      "reservation_mm": [
+        30,
+        12,
+        24
+      ],
+      "world_center_mm": [
+        80,
+        -12,
+        61
+      ],
+      "collisions_mm3": {},
+      "clear_of_printed_parts": true
+    },
+    {
+      "name": "thermal_body",
+      "reservation_mm": [
+        34,
+        16,
+        24
+      ],
+      "world_center_mm": [
+        0,
+        -27,
+        80
+      ],
+      "collisions_mm3": {
+        "thermal_angled_hood": 0.5644710372907795
+      },
+      "clear_of_printed_parts": false
+    }
+  ],
+  "scene_sha256": "b221e03ccc1a797e777850bb10df4b1db598ddcf6cda69d7125b322d8b2d0122",
+  "limits": [
+    "Chosen extra allowances are engineering assumptions",
+    "No connector cable bend,fastener protrusion,electrical or antenna approval",
+    "Thermal tilted seat requires separate oriented envelope test"
+  ]
+}

@@ -1,0 +1,72 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGlob "**/*thermal*rear*" [90min . · 30 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✗ [0mRead research-adapters/build_thermal_rear_insert.py failed
+[91m[1mError: [0mFile not found: /home/solrahk/pig-health-monitor/v3-mqtt-pocketbase/enclosure/recovery-20261018/research-adapters/build_thermal_rear_insert.py
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGlob "**/build_thermal_rear_insert.py" [90min /home/solrahk/pig-health-monitor · 3 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead build_thermal_rear_insert.py [90m[offset=1, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead research-adapters/thermal-rear-insert-checks.json [90m[offset=1, limit=260][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "bolt|cradle|stand" [90min . · 0 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "thermal_raised_cradle|bolt_seats|repair_acceptance|mechanically_valid|gap_mm" [90min research-adapters/thermal-rear-insert-checks.json · 17 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "thermal_raised_cradle|9.2|strap slot" [90min . · 55 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead build_revision.py [90m[offset=250, limit=90][0m
+> reviewer · cx/gpt-6.1-sol-review
+## Findings — severity order
+
+References below are relative to `v3-mqtt-pocketbase/enclosure/recovery-20261018/`. I excluded the smallest variant’s stale/active-repair discrepancies.
+
+### 1. High — Repaired carriers lose their stand-offs, but still pass without an enclosure bearing/load path
+**`build_thermal_rear_insert.py:174–184, 362–372`**
+
+Both repaired variants delete the original carrier—including the four feet created at lines 163–167—and replace it with a frame and bolt beams. The feet are never recreated.
+
+The replacement frame’s underside is sensor-local **z = 4 mm**. The original cradle stand tops, using the script’s construction transform, are approximately **sensor-local z = 2.61 mm**. This leaves approximately **1.39 mm normal separation** at the mounting locations before considering any other supporting surface. Subtracting the cradle cannot fill this gap.
+
+The gates require nonintersection, connected topology and flat upper bolt seats, but **never require the carrier’s underside to bear against the cradle**. Consequently, the JSON reports both repaired variants as mechanically valid (`thermal-rear-insert-checks.json:2627,3920`) without demonstrating how tightening the mounting bolts transfers compression into the enclosure rather than bending/pulling the carrier across the gap.
+
+**Missing test:** finite underside bearing/contact footprint against the actual cradle at each mount, with an explicit permissible gap. Connected carrier topology is not a substitute for that interface.
+
+### 2. High — Bolt-seat pass does not validate the installed bolt/washer or its clearance
+**`build_thermal_rear_insert.py:334–349, 350–360, 373–374`**
+
+The bolt-seat gate checks four points at radius 2.4 mm for coplanarity and axis alignment. It does not check a finite washer-bearing annulus, residual material beneath that annulus, or a head/washer placed on the measured seat.
+
+More importantly, `installed` contains only the carrier, retainers, PCB and package. **Neither mounting hardware nor retainer hardware participates in the internal/enclosure collision tests or optical obstacle set.** A flat seat can therefore pass even if its installed head collides with the hood, or a retainer screw obstructs a sampled optical ray.
+
+This is a concrete acceptance gap, not a request for measured hardware: the design already assumes M3 seats and M2 retainer screws, and can test explicit nominal hardware envelopes.
+
+**Missing tests:** washer footprint support plus nominal head/washer/shank collision and access envelopes at the measured seats; include relevant hardware in the optical obstacle set.
+
+### 3. Medium — Retention passes from one midpoint ray without checking the screw-to-boss retention path
+**`build_thermal_rear_insert.py:321–333, 369`**
+
+Each bar is declared captured solely because a single ray above the PCB edge hits it within 0.31 mm. This verifies local overlap and gap, but does not establish that the **final, enclosure-trimmed bar remains attached to usable bosses**.
+
+The carrier and bars are independently subtracted against the cradle/hood at lines 262–275. The retention gate never checks the surviving clearance holes against pilot holes, boss engagement, screw-head bearing, or whether the bar has support at its fasteners. A connected bar can retain its midpoint and pass this gate after losing a functional fastening region.
+
+Thus `retention: true` is stronger than the actual test: it means “material above one point,” not “fastened restraint with a load path.”
+
+**Missing test:** on the final meshes, verify both fastener interfaces per bar and finite edge-overlap footprints linked to those interfaces.
+
+### 4. Medium — Bearing accepts a recessed surface as PCB support
+**`build_thermal_rear_insert.py:311–319`**
+
+Bearing rays start at `REAR + 0.01` and travel downward **0.07 mm**. Any hit contributes full bearing area, without checking the hit’s height or normal. A support surface as much as **0.06 mm below the specified seating plane**, or a non-bearing sloped surface in that interval, is counted as seated PCB support.
+
+The script explicitly says it restores the bearing plane exactly; this test does not enforce that requirement. A recessed edge can receive the same passing area as a true contact surface.
+
+**Missing test:** require hits at the intended seating plane within a small declared numerical tolerance, with normals aligned to the PCB underside.
+
+## Optical linkage assessment
+
+The script **does correctly link** per-scenario `accepted` to `mechanically_valid` (`:402–405`); there is no independent optical pass overriding a failed mechanical gate. However, the mechanical false passes above propagate directly into optical acceptance, and omitted fasteners are absent from both mechanical collision and optical sampling. I would not treat the repaired JSON’s `repair_acceptance: true` as demonstrating an installable, supported assembly.
+
+No files were modified; no subagents were used.

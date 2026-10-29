@@ -1,0 +1,113 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-n/START_HERE.md [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mSkill "using-superpowers" 
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-n/ASSEMBLY_CURRENT.md [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-n/MANUFACTURER_RESEARCH.md [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-n/INTEGRATION_DECISIONS.md [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018 [90m[offset=0, limit=200][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "stl|spare|trim|spacer|carrier|revision-m" [90min v3-mqtt-pocketbase/enclosure/recovery-20261018/render_assembled.py · 15 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-n [90m[offset=0, limit=150][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/render_assembled.py [90m[offset=1, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-n/verification-summary.json [90m[offset=1, limit=160][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/check_grip_surfaces.py [90m[offset=1, limit=65][0m
+> reviewer · cx/gpt-6.1-sol-review
+1. **P2 — Grip-surface evidence and reproduction command target the wrong revision.**  
+   `v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-n/ASSEMBLY_CURRENT.md:17–21` claims an exported-surface cross-check in `grip-surface-checks.json`, but that file is absent from revision N. The prescribed script hardcodes `out=root/'revision-m'` (`check_grip_surfaces.py:9`), so running the documented command checks—and writes its report into—M, not N. **Action:** make the check explicitly target N and supply its report, or identify this as historical M evidence rather than a current N verification.
+
+2. **P3 — Current assembly ledger still identifies itself as revision M.**  
+   `v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-n/ASSEMBLY_CURRENT.md:1` says “Current M assembly ledger,” whereas `START_HERE.md` presents it as the current N assembly authority. This leaves the revision applicability of the hardware instructions ambiguous, especially alongside the actual M-targeting check above. **Action:** label it N, or explicitly state which M instructions carry forward unchanged.
+
+No other concrete defects found in the four requested documents. The 17-export/20-installed-instance quantities reconcile with the renderer’s duplicates and two excluded spares; physical-fit, optical, acoustic and ingress limitations are explicit and do not imply completion or IP certification. No files modified.

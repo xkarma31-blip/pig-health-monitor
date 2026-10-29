@@ -1,0 +1,56 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py [90m[offset=1, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/render_assembled.py [90m[offset=1, limit=1000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/check_assembly.py [90m[offset=1, limit=1000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-h/README.md [90m[offset=1, limit=1000][0m
+> reviewer · cx/gpt-6.1-sol-review
+**Findings, highest severity first** — references relative to `v3-mqtt-pocketbase/enclosure/recovery-20261018/`. Static geometry review; no files modified.
+
+1. **High — Thermal cradle fastener heads/nuts collide with the installed hood.**  
+   `build_revision.py:231–242,247–249`; `render_assembled.py:27,31`  
+   The cradle platform’s upper surface is approximately `12.553 + y·tan(15°)` above the separator, while the hood’s inner roof is `13 + y·tan(15°)`: **only ~0.45 mm clearance**. All four cradle bores at `(±30, ±9)` sit under solid roof, outside the 46×26 optical opening. Ordinary M3 heads, nuts or washers cannot occupy this gap. Mounting the cradle before the hood does not resolve the final interference. Provide roof access/clearance pockets or change the cradle height/fastening arrangement.
+
+2. **High — Thermal cradle support feet have no demonstrated continuous attachment to the platform around their bores.**  
+   `build_revision.py:227–242`  
+   The stands terminate at `12 + y·tan(15°)`, about **0.55 mm below the platform’s upper surface**. Thus their union is embedded into the thin sloping platform rather than forming a flat, exposed bearing pad. The vertical through-bores emerge on that slope, leaving fastener bearing and load transfer dependent on a thin, uneven platform section. A manifold mesh does not establish a usable bolted seat. Add explicit flat bearing bosses and verify the remaining section after the bore and bevel—not merely connected topology.
+
+3. **Medium — Hood bolts have sloped bearing surfaces, but the render depicts ordinary flat-bottom heads.**  
+   `build_revision.py:247–255`; `render_assembled.py:87–89`  
+   Hood bores are vertical through a 15° roof, with no counterbore or level seating pad. Across the rendered 5.4 mm head diameter, the roof rises **~1.45 mm**. Consequently the flat-bottom head proxy intersects the uphill roof and floats above the downhill side; a real screw cannot seat as shown. Specify suitable angled seating hardware or model flat pads, including driver clearance.
+
+4. **Medium — Acoustic trim has no mechanical retention.**  
+   `build_revision.py:158–164`; `render_assembled.py:26,53–58`; `revision-h/README.md:37,55`  
+   Each trim ring simply rests on the face: its 12 mm inner diameter matches the sound aperture, but there is no locating sleeve, interference fit, latch or fastener. It will fall off without an additional attachment process. The assembly instructions specify nuts/straps but do not identify adhesive or another trim-retention method.
+
+5. **Medium — The digital assembly gates cannot detect the principal fastening failure above.**  
+   `check_assembly.py:36–44,49–53`; `revision-h/README.md:45–55`  
+   The checker explicitly excludes purchased fasteners and only rejects **positive-volume intersections between printable parts**. It never checks head/nut envelopes, driver approach, bearing seats, hole-axis continuity, or whether parts are actually retained. Therefore the “matched holes” and “cradle bases meet the plate” statements are insufficient assembly evidence. Add fastener-envelope and access checks—especially all four cradle joints—and qualify the README’s assembly instructions until those checks pass.

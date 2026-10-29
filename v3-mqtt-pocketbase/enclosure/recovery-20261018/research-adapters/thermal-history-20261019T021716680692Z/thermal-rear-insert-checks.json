@@ -1,0 +1,5515 @@
+{
+  "units": "mm",
+  "P_sha256": {
+    "main_tub": "f5152219d6976f380e1860400caf44d4a8bfeff5d35b1870740ea9d78c8efc12",
+    "main_lid": "3de0b601957fe48420371434df05db1afa5def114d90df4b79f86dd3aaf56550",
+    "thermal_tub": "ef5f2aa56b83c8cb7af040a7e7055b44766467e68dc6cc85f1e486b09ec1c2fa",
+    "thermal_face": "4ceadefe5bfd91dd54fe3c8aa9005f13ef3b9bb738ec906be17c304bdeabf671",
+    "thermal_raised_cradle": "9d2cebe08c75bc8f4e752c05fb70079562e01cc88b2fab0fb4d1bf77564fed2d",
+    "thermal_angled_hood": "10a79f3270e9c3dce5153311b4fb9ab0347b5ae139ae931b0e953363c1c19b9c",
+    "acoustic_tub": "5ae7ee3d9dba0228e6177644a0076a0f14a0f56859c3853c1b32f150bf991d5d",
+    "acoustic_face": "68dbcded253e22103736a3d6b49ac3a976e64bbc17a57883d49bcc7ab2741ded",
+    "mounting_spine": "d8566155e0fc07dcff34381212ddc977850b7991b4ed6e28763f305110b5aebb",
+    "sht_mount_arm": "3c1813784b9340e578b1bba883b837b08abdae78150f65e3528892259a039342"
+  },
+  "source_outlines_mm": {
+    "pcb25_4x17_78": [
+      25.4,
+      17.78
+    ],
+    "pcb25_4square": [
+      25.4,
+      25.4
+    ],
+    "pcb28x16": [
+      28,
+      16
+    ]
+  },
+  "assumptions": {
+    "pcb_thickness": 1.6,
+    "lateral_allowance": 0.3,
+    "edge_bearing_width": 1.5,
+    "rear_plane": 6.0,
+    "front_plane": 7.6,
+    "component_free_edge_required": 1.5,
+    "package_proxy": [
+      12,
+      8,
+      2
+    ],
+    "not_measured": true
+  },
+  "variants": {
+    "pcb25_4x17_78": {
+      "carrier": {
+        "nonmanifold_edges": 1244,
+        "degenerate_faces": 0,
+        "volume_mm3": 1958.9434250212425,
+        "islands": 1
+      },
+      "retainers": [
+        {
+          "nonmanifold_edges": 0,
+          "degenerate_faces": 0,
+          "volume_mm3": 179.57812397415654,
+          "islands": 1
+        },
+        {
+          "nonmanifold_edges": 0,
+          "degenerate_faces": 0,
+          "volume_mm3": 191.5436943062712,
+          "islands": 1
+        }
+      ],
+      "bearing_area_mm2": 76.12380000000003,
+      "collisions": [
+        {
+          "a": "pcb25_4x17_78",
+          "b": "thermal_raised_cradle",
+          "mm3": 6.030855715324444
+        },
+        {
+          "a": "M3_hex_nut_-30_-9",
+          "b": "thermal_face",
+          "mm3": 41.13748783988545
+        },
+        {
+          "a": "M3_hex_nut_-30_9",
+          "b": "thermal_face",
+          "mm3": 41.13749382478427
+        },
+        {
+          "a": "M3_hex_nut_30_-9",
+          "b": "thermal_face",
+          "mm3": 41.137488911752435
+        },
+        {
+          "a": "M3_hex_nut_30_9",
+          "b": "thermal_face",
+          "mm3": 41.137484217043664
+        }
+      ],
+      "optical": [
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -4.372712135314941,
+                -36.33738708496094,
+                73.81832885742188
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -4.372712135314941,
+                -36.33738708496094,
+                73.81832885742188
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -11.996302604675293,
+                -35.35465621948242,
+                70.15071105957031
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -11.996302604675293,
+                -35.35465621948242,
+                70.15071105957031
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -6.372711181640625,
+                -35.81975173950195,
+                71.886474609375
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -6.372711181640625,
+                -35.81975173950195,
+                71.886474609375
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -12.75,
+                -34.16739273071289,
+                69.0915298461914
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -12.75,
+                -34.16739273071289,
+                69.0915298461914
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -2.3727121353149414,
+                -36.85502624511719,
+                75.75018310546875
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -2.3727121353149414,
+                -36.85502624511719,
+                75.75018310546875
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -9.996302604675293,
+                -35.87229537963867,
+                72.08256530761719
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -9.996302604675293,
+                -35.87229537963867,
+                72.08256530761719
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -3.3315775394439697,
+                -36.5005989074707,
+                74.42743682861328
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -3.3315775394439697,
+                -36.5005989074707,
+                74.42743682861328
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -9.140005111694336,
+                -35.751853942871094,
+                71.63307189941406
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -9.140005111694336,
+                -35.751853942871094,
+                71.63307189941406
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -5.331578254699707,
+                -35.98296356201172,
+                72.49559020996094
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -5.331578254699707,
+                -35.98296356201172,
+                72.49559020996094
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -11.140006065368652,
+                -35.234214782714844,
+                69.70122528076172
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -11.140006065368652,
+                -35.234214782714844,
+                69.70122528076172
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -1.3315784931182861,
+                -37.01823806762695,
+                76.35929107666016
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -1.3315784931182861,
+                -37.01823806762695,
+                76.35929107666016
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -7.140007019042969,
+                -36.269493103027344,
+                73.56492614746094
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -7.140007019042969,
+                -36.269493103027344,
+                73.56492614746094
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -2.290443181991577,
+                -36.66381072998047,
+                75.03654479980469
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -2.290443181991577,
+                -36.66381072998047,
+                75.03654479980469
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -6.283708095550537,
+                -36.149051666259766,
+                73.11543273925781
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -6.283708095550537,
+                -36.149051666259766,
+                73.11543273925781
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -4.290444374084473,
+                -36.146175384521484,
+                73.10469818115234
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -4.290444374084473,
+                -36.146175384521484,
+                73.10469818115234
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -8.283710479736328,
+                -35.631412506103516,
+                71.18358612060547
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -8.283710479736328,
+                -35.631412506103516,
+                71.18358612060547
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -0.29044294357299805,
+                -37.18144989013672,
+                76.96839904785156
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -0.29044294357299805,
+                -37.18144989013672,
+                76.96839904785156
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -4.283707141876221,
+                -36.666690826416016,
+                75.04728698730469
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -4.283707141876221,
+                -36.666690826416016,
+                75.04728698730469
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -1.2493096590042114,
+                -36.827022552490234,
+                75.6456527709961
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -1.2493096590042114,
+                -36.827022552490234,
+                75.6456527709961
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -3.427412986755371,
+                -36.54624557495117,
+                74.59779357910156
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -3.427412986755371,
+                -36.54624557495117,
+                74.59779357910156
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -3.2493088245391846,
+                -36.309383392333984,
+                73.71380615234375
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -3.2493088245391846,
+                -36.309383392333984,
+                73.71380615234375
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -5.4274115562438965,
+                -36.02861022949219,
+                72.66594696044922
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -5.4274115562438965,
+                -36.02861022949219,
+                72.66594696044922
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                0.7506906986236572,
+                -37.34465789794922,
+                77.57750701904297
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                0.7506906986236572,
+                -37.34465789794922,
+                77.57750701904297
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -1.4274144172668457,
+                -37.06388854980469,
+                76.52964782714844
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb25_4x17_78": {
+              "world_mm": [
+                -1.4274144172668457,
+                -37.06388854980469,
+                76.52964782714844
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        }
+      ],
+      "bearing": [
+        {
+          "edge": -1,
+          "area_mm2": 38.100000000000016,
+          "measurement_valid": true,
+          "required_mm2": 36.19499999999999
+        },
+        {
+          "edge": 1,
+          "area_mm2": 38.023800000000016,
+          "measurement_valid": true,
+          "required_mm2": 36.19499999999999
+        }
+      ],
+      "retention": [
+        {
+          "edge": -1,
+          "gap_mm": 0.2999993562698364,
+          "captured": true
+        },
+        {
+          "edge": 1,
+          "gap_mm": 0.29999834299087524,
+          "captured": true
+        }
+      ],
+      "bolt_seats": [
+        {
+          "x": -30,
+          "y": -9,
+          "flat": true,
+          "samples": [
+            {
+              "hit": [
+                -27.600000381469727,
+                -24.688457489013672,
+                71.0
+              ],
+              "normal": [
+                1.0501686631414486e-07,
+                -1.0,
+                4.620838467417343e-07
+              ]
+            },
+            {
+              "hit": [
+                -32.400001525878906,
+                -24.688461303710938,
+                71.0
+              ],
+              "normal": [
+                1.0501686631414486e-07,
+                -1.0,
+                4.620838467417343e-07
+              ]
+            },
+            {
+              "hit": [
+                -30.0,
+                -24.688457489013672,
+                73.4000015258789
+              ],
+              "normal": [
+                -1.5554230969883065e-07,
+                -1.0,
+                -1.6988461766231922e-06
+              ]
+            },
+            {
+              "hit": [
+                -30.0,
+                -24.688461303710938,
+                68.5999984741211
+              ],
+              "normal": [
+                1.0501686631414486e-07,
+                -1.0,
+                4.620838467417343e-07
+              ]
+            }
+          ]
+        },
+        {
+          "x": -30,
+          "y": 9,
+          "flat": true,
+          "samples": [
+            {
+              "hit": [
+                -27.600000381469727,
+                -29.51154136657715,
+                89.0
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                1.6988423112707096e-07
+              ]
+            },
+            {
+              "hit": [
+                -32.400001525878906,
+                -29.51154136657715,
+                89.0
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                1.6988423112707096e-07
+              ]
+            },
+            {
+              "hit": [
+                -30.0,
+                -29.51154327392578,
+                91.4000015258789
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                1.6988423112707096e-07
+              ]
+            },
+            {
+              "hit": [
+                -30.0,
+                -29.51154327392578,
+                86.5999984741211
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                1.6988423112707096e-07
+              ]
+            }
+          ]
+        },
+        {
+          "x": 30,
+          "y": -9,
+          "flat": true,
+          "samples": [
+            {
+              "hit": [
+                32.400001525878906,
+                -24.688461303710938,
+                71.0
+              ],
+              "normal": [
+                -1.2171046392950302e-08,
+                -1.0,
+                5.266419407234935e-07
+              ]
+            },
+            {
+              "hit": [
+                27.600000381469727,
+                -24.688453674316406,
+                71.0
+              ],
+              "normal": [
+                1.5525944263572455e-07,
+                -1.0,
+                5.776046236860566e-07
+              ]
+            },
+            {
+              "hit": [
+                30.0,
+                -24.688457489013672,
+                73.4000015258789
+              ],
+              "normal": [
+                -1.2171046392950302e-08,
+                -1.0,
+                5.266419407234935e-07
+              ]
+            },
+            {
+              "hit": [
+                30.0,
+                -24.688465118408203,
+                68.5999984741211
+              ],
+              "normal": [
+                1.5525944263572455e-07,
+                -1.0,
+                5.776046236860566e-07
+              ]
+            }
+          ]
+        },
+        {
+          "x": 30,
+          "y": 9,
+          "flat": true,
+          "samples": [
+            {
+              "hit": [
+                32.400001525878906,
+                -29.51154136657715,
+                89.0
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                -4.204627259696281e-07
+              ]
+            },
+            {
+              "hit": [
+                27.600000381469727,
+                -29.51154136657715,
+                89.0
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                1.121232799050631e-06
+              ]
+            },
+            {
+              "hit": [
+                30.0,
+                -29.51154327392578,
+                91.4000015258789
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                -4.204627259696281e-07
+              ]
+            },
+            {
+              "hit": [
+                30.0,
+                -29.511545181274414,
+                86.5999984741211
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                1.121232799050631e-06
+              ]
+            }
+          ]
+        }
+      ],
+      "internal_collisions": [
+        {
+          "a": "pcb25_4x17_78",
+          "b": "pcb25_4x17_78_retainer",
+          "mm3": 1000.8290081655883
+        },
+        {
+          "a": "pcb25_4x17_78",
+          "b": "pcb25_4x17_78_retainer.001",
+          "mm3": 1260.1752701151252
+        }
+      ],
+      "mechanical_gates": {
+        "topology": false,
+        "fixed_clearance": false,
+        "internal_clearance": false,
+        "bearing": true,
+        "retention": true,
+        "bolt_seats": true
+      },
+      "mechanically_valid": false,
+      "legacy_geometry_valid": false,
+      "independent_hardware_validation_required": true,
+      "optical_success": false,
+      "installation": {
+        "scene": "pcb25_4x17_78_installed.blend",
+        "units": "mm",
+        "sensor_local_to_installed_world": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            -0.25881898403167725,
+            -0.9659258127212524,
+            -23.5
+          ],
+          [
+            0.0,
+            0.9659258127212524,
+            -0.25881898403167725,
+            80.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "installed_world_to_sensor_local": [
+          [
+            1.0,
+            -0.0,
+            0.0,
+            -0.0
+          ],
+          [
+            -0.0,
+            -0.25881901383399963,
+            0.9659258723258972,
+            -83.35631561279297
+          ],
+          [
+            0.0,
+            -0.9659258723258972,
+            -0.25881901383399963,
+            -1.9937382936477661
+          ],
+          [
+            -0.0,
+            0.0,
+            -0.0,
+            1.0
+          ]
+        ],
+        "vertices_baked_world": true,
+        "object_matrices_identity": true,
+        "cradle_rotation_x_degrees": 15,
+        "construction_origin_mm": [
+          0.0,
+          0.0,
+          6.5
+        ],
+        "variant_objects": [
+          "pcb25_4x17_78",
+          "pcb25_4x17_78_retainer",
+          "pcb25_4x17_78_retainer.001",
+          "PCB envelope",
+          "ASSUMED package",
+          "M3_hex_nut_-30_-9",
+          "M3_hex_nut_-30_9",
+          "M3_hex_nut_30_-9",
+          "M3_hex_nut_30_9"
+        ],
+        "fixed_context_objects": [
+          "main_tub",
+          "main_lid",
+          "thermal_tub",
+          "thermal_face",
+          "thermal_raised_cradle",
+          "thermal_angled_hood",
+          "acoustic_tub",
+          "acoustic_face",
+          "mounting_spine",
+          "sht_mount_arm"
+        ],
+        "proxy_dimensions_mm": {
+          "pcb": [
+            25.4,
+            17.78,
+            1.6
+          ],
+          "package": [
+            12,
+            8,
+            2
+          ]
+        },
+        "fastener_contract": {
+          "M3": "Four M3x16 low-profile socket screws: head diameter <=5.5, height <=2.0; washer OD6 ID3.2 thickness0.5; DIN934 nuts AF5.5 thickness2.4 at construction z=-2.4..0. Standard 3mm socket heads do NOT fit.",
+          "M2": "Four M2x5 thread-forming screws into 1.6mm pilots; 2mm minimum engagement, washer OD5 ID2.2 thickness0.3. Qualify pilot with printed coupon before assembly.",
+          "assembly": "Install/hold M3 nuts from underside before thermal face closure. Fit PCB and edge bars before hood. Do not substitute standard-height M3 heads."
+        }
+      }
+    },
+    "pcb25_4square": {
+      "carrier": {
+        "nonmanifold_edges": 129,
+        "degenerate_faces": 0,
+        "volume_mm3": 3186.3225225101373,
+        "islands": 1
+      },
+      "retainers": [
+        {
+          "nonmanifold_edges": 0,
+          "degenerate_faces": 0,
+          "volume_mm3": 182.3085864458903,
+          "islands": 1
+        },
+        {
+          "nonmanifold_edges": 0,
+          "degenerate_faces": 0,
+          "volume_mm3": 182.3085738185554,
+          "islands": 1
+        }
+      ],
+      "bearing_area_mm2": 76.20000000000003,
+      "collisions": [
+        {
+          "a": "pcb25_4square",
+          "b": "thermal_raised_cradle",
+          "mm3": 47.77296068998128
+        },
+        {
+          "a": "M3_hex_nut_-30_-9",
+          "b": "thermal_face",
+          "mm3": 41.13748783988545
+        },
+        {
+          "a": "M3_hex_nut_-30_9",
+          "b": "thermal_face",
+          "mm3": 41.13749382478427
+        },
+        {
+          "a": "M3_hex_nut_30_-9",
+          "b": "thermal_face",
+          "mm3": 41.137488911752435
+        },
+        {
+          "a": "M3_hex_nut_30_9",
+          "b": "thermal_face",
+          "mm3": 41.137484217043664
+        }
+      ],
+      "optical": [
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        }
+      ],
+      "bearing": [
+        {
+          "edge": -1,
+          "area_mm2": 38.100000000000016,
+          "measurement_valid": true,
+          "required_mm2": 36.19499999999999
+        },
+        {
+          "edge": 1,
+          "area_mm2": 38.100000000000016,
+          "measurement_valid": true,
+          "required_mm2": 36.19499999999999
+        }
+      ],
+      "retention": [
+        {
+          "edge": -1,
+          "gap_mm": 0.2999994456768036,
+          "captured": true
+        },
+        {
+          "edge": 1,
+          "gap_mm": 0.3000011146068573,
+          "captured": true
+        }
+      ],
+      "bolt_seats": [
+        {
+          "x": -30,
+          "y": -9,
+          "flat": true,
+          "samples": [
+            {
+              "hit": [
+                -27.600000381469727,
+                -24.688453674316406,
+                71.0
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                -8.154420783057503e-08
+              ]
+            },
+            {
+              "hit": [
+                -32.400001525878906,
+                -24.688461303710938,
+                71.0
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                -8.154420783057503e-08
+              ]
+            },
+            {
+              "hit": [
+                -30.0,
+                -24.688457489013672,
+                73.4000015258789
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                -1.5629386780346977e-06
+              ]
+            },
+            {
+              "hit": [
+                -30.0,
+                -24.688461303710938,
+                68.5999984741211
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                -8.154420783057503e-08
+              ]
+            }
+          ]
+        },
+        {
+          "x": -30,
+          "y": 9,
+          "flat": true,
+          "samples": [
+            {
+              "hit": [
+                -27.600000381469727,
+                -29.51154327392578,
+                89.0
+              ],
+              "normal": [
+                9.343126805561042e-08,
+                -1.0,
+                1.698840890185238e-07
+              ]
+            },
+            {
+              "hit": [
+                -32.400001525878906,
+                -29.51154327392578,
+                89.0
+              ],
+              "normal": [
+                9.343126805561042e-08,
+                -1.0,
+                1.698840890185238e-07
+              ]
+            },
+            {
+              "hit": [
+                -30.0,
+                -29.51154327392578,
+                91.4000015258789
+              ],
+              "normal": [
+                -1.5554252286165138e-07,
+                -1.0,
+                4.077236326338607e-07
+              ]
+            },
+            {
+              "hit": [
+                -30.0,
+                -29.51154327392578,
+                86.5999984741211
+              ],
+              "normal": [
+                9.343126805561042e-08,
+                -1.0,
+                1.698840890185238e-07
+              ]
+            }
+          ]
+        },
+        {
+          "x": 30,
+          "y": -9,
+          "flat": true,
+          "samples": [
+            {
+              "hit": [
+                32.400001525878906,
+                -24.688457489013672,
+                71.0
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                -1.359072143714002e-07
+              ]
+            },
+            {
+              "hit": [
+                27.600000381469727,
+                -24.688453674316406,
+                71.0
+              ],
+              "normal": [
+                0.0,
+                -0.9999999403953552,
+                6.795373508339253e-08
+              ]
+            },
+            {
+              "hit": [
+                30.0,
+                -24.688453674316406,
+                73.4000015258789
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                -1.359072143714002e-07
+              ]
+            },
+            {
+              "hit": [
+                30.0,
+                -24.688457489013672,
+                68.5999984741211
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                -1.359072143714002e-07
+              ]
+            }
+          ]
+        },
+        {
+          "x": 30,
+          "y": 9,
+          "flat": true,
+          "samples": [
+            {
+              "hit": [
+                32.400001525878906,
+                -29.51154136657715,
+                89.0
+              ],
+              "normal": [
+                -3.3228204188162636e-08,
+                -1.0,
+                0.0
+              ]
+            },
+            {
+              "hit": [
+                27.600000381469727,
+                -29.51154136657715,
+                89.0
+              ],
+              "normal": [
+                2.222638926241416e-07,
+                -1.0,
+                6.11583402587712e-07
+              ]
+            },
+            {
+              "hit": [
+                30.0,
+                -29.511547088623047,
+                91.4000015258789
+              ],
+              "normal": [
+                -3.3228204188162636e-08,
+                -1.0,
+                0.0
+              ]
+            },
+            {
+              "hit": [
+                30.0,
+                -29.511545181274414,
+                86.5999984741211
+              ],
+              "normal": [
+                -3.3228204188162636e-08,
+                -1.0,
+                0.0
+              ]
+            }
+          ]
+        }
+      ],
+      "internal_collisions": [
+        {
+          "a": "pcb25_4square",
+          "b": "pcb25_4square_retainer",
+          "mm3": 6.521342086170415
+        },
+        {
+          "a": "pcb25_4square",
+          "b": "pcb25_4square_retainer.001",
+          "mm3": 2.2226229542040152
+        }
+      ],
+      "mechanical_gates": {
+        "topology": false,
+        "fixed_clearance": false,
+        "internal_clearance": false,
+        "bearing": true,
+        "retention": true,
+        "bolt_seats": true
+      },
+      "mechanically_valid": false,
+      "legacy_geometry_valid": false,
+      "independent_hardware_validation_required": true,
+      "optical_success": false,
+      "installation": {
+        "scene": "pcb25_4square_installed.blend",
+        "units": "mm",
+        "sensor_local_to_installed_world": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            -0.25881898403167725,
+            -0.9659258127212524,
+            -23.5
+          ],
+          [
+            0.0,
+            0.9659258127212524,
+            -0.25881898403167725,
+            81.80000305175781
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "installed_world_to_sensor_local": [
+          [
+            1.0,
+            -0.0,
+            0.0,
+            -0.0
+          ],
+          [
+            -0.0,
+            -0.25881901383399963,
+            0.9659258723258972,
+            -85.09498596191406
+          ],
+          [
+            0.0,
+            -0.9659258723258972,
+            -0.25881901383399963,
+            -1.5278626680374146
+          ],
+          [
+            -0.0,
+            0.0,
+            -0.0,
+            1.0
+          ]
+        ],
+        "vertices_baked_world": true,
+        "object_matrices_identity": true,
+        "cradle_rotation_x_degrees": 15,
+        "construction_origin_mm": [
+          0.0,
+          1.7999999523162842,
+          6.5
+        ],
+        "variant_objects": [
+          "pcb25_4square",
+          "pcb25_4square_retainer",
+          "pcb25_4square_retainer.001",
+          "PCB envelope",
+          "ASSUMED package",
+          "M3_hex_nut_-30_-9",
+          "M3_hex_nut_-30_9",
+          "M3_hex_nut_30_-9",
+          "M3_hex_nut_30_9"
+        ],
+        "fixed_context_objects": [
+          "main_tub",
+          "main_lid",
+          "thermal_tub",
+          "thermal_face",
+          "thermal_raised_cradle",
+          "thermal_angled_hood",
+          "acoustic_tub",
+          "acoustic_face",
+          "mounting_spine",
+          "sht_mount_arm"
+        ],
+        "proxy_dimensions_mm": {
+          "pcb": [
+            25.4,
+            25.4,
+            1.6
+          ],
+          "package": [
+            12,
+            8,
+            2
+          ]
+        },
+        "fastener_contract": {
+          "M3": "Four M3x16 low-profile socket screws: head diameter <=5.5, height <=2.0; washer OD6 ID3.2 thickness0.5; DIN934 nuts AF5.5 thickness2.4 at construction z=-2.4..0. Standard 3mm socket heads do NOT fit.",
+          "M2": "Four M2x5 thread-forming screws into 1.6mm pilots; 2mm minimum engagement, washer OD5 ID2.2 thickness0.3. Qualify pilot with printed coupon before assembly.",
+          "assembly": "Install/hold M3 nuts from underside before thermal face closure. Fit PCB and edge bars before hood. Do not substitute standard-height M3 heads."
+        }
+      }
+    },
+    "pcb28x16": {
+      "carrier": {
+        "nonmanifold_edges": 661,
+        "degenerate_faces": 0,
+        "volume_mm3": 1999.2450368548282,
+        "islands": 1
+      },
+      "retainers": [
+        {
+          "nonmanifold_edges": 0,
+          "degenerate_faces": 0,
+          "volume_mm3": 205.23122092229653,
+          "islands": 1
+        },
+        {
+          "nonmanifold_edges": 0,
+          "degenerate_faces": 0,
+          "volume_mm3": 205.68770371607556,
+          "islands": 1
+        }
+      ],
+      "bearing_area_mm2": 84.00000000000185,
+      "collisions": [
+        {
+          "a": "pcb28x16",
+          "b": "thermal_raised_cradle",
+          "mm3": 5.336182363953292
+        },
+        {
+          "a": "M3_hex_nut_-30_-9",
+          "b": "thermal_face",
+          "mm3": 41.13748783988545
+        },
+        {
+          "a": "M3_hex_nut_-30_9",
+          "b": "thermal_face",
+          "mm3": 41.13749382478427
+        },
+        {
+          "a": "M3_hex_nut_30_-9",
+          "b": "thermal_face",
+          "mm3": 41.137488911752435
+        },
+        {
+          "a": "M3_hex_nut_30_9",
+          "b": "thermal_face",
+          "mm3": 41.137484217043664
+        }
+      ],
+      "optical": [
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -4.372710704803467,
+                -36.33738708496094,
+                73.81832885742188
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -4.372710704803467,
+                -36.33738708496094,
+                73.81832885742188
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -11.996297836303711,
+                -35.354652404785156,
+                70.15071868896484
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -11.996297836303711,
+                -35.354652404785156,
+                70.15071868896484
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -6.372710227966309,
+                -35.81974792480469,
+                71.886474609375
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -6.372710227966309,
+                -35.81974792480469,
+                71.886474609375
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -13.260244369506836,
+                -34.44154357910156,
+                68.7342529296875
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -13.260244369506836,
+                -34.44154357910156,
+                68.7342529296875
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -2.372710704803467,
+                -36.85502624511719,
+                75.75018310546875
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -2.372710704803467,
+                -36.85502624511719,
+                75.75018310546875
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -9.996296882629395,
+                -35.872291564941406,
+                72.08257293701172
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -9.996296882629395,
+                -35.872291564941406,
+                72.08257293701172
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -3.331575870513916,
+                -36.50059509277344,
+                74.42743682861328
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -3.331575870513916,
+                -36.50059509277344,
+                74.42743682861328
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -9.140000343322754,
+                -35.75185012817383,
+                71.6330795288086
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -9.140000343322754,
+                -35.75185012817383,
+                71.6330795288086
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -5.331576347351074,
+                -35.98295974731445,
+                72.49559020996094
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -5.331576347351074,
+                -35.98295974731445,
+                72.49559020996094
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -11.140000343322754,
+                -35.234214782714844,
+                69.70123291015625
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -11.140000343322754,
+                -35.234214782714844,
+                69.70123291015625
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -1.3315773010253906,
+                -37.01823806762695,
+                76.35929107666016
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -1.3315773010253906,
+                -37.01823806762695,
+                76.35929107666016
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -7.1400041580200195,
+                -36.26948928833008,
+                73.56492614746094
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -7.1400041580200195,
+                -36.26948928833008,
+                73.56492614746094
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -2.2904415130615234,
+                -36.6638069152832,
+                75.03654479980469
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -2.2904415130615234,
+                -36.6638069152832,
+                75.03654479980469
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -6.283703804016113,
+                -36.1490478515625,
+                73.11544036865234
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -6.283703804016113,
+                -36.1490478515625,
+                73.11544036865234
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -4.29044246673584,
+                -36.14617156982422,
+                73.10469818115234
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -4.29044246673584,
+                -36.14617156982422,
+                73.10469818115234
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -8.283706665039062,
+                -35.63140869140625,
+                71.18359375
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -8.283706665039062,
+                -35.63140869140625,
+                71.18359375
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -0.29044175148010254,
+                -37.18144607543945,
+                76.96839904785156
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -0.29044175148010254,
+                -37.18144607543945,
+                76.96839904785156
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -4.2837042808532715,
+                -36.66668701171875,
+                75.04729461669922
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -4.2837042808532715,
+                -36.66668701171875,
+                75.04729461669922
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -1.2493077516555786,
+                -36.82701873779297,
+                75.6456527709961
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -1.2493077516555786,
+                -36.82701873779297,
+                75.6456527709961
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -3.4274094104766846,
+                -36.54624557495117,
+                74.5978012084961
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -3.4274094104766846,
+                -36.54624557495117,
+                74.5978012084961
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -3.249307155609131,
+                -36.30937957763672,
+                73.71380615234375
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -3.249307155609131,
+                -36.30937957763672,
+                73.71380615234375
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -5.427407264709473,
+                -36.02861022949219,
+                72.66595458984375
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -5.427407264709473,
+                -36.02861022949219,
+                72.66595458984375
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                0.7506918907165527,
+                -37.34465789794922,
+                77.57750701904297
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                0.7506918907165527,
+                -37.34465789794922,
+                77.57750701904297
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -1.4274096488952637,
+                -37.06388473510742,
+                76.52965545654297
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {
+            "pcb28x16": {
+              "world_mm": [
+                -1.4274096488952637,
+                -37.06388473510742,
+                76.52965545654297
+              ],
+              "grid": [
+                0,
+                0
+              ]
+            }
+          },
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        }
+      ],
+      "bearing": [
+        {
+          "edge": -1,
+          "area_mm2": 42.000000000000924,
+          "measurement_valid": true,
+          "required_mm2": 39.9
+        },
+        {
+          "edge": 1,
+          "area_mm2": 42.000000000000924,
+          "measurement_valid": true,
+          "required_mm2": 39.9
+        }
+      ],
+      "retention": [
+        {
+          "edge": -1,
+          "gap_mm": 0.3000001013278961,
+          "captured": true
+        },
+        {
+          "edge": 1,
+          "gap_mm": 0.30000078678131104,
+          "captured": true
+        }
+      ],
+      "bolt_seats": [
+        {
+          "x": -30,
+          "y": -9,
+          "flat": true,
+          "samples": [
+            {
+              "hit": [
+                -27.600000381469727,
+                -24.688457489013672,
+                71.0
+              ],
+              "normal": [
+                9.967071434857644e-08,
+                -1.0,
+                4.620840456937003e-07
+              ]
+            },
+            {
+              "hit": [
+                -32.400001525878906,
+                -24.688461303710938,
+                71.0
+              ],
+              "normal": [
+                9.967071434857644e-08,
+                -1.0,
+                4.620840456937003e-07
+              ]
+            },
+            {
+              "hit": [
+                -30.0,
+                -24.688457489013672,
+                73.4000015258789
+              ],
+              "normal": [
+                -1.5554230969883065e-07,
+                -1.0,
+                -1.6988461766231922e-06
+              ]
+            },
+            {
+              "hit": [
+                -30.0,
+                -24.688461303710938,
+                68.5999984741211
+              ],
+              "normal": [
+                9.967071434857644e-08,
+                -1.0,
+                4.620840456937003e-07
+              ]
+            }
+          ]
+        },
+        {
+          "x": -30,
+          "y": 9,
+          "flat": true,
+          "samples": [
+            {
+              "hit": [
+                -27.600000381469727,
+                -29.51154136657715,
+                89.0
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                1.6988423112707096e-07
+              ]
+            },
+            {
+              "hit": [
+                -32.400001525878906,
+                -29.51154136657715,
+                89.0
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                1.6988423112707096e-07
+              ]
+            },
+            {
+              "hit": [
+                -30.0,
+                -29.51154327392578,
+                91.4000015258789
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                1.6988423112707096e-07
+              ]
+            },
+            {
+              "hit": [
+                -30.0,
+                -29.51154327392578,
+                86.5999984741211
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                1.6988423112707096e-07
+              ]
+            }
+          ]
+        },
+        {
+          "x": 30,
+          "y": -9,
+          "flat": true,
+          "samples": [
+            {
+              "hit": [
+                32.400001525878906,
+                -24.688461303710938,
+                71.0
+              ],
+              "normal": [
+                -1.2171046392950302e-08,
+                -1.0,
+                5.266419407234935e-07
+              ]
+            },
+            {
+              "hit": [
+                27.600000381469727,
+                -24.688453674316406,
+                71.0
+              ],
+              "normal": [
+                1.5525944263572455e-07,
+                -1.0,
+                5.776046236860566e-07
+              ]
+            },
+            {
+              "hit": [
+                30.0,
+                -24.688457489013672,
+                73.4000015258789
+              ],
+              "normal": [
+                -1.2171046392950302e-08,
+                -1.0,
+                5.266419407234935e-07
+              ]
+            },
+            {
+              "hit": [
+                30.0,
+                -24.688465118408203,
+                68.5999984741211
+              ],
+              "normal": [
+                1.5525944263572455e-07,
+                -1.0,
+                5.776046236860566e-07
+              ]
+            }
+          ]
+        },
+        {
+          "x": 30,
+          "y": 9,
+          "flat": true,
+          "samples": [
+            {
+              "hit": [
+                32.400001525878906,
+                -29.51154327392578,
+                89.0
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                0.0
+              ]
+            },
+            {
+              "hit": [
+                27.600000381469727,
+                -29.51154136657715,
+                89.0
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                1.121232799050631e-06
+              ]
+            },
+            {
+              "hit": [
+                30.0,
+                -29.51154327392578,
+                91.4000015258789
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                0.0
+              ]
+            },
+            {
+              "hit": [
+                30.0,
+                -29.511545181274414,
+                86.5999984741211
+              ],
+              "normal": [
+                0.0,
+                -1.0,
+                1.121232799050631e-06
+              ]
+            }
+          ]
+        }
+      ],
+      "internal_collisions": [
+        {
+          "a": "pcb28x16",
+          "b": "pcb28x16_retainer",
+          "mm3": 192.5706481526325
+        },
+        {
+          "a": "pcb28x16",
+          "b": "pcb28x16_retainer.001",
+          "mm3": 229.2729961415838
+        }
+      ],
+      "mechanical_gates": {
+        "topology": false,
+        "fixed_clearance": false,
+        "internal_clearance": false,
+        "bearing": true,
+        "retention": true,
+        "bolt_seats": true
+      },
+      "mechanically_valid": false,
+      "legacy_geometry_valid": false,
+      "independent_hardware_validation_required": true,
+      "optical_success": false,
+      "installation": {
+        "scene": "pcb28x16_installed.blend",
+        "units": "mm",
+        "sensor_local_to_installed_world": [
+          [
+            1.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            -0.25881898403167725,
+            -0.9659258127212524,
+            -23.5
+          ],
+          [
+            0.0,
+            0.9659258127212524,
+            -0.25881898403167725,
+            80.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ]
+        ],
+        "installed_world_to_sensor_local": [
+          [
+            1.0,
+            -0.0,
+            0.0,
+            -0.0
+          ],
+          [
+            -0.0,
+            -0.25881901383399963,
+            0.9659258723258972,
+            -83.35631561279297
+          ],
+          [
+            0.0,
+            -0.9659258723258972,
+            -0.25881901383399963,
+            -1.9937382936477661
+          ],
+          [
+            -0.0,
+            0.0,
+            -0.0,
+            1.0
+          ]
+        ],
+        "vertices_baked_world": true,
+        "object_matrices_identity": true,
+        "cradle_rotation_x_degrees": 15,
+        "construction_origin_mm": [
+          0.0,
+          0.0,
+          6.5
+        ],
+        "variant_objects": [
+          "pcb28x16",
+          "pcb28x16_retainer",
+          "pcb28x16_retainer.001",
+          "PCB envelope",
+          "ASSUMED package",
+          "M3_hex_nut_-30_-9",
+          "M3_hex_nut_-30_9",
+          "M3_hex_nut_30_-9",
+          "M3_hex_nut_30_9"
+        ],
+        "fixed_context_objects": [
+          "main_tub",
+          "main_lid",
+          "thermal_tub",
+          "thermal_face",
+          "thermal_raised_cradle",
+          "thermal_angled_hood",
+          "acoustic_tub",
+          "acoustic_face",
+          "mounting_spine",
+          "sht_mount_arm"
+        ],
+        "proxy_dimensions_mm": {
+          "pcb": [
+            28,
+            16,
+            1.6
+          ],
+          "package": [
+            12,
+            8,
+            2
+          ]
+        },
+        "fastener_contract": {
+          "M3": "Four M3x16 low-profile socket screws: head diameter <=5.5, height <=2.0; washer OD6 ID3.2 thickness0.5; DIN934 nuts AF5.5 thickness2.4 at construction z=-2.4..0. Standard 3mm socket heads do NOT fit.",
+          "M2": "Four M2x5 thread-forming screws into 1.6mm pilots; 2mm minimum engagement, washer OD5 ID2.2 thickness0.3. Qualify pilot with printed coupon before assembly.",
+          "assembly": "Install/hold M3 nuts from underside before thermal face closure. Fit PCB and edge bars before hood. Do not substitute standard-height M3 heads."
+        }
+      }
+    }
+  },
+  "P_unchanged": true,
+  "mechanical_acceptance": false,
+  "blender_version": "4.0.2",
+  "historical_smallest": "pcb25_4x17_78_rear_insert_historical_pre_flat_seat_20261019.stl",
+  "repair_acceptance": false,
+  "limitations": [
+    "Historical smallest preserved separately; all active variants require flat bolt seats.",
+    "Bearing, retention and optics are sampled geometric checks, not physical fit or load certification.",
+    "Optical acceptance is per scenario and always requires every mechanical gate."
+  ]
+}

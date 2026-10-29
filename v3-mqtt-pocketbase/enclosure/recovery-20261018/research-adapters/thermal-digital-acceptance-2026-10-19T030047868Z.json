@@ -1,0 +1,17 @@
+{
+  "acceptance": true,
+  "scope": "Nominal digital thermal assembly; sampled optics; manufacturing mesh and slicer evidence. No physical certification.",
+  "gates": {
+    "blender42": true,
+    "independent_hardware": true,
+    "current_checker": true,
+    "current_scenes": true,
+    "all_sampled_optics": true,
+    "nine_exports_and_slices": true,
+    "scene_reopen": true,
+    "revision_P_unchanged": true
+  },
+  "hardware_report": "thermal-installed-hardware-checks-20261019T023444056715Z.json",
+  "hardware_sha256": "f3d8cb77ed39eb013956f381899e82a7cbd282ed378b09756dc09e5f2d4999dc",
+  "sampled_optical_scenarios": 216
+}

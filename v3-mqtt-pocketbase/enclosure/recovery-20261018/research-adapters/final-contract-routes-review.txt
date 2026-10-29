@@ -1,0 +1,25 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGlob "**/*integrated*py" [90min . · 2 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead check_integrated_export_contract.py [90m[offset=1, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead check_integrated_routes.py [90m[offset=1, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead build_mic_retention_thread_option.py [90m[offset=1, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+### P2 — Render-only geometry modifiers can pass the export contract
+
+**File:** `check_integrated_export_contract.py:100–107, 244–247`
+
+`geometry_modifiers()` checks the **viewport dependency graph**, not render evaluation. A geometry-changing modifier with `show_viewport=False` and `show_render=True` therefore produces an unchanged evaluated mesh and returns `[]`.
+
+For a nonthermal manufacturing instance such as `main_lid`, this leaves the other acceptance checks inspecting its unchanged base mesh: `volume()`, `bounds()`, `triangle_hash()`, and `vertex_distance()` all read `obj.data`. The Boolean probe likewise does not establish equality with the render-evaluated geometry. Consequently, the contract can accept a scene whose render geometry differs from the mapped manufacturing STL.
+
+**Concrete negative case:** add a render-enabled, viewport-disabled Solidify modifier to `main_lid`, without changing its base mesh or transform. The repaired modifier predicate treats it as harmless despite its geometry-changing render behavior. The stricter thermal predicate (`not obj.modifiers`) prevents this bypass for the nine thermal objects, but not the other manufacturing instances.
+
+**Missing negative coverage:** the self-tests at **lines 274–284** exercise displacement, mesh substitution, and stale SHT geometry—not viewport/render modifier divergence.
+
+No other concrete false-acceptance defect established in the two scoped route/retention scripts. Their stated exclusions are not treated as digital blockers here.
+
+*Read-only inspection; no files modified and no Blender tests executed in this review.*

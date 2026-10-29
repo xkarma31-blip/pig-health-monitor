@@ -1,0 +1,88 @@
+[0m
+> reviewer · ag/gemini-3.8-flash-low
+[0m✱ [0mGlob "enclosure/recovery-20261018/*" [90m0 matches[0m
+> reviewer · ag/gemini-3.8-flash-low
+[0m✱ [0mGlob "**/enclosure/recovery-20261018/*" [90m55 matches[0m
+> reviewer · ag/gemini-3.8-flash-low
+[0m✱ [0mGrep "spine|cable|gland|boss|hinge|closure|latch" [90min v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py · 18 matches[0m
+> reviewer · ag/gemini-3.8-flash-low
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py [90m[offset=80, limit=120][0m
+> reviewer · ag/gemini-3.8-flash-low
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/render_assembled.py [90m[limit=100, offset=1][0m
+> reviewer · ag/gemini-3.8-flash-low
+### Visual Inspection of Provided Images
+
+Image inputs were loaded and inspected directly:
+- **Image 1**: The original marketing / concept infographic poster (`PigPulse: Edge Intelligence for Swine Health`).
+- **Image 2**: The orthographic CAD / prototype front-view render generated from the STL assembly (`render_assembled.py`).
+
+---
+
+### 1. Inter-Module Connections
+
+#### Visible Shapes, Placement, and Proportions (Image 1)
+- **Vertical Alignment & Gaps**: The assembly consists of three distinct rectangular enclosures arranged vertically:
+  - **Top**: Thermal module (~92 mm wide × ~38 mm high).
+  - **Center**: Main body box (120 mm wide × 112–120 mm high × 35 mm deep).
+  - **Bottom**: Acoustic module (~100 mm wide × ~38 mm high).
+  - Visible vertical gaps separate the modules by roughly 10–18 mm.
+- **Physical Linking Geometry**:
+  - In the front orthographic dimension view (bottom left) and mounted views, there are **no visible external side struts, brackets, or front linking plates** spanning between the main body and the sub-modules. The modules appear vertically stacked along a central axis.
+  - In the exploded view (top center), each sub-module shows an internal wire bundle terminating in white rectangular pin-header / locking wire-to-board connectors (Molex / JST style).
+  - Four vertical fastener studs/bolts per sub-module project toward or through the mating face.
+- **Callout vs. Reality**:
+  - The poster includes an isolated graphic titled *"LOCKING WATERPROOF CONNECTORS: Secure, reliable, IP65-rated connectors for all module interfaces"* showing standalone cylindrical, ribbed, circular twist-collar inline cable couplings with red accent rings.
+  - **Crucially**: In the actual assembled device pictures (both the pole-mount hero render, the 3-way mount pictures, and the exploded view), **these circular locking twistlock connectors are nowhere to be seen between the boxes**. They exist only as an illustrative floating catalog inset.
+
+#### Prior Reviewer Inventions vs. Truly Visible Details
+- **Prior Reviewer Inventions**:
+  - *Invented*: External twistlock or screw-thread barrel connectors physically joining the enclosures.
+  - *Invented*: Enclosures threading or snapping directly into each other.
+  - *Invented*: Rigid external bridge ducts or structural side tubes on the main casing.
+- **Truly Visible Details**:
+  - The sub-modules sit proud of the main enclosure with open air gaps between them.
+  - Fastening occurs strictly via internal/rear fasteners and wire exits through flat aperture faces.
+  - The prototype implementation in CAD (`build_revision.py`) correctly replaced the floating module myth with an **independent rear mounting spine (`mounting_spine`, 48 mm × 196 mm × 5 mm)** with M3 through-bolts, and central top/bottom cable pass-through bores (`cable aperture` at `(0, 55, 16)` and `lower cable exit` at `(0, -55, 16)`).
+
+---
+
+### 2. Main Case Side Closure Details
+
+#### Visible Shapes, Placement, and Proportions (Image 1)
+- **Left Side Elevation / Orthographic Profile**:
+  - On the left side of the main body, there are **two distinct dual-lug / tab protrusions** (one upper, one lower) projecting approximately 6–8 mm outward from the side wall.
+  - Each protrusion consists of two paired cylindrical clamp bosses/collars clamped together with a visible transverse screw or pin running front-to-back.
+  - There is a visible parting line between the front perimeter rim and the rear tub body along the side depth (~35 mm total depth).
+- **Face / Lid Fastening**:
+  - In the front-facing hero view and the dimension view, the front lid is held to the tub by **four corner screws** set inward with circular recessed counterbores.
+- **Internal View**:
+  - The internal cutaway shows a continuous perimeter groove with an *"IP65 Gasket Seal (Rear Cover)"* and corner screw bosses.
+
+#### Prior Reviewer Inventions vs. Truly Visible Details
+- **Prior Reviewer Inventions**:
+  - *Invented*: Continuous living hinges or piano hinges along the left side.
+  - *Invented*: Heavy-duty cam-latches or quick-release toggle draw-latches.
+  - *Invented*: Presuming the box opens like a hinged electrical cabinet door.
+- **Truly Visible Details**:
+  - The lid is secured from the front via corner fasteners into the corner posts.
+  - The side features are **dual external clamping lugs/bosses with transverse screws** (common on industrial IP65 instrument enclosures for external sealing compression, secondary security, or bracket attachment).
+  - In Image 2 (the digital reconstruction), the main lid and tub are simplified flat-face boxes with four corner M3 clearance holes, omitting the side lugs entirely.
+
+---
+
+### 3. Recommended Minimal Reference-Grounded Cable-Guard / Shroud Concept
+
+Based on the physical layout in `build_revision.py` and the true image geometry (where cables pass through central vertical exits `(0, ±55, 16)` across the 15–20 mm gap into the spine-mounted sub-modules):
+
+1. **Geometry & Placement**:
+   - A low-profile, channel-shaped **U-profile shroud / snap-over cable channel** spanning only the central 30 mm width across the top gap (between main tub top and thermal tub bottom) and bottom gap (between main tub bottom and acoustic tub top).
+   - Depth: Sits flush with the rear face of the enclosure against the 48 mm wide `mounting_spine`.
+
+2. **Fastener & Spine Integration (Zero Bolt-Access Interference)**:
+   - The mounting spine has M3 bolt pairs at $x = \pm 18\text{ mm}$ ($y = \pm 80\text{ mm}$ and $y = 0\text{ mm}$).
+   - The cable shroud should occupy the central $x \in [-12\text{ mm}, +12\text{ mm}]$ corridor, remaining completely inboard of the $x = \pm 18\text{ mm}$ spine mounting bolts.
+   - It captures onto the spine using the existing spine thickness as a friction lip or two small dedicated M2.5/M3 standoffs between the module footprints, leaving all 4 corner lid screws on all three enclosures 100% unobstructed.
+
+3. **Maintenance & Cover Removal**:
+   - Because the main lid and module faces lift straight off in $+Z$ (forward), the shroud remains strictly on the stationary tub / spine plane ($Z \le 0$ to $Z = 16\text{ mm}$).
+   - The front covers can be unscrewed and lifted off without touching, loosening, or removing the cable guard.

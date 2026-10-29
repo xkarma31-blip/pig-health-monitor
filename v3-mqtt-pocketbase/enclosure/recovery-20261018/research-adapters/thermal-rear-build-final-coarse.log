@@ -1,0 +1,16 @@
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+fake_module: addon missing 'bl_info' gives bad performance!: '/root/.config/blender/4.0/scripts/addons/mcp/__init__.py'
+Import finished in 0.0189 sec.
+Import finished in 0.0499 sec.
+Import finished in 0.0335 sec.
+Import finished in 0.0322 sec.
+Import finished in 0.0101 sec.
+Import finished in 0.0092 sec.
+Import finished in 0.0237 sec.
+Import finished in 0.0360 sec.
+Import finished in 0.0179 sec.
+Import finished in 0.0110 sec.
+THERMAL REAR CHECKS WRITTEN /home/solrahk/pig-health-monitor/v3-mqtt-pocketbase/enclosure/recovery-20261018/research-adapters
+Blender 4.0.2
+
+Blender quit

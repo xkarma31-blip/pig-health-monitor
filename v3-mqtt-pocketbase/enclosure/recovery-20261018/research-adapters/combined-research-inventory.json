@@ -1,0 +1,443 @@
+{
+  "status": "integration candidate, not accepted release",
+  "configuration": {
+    "sht": "25.5x17.7",
+    "left_mic": "14x12",
+    "tray_spacers_mm": 3,
+    "thermal": "unchanged P"
+  },
+  "objects": {
+    "main_tub": {
+      "location_mm": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "main_lid": {
+      "location_mm": [
+        0.0,
+        -30.0,
+        0.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "thermal_tub": {
+      "location_mm": [
+        0.0,
+        0.0,
+        80.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "thermal_face": {
+      "location_mm": [
+        0.0,
+        -14.0,
+        80.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "acoustic_tub": {
+      "location_mm": [
+        0.0,
+        0.0,
+        -80.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "acoustic_face": {
+      "location_mm": [
+        0.0,
+        -30.0,
+        -80.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "acoustic_trim": {
+      "location_mm": [
+        -24.0,
+        -33.0,
+        -80.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "mounting_spine": {
+      "location_mm": [
+        0.0,
+        5.0,
+        0.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "sht_mount_arm": {
+      "location_mm": [
+        0.0,
+        10.0,
+        61.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "electronics_strap_tray": {
+      "location_mm": [
+        0.0,
+        -6.0,
+        0.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "thermal_raised_cradle": {
+      "location_mm": [
+        0.0,
+        -17.0,
+        80.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "thermal_angled_hood": {
+      "location_mm": [
+        0.0,
+        -17.0,
+        80.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "acoustic_trim.001": {
+      "location_mm": [
+        24.0,
+        -33.0,
+        -80.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "REFERENCE_ARTWORK_LABEL_NOT_STL": {
+      "location_mm": [
+        0.0,
+        -33.08000183105469,
+        12.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "PURCHASED_M3_HEAD_VISUAL_ONLY": {
+      "location_mm": [
+        -54.0,
+        -33.900001525878906,
+        -50.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "PURCHASED_M3_HEAD_VISUAL_ONLY.001": {
+      "location_mm": [
+        -54.0,
+        -33.900001525878906,
+        50.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "PURCHASED_M3_HEAD_VISUAL_ONLY.002": {
+      "location_mm": [
+        54.0,
+        -33.900001525878906,
+        -50.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "PURCHASED_M3_HEAD_VISUAL_ONLY.003": {
+      "location_mm": [
+        54.0,
+        -33.900001525878906,
+        50.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "PURCHASED_M3_HEAD_VISUAL_ONLY.004": {
+      "location_mm": [
+        -65.5,
+        -33.900001525878906,
+        -32.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "PURCHASED_M3_HEAD_VISUAL_ONLY.005": {
+      "location_mm": [
+        -65.5,
+        -33.900001525878906,
+        32.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "PURCHASED_M3_HEAD_VISUAL_ONLY.006": {
+      "location_mm": [
+        -44.0,
+        -33.900001525878906,
+        -93.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "PURCHASED_M3_HEAD_VISUAL_ONLY.007": {
+      "location_mm": [
+        -44.0,
+        -33.900001525878906,
+        -67.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "PURCHASED_M3_HEAD_VISUAL_ONLY.008": {
+      "location_mm": [
+        44.0,
+        -33.900001525878906,
+        -93.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "PURCHASED_M3_HEAD_VISUAL_ONLY.009": {
+      "location_mm": [
+        44.0,
+        -33.900001525878906,
+        -67.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "PURCHASED_M3_HEAD_VISUAL_ONLY.010": {
+      "location_mm": [
+        -40.0,
+        -29.15204429626465,
+        67.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "PURCHASED_M3_HEAD_VISUAL_ONLY.011": {
+      "location_mm": [
+        -40.0,
+        -36.11872100830078,
+        93.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "PURCHASED_M3_HEAD_VISUAL_ONLY.012": {
+      "location_mm": [
+        40.0,
+        -29.15204429626465,
+        67.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "PURCHASED_M3_HEAD_VISUAL_ONLY.013": {
+      "location_mm": [
+        40.0,
+        -36.11872100830078,
+        93.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "PURCHASED_LED_VISUAL_ONLY": {
+      "location_mm": [
+        0.0,
+        -33.20000076293945,
+        -36.0
+      ],
+      "rotation_rad": [
+        0.0,
+        0.0,
+        0.0
+      ]
+    },
+    "sht_adjustable_carrier": {
+      "location_mm": [
+        80.0,
+        -3.0,
+        61.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "tray_spacer_6mm.001": {
+      "location_mm": [
+        -15.0,
+        -3.0,
+        -25.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "tray_spacer_6mm.002": {
+      "location_mm": [
+        -15.0,
+        -3.0,
+        25.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "tray_spacer_6mm.003": {
+      "location_mm": [
+        15.0,
+        -3.0,
+        -25.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "tray_spacer_6mm.004": {
+      "location_mm": [
+        15.0,
+        -3.0,
+        25.0
+      ],
+      "rotation_rad": [
+        1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "microphone_strap_carrier": {
+      "location_mm": [
+        -24.0,
+        -30.0,
+        -80.0
+      ],
+      "rotation_rad": [
+        -1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    },
+    "microphone_strap_carrier.001": {
+      "location_mm": [
+        24.0,
+        -30.0,
+        -80.0
+      ],
+      "rotation_rad": [
+        -1.5707963705062866,
+        0.0,
+        0.0
+      ]
+    }
+  }
+}

@@ -1,0 +1,206 @@
+{
+  "status": "experiment only; not installed or released geometry",
+  "ear_bounds_x_mm": [
+    -68,
+    -56
+  ],
+  "bore_x_mm": -64,
+  "bore_y_mm": [
+    -32,
+    32
+  ],
+  "tub_ear_depth_mm": [
+    26,
+    30
+  ],
+  "lid_ear_depth_mm": [
+    0,
+    3
+  ],
+  "checks": [
+    {
+      "part": "main_tub",
+      "connected_components": 1,
+      "nonmanifold_edges": 0,
+      "volume_mm3": 81064.21242476707
+    },
+    {
+      "part": "main_lid",
+      "connected_components": 1,
+      "nonmanifold_edges": 0,
+      "volume_mm3": 40759.88484900695
+    }
+  ],
+  "sampled_lid_lift": [
+    {
+      "lift_mm": 0,
+      "intersection_mm3": 0.0
+    },
+    {
+      "lift_mm": 0.05,
+      "intersection_mm3": 0.0
+    },
+    {
+      "lift_mm": 0.5,
+      "intersection_mm3": 0.0
+    },
+    {
+      "lift_mm": 2,
+      "intersection_mm3": 0.0
+    },
+    {
+      "lift_mm": 5,
+      "intersection_mm3": 0.0
+    },
+    {
+      "lift_mm": 15,
+      "intersection_mm3": 0.0
+    },
+    {
+      "lift_mm": 35,
+      "intersection_mm3": 0.0
+    }
+  ],
+  "assumed_hardware_envelopes": [
+    {
+      "station_y_mm": -32,
+      "role": "head",
+      "radius_mm": 3,
+      "depth_range_mm": [
+        33,
+        35.4
+      ],
+      "intersection_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0
+      }
+    },
+    {
+      "station_y_mm": -32,
+      "role": "nut",
+      "radius_mm": 3.5,
+      "depth_range_mm": [
+        23,
+        26
+      ],
+      "intersection_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0
+      }
+    },
+    {
+      "station_y_mm": -32,
+      "role": "driver",
+      "radius_mm": 3.5,
+      "depth_range_mm": [
+        35.4,
+        65.4
+      ],
+      "intersection_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0
+      }
+    },
+    {
+      "station_y_mm": 32,
+      "role": "head",
+      "radius_mm": 3,
+      "depth_range_mm": [
+        33,
+        35.4
+      ],
+      "intersection_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0
+      }
+    },
+    {
+      "station_y_mm": 32,
+      "role": "nut",
+      "radius_mm": 3.5,
+      "depth_range_mm": [
+        23,
+        26
+      ],
+      "intersection_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0
+      }
+    },
+    {
+      "station_y_mm": 32,
+      "role": "driver",
+      "radius_mm": 3.5,
+      "depth_range_mm": [
+        35.4,
+        65.4
+      ],
+      "intersection_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0
+      }
+    }
+  ],
+  "aligned_shaft_probes": [
+    {
+      "station_y_mm": -32,
+      "shaft_radius_mm": 1.5,
+      "intersection_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0
+      }
+    },
+    {
+      "station_y_mm": 32,
+      "shaft_radius_mm": 1.5,
+      "intersection_mm3": {
+        "main_tub": 0.0,
+        "main_lid": 0.0
+      }
+    }
+  ],
+  "bearing_seats": [
+    {
+      "part": "main_tub",
+      "station_y_mm": -32,
+      "outer_radius_mm": 3.5,
+      "samples": 96,
+      "pass": true
+    },
+    {
+      "part": "main_lid",
+      "station_y_mm": -32,
+      "outer_radius_mm": 3,
+      "samples": 96,
+      "pass": true
+    },
+    {
+      "part": "main_tub",
+      "station_y_mm": 32,
+      "outer_radius_mm": 3.5,
+      "samples": 96,
+      "pass": true
+    },
+    {
+      "part": "main_lid",
+      "station_y_mm": 32,
+      "outer_radius_mm": 3,
+      "samples": 96,
+      "pass": true
+    }
+  ],
+  "input_sha256": {
+    "main_tub": "3b6bd2645ea55cd4ddae5019db203022ec0dc45b36805503508c4f98c46a1f36",
+    "main_lid": "80a90478dc4fdf046f707b575eb9dc0e946a1c3c4835d5443073651c4756c6b2"
+  },
+  "output_sha256": {
+    "main_tub": "0324f5770442c44e4c4ba15932003138aae19f19cfb4fe3a97addce65e670c2e",
+    "main_lid": "fcee6152fb1d89dca988b18997b7368e125f15a8a632bf4b6e12af0a8cbb42f2"
+  },
+  "limitations": [
+    "No load or print fit test",
+    "No sealing claim",
+    "Hardware envelopes assumed; no full installed assembly audit",
+    "Visible side-boss function in poster unknown"
+  ]
+}

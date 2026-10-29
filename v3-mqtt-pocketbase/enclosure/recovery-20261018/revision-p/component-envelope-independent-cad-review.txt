@@ -1,0 +1,108 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m⚙ [0mexecute {"code":"return search({query:'blender execute python',limit:5});"} 
+> reviewer · cx/gpt-6.1-sol-review
+[0m✗ [0mGlob "**/*" failed
+[91m[1mError: [0mSearch path does not exist: /home/solrahk/pig-health-monitor/enclosure/recovery-20261018
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGlob "**/*recovery*" [90min . · 0 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m⚙ [0mexecute {"code":"return await tools['blender-mcp'].execute_blender_code({code:\"import bpy\\nresult={'file':bpy.data.filepath,'units':bpy.context.scene.unit_settings.scale_length,'objects':[{'name':o.name,'type':o.type} for o in bpy.context.scene.objects]}\"});"} 
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGlob "**/*.{scad,step,stp,FCStd,blend,stl}" [90min . · 150 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018 [90m[offset=1, limit=150][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "tray|cradle|carrier|bolt|reservation" [90min v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py · 46 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py [90m[offset=1, limit=330][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-p [90m[offset=1, limit=150][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/render_assembled.py [90m[offset=1, limit=230][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-p/fastener-ledger.json [90m[offset=1, limit=230][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m⚙ [0mexecute {"code":"return search({query:'execute shell command',limit:2});"} 
+> reviewer · cx/gpt-6.1-sol-review
+## Read-only reservation inspection — revision P
+
+**Principal findings:** the main tray offers a generous ESP reservation; the microphone and SHT reservations overlap their carrier fasteners; the MLX reservation fits *inside the cradle’s opening*, rather than resting on its support rails.
+
+**Evidence limitation:** I read the construction geometry, assembly transforms and P fastener ledger. The live Blender connection refused access, so I could **not independently interrogate the exported STL triangles or saved assembly**. Dimensions below are source-derived CAD spans, not a fresh mesh-intersection certification. No files were changed.
+
+All dimensions are **mm**. The four requested boxes are **engineering test assumptions only**, not identified or measured boards. References below are relative to `v3-mqtt-pocketbase/enclosure/recovery-20261018/`.
+
+### 1. High — microphone 22 × 20 × 12 reservation conflicts with carrier hardware
+
+Each carrier is **26 × 26 × 3**, with bolt axes at **(±10, ±10)** and a central **Ø12** sound opening. A centered 22 × 20 footprint occupies x = ±11, y = ±10: **all four bolt axes fall within or on its footprint**. Rotating the box 90° does not resolve that.
+
+The apparent 26 × 26 platform is therefore not an unobstructed board envelope. With a conservative **3.5 mm radial hardware keep-out**, the straight corridor between opposite fastener rows is only **13 mm**, not 20–22 mm.
+
+- The carrier’s board-facing surface is at acoustic depth **27 mm**; the tub floor ends at depth **3 mm**. This gives **24 mm gross rearward depth**, before rear-mount hardware and wiring.
+- A 12 mm-deep box extending rearward from that surface occupies approximately depth **15–27 mm**: depth is relatively generous, but the fastening plane is obstructed.
+- Ledger M3×12 bolts through the **6 mm face/carrier stack** leave **6 mm beyond the stack**, if installed with their threaded ends toward the board. Reversing them still leaves head/washer keep-outs.
+
+**Alternative to investigate:** keep the microphone centered on its acoustic port, but elevate its reservation beyond the installed fastener envelopes using a purpose-designed support. Approximately **7 mm elevation plus 12 mm board depth** fits inside the gross 24 mm rearward space, leaving about **5 mm**, before cables and actual hardware. That is a packaging direction, not approval of the existing carrier.
+
+**References:** `build_revision.py:159–177`; `render_assembled.py:58–76`; `revision-p/fastener-ledger.json:85–92`.
+
+### 2. High — MLX 34 × 24 × 16 reservation has no direct bearing on the raised cradle
+
+The cradle is **68 × 30**, but its central opening is **46 × 26**. A centered **34 × 24** footprint lies completely inside that opening:
+
+- **6 mm** clearance per side in x;
+- only **1 mm** per side in y;
+- **no overlap with the surrounding support rails**.
+
+Consequently, “fits within the cradle outline” would be misleading: the assumed board box cannot simply rest on the cradle as modeled. The strap slots at x = ±27 also lie well outside the assumed board edges at ±17.
+
+The platform is inclined **15°**. The hood’s nominal inner roof is only approximately **6.5–6.6 mm above the platform’s upper surface**, measured vertically away from the opening. A **16 mm** reservation cannot be contained beneath that roof. Its plausible central placement must instead **use/protrude through the optical opening**. That needs an explicit retention and optical-stack arrangement.
+
+Cradle fasteners at x = ±30 are comfortably outside the centered 34 mm-wide box; **support and roof/opening clearance are the immediate issues**, not those bolts.
+
+**Alternative to investigate:** an adapter spanning the 46 mm opening and bearing on the existing rails, while leaving the real optical path clear. Alternatively, investigate the lower thermal tub’s **86 × 32 × 11 gross cavity**, but its 11 mm gross depth alone cannot contain the 16 mm test box.
+
+**References:** `build_revision.py:138–153`, `build_revision.py:255–293`; `render_assembled.py:57–64`.
+
+### 3. Medium — SHT 30 × 24 × 12 reservation intersects attachment bolts
+
+The external carrier is **32 × 32 × 3**, with a **16 × 16** air opening and attachment axes at **(0, ±12)**.
+
+A centered **30 × 24** footprint has:
+
+- only **1 mm** carrier-edge margin in x;
+- attachment axes directly on its y edges;
+- unavoidable overlap with finite-size heads, nuts or washers.
+
+Rotating to 24 × 30 makes both attachment axes fall **inside** the footprint. With **3.5 mm radial keep-outs**, only **17 mm** separates the inward edges of the two attachment hardware envelopes.
+
+The **8 mm standoffs are below the carrier**, not extra unobstructed space above it. Ledger M3×22 bolts through the **16 mm stack** leave **6 mm past the stack**, if the threaded ends face the board.
+
+**Alternative to investigate:** raise the board above the attachment hardware, or offset it laterally so that its footprint clears the x = 0 fastener line. For example, a 30 mm-wide box centered at approximately **x = +20 relative to the carrier** starts at x = +5, clearing a 3.5 mm keep-out, but substantially overhangs the carrier and requires a different support arrangement. The external location removes a lid-height constraint; it does **not** establish adequate retention or weather protection.
+
+**References:** `build_revision.py:211–229`; `render_assembled.py:61–70`; `revision-p/fastener-ledger.json:67–74`.
+
+### 4. Low — main tray comfortably accommodates a central ESP 30 × 24 × 12 reservation
+
+The tray is **82 × 76 × 3**, installed from main-tub depth **9 to 12**. The lid’s inner face is at depth **30**, giving **18 mm gross height above the tray**.
+
+A central test box occupying:
+
+- x = **−15…+15**;
+- y = **−12…+12**;
+- depth = **12…24**;
+
+has **6 mm gross lid clearance**.
+
+Tray attachment axes are at **(±15, ±25)**, so they sit **13 mm beyond the nearest board edge in y**. The tray strap slots at x = ±32 are also outside this reservation. Under the conservative 3.5 mm radial keep-out assumption, the central corridor between attachment rows is **43 mm**, comfortably exceeding the box’s 24 mm dimension.
+
+M3×18 tray bolts through the **12 mm stack** can protrude **6 mm above the tray** when threaded ends face inward. Those protrusions obstruct positions near the four mount axes, **not the proposed central box**. Avoid interpreting all 82 × 76 mm as equally clear.
+
+**References:** `build_revision.py:115–135`, `build_revision.py:232–242`; `render_assembled.py:56–64`, `render_assembled.py:77–84`; `revision-p/fastener-ledger.json:76–83`.
+
+## Outstanding verification
+
+The reviewed evidence does **not** establish installed-hardware collision tests for these four electronic boxes. Before treating any reservation as usable, check the actual P meshes with complete screw/head/washer/nut/thread envelopes, then add connector exits, wire bends, strap thickness, electrical insulation and assembly access.
+
+**Bottom line:** reserve the ESP centrally; do not approve the mic or SHT boxes flush against their existing carriers; treat the MLX location as an **unsupported, through-opening packaging concept** requiring an adapter and optical-stack definition.

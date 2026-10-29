@@ -1,0 +1,3264 @@
+{
+  "units": "mm",
+  "P_sha256": {
+    "main_tub": "f5152219d6976f380e1860400caf44d4a8bfeff5d35b1870740ea9d78c8efc12",
+    "main_lid": "3de0b601957fe48420371434df05db1afa5def114d90df4b79f86dd3aaf56550",
+    "thermal_tub": "ef5f2aa56b83c8cb7af040a7e7055b44766467e68dc6cc85f1e486b09ec1c2fa",
+    "thermal_face": "4ceadefe5bfd91dd54fe3c8aa9005f13ef3b9bb738ec906be17c304bdeabf671",
+    "thermal_raised_cradle": "9d2cebe08c75bc8f4e752c05fb70079562e01cc88b2fab0fb4d1bf77564fed2d",
+    "thermal_angled_hood": "10a79f3270e9c3dce5153311b4fb9ab0347b5ae139ae931b0e953363c1c19b9c",
+    "acoustic_tub": "5ae7ee3d9dba0228e6177644a0076a0f14a0f56859c3853c1b32f150bf991d5d",
+    "acoustic_face": "68dbcded253e22103736a3d6b49ac3a976e64bbc17a57883d49bcc7ab2741ded",
+    "mounting_spine": "d8566155e0fc07dcff34381212ddc977850b7991b4ed6e28763f305110b5aebb",
+    "sht_mount_arm": "3c1813784b9340e578b1bba883b837b08abdae78150f65e3528892259a039342"
+  },
+  "source_outlines_mm": {
+    "pcb25_4x17_78": [
+      25.4,
+      17.78
+    ],
+    "pcb25_4square": [
+      25.4,
+      25.4
+    ],
+    "pcb28x16": [
+      28,
+      16
+    ]
+  },
+  "assumptions": {
+    "pcb_thickness": 1.6,
+    "lateral_allowance": 0.3,
+    "edge_bearing_width": 1.5,
+    "rear_plane": 6.0,
+    "front_plane": 7.6,
+    "component_free_edge_required": 1.5,
+    "package_proxy": [
+      12,
+      8,
+      2
+    ],
+    "not_measured": true
+  },
+  "variants": {
+    "pcb25_4x17_78": {
+      "carrier": {
+        "nonmanifold_edges": 355,
+        "degenerate_faces": 6,
+        "volume_mm3": 2656.7468976037035,
+        "islands": 1
+      },
+      "retainers": [
+        {
+          "nonmanifold_edges": 0,
+          "degenerate_faces": 0,
+          "volume_mm3": 162.01250961091876,
+          "islands": 1
+        },
+        {
+          "nonmanifold_edges": 0,
+          "degenerate_faces": 0,
+          "volume_mm3": 167.26070922824184,
+          "islands": 1
+        }
+      ],
+      "bearing_area_mm2": 1879.4569076985472,
+      "collisions": [
+        {
+          "a": "pcb25_4x17_78",
+          "b": "thermal_raised_cradle",
+          "mm3": 30.245192241309518
+        }
+      ],
+      "optical": [
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        }
+      ],
+      "bearing": [
+        {
+          "edge": -1,
+          "area_mm2": 932.0571985880349,
+          "required_mm2": 36.19499999999999
+        },
+        {
+          "edge": 1,
+          "area_mm2": 947.3997091105124,
+          "required_mm2": 36.19499999999999
+        }
+      ],
+      "internal_collisions": [
+        {
+          "a": "pcb25_4x17_78",
+          "b": "PCB envelope",
+          "mm3": 0.3800782041304226
+        }
+      ],
+      "mechanical_gates": {
+        "topology": false,
+        "fixed_clearance": false,
+        "internal_clearance": false,
+        "bearing": true
+      },
+      "mechanically_valid": false,
+      "optical_success": false
+    },
+    "pcb25_4square": {
+      "carrier": {
+        "nonmanifold_edges": 357,
+        "degenerate_faces": 3,
+        "volume_mm3": 2853.962847752923,
+        "islands": 1
+      },
+      "retainers": [
+        {
+          "nonmanifold_edges": 0,
+          "degenerate_faces": 0,
+          "volume_mm3": 33.839535843461,
+          "islands": 1
+        },
+        {
+          "nonmanifold_edges": 0,
+          "degenerate_faces": 0,
+          "volume_mm3": 167.26092378757477,
+          "islands": 1
+        }
+      ],
+      "bearing_area_mm2": 3961.150881825458,
+      "collisions": [
+        {
+          "a": "pcb25_4square",
+          "b": "thermal_raised_cradle",
+          "mm3": 22.824957417120622
+        },
+        {
+          "a": "pcb25_4square",
+          "b": "thermal_angled_hood",
+          "mm3": 2.077167261001821
+        },
+        {
+          "a": "pcb25_4square_retainer",
+          "b": "thermal_angled_hood",
+          "mm3": 121.7417270030766
+        },
+        {
+          "a": "PCB envelope",
+          "b": "thermal_angled_hood",
+          "mm3": 36.948371532548435
+        }
+      ],
+      "optical": [
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        }
+      ],
+      "bearing": [
+        {
+          "edge": -1,
+          "area_mm2": 1975.15807810122,
+          "required_mm2": 36.19499999999999
+        },
+        {
+          "edge": 1,
+          "area_mm2": 1985.992803724238,
+          "required_mm2": 36.19499999999999
+        }
+      ],
+      "internal_collisions": [
+        {
+          "a": "pcb25_4square",
+          "b": "PCB envelope",
+          "mm3": 0.22309487218313057
+        }
+      ],
+      "mechanical_gates": {
+        "topology": false,
+        "fixed_clearance": false,
+        "internal_clearance": false,
+        "bearing": true
+      },
+      "mechanically_valid": false,
+      "optical_success": false
+    },
+    "pcb28x16": {
+      "carrier": {
+        "nonmanifold_edges": 360,
+        "degenerate_faces": 8,
+        "volume_mm3": 2648.5954893739795,
+        "islands": 1
+      },
+      "retainers": [
+        {
+          "nonmanifold_edges": 0,
+          "degenerate_faces": 0,
+          "volume_mm3": 181.40492829934266,
+          "islands": 1
+        },
+        {
+          "nonmanifold_edges": 0,
+          "degenerate_faces": 0,
+          "volume_mm3": 181.40473470079743,
+          "islands": 1
+        }
+      ],
+      "bearing_area_mm2": 48.28774622276029,
+      "collisions": [
+        {
+          "a": "pcb28x16",
+          "b": "thermal_raised_cradle",
+          "mm3": 25.587443542230503
+        }
+      ],
+      "optical": [
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": -2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 0,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 2,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 4,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 8,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            0,
+            0
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            -2,
+            -2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            55,
+            35
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 0,
+          "hits": {},
+          "accepted": false
+        },
+        {
+          "pupil_from_front": 12,
+          "offset": [
+            2,
+            2
+          ],
+          "fov": [
+            110,
+            75
+          ],
+          "allowance": 1,
+          "hits": {},
+          "accepted": false
+        }
+      ],
+      "bearing": [
+        {
+          "edge": -1,
+          "area_mm2": 6.285649095152053,
+          "required_mm2": 39.9
+        },
+        {
+          "edge": 1,
+          "area_mm2": 42.00209712760824,
+          "required_mm2": 39.9
+        }
+      ],
+      "internal_collisions": [
+        {
+          "a": "pcb28x16",
+          "b": "PCB envelope",
+          "mm3": 0.36067974154380394
+        }
+      ],
+      "mechanical_gates": {
+        "topology": false,
+        "fixed_clearance": false,
+        "internal_clearance": false,
+        "bearing": false
+      },
+      "mechanically_valid": false,
+      "optical_success": false
+    }
+  },
+  "P_unchanged": true,
+  "mechanical_acceptance": false,
+  "blender_version": "4.2.3 LTS"
+}

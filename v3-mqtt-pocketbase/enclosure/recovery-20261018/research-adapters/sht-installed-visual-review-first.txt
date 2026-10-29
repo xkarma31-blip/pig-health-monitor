@@ -1,0 +1,20 @@
+[0m
+> build · ag/gemini-3.8-flash-low
+[0m→ [0mRead original-poster.png 
+[0m→ [0mRead research-adapters/sht-25.5x17.7-installed.png 
+> build · ag/gemini-3.8-flash-low
+Based on a direct visual inspection of `research-adapters/sht-25.5x17.7-installed.png` and `original-poster.png`:
+
+### 1. Aesthetic Comparison (Main Enclosure)
+* **Overall Form & Finish**: The render in `sht-25.5x17.7-installed.png` captures the broad 3-block topology (top module, central body, bottom acoustic module), but uses flat, uniform dark-slate shading with minimal bevel highlight definition compared to the textured, semi-matte molded industrial finish seen throughout `original-poster.png`.
+* **Top Thermal Module Geometry**: In the poster, the thermal hood features a forward-facing circular lens window recessed in a chamfered rectangular face. In the rendered image, the entire front face of the top enclosure is an open rectangular cutout revealing an interior recess/cavity without the circular lens framing.
+* **Inter-Module Connectors**: In `original-poster.png`, the top and bottom modules connect to the main body via cylindrical neck couplings / waterproof gland connectors. In the render, the modules are butt-joined or flush-stacked directly against the main body with no exposed connector necks.
+* **Bottom Module Accents**: In the poster, the dual acoustic ports are dark mesh/grille inserts surrounded by flush screw fasteners. In the render, the microphone ports have prominent, bright mint-green raised/chamfered annular bezels.
+
+### 2. Concrete Visible Defects on the Added External SHT Frame
+* **Floating / Severed Bracket Structure**: The horizontal mounting bar extending from behind the top-right corner of the main enclosure terminates abruptly into a dark backing block. Suspended next to it are two white rectangular frame parts with no continuous structural connection bridging them.
+* **Duplicated / Overlapping Frame Geometry**: There are two distinct white frame elements rendered side-by-side:
+  * The inner white frame floats partially over the dark mounting pad.
+  * The outer white frame extends further to the right, connected only by thin horizontal alignment rails/prongs projecting through space.
+  * This appears as an incomplete assembly, an exploded snapshot, or an accidental double-instance of the CAD adapter rather than a single unified mounting frame.
+* **Unassigned Material / High Contrast**: The added SHT frame is rendered in raw, untextured stark white plastic, contrasting sharply with the dark charcoal/slate palette of the main enclosure and bracket without matching any surface aesthetic from the original poster.

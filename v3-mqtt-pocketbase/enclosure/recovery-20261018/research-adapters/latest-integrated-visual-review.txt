@@ -1,0 +1,29 @@
+[0m
+> build · ag/gemini-3.8-flash-low
+[0m✱ [0mGlob "**/*combined-thermal-installed.png" [90m1 match[0m
+> build · ag/gemini-3.8-flash-low
+[0m✱ [0mGlob "**/*original-poster.png" [90m1 match[0m
+> build · ag/gemini-3.8-flash-low
+[0m→ [0mRead original-poster.png 
+[0m→ [0mRead research-adapters/combined-thermal-installed.png 
+> build · ag/gemini-3.8-flash-low
+### Inspection & Comparison Findings
+
+#### 1. White Adapter Artifact Status
+* **Resolved:** There are no white materials or bleached surfaces remaining on the adapter assembly or thermal supports. The components have inherited the matte charcoal material finish consistent with the rest of the chassis.
+
+---
+
+#### 2. Visible Unintentional Material / Render Defects
+
+* **Coplanar / Z-Fighting Artifact on Main Front Face:**
+  * On the front face of the main body, diagonal polygonal shading lines (triangulation shading artifact running from the top left corner down across the face) are visible across the planar surface, indicating either un-split coplanar faces, an overlay plane intersecting the main lid without an offset, or improper shading interpolation across flat geometry.
+
+* **Missing Optical / Sensor Window Material (Open Cavity):**
+  * The center viewport of the thermal module is rendered as an empty, untextured hollow cavity with raw internal back-faces visible. In `original-poster.png`, the MLX90640 aperture has a distinct recessed dark lens/sensor package and protective glass/germanium optical element with specularity.
+
+* **Missing Status LED Emissive / Shader Assignment:**
+  * The lower green indicator dot on the main body is flatly textured without an emissive/bloom shader or volumetric contribution, appearing as a matte flat green circle rather than an active indicator.
+
+* **Roughness / Specular Inconsistency Between Modules:**
+  * The main body front face exhibits a semi-gloss/specular sheen (with an edge reflection), while the thermal head and acoustic module housings exhibit a completely flat, diffuse matte response with zero surface sheen, creating an unintended split in surface roughness across mating enclosures.

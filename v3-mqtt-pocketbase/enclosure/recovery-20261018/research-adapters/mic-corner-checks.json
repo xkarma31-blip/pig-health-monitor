@@ -1,0 +1,19 @@
+{
+  "status": "research coupon, uninstalled and unvalidated retention",
+  "source_board_plan_mm": [
+    14,
+    12
+  ],
+  "sound_keepout_radius_mm": 6.3,
+  "corner_bearing_total_nominal_mm2": 9,
+  "seat_z_mm": 11,
+  "nonmanifold_edges": 0,
+  "volume_mm3": 1716.3020766985328,
+  "retention": "Four outboard stops/tie tunnels; purchased ties, prethreaded, not printed hardware",
+  "limitations": [
+    "Tie bends/head and actual port/component-safe route require verification",
+    "Actual PCB underside/corner-safe areas unknown",
+    "Gasket,port alignment and response not validated",
+    "Must check installed bolt/tie/cable envelopes"
+  ]
+}

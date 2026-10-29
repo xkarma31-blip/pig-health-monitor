@@ -1,0 +1,14 @@
+Here are the prioritized visible defects of the prototype render compared to the approved design:
+
+### 1. Label & Indicator Defects
+* **Illegible Subtext:** The tagline under "PigPulse" is extremely dark and virtually invisible against the black background.
+* **Missing Status LED:** The green operational LED below the main logo is completely absent.
+
+### 2. Housing Shape & Geometry
+* **Flat Top Module:** The top thermal housing is a simple flat box, lacking the required downward-angled face/hood for pen coverage.
+* **Overly Blocky / Sharp Edges:** Enclosures use raw 90° sharp corners instead of the rounded, filleted edges of the ruggedized IP65 enclosure.
+* **Missing Enclosure Hardware:** Entirely lacks the side latches, hinges, external mounting tabs, and molded structural seams.
+
+### 3. Ports & Connectors
+* **Missing Module Interconnects:** The locking waterproof circular connectors between the main body and the top/bottom modules are missing, leaving the modules floating detached.
+* **Simplified Apertures:** The thermal and acoustic openings are reduced to simple flat green rings rather than recessed lenses, gaskets, and acoustic grilles.

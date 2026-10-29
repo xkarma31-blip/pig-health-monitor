@@ -2,6 +2,15 @@
 Description=PigPulse Local PocketBase Server
 After=network.target
 
+# The bind address below is created by wlan0-static-ip.service. Declaring the
+# dependency is mandatory, not cosmetic: `After=network.target` says nothing
+# about wlan0-static-ip.service, so on a cold boot PocketBase could win the
+# race, fail to bind 192.168.69.1, and die. Because it exits 0 on some failures,
+# `Restart=on-failure` below would then treat the death as a clean stop and
+# never retry -- a permanent outage from a one-second ordering race.
+Requires=wlan0-static-ip.service
+After=wlan0-static-ip.service
+
 [Service]
 Type=simple
 User=pigpulse
@@ -16,7 +25,12 @@ WorkingDirectory=/home/pigpulse/pocketbase
 # the admin API. That is why the admin password is mandatory and lives in
 # /etc/pigpulse/bridge.env, never in the repo.
 ExecStart=/home/pigpulse/pocketbase/pocketbase serve --http=192.168.69.1:8090
-Restart=on-failure
+# `always`, not `on-failure`. PocketBase serves forever when healthy, so any
+# exit at all is a fault. With `on-failure` a failed migration (which exits 0)
+# read as a clean stop and the service stayed down until a human noticed --
+# measured on 2026-09-28: "Failed to apply migration ..._collections.name"
+# then "Deactivated successfully", and it never retried.
+Restart=always
 RestartSec=5
 
 [Install]

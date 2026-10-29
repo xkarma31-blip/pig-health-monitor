@@ -1,0 +1,96 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead . [90m[offset=0, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "revision_p|revision-p|REV.*P|== ['"]P|split_boss|tub.support" [90min . · 15 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead probe_split_boss_concept.py [90m[offset=0, limit=300][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead build_revision.py [90m[offset=1, limit=210][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead summarize_verification.js [90m[offset=0, limit=180][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead fastener_ledger.js [90m[offset=0, limit=130][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead slice_revision.sh [90m[offset=0, limit=150][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead revision-p [90m[offset=0, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead revision-p/START_HERE.md [90m[offset=0, limit=160][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead verify_revision.sh [90m[offset=0, limit=160][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m⚙ [0mexecute {"code":"return search({query:'filesystem read_multiple_files',limit:2});"} 
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead revision-p/o-to-p-export-comparison.json [90m[offset=0, limit=170][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m⚙ [0mexecute {"code":"return search({query:'execute shell command',limit:2});"} 
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "supplement|split|head|washer" [90min render_assembled.py · 2 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead render_assembled.py [90m[offset=95, limit=45][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m⚙ [0mexecute {"code":"return tools[\"blender-mcp\"].execute_blender_code({code:\"from pathlib import Path\\nimport hashlib,json\\nr=Path('/home/solrahk/pig-health-monitor/v3-mqtt-pocketbase/enclosure/recovery-20261018')\\nresult={p.stem:hashlib.sha256(p.read_bytes()).hexdigest()==hashlib.sha256((r/'revision-o'/p.name).read_bytes()).hexdigest() for p in (r/'revision-p').glob('*.stl')}\"});"} 
+> reviewer · cx/gpt-6.1-sol-review
+## Findings — severity order
+
+1. **High — The documented P release workflow does not exist.**  
+   **`revision-p/START_HERE.md:38–41`; `verify_revision.sh:8–19`**  
+   START_HERE instructs users to run `verify_revision_p.sh` followed by `package_revision_p.sh`, but neither file exists in this directory. The existing verification runner explicitly refuses P, and its pipeline does not invoke `probe_split_boss_concept.py`. Only an O packaging script is present.  
+   **Impact:** P’s passing saved summary is not a reproducible, coherent release procedure. Following the supplied instructions fails before verification or packaging. This is a release blocker, not a mesh defect.
+
+2. **Medium — The P closure gate validates counts, but not the identity or coverage of the tests.**  
+   **`summarize_verification.js:31`**  
+   The gate does not require the expected part names, stations, hardware roles, lift distances, or intersection-map keys. For example, `Object.values({}).every(...)` passes, so two shaft records and six hardware records with empty intersection maps satisfy those portions of the gate. Duplicate seat or lift records also satisfy their count checks. Fresh main-part hashes do not prove that those parts received the intended tests.  
+   **Impact:** `supplementary_closure_gate: true` can overstate actual coverage. Require the exact expected test identities and finite, nonnegative measurements, including both `main_tub` and `main_lid` intersection values. Missing regression tests should cover empty maps, duplicated stations and omitted hardware roles.
+
+3. **Medium — Support is configured, but its presence is not a P acceptance criterion.**  
+   **`slice_revision.sh:18–20`; `summarize_verification.js:48–54,73`**  
+   The slicer correctly enables buildplate support for the P main tub. However, the summary merely records `support_enabled`; it never requires it to be `1`. Nor does it verify that support toolpaths were generated beneath the ears. An unsupported slice with fresh hashes, nonempty toolpaths and no matching warning can still pass.  
+   **Impact:** The specific manufacturing correction described in `revision-p/START_HERE.md:33–35` is not protected against regression. At minimum, gate the intended support configuration; separately verify actual support generation rather than treating configuration alone as proof.
+
+4. **Low — P’s own closure evidence falsely labels installed geometry as an uninstalled experiment.**  
+   **`probe_split_boss_concept.py:1–3,15,108–116`**  
+   P mode deliberately imports and tests the already-installed P ears, but still emits `"experiment only; not installed or released geometry"`. “Not released” is consistent with candidate status; “not installed” is not. The limitations also say there is no full installed assembly audit without distinguishing this local probe from the separately supplied assembly checks.  
+   **Impact:** Release evidence contradicts the candidate documentation and obscures what was actually tested. This should be corrected before promotion.
+
+## Geometry and mechanical assessment
+
+- **The source changes preserve O except for the two main-part ear additions.** P-specific geometry branches add ears to `main_tub` and `main_lid` after their existing finishing operations (`build_revision.py:103–108,131–136`). The microphone-relief branch explicitly applies identically to O and P (`174–177`). The supplied `o-to-p-export-comparison.json` likewise reports the other **15 STLs unchanged**. That comparison contains booleans rather than hash evidence, so I would not treat it alone as an independent current-byte verification.
+- Ear positions, installed split planes and **7 mm nominal grip** agree between the builder, probe and ledger. I found **no concrete dimensional contradiction proving the new ears mechanically unusable**.
+- The probe provides useful local bearing, shaft, head/nut/driver and straight-lift checks, but those remain assumed-envelope digital tests—not load capacity, purchased-hardware fit, support-removal quality or physical assembly validation.
+
+**Verdict:** Keep P as a candidate. The principal blocker is release reproducibility and evidence integrity, not a demonstrated bad ear mesh. No files were modified; no subagents were used.

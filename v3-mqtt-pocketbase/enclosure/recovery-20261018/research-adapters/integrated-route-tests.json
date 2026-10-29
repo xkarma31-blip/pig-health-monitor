@@ -1,0 +1,7 @@
+{
+  "crossing": true,
+  "contained": true,
+  "clear": true,
+  "finite_not_ray": true,
+  "strip_width": true
+}

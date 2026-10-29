@@ -1,0 +1,147 @@
+{
+  "blender_version": "4.2.3 LTS",
+  "pass": true,
+  "baseline_pass": true,
+  "negative_tests": [
+    {
+      "mutation": [
+        "displaced",
+        "pcb25_4square"
+      ],
+      "detected": true
+    },
+    {
+      "mutation": [
+        "displaced",
+        "pcb25_4square_retainer"
+      ],
+      "detected": true
+    },
+    {
+      "mutation": [
+        "displaced",
+        "pcb25_4square_retainer.001"
+      ],
+      "detected": true
+    },
+    {
+      "mutation": [
+        "displaced",
+        "PCB envelope"
+      ],
+      "detected": true
+    },
+    {
+      "mutation": [
+        "displaced",
+        "ASSUMED package"
+      ],
+      "detected": true
+    },
+    {
+      "mutation": [
+        "displaced",
+        "M3_hex_nut_-30_-9"
+      ],
+      "detected": true
+    },
+    {
+      "mutation": [
+        "displaced",
+        "M3_hex_nut_-30_9"
+      ],
+      "detected": true
+    },
+    {
+      "mutation": [
+        "displaced",
+        "M3_hex_nut_30_-9"
+      ],
+      "detected": true
+    },
+    {
+      "mutation": [
+        "displaced",
+        "M3_hex_nut_30_9"
+      ],
+      "detected": true
+    },
+    {
+      "mutation": [
+        "substituted",
+        "pcb25_4square"
+      ],
+      "detected": true
+    },
+    {
+      "mutation": [
+        "substituted",
+        "pcb25_4square_retainer"
+      ],
+      "detected": true
+    },
+    {
+      "mutation": [
+        "substituted",
+        "pcb25_4square_retainer.001"
+      ],
+      "detected": true
+    },
+    {
+      "mutation": [
+        "substituted",
+        "PCB envelope"
+      ],
+      "detected": true
+    },
+    {
+      "mutation": [
+        "substituted",
+        "ASSUMED package"
+      ],
+      "detected": true
+    },
+    {
+      "mutation": [
+        "substituted",
+        "M3_hex_nut_-30_-9"
+      ],
+      "detected": true
+    },
+    {
+      "mutation": [
+        "substituted",
+        "M3_hex_nut_-30_9"
+      ],
+      "detected": true
+    },
+    {
+      "mutation": [
+        "substituted",
+        "M3_hex_nut_30_-9"
+      ],
+      "detected": true
+    },
+    {
+      "mutation": [
+        "substituted",
+        "M3_hex_nut_30_9"
+      ],
+      "detected": true
+    },
+    {
+      "mutation": [
+        "stale_sht",
+        "sht_adjustable_carrier"
+      ],
+      "detected": true
+    },
+    {
+      "mutation": [
+        "render_modifier",
+        "main_lid"
+      ],
+      "detected": true
+    }
+  ]
+}

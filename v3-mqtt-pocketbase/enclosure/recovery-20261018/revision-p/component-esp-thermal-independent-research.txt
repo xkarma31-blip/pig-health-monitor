@@ -1,0 +1,208 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mSkill "agent-reach" 
+> reviewer · cx/gpt-6.1-sol-review
+I’m using agent-reach’s web-research route: live search and direct page fetches, prioritizing manufacturer drawings. No edits or subagents; I’ll keep published dimensions separate from any claim about which board you have.
+[0m⚙ [0mexecute {"code":"return search({query:'exa web_search',limit:2});"} 
+> reviewer · cx/gpt-6.1-sol-review
+[0m⚙ [0mexecute {"code":"return await Promise.allSettled(['ESP32-S3 SuperMini PCB dimensions 22.5 23.5 18 mechanical drawing','MLX90640 Adafruit Sparkfun Waveshare breakout board dimensions mechanical drawing','GY-MCU90640 GY-MLX90640 board dimensions'].map(query=>tools.exa.web_search_exa({query,numResults:6,objective:'Find manufacturer product pages and mechanical drawings with exact PCB dimensions and published heights; quote evidence.'})));"} 
+> reviewer · cx/gpt-6.1-sol-review
+[0m⚙ [0mexecute {"code":"return await Promise.allSettled(['site.waveshare.com MLX90640 dimensions 28 16','site.sparkfun.com MLX90640 dimensions 1.0 1.0','\"ESP32-S3\" \"22.5\" \"18\" SuperMini','\"GY-90640\" \"size\" dimensions'].map(query=>tools.exa.web_search_exa({query,numResults:4,objective:'Find exact dimensional evidence product or mechanical drawing URLs'})));"} 
+> reviewer · cx/gpt-6.1-sol-review
+[0m% [0mWebFetch https://learn.adafruit.com/adafruit-mlx90640-ir-thermal-camera/downloads 
+> reviewer · cx/gpt-6.1-sol-review
+[0m✗ [0mWebFetch failed
+[91m[1mError: [0mInvalid arguments for tool "webfetch":
+- url: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mWebFetch failed
+[91m[1mError: [0mInvalid arguments for tool "webfetch":
+- url: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mWebFetch failed
+[91m[1mError: [0mInvalid arguments for tool "webfetch":
+- url: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mWebFetch failed
+[91m[1mError: [0mInvalid arguments for tool "webfetch":
+- url: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+> reviewer · cx/gpt-6.1-sol-review
+[0m% [0mWebFetch https://learn.sparkfun.com/tutorials/qwiic-ir-array-mlx90640-hookup-guide/all 
+> reviewer · cx/gpt-6.1-sol-review
+[0m⚙ [0mexecute {"code":"const urls=['https://api.github.com/repos/sparkfun/Qwiic_IR_Array_MLX90640/contents/Hardware','https://iotcrazy.com/docs/esp32-s3-m.html','https://www.espboards.dev/esp32/esp32-s3-super-mini/','https://www.waveshare.com/wiki/MLX90640-D55_Thermal_Camera','https://www.adafruit.com/product/4407','https://www.adafruit.com/product/4469']; return await Promise.allSettled(urls.map(async url=>{let r=await fetch(url);let t=await r.text();return {url,status:r.status,text:url.includes('api.github')?t:t.replace(/<[^>]+>/g,' ').replace(/\\s+/g,' ').match(/.{0,150}(Dimensions|22\\.5|23\\.5|25\\.8|10\\.5|28mm|28 ×).{0,220}/gi)}}));"} 
+> reviewer · cx/gpt-6.1-sol-review
+[0m⚙ [0mexecute {"code":"return await Promise.allSettled(['https://raw.githubusercontent.com/sparkfun/Qwiic_IR_Array_MLX90640/master/Hardware/sparkfun-mlx90640-qwiic-breakout.brd','https://api.github.com/repos/adafruit/Adafruit-MLX90640-PCB/contents','https://www.waveshare.com/wiki/MLX90640-D55_Thermal_Camera','https://www.tasker.com.tw/file/WLq5WO/pG64L/214QJ'].map(async url=>{let r=await fetch(url);let t=await r.text();return {url,status:r.status,text:url.endsWith('.brd')?t.match(/<plain>[\\s\\S]*?<\\/plain>/)?.[0]:url.includes('api.github')?t:url.includes('waveshare')?t.match(/.{0,100}(?:Dimensions|dimensions|[Dd]imension).*?(?:png|jpg|pdf).{0,100}/g):t.slice(0,100)}}));"} 
+> reviewer · cx/gpt-6.1-sol-review
+[0m✗ [0mWebFetch https://www.waveshare.com/w/upload/7/7d/MLX90640_Dimension.jpg failed
+[91m[1mError: [0mUnsupported fetched image content type: image/jpeg
+> reviewer · cx/gpt-6.1-sol-review
+[0m⚙ [0mexecute {"code":"const url='https://raw.githubusercontent.com/adafruit/Adafruit-MLX90640-PCB/master/Adafruit%20MLX90640%20IR%20Thermal%20Camera.brd'; const t=await (await fetch(url)).text(); return {url,outline:t.match(/<plain>[\\s\\S]*?<\\/plain>/)?.[0]?.split('\\n').filter(l=>l.includes('layer=\"20\"')||l.includes('<dimension')).join('\\n')};"} 
+> reviewer · cx/gpt-6.1-sol-review
+## Findings from live web sources
+
+**Important distinction:** these are published board designs and listing claims—not identification of your fitted hardware. In particular, the ESP32-S3 SuperMini’s **22.5 versus 23.5 mm length remains unresolved by a manufacturer mechanical drawing** in the sources retrieved.
+
+### 1. ESP32-S3 SuperMini: conflicting published dimensions
+
+**23.5 × 18 mm — secondary board reference**
+- URL: https://www.espboards.dev/esp32/esp32-s3-super-mini/
+- Direct HTTP fetch succeeded.
+- Quoted evidence:
+  > “23.5 × 18 mm · pin pitch 2.54 mm”
+- The page also says:
+  > “The bare ESP32-S3 Super Mini board drawn to scale at 23.5 × 18 mm”
+- **Evidence quality:** reference-site specification/illustration, not an authenticated manufacturer fabrication drawing.
+
+**22.5 / 22.52 × 18 mm — conflicting secondary documentation**
+- URL: https://iotcrazy.com/docs/esp32-s3-m.html
+- Direct HTTP fetch succeeded.
+- Introductory text:
+  > “all packed into an ultra-compact 22.5 × 18 mm castellated module.”
+- Specification entry:
+  > “Dimensions 22.52 × 18 mm • Castellated half-holes”
+- **Evidence quality:** documentation claim, not a manufacturer mechanical drawing. Even this page uses two different numerical precisions.
+
+**22.5 × 18 mm — additional seller claim**
+- URL: https://compoden.com/products/esp32-s3-supermini-development-board-wifi-bluetooth-le-ultra-compact-ai-iot-microcontroller
+- Live search returned:
+  > “Dimensions: 22.5 x 18 mm (SuperMini form factor)”
+- This was **search-retrieved evidence**, not separately direct-fetched.
+
+**Conclusion:** both dimensional claims exist online. That does **not** establish that they represent two genuinely different PCB variants rather than copied or incorrect specifications. Do not freeze an exact-fit enclosure around either length without measuring the supplied board or obtaining its actual fabrication drawing.
+
+**USB-C connector height, PCB thickness, header height and total assembled height:** **unknown from the retrieved sources.**
+
+### 2. Adafruit MLX90640: PCB outline and assembled dimensions differ
+
+**Manufacturer PCB CAD envelope: 25.40 × 17.78 mm**, with rounded corners.
+
+- Official downloads page:  
+  https://learn.adafruit.com/adafruit-mlx90640-ir-thermal-camera/downloads
+- Manufacturer fab-print image linked there:  
+  https://cdn-learn.adafruit.com/assets/assets/000/087/516/medium800/adafruit_products_MLX90640_fab_print.png?1579903608
+- Manufacturer Eagle board file, successfully fetched and inspected:  
+  https://raw.githubusercontent.com/adafruit/Adafruit-MLX90640-PCB/master/Adafruit%20MLX90640%20IR%20Thermal%20Camera.brd
+
+Quoted CAD evidence from the board-outline layer, `layer="20"`:
+```xml
+<wire x1="0" y1="15.24" x2="0" y2="2.54" width="0" layer="20"/>
+<wire x1="25.4" y1="2.54" x2="25.4" y2="15.24" width="0" layer="20"/>
+<wire x1="22.86" y1="17.78" x2="2.54" y2="17.78" width="0" layer="20"/>
+```
+The outline reaches x = 0…25.4 and y = 0…17.78 mm. **25.40 × 17.78 mm is a CAD-derived PCB envelope**, not a quote of assembled product dimensions.
+
+**55° version, product 4407**
+- URL: https://www.adafruit.com/product/4407
+- Direct fetch succeeded.
+- Quote:
+  > “Product Dimensions: 25.7mm x 17.7mm x 16.0mm”
+- **Published overall product height: 16.0 mm.**
+
+**110° version, product 4469**
+- URL: https://www.adafruit.com/product/4469
+- Direct fetch succeeded.
+- Quote:
+  > “Product Dimensions: 25.8mm x 17.8mm x 10.5mm”
+- **Published overall product height: 10.5 mm.**
+
+These product dimensions should not be silently substituted for the nominal CAD outline. The third dimension is **overall product height**, not a separately specified sensor projection above the PCB.
+
+**Separate sensor-above-PCB height and connector height:** **unknown from the retrieved dimensional evidence.**
+
+Official 3D-model directory, linked by Adafruit:
+https://github.com/adafruit/Adafruit_CAD_Parts/tree/master/4469%20MLX90640%20Stemma  
+I did not extract additional measurements from those models.
+
+### 3. SparkFun Qwiic MLX90640: 25.40 × 25.40 mm PCB
+
+**Manufacturer PCB CAD envelope: 25.40 × 25.40 mm**, or 1 × 1 inch.
+
+- Official guide covering SEN-14843, 110°, and SEN-14844, 55°:  
+  https://learn.sparkfun.com/tutorials/qwiic-ir-array-mlx90640-hookup-guide/all
+- Official hardware repository:  
+  https://github.com/sparkfun/Qwiic_IR_Array_MLX90640
+- Manufacturer board file, successfully fetched and inspected:  
+  https://raw.githubusercontent.com/sparkfun/Qwiic_IR_Array_MLX90640/master/Hardware/sparkfun-mlx90640-qwiic-breakout.brd
+
+Quoted outline evidence:
+```xml
+<wire x1="0" y1="0" x2="25.4" y2="0" width="0.1524" layer="20"/>
+<wire x1="25.4" y1="0" x2="25.4" y2="25.4" width="0.1524" layer="20"/>
+<wire x1="25.4" y1="25.4" x2="0" y2="25.4" width="0.1524" layer="20"/>
+<wire x1="0" y1="25.4" x2="0" y2="0" width="0.1524" layer="20"/>
+```
+
+This establishes the **nominal CAD outline**; it is not a physical measurement of a supplied unit.
+
+**Sensor projection, Qwiic connector height, PCB thickness and overall assembled height:** **unknown from the retrieved sources.**
+
+### 4. Waveshare MLX90640-D55 / D110: 28 × 16 mm published envelope
+
+- Manufacturer wiki:  
+  https://www.waveshare.com/wiki/MLX90640-D55_Thermal_Camera
+- Direct fetch succeeded.
+- Quoted specification:
+  > “Dimensions: 28mm × 16 mm”  
+  > “Mounting hole size: 2.0mm”
+- The same specification section discusses both D55 and D110 options.
+
+Manufacturer D55 product page:
+https://www.waveshare.com/mlx90640-d55-thermal-camera.htm
+- Live search retrieved:
+  > “Dimensions | 28 × 16mm | Mounting hole size | 2.0mm”
+
+**Manufacturer mechanical-image URL**, extracted from the wiki:
+https://www.waveshare.com/w/upload/7/7d/MLX90640_Dimension.jpg
+
+**Limitation:** fetching that image through `webfetch` failed with:
+> “Unsupported fetched image content type: image/jpeg”
+
+Therefore, **28 × 16 mm is supported by manufacturer text**, but I did not visually inspect the drawing or verify further callouts.
+
+**Sensor height, connector height, PCB thickness and overall assembled height:** **unknown.**
+
+### 5. Generic GY-MCU90640: 25 × 15.5 mm manual claim
+
+Two live search results exposed matching manual text.
+
+**English manual mirror**
+- URL: https://amperkot.ru/static/3236/uploads/datasheets/GY_MCU9064%20user%20manual%20v1.pdf
+- Search-retrieved quote:
+  > “size 15.5mm×25mm”
+
+**Chinese manual mirror**
+- URL: https://www.tasker.com.tw/file/WLq5WO/pG64L/214QJ
+- Search-retrieved quote:
+  > “尺寸 | 15.5mm×25mm”
+- Direct HTTP request also succeeded and returned a PDF, but I did **not** render its mechanical illustrations.
+
+**Evidence quality:** mirrored generic-module manual; manufacturer provenance is not authenticated. This supports a **GY-MCU90640-labelled module size claim**, not all boards sold as “GY,” “GY-90640” or “GY-MLX90640.” I did not establish a separate envelope for a plain GY I²C-only breakout.
+
+**Sensor height, header/connector height, PCB thickness and overall assembled height:** **unknown.**
+
+## Practical dimensional takeaway
+
+- **ESP32-S3 SuperMini:** conflicting **22.5/22.52 × 18** and **23.5 × 18 mm** claims; manufacturer outline not established.
+- **Adafruit:** nominal PCB CAD **25.40 × 17.78 mm**; published overall heights **16.0 mm for 55°** and **10.5 mm for 110°**.
+- **SparkFun Qwiic:** nominal PCB CAD **25.40 × 25.40 mm**; height unknown.
+- **Waveshare D55/D110:** manufacturer-listed **28 × 16 mm**; height unknown.
+- **GY-MCU90640:** mirrored-manual claim **25 × 15.5 mm**; height unknown.
+
+**Additional research failure:** Exa reached its free MCP limit and returned HTTP 429 during the generic-GY search. Subsequent checks used direct web/HTTP fetches. No files were edited and no subagents were used.

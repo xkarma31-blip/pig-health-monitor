@@ -1,0 +1,47 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py [90m[offset=1, limit=210][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "carrier|acoustic|depth" [90min v3-mqtt-pocketbase/enclosure/recovery-20261018/render_assembled.py · 16 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/render_assembled.py [90m[offset=49, limit=48][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/render_assembled.py [90m[offset=1, limit=48][0m
+> reviewer · cx/gpt-6.1-sol-review
+## Finding — P1: Prethreading does not remove the flush-assembly pinch
+**`v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py:158–165`**  
+**Placement: `v3-mqtt-pocketbase/enclosure/recovery-20261018/render_assembled.py:58–76`**
+
+Yes—**a prethreaded tie that emerges onto and runs across the carrier’s face-side surface still gets geometrically pinched when that carrier is bolted flush.** Prethreading solves access, not clearance.
+
+- The carrier occupies local **z=0…3**, with through-slots at **x=±10, y=−4…4**.
+- Its assembled depth offset is **27**, so its face-side **z=3** surface reaches mating depth **30**.
+- The acoustic face starts at depth **30** and extends to **33**. It has sound and bolt holes, but no strap clearance at those slot exits.
+- Consequently, there is **zero nominal gap** for any positive-thickness tie segment lying between those mating surfaces. Tightening would require tie compression, deformation, or the carrier remaining proud rather than flush.
+
+This conclusion concerns the modeled route across the interface; a tie entirely recessed into a suitable channel would be a different case. The finishing bevel is not a continuous strap-clearance channel.
+
+## Minimal relief recommendation
+
+Cut **two short, outward-running recesses into the carrier’s local z=3 face**, one from each slot to the nearest outside edge. Do not connect the slots across the sound opening.
+
+Carrier-local coordinates, before finishing:
+
+| Channel | X extent | Y extent | Z extent |
+|---|---|---|---|
+| Left | −13 to −9 | −W/2 to +W/2 | 3−D to 3 |
+| Right | +9 to +13 | −W/2 to +W/2 | 3−D to 3 |
+
+- **W:** measured tie width plus lateral clearance; keep **W≤8 mm** so the recess opens within the existing slot length.
+- **D:** measured tie thickness plus assembly/printing clearance. **A 4 mm wide × 1 mm deep recess is an illustrative starting geometry only**, not a validated tie specification; it leaves a nominal 2 mm carrier floor outside the through-slot.
+- Extend Boolean cutters slightly beyond the outer edge and above z=3 to avoid coincident cutter boundaries.
+- Route the tie tails outward through these channels, with the locking head outside the mating interface. Any face-side return segment or head also needs its own clearance.
+
+**Geometric separation:** these channels remain at **|x|≥9**, outside the sound bore **r=6**. With illustrative **W=4**, their nearest approach to the bolt axes at **y=±10** is 8 mm, leaving **6.3 mm nominal separation from the r=1.7 bolt-hole walls**. Actual fastener hardware envelopes remain a separate check.
+
+## Missing verification
+**`build_revision.py:163–165`; `render_assembled.py:63–76`**
+
+The shown geometry and placement do not establish a collision-free tie route. Add a modeled tie-envelope check at the flush placement, including slot bends, tail exits, and locking-head location; verify the final beveled mesh retains the required channel width/depth and bolt-bearing lands.
+
+**Scope:** source-based geometric review only. No files changed, no subagents used, and no physical-fit claim.

@@ -1,0 +1,40 @@
+[0m
+> reviewer · ag/gemini-3.8-flash-low
+### 1. Two Left-Side Paired Bolt Ears: Assessment
+
+* **Visibility & Correspondence:**
+  * In the **source poster** (see hero post-mount, side views, and exploded view), the main enclosure body features **two paired sets of protruding exterior bolt tabs/ears on the left side** (one upper pair, one lower pair) each fastened with small machine screws/hardware through cylindrical bosses.
+  * In the **3D render**, the placement (upper and lower left perimeter) correctly matches the vertical zone of the source poster's exterior tabs.
+* **Plausibility vs. Mismatch:**
+  * **Visible & Functionally Plausible:** The feature itself is authentic to the poster's visual language—they clearly read as outer clamping/closure ears rather than stray geometry.
+  * **Distracting Discrepancies:**
+    1. **Thickness / Profile:** On the poster, each ear set consists of two distinct mating flanges (front lid tab + rear base tab clamped together via screw heads). On the render, each ear is rendered as a single monolithic block with a hole/indentation rather than a split clamping seam.
+    2. **Fastener Absence:** The poster shows clear metallic socket-head or pan-head machine screws seated in these tabs. In the render, the ears have shallow indentations or hollows without distinct fastener heads.
+    3. **Right-Side Asymmetry:** On the poster, mounting clamp brackets wrap around or attach via distinct rear/side hardware. In the render, the right side has a rigid horizontal bracket arm extending directly out of the seam area without corresponding right-side closure ears.
+
+---
+
+### 2. Source Branding Retained
+
+* **Logo & Typography:**
+  * **PigPulse** wordmark with the broadcast icon integrated above the `u` is retained and accurately positioned.
+  * Subtitle **"Edge Intelligence for Swine Health"** is present, legible, and correctly placed below the primary wordmark.
+* **Palette & Contrast:**
+  * The green hue matches the primary brand green from the poster.
+  * The status LED dot below the text is preserved and aligned vertically with the branding text block.
+
+---
+
+### 3. Visible Defects & Geometric Inconsistencies Worth Fixing
+
+1. **Thermal Module (Top):**
+   * **Missing Camera Lens / Bezel Details:** The poster shows a circular MLX90640 lens aperture centered in a recessed rectangular window with chamfered inner walls. The render shows an empty, hollow glass-like trough/cavity without the sensor barrel or internal optical element.
+   * **Fastener Count & Placement:** The poster’s top face and front face have four corner hex/allen fasteners. The render shows simplified recessed holes.
+2. **Acoustic Module (Bottom):**
+   * **Port Inversion / Wrong Face:** In the poster (see hero, exploded view, and "Modules Detachable"), the **two circular acoustic mic ports with mesh grilles face downward** (bottom-facing to prevent dust/water ingress). The front face of the bottom module is solid dark plastic with subtle perimeter screws. In the render, the two large circular mic ports are placed **directly on the front face**, surrounded by green rings, which contradicts the downward-facing dustproof design highlighted in the source.
+3. **Module Connectors / Standoffs:**
+   * In the poster, the three modules are separated by distinct waterproof locking collar couplings / threaded gland connectors and riser posts. In the render, the top module and bottom module appear to float or sit on minimal flush blocks without the round connector hardware shown in the poster’s exploded and dimensional diagrams.
+4. **Main Face Perimeter Screws:**
+   * The poster’s main body lid has deep corner countersinks with visible socket/hex screws. The render has very faint, low-contrast indentations at the corners.
+5. **Right-Side Mounting Arm:**
+   * The rigid square-flanged bracket arm extending from the top-right side is absent from the poster's main standalone module depictions (the poster uses a rear pole clamp / strap mount). Having it jut out horizontally from the side unbalances the silhouette compared to the poster's clean rectangular profile.

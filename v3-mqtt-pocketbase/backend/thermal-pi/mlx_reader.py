@@ -16,14 +16,83 @@ Enable I2C first (see README).
 
 from __future__ import annotations
 
+import errno
+import os
 import time
 from typing import Optional
 
 import config
 import pigpulse_stats
 
-# MLX90640 frame geometry: 32x24. Mirrors pigpulse_stats.W/H/N.
+# MLX90640 frame geometry: 32x24. Mirrors pigpulse_stats W/H/N.
 N = 768
+
+I2C_SLAVE = 0x0703  # linux/i2c-dev.h
+
+
+def i2c_ack(bus: str, addr: int) -> tuple[bool, str]:
+    """Raw address-only ACK probe. Returns (acked, why-not)."""
+    import fcntl
+    try:
+        if not os.path.exists(bus):
+            return False, f"{bus} does not exist (I2C not enabled in device tree)"
+        fd = os.open(bus, os.O_RDWR)
+    except PermissionError:
+        return False, f"permission denied opening {bus} (run: usermod -aG i2c $USER, then re-login)"
+    except OSError as e:
+        return False, f"cannot open {bus}: {e.strerror}"
+    try:
+        fcntl.ioctl(fd, I2C_SLAVE, addr)
+        os.write(fd, b"")
+        return True, "ACK"
+    except OSError as e:
+        return False, f"no ACK at 0x{addr:02X} ({e.strerror or e})"
+    finally:
+        os.close(fd)
+
+
+def _ecode(e: int | None) -> str:
+    """Symbolic errno name, or the number when unknown."""
+    if e is None:
+        return "?"
+    return errno.errorcode.get(e, str(e))
+
+
+def explain_init_error(exc: BaseException, bus: str, addr: int) -> str:
+    """Turn a bare OSError into something an operator can act on."""
+    if not isinstance(exc, OSError):
+        return f"{type(exc).__name__}: {exc}"
+
+    e = exc.errno
+    if e in (errno.EACCES, errno.EPERM):
+        return (f"I2C PERMISSION DENIED on {bus} [{_ecode(e)}: {exc.strerror}]. "
+                f"Fix: sudo usermod -aG i2c $USER  then log out and back in "
+                f"(or reboot). Verify with: id -nG | tr ' ' '\\n' | grep -x i2c")
+    if e == errno.ENOENT:
+        return (f"I2C BUS {bus} MISSING [{_ecode(e)}: {exc.strerror}]. "
+                f"Fix: enable I2C — add dtparam=i2c_arm=on to /boot/firmware/config.txt, reboot. "
+                f"Check with: ls {bus}")
+
+    acked, why = i2c_ack(bus, addr)
+    head = (f"I2C FAULT on {bus} at 0x{addr:02X} "
+            f"[{_ecode(e)}: {exc.strerror or exc}]")
+    if acked:
+        return (f"{head}\n"
+                f"  -> device DOES acknowledge 0x{addr:02X}, so power/GND/pull-ups are OK.\n"
+                f"  -> the failure is in the MLX90640 register read itself, not the wiring.\n"
+                f"  Likely: sensor needs a power-on settle delay before the first EEPROM read "
+                f"(retrying every 10s should clear it); or a marginal bus at 100kHz over long "
+                f"leads — try i2c_arm_baudrate=40000 in /boot/firmware/config.txt.")
+    return (f"{head}\n"
+            f"  -> DEVICE DOES NOT RESPOND ({why})\n"
+            f"  -> this is a WIRING or POWER fault, not software. Check in this order:\n"
+            f"     1. 3V3 actually present at the sensor VDD (measure it, do not assume)\n"
+            f"     2. GND common between sensor and Pi\n"
+            f"     3. SDA -> header pin 3 (GPIO2), SCL -> header pin 5 (GPIO3), NOT swapped\n"
+            f"     4. 4.7k pull-up from SDA to 3V3 AND SCL to 3V3 (many modules omit these)\n"
+            f"  If the sensor is on the OTHER header pair, it is on /dev/i2c-0 "
+            f"(pins 27/28) — check the 'I2C all buses' line in /health.")
+
 
 # Optional heavy import deferred so i2c_scanDiag / stats unit paths work
 # without the driver installed (e.g. on a dev laptop).
@@ -95,8 +164,8 @@ class MlxReader:
             return True
         except Exception as e:
             self.ready = False
-            self.last_error = f"init failed: {e}"
-            print(f"[MLX90640] {self.last_error}")
+            self.last_error = explain_init_error(e, self.bus, self.addr)
+            print(f"[MLX90640] {self.last_error}", flush=True)
             return False
 
     def read_frame(self, image_out: Optional[list[float]] = None,

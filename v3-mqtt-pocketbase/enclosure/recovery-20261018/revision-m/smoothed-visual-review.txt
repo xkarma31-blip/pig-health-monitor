@@ -1,0 +1,8 @@
+Based on the render:
+
+* **Top Thermal Housing:** The outside corners do not appear smoothly rounded. Instead, conspicuous polygon facets and sharp angular transitions (chamfers/flat segments) are visible along the perimeter edges and corners, particularly on the top and sides.
+* **Logo and Tagline:** The "PigPulse" logo is legible in green text with the integrated icon over the "u". The full tagline, "Edge Intelligence for Swine Health," is printed in white underneath and remains fully readable at this resolution.
+* **Acoustic Trim:** Mint-colored trim is clearly visible as two circular rings surrounding the ports on the bottom module.
+
+**Visible Limitations and Uncertainty:**
+The orthographic/isometric perspective, uniform matte shading, and low-contrast lighting make it difficult to determine the exact mesh density, leaving slight uncertainty about whether subtle bevels or distinct facet edges define the profile. Internal lens elements and deep recess details remain partially obscured by shadow.

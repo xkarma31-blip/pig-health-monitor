@@ -1,0 +1,227 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018 [90m[offset=0, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/render_assembled.py [90m[offset=0, limit=240][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/check_assembly.py [90m[offset=0, limit=260][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/build_revision.py [90m[offset=0, limit=260][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead CANON.md [90m[offset=1, limit=75][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o/assembly-checks.json [90m[offset=0, limit=220][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/fastener_ledger.js [90m[offset=1, limit=180][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mSkill "ponytail" 
+> reviewer · cx/gpt-6.1-sol-review
+## Scope and coordinate convention
+
+Read-only inspection of `build_revision.py`, `render_assembled.py`, `check_assembly.py`, and the saved revision-o assembly report/fastener ledger. **No files changed, scripts executed, or subagents used.** Findings below are nominal CAD deductions—not physical-fit approval.
+
+Use:
+- **X:** width.
+- **H:** assembled vertical height.
+- **D:** forward depth from tub backs; Blender world `Y = −D`.
+- Construction coordinates map to assembled `(X,H,D) = (x, module_height+y, module_depth+z)`.
+
+The assembly placements are defined in `render_assembled.py:55–70`.
+
+## Findings, in severity order
+
+### 1. High — Upper exits are parallel but not coaxial; a straight connector-shaped guard would misrepresent the route
+
+References: `build_revision.py:114–119,129–137`; `render_assembled.py:56–64`.
+
+- Main upper exit: **Ø8**, axis along H, at **X=0, D=16**.
+- Thermal lower exit: **Ø6**, axis along H, at **X=0, D=8**.
+- Their axes therefore have an exact nominal **8 mm depth offset**.
+
+The depth projections of the bores are:
+- Main: **D=12…20**.
+- Thermal: **D=5…11**.
+
+These intervals are **disjoint by 1 mm**. Even an ideal zero-thickness line parallel to H cannot pass straight through both openings. A rigid straight sleeve aligned to either axis is disqualified.
+
+**Why a dogleg may be needed:** routing must transition 8 mm rearward while crossing a nominal 5 mm exposed inter-module gap. Using wall midplanes, the transition is between approximately `(H=54.5,D=16)` and `(H=62.5,D=8)`—8 mm vertically and 8 mm in depth—but that diagonal traverses portions of both walls. It is not a demonstrated cable path.
+
+A flexible route might bend partly inside the tubs, or bow laterally/outward before returning. Whether any such route works depends on the actual cable, termination, permissible bend radius, and internal component placement. None is established here.
+
+### 2. High — Existing bore attachment cannot simply reuse the current bolt-length assumptions
+
+References: `build_revision.py:188–220`; `fastener_ledger.js:9–20`.
+
+Useful existing rear-facing attachment axes:
+- Spine/tub pairs: **X=±18**, at **H=−80, 0, 80**, nominal Ø3.4.
+- SHT arm/spine pair: **X=±12, H=61**, nominal Ø3.4.
+
+These are occupied joints, not spare accessory holes.
+
+The ledger assumes:
+- Spine/tub: 8 mm grip, 14 mm bolt.
+- SHT arm/spine: 10 mm grip, 16 mm bolt.
+- Additional washer/nut/thread allowance: 4.4 mm.
+
+Both have only **1.6 mm nominal length margin** under those assumptions. A proposed **2 mm attachment tab** consumes that margin and leaves **−0.4 mm**. Do not specify “reuse existing bolts” without checking the revised stack and actual hardware.
+
+Sharing the SHT pair also means temporarily disturbing the SHT support joint; sharing spine/tub bolts disturbs a structural mounting joint. The guard can remain nonstructural, but its installation must not compromise those joints.
+
+### 3. Medium — A rear bridge at the upper gap runs into the SHT arm unless deliberately offset
+
+References: `build_revision.py:214–220`; `render_assembled.py:60–61`; `revision-o/assembly-checks.json:10–32,70–80`.
+
+Nominal assembled SHT geometry:
+- Arm crossbar: **X=−24…80, H=56…66, D=−10…−5**.
+- Carrier landing extends to **X=64…96, H=45…77**.
+- Carrier itself: **X=64…96, H=45…77, D=3…6**.
+- Landing/standoff geometry spans additional depth; the arm’s overall bounds reach **D=3**.
+
+Consequences:
+- A central rear guard spanning H=56…61 **cannot occupy the arm crossbar’s D=−10…−5 band**.
+- A rear rail must sit **behind D=−10**, with an explicit clearance, or take a different route.
+- Routing toward the right-hand carrier risks obstructing its open exposure, strap slots, or fastener access. Keep the cable and guard out of the carrier/landing region—not merely outside the central 16×16 opening.
+
+### 4. Medium — Current assembly checks do not validate a cable guard, cable bend, or general fastener access
+
+References: `check_assembly.py:35–67,68–110`.
+
+The all-installed intersection gate checks the listed printable meshes. It does **not** establish:
+- Cable routing or bend clearance.
+- Any proposed guard’s fit.
+- Full cover withdrawal/tool access.
+- General spine/tub or cover screw head/nut envelopes.
+- Electronics interference.
+
+The additional hardware checks concern specific cradle and SHT-joint envelopes. They are not general accessory-clearance approval. The render’s purchased cover heads are visual proxies (`render_assembled.py:112–139`), not verified hardware.
+
+## Exact nominal module edge gaps
+
+From tub dimensions and module centers:
+
+- **Main:** H=−56…56.
+- **Thermal:** H=61…99.
+- **Acoustic:** H=−99…−61.
+
+Thus:
+- **Main-to-thermal edge gap: 5 mm.**
+- **Acoustic-to-main edge gap: 5 mm.**
+
+These are housing-edge separations, **not unobstructed attachment volumes**. The spine spans behind the assembly, and the upper gap has the SHT arm behind it.
+
+Width steps:
+- Main half-width: 60 mm.
+- Thermal half-width: 46 mm → **14 mm shoulder per side**.
+- Acoustic half-width: 50 mm → **10 mm shoulder per side**.
+
+Sources: `build_revision.py:108,129,146,190`; `render_assembled.py:56–64`.
+
+### Lower route: importantly different
+
+Main lower exit and acoustic upper exit are both:
+- **X=0, D=16**, axis along H.
+- **Ø6**.
+- Facing across H=−61…−56.
+
+They are nominally **coaxial**. A straight open guard is geometrically plausible here; the upper route cannot be treated as its mirrored equivalent.
+
+## Concrete minimal guard options
+
+### Option A — Split, open saddle guards at the facing exits: least intrusive
+
+**Section:** shallow U-channel or rounded saddle, with a separate removable keeper only if needed. Ends terminate outside the walls; no connector-like plug or sleeve projecting into either bore.
+
+**Attachment:** short removable clips engaging existing exterior wall/rim geometry adjacent to the aperture. Clip engagement must stop short of the cover mating plane and corner posts. This is a feasibility option, not a validated snap-fit.
+
+**Function:**
+- Protect the exposed span from snagging/contact.
+- Provide a broad routing surface.
+- Allow cable installation without feeding an unknown connector through a closed guard.
+
+For the upper route, use **two offset saddles**, one at D=16 and one at D=8, rather than a straight joining tube. Leave the transition open for the actual cable route to be established.
+
+**Disqualifiers:**
+- Clips intruding into the bore or reducing usable aperture.
+- Hooking beneath the lid/face or preventing cover removal.
+- Sharp saddle edges or forced bending at the wall.
+- A clip requiring deformation or retention strength not yet demonstrated.
+
+This avoids changing existing bolt stacks, but friction/clip retention remains unproven.
+
+### Option B — Rear-mounted open dogleg shield using existing spine bores
+
+**Section:** narrow rear rail with an open, rounded channel reaching forward toward the cable span. Prefer a **removable outboard keeper** over a closed tunnel.
+
+**Attachment:** share a selected existing spine/tub bolt pair; use two points to prevent rotation. Keep the rail central or left of the SHT landing. For an upper rail crossing the SHT crossbar, place its body **behind D=−10**, plus clearance.
+
+**Function:** rear support carries a removable shield over the actual cable route; it does not join the housings or carry module loads.
+
+**Disqualifiers:**
+- Rail intersecting the SHT crossbar.
+- Forward-reaching arms crossing a lid/face removal path.
+- Tabs obstructing rear nuts, mounting/post straps, or wall mounting.
+- Added bolt length protruding into electronics space.
+- A “dogleg” channel drawn without proving the cable can follow it.
+
+This is more positively retained than clips, but it is **not the smallest part**, and requires hardware-stack revalidation.
+
+### Option C — Detachable saddle on the SHT arm joint
+
+**Attachment:** two rear tabs sharing **X=±12,H=61** bores, with the guard body behind the arm and a central forward-reaching shield.
+
+**Advantage:** nearest existing two-bore attachment to the upper gap.
+
+**Disadvantages/disqualifiers:**
+- Disturbs the SHT support joint during installation/removal.
+- Cannot preserve the current bolt-length assumption with an arbitrary added tab.
+- Must not occupy the tested forward SHT hardware envelopes: radius **3.5 mm**, D=0…3, centered at X=±12,H=61 (`check_assembly.py:100–109`).
+- Must not contact the thermal wall or undermine its existing hardware-clearance notches.
+- Must remain clear of the SHT landing/carrier and service access.
+
+**Secondary choice only:** convenient location does not make it a free attachment point.
+
+## Recommendation and required checks
+
+Prefer **Option A’s open, removable saddles** if existing wall geometry can retain them without entering the cover interface. Otherwise use **Option B’s rear-mounted shield**, accepting revised fastener verification. Do not bridge the upper exits with a straight decorative sleeve.
+
+Before fixing any channel section dimensions, establish:
+1. Actual cable/termination envelope and allowed bends.
+2. A continuous upper routing path through both walls and internal spaces.
+3. Guard-to-print, guard-to-hardware, and cable-to-edge clearance.
+4. Cover removal and driver approach with the guard removed—and, where intended, installed.
+5. SHT exposure/access and revised bolt engagement.
+
+**The CAD establishes the 5 mm edge gaps and 8 mm upper-axis offset. It does not establish a usable cable size, safe bend, retention force, or approved attachment.**

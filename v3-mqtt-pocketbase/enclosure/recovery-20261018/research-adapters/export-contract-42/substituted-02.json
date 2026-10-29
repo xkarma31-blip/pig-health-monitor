@@ -1,0 +1,96 @@
+{
+  "pass": false,
+  "mutation": [
+    "substituted",
+    "pcb25_4square_retainer"
+  ],
+  "blender": "4.2.3 LTS",
+  "scene": "/home/solrahk/pig-health-monitor/v3-mqtt-pocketbase/enclosure/recovery-20261018/research-adapters/combined-thermal-candidate.blend",
+  "scene_sha256": "bee6adc565dec11eca556fc840e305372706a05c613ce6a72f2af591d60151ff",
+  "accepted_source_sha256": "6cd0a7acc7d245a0a0d101fd01a3058821745e86db8c8a215c6c6845853c429f",
+  "source_acceptance_pass": true,
+  "acceptance_report_sha256": "db234ee107ccfc7e4c99a1d6475a8d577b2e1ecb9bde27962e68e0ace8e90ab1",
+  "transform_metadata_sha256": "e0558627432efd77ba039c687550daf04c57bef76b9de9807b9537c28ae6ca54",
+  "scope": "Digital export identity only; no physical hardware approval",
+  "inventory": {
+    "expected_quantity": 23,
+    "actual_quantity": 23,
+    "missing": [],
+    "unexpected": []
+  },
+  "thermal": [
+    {
+      "name": "pcb25_4square_retainer",
+      "pass": false,
+      "topology_equal": false,
+      "world_vertex_error_mm": 92.04846954345703,
+      "matrix_error": 0.0
+    }
+  ],
+  "manufacturing": [
+    {
+      "instance": "pcb25_4square_retainer",
+      "file": "research-adapters/pcb25_4square_retainer_1.stl",
+      "quantity": 1,
+      "manufacturing_to_world": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          -0.25881898403167725,
+          -0.9659258127212524,
+          -23.5
+        ],
+        [
+          0.0,
+          0.9659258127212524,
+          -0.25881898403167725,
+          81.80000305175781
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ],
+      "pass": false,
+      "file_sha256": "c6775cf7eb9aa88e829ee943232b7e654734108f9b5e8649b634fc5fb161617a",
+      "bounds_error_mm": 89.04846954345703,
+      "installed_volume_mm3": 40928.13276500124,
+      "export_volume_mm3": 213.14887835376723,
+      "intersection_mm3": 0.0,
+      "symmetric_difference_mm3": 41141.281643355,
+      "installed_geometry_sha256": "876fcbcfd49c9890366142d546bd6bc1873d9738751601ad8c1096bbd2e42bea",
+      "roundtrip_geometry_sha256": "da34f3f0393afa9e5312dd4a2512ee0ae0ae14fb5384faf56ada1dda17caa026",
+      "triangle_hash_equal": false,
+      "vertex_distance_mm": 127.83000946044922,
+      "matrix_error": 0.0
+    }
+  ],
+  "thermal_tag_inventory_pass": true,
+  "file_quantities": {
+    "research-adapters/mic_14x12_corner_support.stl": 2,
+    "research-adapters/optional_tray_spacer_3mm.stl": 4,
+    "research-adapters/pcb25_4square_rear_insert.stl": 1,
+    "research-adapters/pcb25_4square_retainer_1.stl": 1,
+    "research-adapters/pcb25_4square_retainer_2.stl": 1,
+    "research-adapters/research_spine_tray_access.stl": 1,
+    "research-adapters/sht-25.5x17.7.stl": 1,
+    "revision-p/acoustic_face.stl": 1,
+    "revision-p/acoustic_trim.stl": 2,
+    "revision-p/acoustic_tub.stl": 1,
+    "revision-p/electronics_strap_tray.stl": 1,
+    "revision-p/main_lid.stl": 1,
+    "revision-p/main_tub.stl": 1,
+    "revision-p/sht_mount_arm.stl": 1,
+    "revision-p/thermal_angled_hood.stl": 1,
+    "revision-p/thermal_face.stl": 1,
+    "revision-p/thermal_raised_cradle.stl": 1,
+    "revision-p/thermal_tub.stl": 1
+  }
+}

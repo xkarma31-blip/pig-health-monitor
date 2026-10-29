@@ -1,0 +1,121 @@
+[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018 [90m[offset=0, limit=100][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+[0m✗ [0mRead  failed
+[91m[1mError: [0mInvalid arguments for tool "read":
+- path: Missing key
+
+Arguments provided:
+{}
+
+Update the arguments and call the tool again.
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/check_strap_relief.py [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/summarize_verification.js [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o/FULL_ARCHIVE_REPRODUCTION.md [90m[offset=0, limit=2000][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/verify_revision.sh [90m[offset=0, limit=200][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/package_revision_o.sh [90m[offset=0, limit=200][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m→ [0mRead v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o/strap-relief-comparison.json [90m[offset=0, limit=65][0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "negative_control|repaired_o|pass|Blender|Prusa|error|Error" [90min v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o/full-archive-reproduction.log · 35 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+[0m✱ [0mGrep "negative_control|repaired_o|assemblyPairs|Traceback" [90min v3-mqtt-pocketbase/enclosure/recovery-20261018/revision-o/full-archive-reproduction.log · 3 matches[0m
+> reviewer · cx/gpt-6.1-sol-review
+## Findings — severity order
+
+Paths below are relative to `v3-mqtt-pocketbase/enclosure/recovery-20261018/`.
+
+### 1. Medium — Summary accepts contradictory or empty relief sample evidence
+**`summarize_verification.js:14`**
+
+The new gate checks the two revision labels, their aggregate `pass` values, and both current STL hashes, but **never validates either result’s `samples`**.
+
+Consequently, a report containing N `pass:false`, O `pass:true`, and correct hashes passes even if:
+- O has zero samples;
+- O contains failing samples;
+- N contains only passing samples;
+- the sampled coordinates or clearance threshold differ from the intended probe.
+
+Hash freshness establishes which file bytes the report claims to describe; it does not establish that its aggregate conclusions follow from its evidence. This matters because packaging invokes the summarizer without rerunning the probe (`package_revision_o.sh:6`).
+
+**Recommendation:** Require the exact expected sample set, finite measurements, and per-sample outcomes consistent with the threshold; recompute both aggregates rather than trusting the stored booleans.
+
+### 2. Medium — A broken negative-control probe counts as the expected N failure
+**`check_strap_relief.py:18–22,29–30`**
+
+A ray miss becomes `pass:false`, and N is considered a successful negative control whenever **any** sample fails. Therefore, missing geometry, an incorrectly positioned N mesh, or an incomplete import can satisfy the negative-control condition without demonstrating the intended obstructed escape channel.
+
+O still must pass all 18 rays, so this is not an unconditional O bypass. It does, however, undermine the stated control: the checker does not distinguish **“N was measured and obstructed”** from **“N could not be measured.”**
+
+**Recommendation:** Separate probe validity from clearance success. Require all expected N rays to hit valid geometry, then require measured clearance failures at explicitly intended control locations.
+
+### 3. Low — The clearance predicate has no lower geometry bound
+**`check_strap_relief.py:19–21`**
+
+Any hit at `z <= 1.85` passes, including a floor far below the nominal carrier. For example, displaced geometry below the intended part can produce arbitrarily large reported clearance and still satisfy this probe.
+
+This is narrower than continuous-route or physical-fit limitations: even the discrete measurement lacks a sanity check establishing that the hit is an expected carrier floor. Other export checks may catch some displacement or dimensional errors, but this checker itself does not establish that relationship.
+
+**Recommendation:** Validate the expected floor-height interval or expected carrier bounds alongside the upper clearance threshold.
+
+## What the new gate gets right
+
+- **N fails / O passes is explicitly enforced** in both the checker (`check_strap_relief.py:29–30`) and summarizer (`summarize_verification.js:14`).
+- **Both actual STL files are hashed**, rather than using one revision’s hash for both: checker line 26; summarizer line 14 independently reads both files.
+- A missing N input fails closed rather than silently skipping the control.
+
+## Package dependence
+
+The comparison intentionally depends on the preserved N STL. The packaging script includes that exact dependency at **`package_revision_o.sh:16`**, so the current package recipe addresses it.
+
+The executable environment is **not self-contained**: the runner uses host Blender, Node, and the slicing environment. The reproduction document explicitly discloses this at **`revision-o/FULL_ARCHIVE_REPRODUCTION.md:11–13`**. I would not classify that disclosed dependency as a defect.
+
+## Reproduction-document claims
+
+I found **no clear overclaim in the document as written**:
+
+- The preserved log reports N false / O true at **`revision-o/full-archive-reproduction.log:431`**.
+- It reports `pass:true`, 17 parts, and 13 assembly pairs at **lines 626–627**, consistent with document lines 6–7.
+- The document limits the claim to digital evidence, discloses host dependencies, excludes physical testing, and states later documentation additions were not another reproduction.
+
+**Qualification:** “hash-bound preserved-N/fixed-O relief comparison” at **document lines 9–10** should not be interpreted as robust negative-control validation or proof of strap usability. The bugs above limit what that successful comparison demonstrates. The log alone also does not independently authenticate the extracted archive’s identity or source provenance.
+
+## Missing regression coverage
+
+The gate needs explicit rejection tests for:
+- valid hashes with empty or contradictory samples;
+- an N ray miss versus a genuine measured obstruction;
+- missing/swapped revision inputs and stale hashes;
+- out-of-range floor hits.
+
+This was a static, read-only audit; I did not execute the scripts because they write evidence files.
