@@ -1,7 +1,16 @@
 #!/usr/bin/env python3
-"""Live MJPEG from Tapo RTSP — serves on 0.0.0.0:8091 (Pi dual-home)."""
+"""Live MJPEG from Tapo RTSP — serves on 127.0.0.1:8091 (loopback only).
+
+Loopback is deliberate. thermal-pi's /cctv route proxies this feed so the
+browser stays on the HTTPS origin, and it dials _CCTV_HOST = "127.0.0.1", so
+nothing on the AP needs a direct connection. Binding 0.0.0.0 published an
+UNAUTHENTICATED video stream to every client that could associate with SSID
+PigPulse.
+"""
 import os
+import queue as _queue
 import socket
+import struct
 import subprocess
 import threading
 import time
@@ -18,7 +27,7 @@ CANDIDATES = [h for h in (
 ) if h]
 RTSP_USER, RTSP_PASS, RTSP_PORT = "pigpulse", "capstone", 554
 PORT = 8091
-BIND = "0.0.0.0"
+BIND = "127.0.0.1"
 BOUNDARY = b"--frame\r\nContent-Type: image/jpeg\r\n\r\n"
 # clients is touched by every connection thread AND the single ffmpeg pump
 # thread, so all access goes through _clients_lock.
@@ -31,10 +40,10 @@ def clients_snapshot():
         return list(clients)
 
 
-def client_drop(conn):
+def client_drop(q):
     with _clients_lock:
-        if conn in clients:
-            clients.remove(conn)
+        if q in clients:
+            clients.remove(q)
 
 
 def rtsp_url(host: str) -> str:
@@ -54,6 +63,7 @@ def pick_host(timeout: float = 2.0) -> str | None:
 
 def read_frames():
     while True:
+        retry_delay = 5
         # Re-probe every restart cycle: the camera may still be booting, or the
         # Pi's AP may not be up yet — never give up, just wait and retry.
         host = None
@@ -113,32 +123,51 @@ def read_frames():
                     frame = buf[s : e + 2]
                     start = e + 2
                     payload = BOUNDARY + frame + b"\r\n"
-                    dead = []
-                    for c in clients_snapshot():
+                    # Non-blocking fan-out: the pump NEVER waits on a client.
+                    # A slow reader (phone wifi doze) used to block this loop
+                    # for up to its whole send timeout — dragging EVERY
+                    # stream seconds behind. Now each client has a tiny
+                    # latest-frame queue; when full, the oldest frame is
+                    # dropped so every reader catches up to the freshest.
+                    for q in clients_snapshot():
                         try:
-                            c.sendall(payload)
-                        except Exception:
-                            dead.append(c)
-                    for c in dead:
-                        client_drop(c)
-                        try:
-                            c.close()
-                        except Exception:
-                            pass
+                            q.put_nowait(payload)
+                        except _queue.Full:
+                            try:
+                                q.get_nowait()
+                            except _queue.Empty:
+                                pass
+                            try:
+                                q.put_nowait(payload)
+                            except _queue.Full:
+                                pass
                 buf = buf[start:]
             proc.kill()
+            proc.wait(timeout=5)
             if err_tail:
                 print(f"CCTV: ffmpeg for {host} exited: {err_tail[-1]}", flush=True)
+                if any("401" in line or "Unauthorized" in line for line in err_tail):
+                    retry_delay = 180  # measured camera recovery after 180s quiet
         except Exception as e:
             print(
                 f"CCTV: ffmpeg failed to start ({type(e).__name__}: {e}) "
                 f"— check that ffmpeg is installed",
                 flush=True,
             )
-        time.sleep(1)   # never spin the retry loop
+        time.sleep(retry_delay)
 
 
 def handle_client(conn):
+    """One tiny queue + one writer thread per client.
+
+    The pump enqueues frames and never blocks. The writer drains at the
+    client's own pace. SO_SNDTIMEO bounds a wedged SEND (send-only — the
+    keepalive recv below deliberately has no timeout, because an idle
+    browser never sends after the GET, and a recv timeout would evict
+    healthy clients). Result: no client can delay any other client, and a
+    slow one always catches up to the freshest frame instead of lagging.
+    """
+    q = None
     try:
         conn.sendall(
             b"HTTP/1.1 200 OK\r\n"
@@ -146,12 +175,46 @@ def handle_client(conn):
             b"Cache-Control: no-cache\r\n"
             b"Connection: close\r\n\r\n"
         )
+        conn.setsockopt(
+            socket.SOL_SOCKET, socket.SO_SNDTIMEO, struct.pack("ll", 10, 0)
+        )
+        try:
+            conn.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        except OSError:
+            pass
+        q = _queue.Queue(maxsize=2)
         with _clients_lock:
-            clients.append(conn)
-        # Hold the client open by reading. recv() returning b"" is a clean
-        # FIN — breaking there is essential, because `while conn in clients`
-        # alone spins this thread at 100% CPU until the next video frame
-        # happens to fail a sendall and evicts the socket.
+            clients.append(q)
+    except Exception:
+        try:
+            conn.close()
+        except Exception:
+            pass
+        return
+
+    def writer():
+        while True:
+            try:
+                conn.sendall(q.get(timeout=30))
+            except _queue.Empty:
+                # No frames for 30 s: exit if this client was unregistered
+                # (its reader saw the browser leave); otherwise keep waiting.
+                if q not in clients_snapshot():
+                    return
+                continue
+            except Exception:
+                break
+        client_drop(q)
+        try:
+            conn.close()
+        except Exception:
+            pass
+
+    threading.Thread(target=writer, daemon=True).start()
+    # Hold the client open by reading. recv() returning b"" is a clean
+    # FIN — breaking there is essential, because a dead-but-unread socket
+    # would otherwise linger until its next send times out.
+    try:
         while True:
             data = conn.recv(1024)
             if not data:
@@ -159,7 +222,7 @@ def handle_client(conn):
     except Exception:
         pass
     finally:
-        client_drop(conn)
+        client_drop(q)
         try:
             conn.close()
         except Exception:
@@ -181,9 +244,9 @@ def serve():
     threading.Thread(target=read_frames, daemon=True).start()
     while True:
         conn, _ = s.accept()
-        # A client that connects and never reads would otherwise hold a thread
-        # forever; drop idle ones.
-        conn.settimeout(300)
+        # No settimeout here: sends are bounded per-writer by SO_SNDTIMEO
+        # (set in handle_client), and the keepalive recv must block forever
+        # — idle browsers never send after the GET.
         threading.Thread(target=handle_client, args=(conn,), daemon=True).start()
 
 

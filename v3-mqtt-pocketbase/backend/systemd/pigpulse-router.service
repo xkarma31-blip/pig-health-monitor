@@ -1,0 +1,13 @@
+[Unit]
+Description=PigPulse router mode: forward+NAT for the barn AP (inert until an upstream exists)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/sbin/sysctl -w net.ipv4.ip_forward=1
+ExecStart=/usr/sbin/nft -f /etc/nftables-pigpulse.conf
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

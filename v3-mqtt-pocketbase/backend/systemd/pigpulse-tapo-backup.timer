@@ -1,0 +1,14 @@
+[Unit]
+Description=Hourly Tapo SD-clip offload attempt (no-op when off-network)
+
+[Timer]
+# Hourly rather than daily: the laptop is only sometimes on the PigPulse AP,
+# and each attempt that finds no camera exits in under a second. Clips are
+# skipped by filename, so frequent runs are idempotent.
+OnCalendar=hourly
+Persistent=true
+RandomizedDelaySec=300
+Unit=pigpulse-tapo-backup.service
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,19 @@
+[Unit]
+Description=PigPulse Tapo SD-clip offload (backup of camera microSD to laptop)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=solrahk
+# Camera credentials + auth mode (TAPO_USER/TAPO_PASS/TAPO_CLOUD_PASS/
+# TAPO_AUTH_MODE). The leading dash makes the file OPTIONAL: until it exists
+# the script runs as a quiet no-op (credential guard) instead of failing.
+EnvironmentFile=-/home/solrahk/.config/pigpulse/tapo.env
+# pytapo venv (x86_64 laptop build of the vendored wheels). The script
+# probes the camera first and exits 0 when unreachable, so timer runs while
+# the laptop is off the PigPulse AP are cheap and quiet.
+ExecStart=/home/solrahk/sandbox/tapo-venv/bin/python /home/solrahk/pig-health-monitor/v3-mqtt-pocketbase/backend/cctv/tapo_clip_backup.py
+
+[Install]
+WantedBy=multi-user.target
