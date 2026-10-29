@@ -89,3 +89,7 @@ docs/*.xlsx
 opencode.json.bak-*
 v3-mqtt-pocketbase/backend/thermal-pi/tls.*.bak-*
 v3-mqtt-pocketbase/firmware/esp32s3-mic-ambient/arduino/esp32s3_telemetry/build/
+
+# Enclosure research zips can exceed GitHub's 100MB file limit — host externally
+# (reference copy: ~/sandbox/pigpulse-enclosure-bigfiles/)
+v3-mqtt-pocketbase/enclosure/**/*.zip
