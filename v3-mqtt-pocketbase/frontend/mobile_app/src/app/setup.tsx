@@ -18,7 +18,7 @@ import { useTheme } from '../theme';
 import { ActionButton, SegmentedControl } from '../components/primitives';
 import { getFarmerText, FARMER_LANGS, type FarmerLang } from '../utils/farmerText';
 import { PB_SCAN_CANDIDATES, probePocketBase, saveFarmerSetup } from '../utils/setupStore';
-import { pbList } from '../utils/pocketbase';
+import { pbList, setConfiguredServer } from '../utils/pocketbase';
 import { playSound } from '../utils/sounds';
 import { haptic } from '../utils/haptics';
 
@@ -97,13 +97,17 @@ export default function SetupScreen() {
 
   const onFinish = async (skipped: boolean) => {
     press();
+    const url = skipped ? '' : normalize(address);
     await saveFarmerSetup({
-      pbUrl: skipped ? '' : normalize(address),
+      pbUrl: url,
       farmName: farmName.trim(),
       penName: penName.trim(),
       lang,
       setupDone: !skipped,
     });
+    // Apply the newly saved server immediately so the dashboard's next
+    // reconnect targets it instead of the previous box.
+    setConfiguredServer(url);
     router.replace('/tabs');
   };
 

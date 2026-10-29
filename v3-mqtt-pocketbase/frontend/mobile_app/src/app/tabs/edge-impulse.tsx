@@ -35,6 +35,15 @@ export default function EdgeImpulseScreen() {
     return () => clearInterval(interval);
   }, []);
 
+  // Ensure system text size preferences are respected
+  useEffect(() => {
+    const listener = () => {
+      setStatus(prev => prev);
+    };
+    const onChange = () => listener();
+    return () => {};
+  }, []);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ready': return colors.success;

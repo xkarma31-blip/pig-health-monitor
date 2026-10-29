@@ -46,6 +46,7 @@ export const SETUP_DEFAULTS: FarmerSetup = {
 export const PB_SCAN_CANDIDATES = [
   'http://127.0.0.1:8090',
   'http://localhost:8090',
+  'http://192.168.69.1:8090',
   'http://192.168.254.100:8090',
   'http://192.168.1.100:8090',
   'http://192.168.0.100:8090',

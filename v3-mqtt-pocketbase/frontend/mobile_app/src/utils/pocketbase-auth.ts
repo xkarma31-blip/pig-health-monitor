@@ -14,7 +14,7 @@
 import { Platform } from 'react-native';
 import { useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { PB_FALLBACK_URLS, PB_URL } from './pocketbase';
+import { resolveBaseUrls } from './pocketbase';
 
 export type PBAuthUser = {
   id: string;
@@ -74,7 +74,9 @@ export async function initPBAuth(): Promise<void> {
 }
 
 async function authRequest(endpoint: string, body: Record<string, unknown>): Promise<PBAuthUser> {
-  const urls = [PB_URL, ...PB_FALLBACK_URLS];
+  // Same resolution order as the data client: the farmer-saved setup address
+  // outranks build-time env vars. Web resolves to same-origin ('').
+  const urls = resolveBaseUrls();
   let lastErr = '';
   for (const base of urls) {
     try {
@@ -103,7 +105,17 @@ async function authRequest(endpoint: string, body: Record<string, unknown>): Pro
       return user;
     } catch (e: unknown) {
       lastErr = e instanceof Error ? String(e.message || e) : String(e);
-      if (lastErr.includes('Failed to fetch') || lastErr.includes('Network') || lastErr.includes('Load failed')) continue;
+      // A server that answered with an auth error will reject every fallback
+      // the same way — surface it. Only transport-level failures justify
+      // trying the next base.
+      if (
+        lastErr.includes('Failed to fetch') ||
+        lastErr.includes('Network') ||
+        lastErr.includes('Load failed') ||
+        lastErr.includes('Invalid URL') ||
+        lastErr.includes('timeout') ||
+        lastErr.toLowerCase().includes('timed out')
+      ) continue;
       throw e;
     }
   }

@@ -23,6 +23,10 @@ export type SensorReading = Record<string, unknown> & { id?: string; name?: stri
 function toLiveSensor(device: Record<string, unknown>): LiveSensorReading {
   const id = String(device.id || device.deviceId || 'sensor');
   const name = String(device.name || device.deviceId || id);
+  const type = String(device.type || '').toLowerCase().includes('mic')
+    || /mic|s3-mic|acoustic/i.test(name)
+    ? 'acoustic'
+    : 'thermal';
   const value =
     typeof device.lastValue === 'number' ? device.lastValue
     : typeof device.temperature === 'number' ? device.temperature
@@ -32,14 +36,18 @@ function toLiveSensor(device: Record<string, unknown>): LiveSensorReading {
   let status: SensorStatus = 'normal';
   const rawStatus = String(device.status || '');
   if (rawStatus === 'warning' || rawStatus === 'danger') status = rawStatus;
-  else if (value > Number(device.maxRange ?? 40)) status = 'danger';
+  else if (type === 'thermal' && value > Number(device.maxRange ?? 40)) {
+    // Only thermal readings use the temperature danger heuristic — an
+    // acoustic level above 40 (dB or any unit) is not a fever.
+    status = 'danger';
+  }
   return {
     id,
-    type: 'thermal',
+    type,
     label: name,
-    icon: String(device.icon || '📡'),
+    icon: String(device.icon || (type === 'acoustic' ? '🎤' : '📡')),
     value,
-    unit: String(device.unit || '°C'),
+    unit: String(device.unit || (type === 'acoustic' ? '' : '°C')),
     status,
     lastUpdated,
     minRange: Number(device.minRange ?? 37.5),

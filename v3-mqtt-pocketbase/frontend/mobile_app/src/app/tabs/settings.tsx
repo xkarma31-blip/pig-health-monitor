@@ -29,11 +29,12 @@ const DEMO_NODES: Node[] = [
 function mapSensor(id: string, s: Record<string, unknown>): Node {
   const label = String(s.label || id);
   const type = String(s.type || 'sensor');
-  const name = `${label} (${type === 'thermal' ? 'MLX90640' : type === 'sound' ? 'INMP441' : type})`;
-  const battery = s.battery != null ? `${Math.round(Number(s.battery))}%` : '—';
-  const rssi = s.rssi != null ? `${Number(s.rssi)} dBm` : '—';
+  const name = `${label} (${type === 'acoustic' || type === 'sound' ? 'INMP441 mic' : type === 'thermal' ? 'MLX90640' : type})`;
+  const battery = s.battery != null && Number.isFinite(Number(s.battery)) ? `${Math.round(Number(s.battery))}%` : '—';
+  const rssi = s.rssi != null && Number.isFinite(Number(s.rssi)) ? `${Number(s.rssi)} dBm` : '—';
   const lastUpdated = Date.parse(String(s.lastUpdated ?? ''));
-  const online = Number.isFinite(lastUpdated) ? Date.now() - lastUpdated < 5 * 60 * 1000 : true;
+  // Unknown time must read offline, not silently "online".
+  const online = Number.isFinite(lastUpdated) ? Date.now() - lastUpdated < 5 * 60 * 1000 : false;
   return {
     id,
     name,

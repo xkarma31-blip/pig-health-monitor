@@ -18,6 +18,7 @@ import {
 } from '../../components/primitives';
 import { playSound } from '../../utils/sounds';
 import { haptic } from '../../utils/haptics';
+import { telemetryTime } from '../../utils/telemetry-time';
 
 const FARM = { name: 'Sundown Farm', penCount: 5, pigCount: 110 };
 const DEMO_STATS = { healthy: 3, watch: 1, alert: 1 };
@@ -39,7 +40,9 @@ function inferStatus(frame: TelemetryFrame): Status {
 function formatTimestamp(value: string | undefined): string {
   if (!value) return '—';
   try {
-    return new Date(value).toLocaleString(undefined, {
+    const timestamp = telemetryTime(value);
+    if (!Number.isFinite(timestamp)) return 'Time unavailable';
+    return new Date(timestamp).toLocaleString(undefined, {
       month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
     });
   } catch {
@@ -59,7 +62,7 @@ type DeviceRow = {
 export default function HomeScreen() {
   const { colors, spacing, radius, typography } = useTheme();
   const router = useRouter();
-  const { user } = useAuth();
+  useAuth();
   const tier = useBreakpoint();
 
   const {
@@ -157,24 +160,51 @@ export default function HomeScreen() {
             </Text>
           </View>
           <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 4 }]}>
-            {hasLiveData
-              ? `${FARM.name} · ${devices.length} device${devices.length !== 1 ? 's' : ''} streaming`
+            {connectionStatus === 'stale'
+              ? 'Stored readings · waiting for fresh sensor data'
               : connectionStatus === 'error'
-                ? `Connection error — showing cached data`
-                : `${FARM.name} · connecting to PocketBase…`}
+                ? 'Connection unavailable · showing last known readings'
+                : hasLiveData
+                  ? `${FARM.name} · ${devices.length} device${devices.length !== 1 ? 's' : ''} streaming`
+                  : `${FARM.name} · connecting to PocketBase…`}
           </Text>
         </View>
         <View
           style={[
             styles.pill,
             {
-              backgroundColor: isOnline ? colors.healthySoft : colors.alertSoft,
+              backgroundColor:
+                connectionStatus === 'stale'
+                  ? colors.watchSoft
+                  : isOnline
+                    ? colors.healthySoft
+                    : colors.alertSoft,
               borderRadius: radius.pill,
             },
           ]}
         >
-          <Text style={[typography.label, { color: isOnline ? colors.healthy : colors.alert }]}>
-            {connectionStatus === 'connected' ? 'Live' : connectionStatus === 'connecting' ? 'Connecting' : connectionStatus === 'error' ? 'Error' : 'Offline'}
+          <Text
+            style={[
+              typography.label,
+              {
+                color:
+                  connectionStatus === 'stale'
+                    ? colors.watch
+                    : isOnline
+                      ? colors.healthy
+                      : colors.alert,
+              },
+            ]}
+          >
+            {connectionStatus === 'connected'
+              ? 'Live'
+              : connectionStatus === 'connecting'
+                ? 'Connecting'
+                : connectionStatus === 'stale'
+                  ? 'Stored data'
+                  : connectionStatus === 'error'
+                    ? 'Error'
+                    : 'Offline'}
           </Text>
         </View>
       </View>
