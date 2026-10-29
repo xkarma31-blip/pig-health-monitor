@@ -78,7 +78,7 @@ npm run deploy:landing  # Vercel landing page
 
 | What | How |
 |---|---|
-| Landing page | `~/bin/pigpulse-autodeploy.sh` (auto) or `scripts/deploy-landing.sh` |
+| Landing page | `~/.local/bin/pigpulse-autodeploy.sh` (auto) or `scripts/deploy-landing.sh` |
 | Expo app | `cd v3-mqtt-pocketbase/frontend/mobile_app && npx vercel --prod` |
 
 `scripts/deploy.sh` is **DISABLED** — it deployed the stale app over the live
@@ -90,3 +90,19 @@ Never claim hardware is "confirmed" without a device readout (`cat /proc/*`,
 `free -h`, `i2cdetect`, `arecord -l`, `ss -lntp`, …). Spec sheets and web
 sources are not hardware grounding. Zeros on a capture line mean nothing is
 driving it — not that the room is quiet.
+
+## Firmware change discipline (KNOWN-GOOD record)
+
+**Before flashing the ESP32-S3, archive the current working state and record it.**
+The register lives at
+`v3-mqtt-pocketbase/firmware/esp32s3-mic-ambient/docs/KNOWN_GOOD.md`.
+
+1. Copy the working `.bin` + source into
+   `firmware/esp32s3-mic-ambient/docs/known-good-YYYYMMDD/` and add a row with
+   its sha256 to `KNOWN_GOOD.md` **before** the next flash.
+2. One change at a time; each with a measured before/after reading.
+3. The board must never be left on a diagnostic build without a note in that file.
+4. A "known-good" entry needs measured evidence — a distinct-value/RMS reading
+   from `/esp/stream` or the USB serial — not merely a successful compile.
+
+Revert commands and the archived binary are in `KNOWN_GOOD.md`.

@@ -53,6 +53,10 @@ builds/
 # Private TLS key — NEVER commit. Regenerate on the Pi with
 #   bash ~/thermal-pi/scripts/gen-selfsigned.sh   (see backend/scripts/)
 **/tls.key
+# Private keys must never be committable, including timestamped backups made by
+# scripts/gen-selfsigned.sh. `**/tls.key` alone does not cover tls.key.bak-*.
+**/tls.key*
+**/tls.key.bak*
 *.pem
 **/pb_data/
 *.db
@@ -79,3 +83,9 @@ docs/*.xlsx
 # === Tool scratch state (2026-09-30 cleanup) ===
 .superpowers/
 .deploy-stage/
+
+# === Session-state + backup noise (2026-10-29 commit sweep) ===
+.opencode/
+opencode.json.bak-*
+v3-mqtt-pocketbase/backend/thermal-pi/tls.*.bak-*
+v3-mqtt-pocketbase/firmware/esp32s3-mic-ambient/arduino/esp32s3_telemetry/build/

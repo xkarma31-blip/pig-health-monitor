@@ -4,5 +4,25 @@
     "/home/solrahk/.hermes/SOUL.md",
     "/home/solrahk/.gemini/antigravity/scratch/shikigami_memory/skills/opencode_top5_workflow/SKILL.md",
     "Project: Pig Health Monitor capstone at this repository root."
-  ]
+  ],
+  "mcp": {
+    "servers": {
+      "lsp": {
+        "type": "local",
+        "command": [
+          "npx",
+          "-y",
+          "cclsp@0.7.0"
+        ],
+        "environment": {
+          "CCLSP_CONFIG_PATH": "/home/solrahk/.config/opencode/cclsp-capstone.json"
+        },
+        "timeout": {
+          "startup": 60000,
+          "catalog": 60000,
+          "execution": 120000
+        }
+      }
+    }
+  }
 }
