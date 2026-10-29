@@ -1,10 +1,10 @@
 # 📊 PigPulse — Daily Update
 
-**September 28, 2026 — 06:02 AM**
+**October 29, 2026 — 07:01 AM**
 
 ---
 
-**Total:** 8,111 words | 57,946 chars
+**Total:** 7,593 words | 51,610 chars
 
 ## 🔄 Changes Since Last Run
 
@@ -69,12 +69,11 @@ Final Defense,,,,,,,,,,,,,,,,,,,,,,
 
 🔗 **Live:** [https://docs.google.com/document/d/1gIoC2biR0HfDfn-PDwc7xcxRnLEFokpEpp2YSPoy-ug/edit](https://docs.google.com/document/d/1gIoC2biR0HfDfn-PDwc7xcxRnLEFokpEpp2YSPoy-ug/edit)
 
-📊 **Stats:** 1,730 words | 10,332 chars
+📊 **Stats:** 1,730 words | 10,341 chars
 
 ### Content:
 
-﻿Tab 1
-PANGUTANA / CONCERNS: 
+﻿PANGUTANA / CONCERNS: 
 
 
 1. Saon pagkaaccurate og basa sa thermal cam sa fever ? basin nya dala ra sa panahon ang kainit?
@@ -103,21 +102,21 @@ PANGUTANA / CONCERNS:
 27.   - You still need a **boost converter** (to 5V) + protection circuit.
 28.   - Not ideal as the main charger for continuous Pi use.
 29. 30. ### 3. Raspberry Pi Longevity & Built-in Battery
-31. - Pi itself has **no built-in battery or
+31. - Pi itself has **no built-in battery or charg
 
-... *(showing first 3,000 of 10,332 chars)*
+... *(showing first 3,000 of 10,341 chars)*
 
 ### 🔄 Changes:
+  + * Order Wifi Adapter
   + * buhat ug criteria for purposive sampling
   + * butang ug qr sa raspi for easy access of wifi of users
   + * deploy sa cctv para kuha data na ifeed model
   + * esp ug mic nya iconnect sa raspi, cam, ug cctv
-  + * extract ug process sa mic
   - ### Content:
   - ### 🔄 Changes:
-  - + 100. - Graphics/video card (via PCIe) improves parallel compute and some vision workloads, but adds cost, power, and c
-  - + 101. 102. ### 13. Final Feasibility Check
-  - + 103. Your plan is **possible** on Raspberry Pi 5, especially with AI HAT.
+  - + * Order Wifi Adapter
+  - + * buhat ug criteria for purposive sampling
+  - + * butang ug qr sa raspi for easy access of wifi of users
 
 ---
 
@@ -150,67 +149,85 @@ Sugod na ug buhat sa sa protoype if ma abot na ang parts	FALSE		Mamalit sa mga n
 
 🔗 **Live:** [https://1drv.ms/w/c/9272348ac87b5645/IQCEtQsZDLghS7v1TAh9S8D2AWTQ6GaFFxaCBOuRiKOsEpw?e=mBIrJ7](https://1drv.ms/w/c/9272348ac87b5645/IQCEtQsZDLghS7v1TAh9S8D2AWTQ6GaFFxaCBOuRiKOsEpw?e=mBIrJ7)
 
-📊 **Stats:** 4,034 words | 31,356 chars
+📊 **Stats:** 3,516 words | 25,011 chars
 
 ### 📋 Document Structure:
-- **2**
-- **3**
+- **Keywords: TinyML, swine health monitoring, sound classification, thermal imaging, edge computing, smart farming.**
 - **4**
+- **This study developed PigPulse, a multimodal TinyML-based safeguard system for open-air swine farming that detects irregularities in pig vocalization patterns and pen-level fever using thermal imaging. It was designed to monitor pig health in real time using sound sensing an MLX 90640 thermal camera, (i suwat dayon diri kung unsay gi gamit, ras pi ba, esp, etc.) -based processing, and a companion mobile/web application for farmer alerts. The system was tested (asa na deploy and pila ka adlaw) to assess vocalization irregularitiy detection, fever detection accuracy, system latency, and overall reliability. The results showed that PigPulse successfully detected (unsay results nga nakuha pag deployment)  and identified elevated body temperature at the pig pen. (Diri kay mag hisgot siya about sa accuracy and precision sa sound detection). (Diri kay ang fever detection accuracy and thermal results). The system achieved (latency figure) latency for real-time alerts. However, (testing/deployment) revealed limitations such as (limits sa system). Overall, PigPulse proved to be functional prototype for early illness detection in open-air swine farming, though improvements in (accuracy and individual pig tracking noise filtering) is still needed.**
+- **4**
+- **This study developed PigPulse, a multimodal TinyML-based safeguard system for open-air swine farming that detects irregularities in pig vocalization patterns and pen-level fever using thermal imaging. It was designed to monitor pig health in real time using sound sensing an MLX 90640 thermal camera, (i suwat dayon diri kung unsay gi gamit, ras pi ba, esp, etc.) -based processing, and a companion mobile/web application for farmer alerts. The system was tested (asa na deploy and pila ka adlaw) to assess vocalization irregularitiy detection, fever detection accuracy, system latency, and overall reliability. The results showed that PigPulse successfully detected (unsay results nga nakuha pag deployment)  and identified elevated body temperature at the pig pen. (Diri kay mag hisgot siya about sa accuracy and precision sa sound detection). (Diri kay ang fever detection accuracy and thermal results). The system achieved (latency figure) latency for real-time alerts. However, (testing/deployment) revealed limitations such as (limits sa system). Overall, PigPulse proved to be functional prototype for early illness detection in open-air swine farming, though improvements in (accuracy and individual pig tracking noise filtering) is still needed.**
+- **4**
+- **The researchers would like to express their deepest gratitude to the Almighty Father for His constant guidance, strength, and blessing throughout the conduct of this study. His wisdom gave researchers clarity, courage, and perseverance in overcoming the challenges encountered during the research process. In moments of uncertainty, His presence provided direction and hope, making the completion if this study possible. To him be all the glory, honor, and praise.**
+- **The researchers would like to express their deepest gratitude to the Almighty Father for His constant guidance, strength, and blessing throughout the conduct of this study. His wisdom gave researchers clarity, courage, and perseverance in overcoming the challenges encountered during the research process. In moments of uncertainty, His presence provided direction and hope, making the completion if this study possible. To him be all the glory, honor, and praise.**
 - **iii**
 - **v**
 - **vi**
 - **1: The Problem and Its Setting**
-- **1**
-- **2: Review of Related Literatures**
-- **3: Methodology**
-- **1**
-- **Swine farming plays a vital role in Philippine agriculture, contributing to household income, food security, and local economic activity. For many small-scale producers, swine farming represents an accessible source of income that can support the household needs. While a portion of the industry consists of large-scale commercial operations, a substantial majority comes from small backyard production systems. According to Philippine Statistics Authority's Swine Situation Report, backyard or small farms accounted for 67.5% of the country's total swine inventory as of the quarter of 2023, reaffirming that open-air, low-technology operations continue to dominate the local how industry despite of the growth of commercial farms. In local communities, many households raise pigs to generate and earn income. This shows that swine farming continuous to play an important role in strengthening household income and sustaining rural livelihoods in the Philippines.**
 
-### 📝 Chapter Progress (latest content from each):
+### Content:
 
-**CHAPTER 1**
->...(earlier content)...
+3. What is the overall performance of PigPulse as a swine health monitoring system in terms of: 
 
-regularities across a group of pigs without isolating or restraining individual pigs.  
+3.1 monitoring reliability; 
 
-
-PigPulse – This refers to the multimodal, TinyML based safeguard system developed in this study to detect sound irregularities and fever in pigs. In this study, it refers to the complete prototype system, including its hardware, software, and mobile or web-based alert application. 
+3.2 combined detection performance for coughing and fever; and 
 
-
-Sound Classification – This refers to the process of identifying and labeling different types of sounds using a trained model. In this study, it refers to the ESP32 based model used to detect irregular vocalization. 
+3.3 practical applicability for smallholder swine farm management? 
 
-
-Thermal Imaging – This refers to a method of capturing temperature information from a surface using infrared sensing rather than direct contact. In this study, it refers to the MLX 90640 thermal camera used to detect pig body temperature at the pen level.  
-
-
-TinyML – This refers to the practice of running machine learning models on small, lower power embedded devices. In this study, it refers to the model 
-
-18
-
-deployed on the ESP32 and Raspberry Pi to process sound and thermal data directly on the hardware. 
-
-
-Vocalization Irregularity – This refers to a sound pattern from an animal that differs from its normal or expected vocal behavior. In this study, it refers to abnormal pig sounds detected by PigPulse as a possible early sign of distress or illness.  
-
-
-Latency - refers to the amount of time, including delays, for data to travel from one given point to another. 
-
-
-
-**CHAPTER 2**
->...(earlier content)...
-
-mitted and determined despite difficulties encountered along the way. 
+By addressing these questions, the study aims to design and evaluate a practical and accessible system for real-time, non-intrusive detection of coughing and fever in open-air swine farming. 
 
  
 
  
 
  
+
+ 
+
+ 
+
+ 
+
+Objective of the Study 
+
+The purpose of this study is to develop PigPulse, a prototype safeguard system that can provide real time health monitoring for pigs in open air, group housed environments through the integration of cough detection and thermal imaging-based fever detection. The study aims to explore the potential of a low cost, non-intrusive tool for detecting these early physical signs of illness in pigs, and for notifying farmers so they can act before problems become worse.  
+
+Specifically, this study aims to: 
+
+12
+
+3.1 monitoring reliability; 
+
+3.2 combined detection performance for coughing and fever; and 
+
+3.3 practical applicability for smallholder swine farm management? 
+
+By addressing these questions, the study aims to design and evaluate a practical and accessible system for real-time, non-intrusive detection of coughing and fever in open-air swine farming. 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+ 
+
+Objective of the Study 
+
+The purpose of this study is to develop PigPulse, a prototype safeguard system that can provide real time health monitoring for pigs in open air, group housed environments through the integration of cough detection and thermal imaging-based fever detection. The study aims to explore the potential of a low cost, non-intrusive tool for detecting these early physical signs of illness in pigs, and for notifying farmers so they can act before problems become worse.  
+
+Specifically, this study aims to: 
+
+12
+
+9
 
 ABSTRACT 
-
-3
 
 Keywords: TinyML, swine health monitoring, sound classification, thermal imaging, edge computing, smart farming. 
 
@@ -222,397 +239,11 @@ Keywords: TinyML, swine health monitoring, sound classification, thermal imaging
 
  
 
- 
-
 TABLE OF CONTENTS 
-
-                    
 
 4
 
-APPROVAL SHEET 
-                                                               ii 
-
-ACKNOWLEDGEMENT 
-                                                              iii 
-
-ABSTRACT 
-                                                               v 
-
-TABLE OF CONTENTS                                                                                            vi 
-
-LIST OF TABLES                                                                                                        ix 
-
-LIST OF FIGURES                                                                                        x 
-
- 
-
-Chapter 1: The Problem and Its Setting 
-
-  
-
- 
-
-Introduction 
-
- 
-
-1 
-
-  
-
- 
-
-Statement of the Problem 
-
- 
-
-1 
-
-  
-
- 
-
-Objectives of the Study 
-
- 
-
-7 
-
-  
-
- 
-
-Significance of the Study 
-
- 
-
-43 
-
-  
-
- 
-
-Scope of the Study 
-
- 
-
-43 
-
-  
-
- 
-
-Definition of Terms 
-
- 
-
-44 
-
-Chapter 2: Review of Related Literatures 
-
- 
-
- 
-
-Related Literature 
-
- 
-
-1 
-
-5
-
-Research Study 
-
- 
-
- 
-
-System Overview 
-
- 
-
-1 
-
- 
-
- 
-
-Setting and Participants 
-
- 
-
-1 
-
-  
-
- 
-
-Description of Experiments 
-
- 
-
-7 
-
-  
-
- 
-
- 
-
- 
-
-43 
-
-  
-
- 
-
- 
-
- 
-
-43 
-
-  
-
- 
-
- 
-
- 
-
-44 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
-6
-
-LIST OF TABLES 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
-7
-
-### Content:
-
-for Open-Air Swine Farming 
-
-A Capstone project in  
-
-CPE-4425 
-
-Presented to the Faculty of Computer Engineering Department 
-
-Cebu Technological Campus – Sabang Danao City, Philippines  
-
-In partial Fulfillment  
-
-of the Requirements for the Degree 
-
-BACHELOR OF SCIENCE IN COMPUTER ENGINEERING 
-
-By 
-
-Capuno, Kharl Angelo A. 
-
-Bejoc, Rainier R. 
-
-Gomez, AG M. 
-
- 
-
- 
-
-CHONA R. DAGATAN, MSME, MEng’gEd-CPE 
-
-ADVISER 
-
-AUGUST 2026 
-
-APPROVAL SHEET 
-
-1
-
-This thesis is entitled “Multimodal TinyML-Based Sound and Fever Detection Safeguard for Open-Air Swine Farming” prepared and submitted by Kharl Angelo A. Capuno, Rainier R. Bejoc, and AG M. Gomez in partial fulfillment of the requirements in Capstone Design Project for the Degree of Bachelor of Science in Computer Engineering has been examined and is recommended for approval and acceptance.  
-
-CHONA R. DAGATAN, MSME, MEng’gEd-CpE 
-
-Thesis Adviser 
-
- 
-
- 
-
-HENRY C. DANLAG, CoE  
- 
- 
- 
-JESTONI P. TAN, MSEE 
-
-Panel Member  
- 
- 
- 
-       
-       
-Panel Member 
-
- 
-
- 
-
- 
-
-HANNYLYN CABULINAS, CPE 
- 
- 
- 
-   JOEL JR. YPIL, CPE 
-
-Panel Member 
-     
- 
- 
- 
- 
- 
-Panel Member 
-
- 
-
- 
-
-CHONA R. DAGATAN, MSME, MEng’gEd-CPE 
-
-Panel Member 
-
- 
-
-APPROVED by tribunal at the Oral Examination with the grade of _______. 
-
-Date: __________________ 
-
-CHONA R. DAGATAN, MSME, MEng’gEd-CPE 
-
-Chairman, BS Computer Engineering 
-
- 
-
-TOMASHITA P. ARENAS, MEng’Ed-CPE 
-
-Dean, College of Engineering 
-
-ACKNOWLEDGEMENT 
-
-2
-
-Multimodal TinyML-Based Sound and Fever Detection Safeguard 
-
-for Open-Air Swine Farming 
-
-A Capstone project in  
-
-CPE-4425 
-
-Presented to the Faculty of Computer Engineering Department 
-
-Cebu Technological Campus – Sabang Danao City, Philippines  
-
-In partial Fulfillment  
-
-of the Requirements for the Degree 
-
-By 
-
-Capuno, Kharl Angelo A. 
-
-Bejoc, Rainier R. 
-
-Gomez, AG M. 
-
- 
-
- 
-
-CHONA R. DAGATAN, MSME, MEng’gEd-CPE 
-
-ADVISER 
-
-AUGUST 2026 
-
-APPROVAL SHEET 
-
-1
-
-The researchers would like to express their deepest gratitude to the Almighty Father for His constant guidance, strength, and blessing throughout the conduct of this study. His wisdom gave researchers clarity, courage, and perseverance in overcoming the challenges encountered during the research process. In moments of uncertainty, His presence provided direction and hope, making the completion if this study possible. To him be all the glory, honor, and praise. 
-
-The researchers also sincerely extend heartfelt appreciation to Engr. Chona Dagatan, their research adviser, for her invaluable guidance, unwavering support, and insightful recommendations throughout the development of this study. Her expertise, encouragement, and constructive feedback greatly contributed to the refinement and successful completion of this research. Likewise, the researchers express sincere gratitude to Engr. Henry Danlag for effectively integrating the Embedded Systems subject with the research topic, which enriched the study through the application of both theoretical and knowledge and practical skills. 
-
-The researchers would also like to acknowledge the unwavering support of their families, friends, and relatives, whose encouragement, patience and understanding served as constant source of motivation throughout this undertaking. Their moral support helped the researchers remain committed and determined despite difficulties encountered along the way. 
-
- 
-
- 
-
- 
-
 ABSTRACT 
-
-3
 
 This study developed PigPulse, a multimodal TinyML-based safeguard system for open-air swine farming that detects irregularities in pig vocalization patterns and pen-level fever using thermal imaging. It was designed to monitor pig health in real time using sound sensing an MLX 90640 thermal camera, (i suwat dayon diri kung unsay gi gamit, ras pi ba, esp, etc.) -based processing, and a companion mobile/web application for farmer alerts. The system was tested (asa na deploy and pila ka adlaw) to assess vocalization irregularitiy detection, fever detection accuracy, system latency, and overall reliability. The results showed that PigPulse successfully detected (unsay results nga nakuha pag deployment)  and identified elevated body temperature at the pig pen. (Diri kay mag hisgot siya about sa accuracy and precision sa sound detection). (Diri kay ang fever detection accuracy and thermal results). The system achieved (latency figure) latency for real-time alerts. However, (testing/deployment) revealed limitations such as (limits sa system). Overall, PigPulse proved to be functional prototype for early illness detection in open-air swine farming, though improvements in (accuracy and individual pig tracking noise filtering) is still needed.  
 
@@ -626,211 +257,35 @@ Keywords: TinyML, swine health monitoring, sound classification, thermal imaging
 
  
 
+TABLE OF CONTENTS 
+
+4
+
+ABSTRACT 
+
+This study developed PigPulse, a multimodal TinyML-based safeguard system for open-air swine farming that detects irregularities in pig vocalization patterns and pen-level fever using thermal imaging. It was designed to monitor pig health in real time using sound sensing an MLX 90640 thermal camera, (i suwat dayon diri kung unsay gi gamit, ras pi ba, esp, etc.) -based processing, and a companion mobile/web application for farmer alerts. The system was tested (asa na deploy and pila ka adlaw) to assess vocalization irregularitiy detection, fever detection accuracy, system latency, and overall reliability. The results showed that PigPulse successfully detected (unsay results nga nakuha pag deployment)  and identified elevated body temperature at the pig pen. (Diri kay mag hisgot siya about sa accuracy and precision sa sound detection). (Diri kay ang fever detection accuracy and thermal results). The system achieved (latency figure) latency for real-time alerts. However, (testing/deployment) revealed limitations such as (limits sa system). Overall, PigPulse proved to be functional prototype for early illness detection in open-air swine farming, though improvements in (accuracy and individual pig tracking noise filtering) is still needed.  
+
+Keywords: TinyML, swine health monitoring, sound classification, thermal imaging, edge computing, smart farming. 
+
+ 
+
+ 
+
+ 
+
  
 
 TABLE OF CONTENTS 
 
-                    
-
 4
 
-COVER PAGE             
-                       i 
+ACKNOWLEDGEMENT 
 
-APPROVAL SHEET 
-                                                               ii 
+The researchers would like to express their deepest gratitude to the Almighty Father for His constant guidance, strength, and blessing throughout the conduct of this study. His wisdom gave researchers clarity, courage, and perseverance in overcoming the challenges encountered during the research process. In moments of uncertainty, His presence provided direction and hope, making the completion if this study possible. To him be all the glory, honor, and praise. 
 
-ACKNOWLEDGEMENT 
-                                                              iii 
+The researchers also sincerely extend heartfelt appreciation to Engr. Chona Dagatan, their research adviser, for her invaluable guidance, unwavering support, and insightful recommendations throughout the development of this study. Her expertise, encouragement, and constructive feedback greatly contributed to the refinement and successful completion of this research. Likewise, the researchers express sincere gratitude to Engr. Henry Danlag for effectively integrating the Embedded Systems subject with the research topic, which enriched the study through the application of both theoretical and knowledge and practical skills. 
 
-ABSTRACT 
-                                                               v 
-
-TABLE OF CONTENTS                                                                                            vi 
-
-LIST OF TABLES                                                                                                        ix 
-
-LIST OF FIGURES                                                                                        x 
-
- 
-
-Chapter 1: The Problem and Its Setting 
-
-  
-
-	
-
-Introduction 
-
-	
-
-1 
-
-
-
-
-  
-
-	
-
-Statement of the Problem 
-
-	
-
-1 
-
-
-
-
-  
-
-	
-
-Objectives of the Study 
-
-	
-
-7 
-
-
-
-
-  
-
-	
-
-Significance of the Study 
-
-	
-
-43 
-
-
-
-
-  
-
-	
-
-Scope of the Study 
-
-	
-
-43 
-
-
-
-
-  
-
-	
-
-Definition of Terms 
-
-	
-
-44 
-
-
-
-
-Chapter 2: Review of Related Literatures 
-
- 
-
-	
-
-Related Literature 
-
-	
-
-1 
-
-
-
-5
-
-Chapter 3: Methodology 
-
-  Research Study 
-
- 
-
-	
-
-System Overview 
-
-	
-
-1 
-
-
-
-
- 
-
-	
-
-Setting and Participants 
-
-	
-
-1 
-
-
-
-
-  
-
-	
-
-Description of Experiments 
-
-	
-
-7 
-
-
-
-
-  
-
-	
-
- 
-
-	
-
-43 
-
-
-
-
-  
-
-	
-
- 
-
-	
-
-43 
-
-
-
-
-  
-
-	
-
- 
-
-	
-
-44 
-
-
-
+The researchers would also like to acknowledge the unwavering support of their families, friends, and relatives, whose encouragement, patience and understanding served as constant source of motivation throughout this undertaking. Their moral support helped the researchers remain committed and determined despite difficulties encountered along the way. 
 
  
 
@@ -838,7 +293,15 @@ Description of Experiments 
 
  
 
- 
+3
+
+ACKNOWLEDGEMENT 
+
+The researchers would like to express their deepest gratitude to the Almighty Father for His constant guidance, strength, and blessing throughout the conduct of this study. His wisdom gave researchers clarity, courage, and perseverance in overcoming the challenges encountered during the research process. In moments of uncertainty, His presence provided direction and hope, making the completion if this study possible. To him be all the glory, honor, and praise. 
+
+The researchers also sincerely extend heartfelt appreciation to Engr. Chona Dagatan, their research adviser, for her invaluable guidance, unwavering support, and insightful recommendations throughout the development of this study. Her expertise, encouragement, and constructive feedback greatly contributed to the refinement and successful completion of this research. Likewise, the researchers express sincere gratitude to Engr. Henry Danlag for effectively integrating the Embedded Systems subject with the research topic, which enriched the study through the application of both theoretical and knowledge and practical skills. 
+
+The researchers would also like to acknowledge the unwavering support of their families, friends, and relatives, whose encouragement, patience and understanding served as constant source of motivation throughout this undertaking. Their moral support helped the researchers remain committed and determined despite difficulties encountered along the way. 
 
  
 
@@ -846,131 +309,31 @@ Description of Experiments 
 
  
 
- 
+3
 
- 
+APPROVAL SHEET 
 
- 
+This thesis is entitled “Multimodal TinyML-Based Sound and Fever Detection Safeguard for Open-Air S
 
- 
-
- 
-
-6
-
-LIST OF TABLES 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
-7
-
-LIST OF FIGURES 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
-8
-
-CHAPTER 1 
-
-Introduction 
-
-Swine farming plays a vital role in Philippine agriculture, contributing to household income, food security, and local economic activity. For many small-scale producers, swine farming represents an accessible source of income that can support the household needs. While a portion of the industry consists of large-scale commercial operations, a substantial majority comes from small backyard production systems. According to Philippine Statistics Authority's Swine Situation Report, backyard or small farms accounted for 67.5% of the country's total swine inventory as of the quarter of 2023, reaffirming that open-air, low-technology operations continue to dominate the local how industry despite of the growth of commercial farms. In local communities, many households raise pigs to generate and earn income. This shows that swine farming continuous to play an important role in strengthening household income and sustaining rural livelihoods in the Philippines. 
-
-Despite their importance, open-air and backyard swine farms face persistent challenges in disease surveillance and biosecurity. Backyard operations have been identified as high-risk, low-biosecurity sources of infection that are difficult to monitor and control compared to enclosed commercial farms. In the Philippine setting specifically, a large share of backyard farms remain informal and resource-limited, with weak compliance to biosecurity protocols, a gap that continues to be cited as a major 
-
-9
-
-obstacle to effective African Swine Fever containment and general disease management at the smallholder level (Portugaliza, 2025). 
-
- 
-
-Monitoring pig health and welfare in open-air conditions also presents accuracy and practicality challe
-
-... *(showing first 8,000 of 31,356 chars — continues through later chapters)*
+... *(showing first 8,000 of 25,011 chars — continues through later chapters)*
 
 ### 🔄 Changes:
-  + 1. How effective is PigPulse in providing real time health monitoring of pigs in an open-air pen in terms of:
-  + 1.1 detection of vocalization irregularities;
-  + 1.2 pen level fever detection using thermal imaging; and
+  + 1. How effective is PigPulse in providing real-time health monitoring of pigs in an open-air pen in terms of:
+  + 1.1 detection of pig coughing;
+  + 1.2 pen-level fever detection using thermal imaging; and
   + 1.3 accuracy of readings and system latency?
-  + 2. How well does the TinyML component of PigPulse perform in terms of:
+  + 2. How well does the machine learning component of PigPulse perform in terms of:
   - ### Content:
   - ### 📋 Document Structure:
-  - ### 📝 Chapter Progress (latest content from each):
   - ### 🔄 Changes:
-  - **CHAPTER 1**
+  - + 1. How effective is PigPulse in providing real-time health monitoring of pigs in an open-air pen in terms of:
+  - + 1.1 detection of pig coughing;
 
 ---
 
 ## 📄 Concept Paper
 
-📄 **Path:** `/home/solrahk/pigpulse/docs/research/pig_health_monitor_concept_paper.md`
+📄 **Path:** `/home/solrahk/pig-health-monitor/docs/pig_health_monitor_concept_paper.md`
 
 📊 **Stats:** 863 words | 5,796 chars
 
@@ -1026,14 +389,14 @@ We don't just detect the cough; we detect the **Cause**.
   + ## 4. The "Defense Dojo" (Common Panel Questions)
   + ### The Causality Link (The "Unique Factor")
   - ### Content:
-  - 📄 **Path:** `/home/solrahk/pigpulse/docs/research/pig_health_monitor_concept_paper.md`
+  - 📄 **Path:** `/home/solrahk/pig-health-monitor/docs/pig_health_monitor_concept_paper.md`
   - 📊 **Stats:** 863 words | 5,796 chars
 
 ---
 
 ## 📄 Holistic Briefing
 
-📄 **Path:** `/home/solrahk/pigpulse/docs/research/capstone_holistic_briefing.md`
+📄 **Path:** `/home/solrahk/pig-health-monitor/docs/capstone_holistic_briefing.md`
 
 📊 **Stats:** 723 words | 5,160 chars
 
@@ -1106,14 +469,14 @@ Firebase Realtime Database is structured for **Account-Based Isolation (Grafting
   + ## 🚀 7. FINAL ROADMAP: TOWARD DEFENSE & PUBLICATION
   + ## 🛡️ 4. THE SOVEREIGN HYBRID INFERENCE PROTOCOL (SHIP)
   - ### Content:
-  - 📄 **Path:** `/home/solrahk/pigpulse/docs/research/capstone_holistic_briefing.md`
+  - 📄 **Path:** `/home/solrahk/pig-health-monitor/docs/capstone_holistic_briefing.md`
   - 📊 **Stats:** 723 words | 5,160 chars
 
 ---
 
 ## 📄 Decision Matrix
 
-📄 **Path:** `/home/solrahk/pigpulse/docs/reference/archive/capstone_decision_matrix.md`
+📄 **Path:** `/home/solrahk/pig-health-monitor/docs/archive/capstone_decision_matrix.md`
 
 📊 **Stats:** 541 words | 3,160 chars
 
@@ -1183,7 +546,7 @@ Firebase Realtime Database is structured for **Account-Based Isolation (Grafting
   + ### 🏆 Recommendation: **Pig Health Monitor (Swine Monitor)**
   + ### 🥇 Option C: AGRI-RADAR (The "Safe Bet")
   - ### Content:
-  - 📄 **Path:** `/home/solrahk/pigpulse/docs/reference/archive/capstone_decision_matrix.md`
+  - 📄 **Path:** `/home/solrahk/pig-health-monitor/docs/archive/capstone_decision_matrix.md`
   - 📊 **Stats:** 541 words | 3,160 chars
 
 ---
@@ -1193,5 +556,5 @@ Firebase Realtime Database is structured for **Account-Based Isolation (Grafting
 1. **Gantt Chart**: 99 words — project timeline active
 2. **Checklist**: 1730 words, 3 concerns noted
 3. **Capstone Status**: 8 incomplete, 0 complete
-4. **OneDrive Manuscript**: 4034 words — ⚠️ ABSTRACT STILL HAS PLACEHOLDERS
+4. **OneDrive Manuscript**: 3516 words — ⚠️ ABSTRACT STILL HAS PLACEHOLDERS
 5. **Local Files**: 3/3 fetched successfully
