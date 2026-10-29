@@ -1,0 +1,172 @@
+- SCL_PIN stuck low
+[i2c] ??? 0x7C TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x7D TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x7E TIMEOUT - SCL_PIN stuck low
+[state] after scan     SDA_PIN=0 SCL_PIN=0
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0x2b (SPI_FAST_FLASH_BOOT)
+Saved PC:0x42020fca
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fce3808,len:0x4bc
+load:0x403c9700,len:0xbd8
+load:0x403cc700,len:0x2a0c
+entry 0x403c98d0
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0x2b (SPI_FAST_FLASH_BOOT)
+Saved PC:0x42020fca
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fce3808,len:0x4bc
+load:0x403c9700,len:0xbd8
+load:0x403cc700,len:0x2a0c
+entry 0x403c98d0
+
+=== SHT/I2C HUNT v2 (bit-banged, timeouts) ===
+[safety] mic GPIO4 untouched, reads = 1
+[safety] mic GPIO5 untouched, reads = 1
+[safety] mic GPIO6 untouched, reads = 1
+[state] idle, no pulls SDA_PIN=1 SCL_PIN=1
+[state] with int pullups SDA_PIN=1 SCL_PIN=1
+[recover] 9 clock pulses + STOP ...
+[state] after recover  SDA_PIN=0 SCL_PIN=0
+[scan] bit-banged 1..126 on SDA_PIN=8 SCL_PIN=9
+[i2c] ??? 0x01 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x02 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x03 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x04 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x05 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x06 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x07 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x08 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x09 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x0A TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x0B TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x0C TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x0D TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x0E TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x0F TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x10 TIMEOUT - SCL_PIN stuck low
+[scan] progress 16/126  ack=0 nack=0 timeout=16
+[i2c] ??? 0x11 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x12 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x13 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x14 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x15 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x16 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x17 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x18 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x19 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x1A TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x1B TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x1C TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x1D TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x1E TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x1F TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x20 TIMEOUT - SCL_PIN stuck low
+[scan] progress 32/126  ack=0 nack=0 timeout=32
+[i2c] ??? 0x21 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x22 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x23 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x24 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x25 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x26 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x27 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x28 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x29 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x2A TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x2B TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x2C TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x2D TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x2E TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x2F TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x30 TIMEOUT - SCL_PIN stuck low
+[scan] progress 48/126  ack=0 nack=0 timeout=48
+[i2c] ??? 0x31 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x32 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x33 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x34 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x35 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x36 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x37 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x38 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x39 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x3A TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x3B TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x3C TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x3D TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x3E TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x3F TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x40 TIMEOUT - SCL_PIN stuck low
+[scan] progress 64/126  ack=0 nack=0 timeout=64
+[i2c] ??? 0x41 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x42 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x43 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x44 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x45 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x46 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x47 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x48 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x49 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x4A TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x4B TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x4C TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x4D TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x4E TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x4F TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x50 TIMEOUT - SCL_PIN stuck low
+[scan] progress 80/126  ack=0 nack=0 timeout=80
+[i2c] ??? 0x51 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x52 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x53 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x54 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x55 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x56 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x57 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x58 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x59 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x5A TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x5B TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x5C TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x5D TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x5E TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x5F TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x60 TIMEOUT - SCL_PIN stuck low
+[scan] progress 96/126  ack=0 nack=0 timeout=96
+[i2c] ??? 0x61 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x62 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x63 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x64 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x65 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x66 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x67 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x68 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x69 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x6A TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x6B TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x6C TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x6D TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x6E TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x6F TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x70 TIMEOUT - SCL_PIN stuck low
+[scan] progress 112/126  ack=0 nack=0 timeout=112
+[i2c] ??? 0x71 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x72 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x73 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x74 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x75 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x76 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x77 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x78 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x79 TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x7A TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x7B TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x7C TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x7D TIMEOUT - SCL_PIN stuck low
+[i2c] ??? 0x7E TIMEOUT - SCL_PIN stuck low
+[state] after scan     SDA_PIN=0 SCL_PIN=0
+[scan] DONE  ack=0  nack=0  timeout=126  totalSCLtimeouts=126
+VERDICT: no device ACKed on 8/9
+=== hunt v2 done — idle ===

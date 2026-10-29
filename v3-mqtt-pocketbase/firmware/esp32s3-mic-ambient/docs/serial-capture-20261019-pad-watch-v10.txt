@@ -1,0 +1,117 @@
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0x2b (SPI_FAST_FLASH_BOOT)
+Saved PC:0x4202123a
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fce3808,len:0x4bc
+load:0x403c9700,len:0xbd8
+load:0x403cc700,len:0x2a0c
+entry 0x403c98d0
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0x2b (SPI_FAST_FLASH_BOOT)
+Saved PC:0x4202123a
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fce3808,len:0x4bc
+load:0x403c9700,len:0xbd8
+load:0x403cc700,len:0x2a0c
+entry 0x403c98d0
+PAD-REGISTER-WATCH-v10 (GPIO_IN_REG, 240 MHz, chunked masks)
+
+===== pass 1 =====
+[probe] I2S OFF; CPU drives GPIO6 (pad5/pad9 as observers)
+[watch] S1 drive6=LOW                                  n=240000 dur=98.4ms  SD longest HIGH run=0 LOW run=60000
+[watch]  Boot hi=100.0% trans=        1 estHz=         5 
+[watch]   IO1 hi=100.0% trans=        1 estHz=         5 
+[watch]   IO2 hi=100.0% trans=        1 estHz=         5 
+[watch]   IO3 hi=100.0% trans=        1 estHz=         5 
+[watch]  SCK4 hi=  0.0% trans=        0 estHz=         0 
+[watch]   WS5 hi=  0.0% trans=        0 estHz=         0 
+[watch]   SD6 hi=  0.0% trans=        0 estHz=         0 
+[watch]   IO7 hi=  0.0% trans=        0 estHz=         0 
+[watch]  SDA8 hi=  0.0% trans=        0 estHz=         0 
+[watch]  SCL9 hi=  0.0% trans=        0 estHz=         0 
+[watch]  IO10 hi=  0.0% trans=        0 estHz=         0 
+[watch]  IO11 hi=  0.0% trans=        0 estHz=         0 
+[watch]  IO12 hi=  0.0% trans=        0 estHz=         0 
+[watch]  IO13 hi=  0.0% trans=        0 estHz=         0 
+[watch] S2 drive6=HIGH                                 n=240000 dur=98.5ms  SD longest HIGH run=0 LOW run=60000
+[watch]  Boot hi=100.0% trans=        1 estHz=         5 
+[watch]   IO1 hi=100.0% trans=        1 estHz=         5 
+[watch]   IO2 hi=100.0% trans=        1 estHz=         5 
+[watch]   IO3 hi=100.0% trans=        1 estHz=         5 
+[watch]  SCK4 hi=  0.0% trans=        0 estHz=         0 
+[watch]   WS5 hi=100.0% trans=        1 estHz=         5 
+[watch]   SD6 hi=  0.0% trans=        0 estHz=         0 
+[watch]   IO7 hi=  0.0% trans=        0 estHz=         0 
+[watch]  SDA8 hi=  0.0% trans=        0 estHz=         0 
+[watch]  SCL9 hi=100.0% trans=        1 estHz=         5 
+[watch]  IO10 hi=100.0% trans=        1 estHz=         5 
+[watch]  IO11 hi= 63.7% trans=      193 estHz=       980 
+[watch]  IO12 hi=100.0% trans=        1 estHz=         5 
+[watch]  IO13 hi=100.0% trans=        1 estHz=         5 
+[watch] S3 release6                                    n=240000 dur=96.4ms  SD longest HIGH run=18363 LOW run=24032
+[watch]  Boot hi=100.0% trans=        1 estHz=         5 
+[watch]   IO1 hi=100.0% trans=        1 estHz=         5 
+[watch]   IO2 hi=100.0% trans=        1 estHz=         5 
+[watch]   IO3 hi=100.0% trans=        1 estHz=         5 
+[watch]  SCK4 hi=  0.0% trans=        0 estHz=         0 
+[watch]   WS5 hi= 41.8% trans=       41 estHz=       213 
+[watch]   SD6 hi= 41.7% trans=       75 estHz=       389 
+[watch]   IO7 hi=  0.0% trans=        0 estHz=         0 
+[watch]  SDA8 hi=  0.0% trans=        0 estHz=         0 
+[watch]  SCL9 hi= 41.7% trans=      115 estHz=       597 
+[watch]  IO10 hi= 40.9% trans=       13 estHz=        67 
+[watch]  IO11 hi= 43.5% trans=       13 estHz=        67 
+[watch]  IO12 hi= 41.5% trans=       15 estHz=        78 
+[watch]  IO13 hi= 41.9% trans=       13 estHz=        67 
+[probe] symmetric: CPU drives GPIO5
+[watch] S5 drive5=LOW                                  n=240000 dur=98.1ms  SD longest HIGH run=6036 LOW run=34297
+[watch]  Boot hi=100.0% trans=        1 estHz=         5 
+[watch]   IO1 hi=100.0% trans=        1 estHz=         5 
+[watch]   IO2 hi=100.0% trans=        1 estHz=         5 
+[watch]   IO3 hi=100.0% trans=        1 estHz=         5 
+[watch]  SCK4 hi=  0.0% trans=        0 estHz=         0 
+[watch]   WS5 hi=  0.0% trans=        0 estHz=         0 
+[watch]   SD6 hi= 16.3% trans=      788 estHz=      4016 
+[watch]   IO7 hi=  0.0% trans=        0 estHz=         0 
+[watch]  SDA8 hi=  0.0% trans=        0 estHz=         0 
+[watch]  SCL9 hi= 23.9% trans=      628 estHz=      3201 
+[watch]  IO10 hi= 20.9% trans=      140 estHz=       714 
+[watch]  IO11 hi=  0.0% trans=        0 estHz=         0 
+[watch]  IO12 hi=  0.0% trans=        0 estHz=         0 
+[watch]  IO13 hi=  0.0% trans=        0 estHz=         0 
+[watch] S4 drive5=HIGH                                 n=240000 dur=94.2ms  SD longest HIGH run=38782 LOW run=2916
+[watch]  Boot hi=100.0% trans=        1 estHz=         5 
+[watch]   IO1 hi=100.0% trans=        1 estHz=         5 
+[watch]   IO2 hi=100.0% trans=        1 estHz=         5 
+[watch]   IO3 hi=100.0% trans=        1 estHz=         5 
+[watch]  SCK4 hi=  0.0% trans=        0 estHz=         0 
+[watch]   WS5 hi=  0.0% trans=        0 estHz=         0 
+[watch]   SD6 hi= 92.8% trans=      400 estHz=      2123 
+[watch]   IO7 hi=  0.0% trans=        0 estHz=         0 
+[watch]  SDA8 hi=  0.0% trans=        0 estHz=         0 
+[watch]  SCL9 hi= 84.9% trans=     2088 estHz=     11081 
+[watch]  IO10 hi= 86.0% trans=      278 estHz=      1475 
+[watch]  IO11 hi= 65.8% trans=      171 estHz=       907 
+[watch]  IO12 hi=100.0% trans=        1 estHz=         5 
+[watch]  IO13 hi=100.0% trans=        1 estHz=         5 
+
+[probe] done — full matrix for the record:
+[matrix] pad out_sel+SIGNAL / iomux ie/wpu/wpd
+[matrix] GPIO0 out_sel=256 (DIR-CPU    ) ie=1 wpu=0 wpd=1 iomux=0x00000b00
+[matrix] GPIO1 out_sel=256 (DIR-CPU    ) ie=1 wpu=0 wpd=0 iomux=0x00000a00
+[matrix] GPIO2 out_sel=256 (DIR-CPU    ) ie=1 wpu=0 wpd=0 iomux=0x00000a00
+[matrix] GPIO3 out_sel=256 (DIR-CPU    ) ie=1 wpu=0 wpd=0 iomux=0x00000a00
+[matrix] GPIO4 out_sel=256 (DIR-CPU    ) ie=0 wpu=0 wpd=0 iomux=0x00000800
+[matrix] GPIO5 out_sel=256 (DIR-CPU    ) ie=1 wpu=0 wpd=0 iomux=0x00000a00
+[matrix] GPIO6 out_sel=256 (DIR-CPU    ) ie=1 wpu=0 wpd=0 iomux=0x00000a00
+[matrix] GPIO7 out_sel=256 (DIR-CPU    ) ie=0 wpu=0 wpd=0 iomux=0x00000800
+[matrix] GPIO8 out_sel=256 (DIR-CPU    ) ie=0 wpu=0 wpd=0 iomux=0x00000800
+[matrix] GPIO9 out_sel=256 (DIR-CPU    ) ie=1 wpu=0 wpd=0 iomux=0x00000a00
+[matrix] GPIO10 out_sel=256 (DIR-CPU    ) ie=1 wpu=0 wpd=0 iomux=0x00000a00
+[matrix] GPIO11 out_sel=256 (DIR-CPU    ) ie=1 wpu=0 wpd=0 iomux=0x00000a00
+[matrix] GPIO12 out_sel=256 (DIR-CPU    ) ie=1 wpu=0 wpd=0 iomux=0x00000a00
+[matrix] GPIO13 out_sel=256 (DIR-CPU    ) ie=1 wpu=0 wpd=0 iomux=0x00000a00

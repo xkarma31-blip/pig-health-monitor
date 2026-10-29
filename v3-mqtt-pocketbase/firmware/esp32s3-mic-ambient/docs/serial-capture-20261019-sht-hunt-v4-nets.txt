@@ -1,0 +1,43 @@
+ coupled pair(s) found
+[scan] DONE ack=0 nack=126 scl_timeout=0
+VERDICT: no device ACKs on 8/9
+=== v4 done — board ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0x2b (SPI_FAST_FLASH_BOOT)
+Saved PC:0x420214de
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fce3808,len:0x4bc
+load:0x403c9700,len:0xbd8
+load:0x403cc700,len:0x2a0c
+entry 0x403c98d0
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0x2b (SPI_FAST_FLASH_BOOT)
+Saved PC:0x40056eb0
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fce3808,len:0x4bc
+load:0x403c9700,len:0xbd8
+load:0x403cc700,len:0x2a0c
+entry 0x403c98d0
+
+=== SHT/I2C HUNT v4 (nets, capacitance, honest scan) ===
+[base] true-float levels (no pulls at all): 1=1 2=1 7=0 8=0 9=0 10=0 11=0 12=1 13=1 14=0 15=0 16=0 17=0 18=0 
+[base] mic 4=0 5=0 6=0
+[ext?] with INTERNAL PULL-DOWN forced: SDA8=0 SCL9=0  (1 => external pull-up present)
+[cap] GPIO8 rise with 45k internal pull-up: 180 us
+[cap]   -> approx capacitance = 1818.2 nF (C = t/(2.2*45k))
+[cap] GPIO8 rise with NO pull-up: NEVER (>2s)
+[cap] GPIO9 rise with 45k internal pull-up: 1 us
+[cap]   -> approx capacitance = 10.1 nF (C = t/(2.2*45k))
+[cap] GPIO9 rise with NO pull-up: 240 us
+[nets] driving each pin LOW while sensing with a 45k pull-up ...
+[nets] *** GPIO8 reads 0 while GPIO9 is driven LOW  -> same net (or shorted)
+[nets] *** GPIO9 reads 0 while GPIO8 is driven LOW  -> same net (or shorted)
+[nets] 2 coupled pair(s) found
+[scan] bus idles SDA=1 SCL=1 (pull-ups on)
+[scan] bit-banged 1..126 ...
+[scan] DONE ack=0 nack=126 scl_timeout=0
+VERDICT: no device ACKs on 8/9
+=== v4 done — board idle ===

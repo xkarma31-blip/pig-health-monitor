@@ -1,0 +1,41 @@
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0x2b (SPI_FAST_FLASH_BOOT)
+Saved PC:0x42020fa2
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fce3808,len:0x4bc
+load:0x403c9700,len:0xbd8
+load:0x403cc700,len:0x2a0c
+entry 0x403c98d0
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0x2b (SPI_FAST_FLASH_BOOT)
+Saved PC:0x42020fa2
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fce3808,len:0x4bc
+load:0x403c9700,len:0xbd8
+load:0x403cc700,len:0x2a0c
+entry 0x403c98d0
+
+=== SHT/I2C HUNT v5 (coupling with controls + pull-up readback) ===
+[control] independent pairs — MUST read 1 (separate). Any 0 = broken test.
+[control] sense=7 driver=10 -> 1 (separate, OK)
+[control] sense=10 driver=7 -> 1 (separate, OK)
+[control] sense=7 driver=11 -> 1 (separate, OK)
+[control] sense=11 driver=7 -> 1 (separate, OK)
+[control] sense=10 driver=11 -> 1 (separate, OK)
+[control] sense=14 driver=15 -> 1 (separate, OK)
+[control] sense=15 driver=14 -> 1 (separate, OK)
+[control] sense=16 driver=17 -> 1 (separate, OK)
+[control] sense=17 driver=16 -> 1 (separate, OK)
+[control] sense=2 driver=13 -> 1 (separate, OK)
+[control] sense=13 driver=2 -> 1 (separate, OK)
+[control] 0 unexpected result(s)
+[target] GPIO8 <-> GPIO9
+[target] sense=8 driver=9 -> 0 (COUPLED — pull-up proven active)
+[target] sense=9 driver=8 -> 0 (COUPLED — pull-up proven active)
+[matrix] full sweep, pull-up-verified only ...
+[matrix] *** sense GPIO8 = 0 while GPIO9 driven LOW  -> coupled
+[matrix] *** sense GPIO9 = 0 while GPIO8 driven LOW  -> coupled

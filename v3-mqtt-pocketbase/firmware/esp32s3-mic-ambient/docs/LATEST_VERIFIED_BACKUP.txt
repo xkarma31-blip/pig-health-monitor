@@ -1,0 +1,1 @@
+/home/solrahk/pig-health-monitor/v3-mqtt-pocketbase/firmware/esp32s3-mic-ambient/docs/known-good-20261019-143307-mic-sht45

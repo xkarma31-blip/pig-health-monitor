@@ -1,0 +1,20 @@
+MS24: 70316 Peak24: 192888 nz:100% -41.5 dBFS tcp:192127 B/s wifi:1 mqtt:1 tcp:1
+[sht45] short/failed measurement read
+RMS24: 311780 Peak24: 627128 nz:100% -28.6 dBFS tcp:12970 B/s wifi:1 mqtt:1 tcp:1
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 52760 Peak24: 142874 nz:100% -44.0 dBFS tcp:207238 B/s wifi:1 mqtt:1 tcp:1
+RMS24: 430331 Peak24: 951764 nz:100% -25.8 dBFS tcp:165256 B/s wifi:1 mqtt:1 tcp:1
+[586349][E][Wire.cpp:513] requestFrom(): i2cRead returned Error -1
+[sht45] short/failed measurement read
+RMS24: 52782 Peak24: 141046 nz:100% -44.0 dBFS tcp:193207 B/s wifi:1 mqtt:1 tcp:1
+RMS24: 326252 Peak24: 573170 nz:100% -28.2 dBFS tcp:191936 B/s wifi:1 mqtt:1 tcp:1
+[sht45] CRC failed
+RMS24: 133572 Peak24: 239148 nz:100% -36.0 dBFS tcp:73896 B/s wifi:1 mqtt:1 tcp:1
+[sht45] temperature=34.09 C humidity=65.07 % CRC=OK
+RMS24: 79564 Peak24: 206520 nz:100% -40.5 dBFS tcp:206229 B/s wifi:1 mqtt:1 tcp:1
+RMS24: 84614 Peak24: 232898 nz:100% -39.9 dBFS tcp:191936 B/s wifi:1 mqtt:1 tcp:1
+[sht45] temperature=34.11 C humidity=64.90 % CRC=OK
+RMS24: 116039 Peak24: 246352 nz:100% -37.2 dBFS tcp:191936 B/s wifi:1 mqtt:1 tcp:1
+RMS24: 279775 Peak24: 606938 nz:100% -29.5 dBFS tcp:192127 B/s wifi:1 mqtt:1 tcp:1
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 48680 Peak24: 110086 nz:100% -44.7 dBFS tcp:191936 B/s wifi:1 mqtt:1 tcp:1

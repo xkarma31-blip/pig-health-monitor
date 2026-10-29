@@ -1,0 +1,27 @@
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0x2b (SPI_FAST_FLASH_BOOT)
+Saved PC:0x4202350a
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fce3808,len:0x4bc
+load:0x403c9700,len:0xbd8
+load:0x403cc700,len:0x2a0c
+entry 0x403c98d0
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0x2b (SPI_FAST_FLASH_BOOT)
+Saved PC:0x4202350a
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fce3808,len:0x4bc
+load:0x403c9700,len:0xbd8
+load:0x403cc700,len:0x2a0c
+entry 0x403c98d0
+
+=== SHT/I2C HUNT v1 — no pin is assumed ===
+[idle] GPIO8  INPUT(no pull) = 1
+[idle] GPIO9  INPUT(no pull) = 1
+[idle] GPIO7  INPUT(no pull) = 1
+[idle] GPIO10 INPUT(no pull) = 0
+[A] documented pair SDA=8 SCL=9 — full scan 1..126

@@ -1,0 +1,50 @@
+ic pin float       GPIO4  level=0 | drive_en=0 outval=0 | IE=1 WPU=0 WPD=0 mcu_sel=1
+[pad] G: mic pin float       GPIO5  level=0 | drive_en=0 outval=0 | IE=1 WPU=0 WPD=0 mcu_sel=1
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0x2b (SPI_FAST_FLASH_BOOT)
+Saved PC:0x4202105a
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fce3808,len:0x4bc
+load:0x403c9700,len:0xbd8
+load:0x403cc700,len:0x2a0c
+entry 0x403c98d0
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0x2b (SPI_FAST_FLASH_BOOT)
+Saved PC:0x4202105a
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fce3808,len:0x4bc
+load:0x403c9700,len:0xbd8
+load:0x403cc700,len:0x2a0c
+entry 0x403c98d0
+
+=== SHT/I2C HUNT v3 (pad-level, decisive) ===
+-- baseline, before driving anything --
+[pad] A: hard float          GPIO8  level=0 | drive_en=0 outval=0 | IE=1 WPU=0 WPD=0 mcu_sel=1
+[pad] A: hard float          GPIO9  level=0 | drive_en=0 outval=0 | IE=1 WPU=0 WPD=0 mcu_sel=1
+-- Q1: internal pull-DOWN against the idle HIGH (45k vs ext pullup) --
+[pad] B: internal pulldown   GPIO8  level=0 | drive_en=0 outval=0 | IE=1 WPU=1 WPD=0 mcu_sel=1
+[pad] B: internal pulldown   GPIO9  level=0 | drive_en=0 outval=0 | IE=1 WPU=1 WPD=0 mcu_sel=1
+-- Q1b: internal pull-UP then hard float again --
+[pad] C: internal pullup     GPIO8  level=1 | drive_en=0 outval=0 | IE=1 WPU=0 WPD=1 mcu_sel=1
+[pad] C: internal pullup     GPIO9  level=1 | drive_en=0 outval=0 | IE=1 WPU=0 WPD=1 mcu_sel=1
+[pad] D: float again         GPIO8  level=1 | drive_en=0 outval=0 | IE=1 WPU=0 WPD=0 mcu_sel=1
+[pad] D: float again         GPIO9  level=1 | drive_en=0 outval=0 | IE=1 WPU=0 WPD=0 mcu_sel=1
+-- Q2/Q3: drive low 2ms, release, then poll up to 2 s --
+[pad] E: while driven low    GPIO9  level=0 | drive_en=1 outval=0 | IE=1 WPU=0 WPD=0 mcu_sel=1
+[pad] E: after release       GPIO9  level=1 | drive_en=0 outval=0 | IE=1 WPU=0 WPD=0 mcu_sel=1
+[Q2] SCL: rose in 5610 us
+[pad] F: while driven low    GPIO8  level=0 | drive_en=1 outval=0 | IE=1 WPU=0 WPD=0 mcu_sel=1
+[pad] F: after release       GPIO8  level=1 | drive_en=0 outval=0 | IE=1 WPU=0 WPD=0 mcu_sel=1
+[Q2] SDA: rose in 370 us
+-- Q4: do SDA and SCL behave as ONE net? drive one, watch the other --
+[Q4] SDA driven LOW  -> SCL reads 0
+[Q4] SCL driven LOW  -> SDA reads 0
+-- Q5: mic pins 4/5/6, same interrogation (for contrast) --
+[pad] G: mic pin float       GPIO4  level=0 | drive_en=0 outval=0 | IE=1 WPU=0 WPD=0 mcu_sel=1
+[pad] G: mic pin float       GPIO5  level=0 | drive_en=0 outval=0 | IE=1 WPU=0 WPD=0 mcu_sel=1
+[pad] G: mic pin float       GPIO6  level=0 | drive_en=0 outval=0 | IE=1 WPU=0 WPD=0 mcu_sel=1
+=== v3 done — board idle ===

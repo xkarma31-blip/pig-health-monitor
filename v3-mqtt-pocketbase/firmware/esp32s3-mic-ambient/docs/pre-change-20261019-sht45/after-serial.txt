@@ -1,0 +1,24 @@
+Starting pigpulse-mic-sht45-20261019 (I2S32 >>16 -> S16LE stereo)...
+[pins] mic SCK=4 WS=5 SD=6 LEFT; SHT45 SDA=8 SCL=9 init=1
+[wifi] scan count=5
+[wifi] txPower set=1 actual=34
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2103287 Peak24: 4194304 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2165665 Peak24: 6291456 nz:100% -11.8 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2165672 Peak24: 8388608 nz:99% -11.8 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2149741 Peak24: 6291456 nz:100% -11.8 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2092507 Peak24: 4194304 nz:99% -12.1 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2179503 Peak24: 6291456 nz:100% -11.7 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2122892 Peak24: 8388608 nz:99% -11.9 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2109404 Peak24: 4194304 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2115004 Peak24: 8388608 nz:99% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2131692 Peak24: 8388608 nz:100% -11.9 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2123432 Peak24: 8388608 nz:99% -11.9 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0

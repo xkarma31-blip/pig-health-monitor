@@ -1,0 +1,95 @@
+:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2101755 Peak24: 4194304 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2101755 Peak24: 4194304 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2100222 Peak24: 4194304 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2094078 Peak24: 2097152 nz:100% -12.1 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2103287 Peak24: 4194304 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2103287 Peak24: 4194304 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2094078 Peak24: 2097152 nz:100% -12.1 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2095615 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2123104 Peak24: 4194304 nz:100% -11.9 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2090999 Peak24: 2097152 nz:100% -12.1 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2101755 Peak24: 4194304 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2095615 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2103287 Peak24: 4194304 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2089458 Peak24: 2097152 nz:100% -12.1 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2107876 Peak24: 4194304 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2092539 Peak24: 2097152 nz:100% -12.1 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2095615 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2109404 Peak24: 4194304 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2092539 Peak24: 2097152 nz:100% -12.1 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2101755 Peak24: 4194304 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2095615 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2094078 Peak24: 2097152 nz:100% -12.1 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2103287 Peak24: 4194304 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2112456 Peak24: 4194304 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2115504 Peak24: 4194304 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2092539 Peak24: 2097152 nz:100% -12.1 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2103287 Peak24: 4194304 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)
+RMS24: 2097152 Peak24: 2097152 nz:100% -12.0 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+RMS24: 2092539 Peak24: 2097152 nz:100% -12.1 dBFS tcp:0 B/s wifi:0 mqtt:0 tcp:0
+[sht45] address=0x44 SDA=8 SCL=9 I2C error=2 (2=NACK)

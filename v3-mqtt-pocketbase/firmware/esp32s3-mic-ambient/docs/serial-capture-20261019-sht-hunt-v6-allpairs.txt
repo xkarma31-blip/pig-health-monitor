@@ -1,0 +1,382 @@
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0x2b (SPI_FAST_FLASH_BOOT)
+Saved PC:0x42021016
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fce3808,len:0x4bc
+load:0x403c9700,len:0xbd8
+load:0x403cc700,len:0x2a0c
+entry 0x403c98d0
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0x2b (SPI_FAST_FLASH_BOOT)
+Saved PC:0x42021016
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fce3808,len:0x4bc
+load:0x403c9700,len:0xbd8
+load:0x403cc700,len:0x2a0c
+entry 0x403c98d0
+
+=== SHT/I2C HUNT v6 — every safe ordered pin pair, 1..126 ===
+[cfg] 14 pins -> 182 ordered pairs
+[ext-up] held HIGH with NO internal pull (=> external pull-up/driver): GPIO1 GPIO2 GPIO7 GPIO8 GPIO9 GPIO10 GPIO11 GPIO12 GPIO13 
+[pair] SDA=1  SCL=2  -> none
+[pair] SDA=1  SCL=7  -> none
+[pair] SDA=1  SCL=8  -> none
+[pair] SDA=1  SCL=9  -> none
+[pair] SDA=1  SCL=10 -> none
+[pair] SDA=1  SCL=11 -> none
+[pair] SDA=1  SCL=12 -> none
+[pair] SDA=1  SCL=13 -> none
+[pair] SDA=1  SCL=14 -> none
+[pair] SDA=1  SCL=15 -> none
+[pair] SDA=1  SCL=16 -> none
+[pair] SDA=1  SCL=17 -> none
+[pair] SDA=1  SCL=18 -> none
+[pair] SDA=2  SCL=1  -> none
+[pair] SDA=2  SCL=7  -> none
+[pair] SDA=2  SCL=8  -> none
+[pair] SDA=2  SCL=9  -> none
+[pair] SDA=2  SCL=10 -> none
+[pair] SDA=2  SCL=11 -> none
+[pair] SDA=2  SCL=12 -> none
+[pair] SDA=2  SCL=13 -> none
+[pair] SDA=2  SCL=14 -> none
+[pair] SDA=2  SCL=15 -> none
+[pair] SDA=2  SCL=16 -> none
+[pair] SDA=2  SCL=17 -> none
+[pair] SDA=2  SCL=18 -> none
+[pair] SDA=7  SCL=1  -> none
+[pair] SDA=7  SCL=2  -> none
+[pair] SDA=7  SCL=8  -> none
+[pair] SDA=7  SCL=9  -> none
+[pair] SDA=7  SCL=10 -> none
+[pair] SDA=7  SCL=11 -> none
+[pair] SDA=7  SCL=12 -> none
+[pair] SDA=7  SCL=13 -> none
+[pair] SDA=7  SCL=14 -> none
+[pair] SDA=7  SCL=15 -> none
+[pair] SDA=7  SCL=16 -> none
+[pair] SDA=7  SCL=17 -> none
+[pair] SDA=7  SCL=18 -> none
+[HIT] SDA=8 SCL=1 addr=0x12 (18) ACK
+[HIT] SDA=8 SCL=1 addr=0x14 (20) ACK
+[HIT] SDA=8 SCL=1 addr=0x15 (21) ACK
+[HIT] SDA=8 SCL=1 addr=0x24 (36) ACK
+[HIT] SDA=8 SCL=1 addr=0x25 (37) ACK
+[pair] SDA=8 SCL=1 -> 5 device(s)
+[HIT] SDA=8 SCL=2 addr=0x08 (8) ACK
+[HIT] SDA=8 SCL=2 addr=0x09 (9) ACK
+[HIT] SDA=8 SCL=2 addr=0x0A (10) ACK
+[HIT] SDA=8 SCL=2 addr=0x0B (11) ACK
+[HIT] SDA=8 SCL=2 addr=0x0C (12) ACK
+[HIT] SDA=8 SCL=2 addr=0x0D (13) ACK
+[HIT] SDA=8 SCL=2 addr=0x0E (14) ACK
+[HIT] SDA=8 SCL=2 addr=0x10 (16) ACK
+[HIT] SDA=8 SCL=2 addr=0x11 (17) ACK
+[HIT] SDA=8 SCL=2 addr=0x12 (18) ACK
+[HIT] SDA=8 SCL=2 addr=0x13 (19) ACK
+[HIT] SDA=8 SCL=2 addr=0x14 (20) ACK
+[HIT] SDA=8 SCL=2 addr=0x15 (21) ACK
+[HIT] SDA=8 SCL=2 addr=0x16 (22) ACK
+[HIT] SDA=8 SCL=2 addr=0x22 (34) ACK
+[HIT] SDA=8 SCL=2 addr=0x24 (36) ACK
+[pair] SDA=8 SCL=2 -> 16 device(s)
+[HIT] SDA=8 SCL=7 addr=0x08 (8) ACK
+[HIT] SDA=8 SCL=7 addr=0x09 (9) ACK
+[HIT] SDA=8 SCL=7 addr=0x0A (10) ACK
+[HIT] SDA=8 SCL=7 addr=0x0B (11) ACK
+[HIT] SDA=8 SCL=7 addr=0x0C (12) ACK
+[HIT] SDA=8 SCL=7 addr=0x0D (13) ACK
+[HIT] SDA=8 SCL=7 addr=0x10 (16) ACK
+[HIT] SDA=8 SCL=7 addr=0x11 (17) ACK
+[HIT] SDA=8 SCL=7 addr=0x12 (18) ACK
+[HIT] SDA=8 SCL=7 addr=0x13 (19) ACK
+[HIT] SDA=8 SCL=7 addr=0x14 (20) ACK
+[HIT] SDA=8 SCL=7 addr=0x15 (21) ACK
+[HIT] SDA=8 SCL=7 addr=0x16 (22) ACK
+[HIT] SDA=8 SCL=7 addr=0x18 (24) ACK
+[HIT] SDA=8 SCL=7 addr=0x24 (36) ACK
+[pair] SDA=8 SCL=7 -> 15 device(s)
+[pair] SDA=8  SCL=9  -> none
+[HIT] SDA=8 SCL=10 addr=0x0A (10) ACK
+[HIT] SDA=8 SCL=10 addr=0x0C (12) ACK
+[HIT] SDA=8 SCL=10 addr=0x10 (16) ACK
+[HIT] SDA=8 SCL=10 addr=0x11 (17) ACK
+[HIT] SDA=8 SCL=10 addr=0x12 (18) ACK
+[HIT] SDA=8 SCL=10 addr=0x13 (19) ACK
+[HIT] SDA=8 SCL=10 addr=0x14 (20) ACK
+[HIT] SDA=8 SCL=10 addr=0x15 (21) ACK
+[HIT] SDA=8 SCL=10 addr=0x16 (22) ACK
+[HIT] SDA=8 SCL=10 addr=0x22 (34) ACK
+[HIT] SDA=8 SCL=10 addr=0x24 (36) ACK
+[HIT] SDA=8 SCL=10 addr=0x25 (37) ACK
+[pair] SDA=8 SCL=10 -> 12 device(s)
+[HIT] SDA=8 SCL=11 addr=0x08 (8) ACK
+[HIT] SDA=8 SCL=11 addr=0x09 (9) ACK
+[HIT] SDA=8 SCL=11 addr=0x0A (10) ACK
+[HIT] SDA=8 SCL=11 addr=0x0B (11) ACK
+[HIT] SDA=8 SCL=11 addr=0x0C (12) ACK
+[HIT] SDA=8 SCL=11 addr=0x0D (13) ACK
+[HIT] SDA=8 SCL=11 addr=0x0E (14) ACK
+[HIT] SDA=8 SCL=11 addr=0x10 (16) ACK
+[HIT] SDA=8 SCL=11 addr=0x11 (17) ACK
+[HIT] SDA=8 SCL=11 addr=0x12 (18) ACK
+[HIT] SDA=8 SCL=11 addr=0x13 (19) ACK
+[HIT] SDA=8 SCL=11 addr=0x14 (20) ACK
+[HIT] SDA=8 SCL=11 addr=0x15 (21) ACK
+[HIT] SDA=8 SCL=11 addr=0x16 (22) ACK
+[HIT] SDA=8 SCL=11 addr=0x24 (36) ACK
+[HIT] SDA=8 SCL=11 addr=0x25 (37) ACK
+[pair] SDA=8 SCL=11 -> 16 device(s)
+[HIT] SDA=8 SCL=12 addr=0x08 (8) ACK
+[HIT] SDA=8 SCL=12 addr=0x09 (9) ACK
+[HIT] SDA=8 SCL=12 addr=0x0A (10) ACK
+[HIT] SDA=8 SCL=12 addr=0x0B (11) ACK
+[HIT] SDA=8 SCL=12 addr=0x0C (12) ACK
+[HIT] SDA=8 SCL=12 addr=0x0D (13) ACK
+[HIT] SDA=8 SCL=12 addr=0x0E (14) ACK
+[HIT] SDA=8 SCL=12 addr=0x10 (16) ACK
+[HIT] SDA=8 SCL=12 addr=0x11 (17) ACK
+[HIT] SDA=8 SCL=12 addr=0x12 (18) ACK
+[HIT] SDA=8 SCL=12 addr=0x13 (19) ACK
+[HIT] SDA=8 SCL=12 addr=0x14 (20) ACK
+[HIT] SDA=8 SCL=12 addr=0x15 (21) ACK
+[HIT] SDA=8 SCL=12 addr=0x24 (36) ACK
+[HIT] SDA=8 SCL=12 addr=0x25 (37) ACK
+[pair] SDA=8 SCL=12 -> 15 device(s)
+[HIT] SDA=8 SCL=13 addr=0x08 (8) ACK
+[HIT] SDA=8 SCL=13 addr=0x09 (9) ACK
+[HIT] SDA=8 SCL=13 addr=0x0A (10) ACK
+[HIT] SDA=8 SCL=13 addr=0x0B (11) ACK
+[HIT] SDA=8 SCL=13 addr=0x0C (12) ACK
+[HIT] SDA=8 SCL=13 addr=0x0D (13) ACK
+[HIT] SDA=8 SCL=13 addr=0x0E (14) ACK
+[HIT] SDA=8 SCL=13 addr=0x10 (16) ACK
+[HIT] SDA=8 SCL=13 addr=0x11 (17) ACK
+[HIT] SDA=8 SCL=13 addr=0x12 (18) ACK
+[HIT] SDA=8 SCL=13 addr=0x13 (19) ACK
+[HIT] SDA=8 SCL=13 addr=0x14 (20) ACK
+[HIT] SDA=8 SCL=13 addr=0x15 (21) ACK
+[HIT] SDA=8 SCL=13 addr=0x22 (34) ACK
+[HIT] SDA=8 SCL=13 addr=0x24 (36) ACK
+[pair] SDA=8 SCL=13 -> 15 device(s)
+[HIT] SDA=8 SCL=14 addr=0x08 (8) ACK
+[HIT] SDA=8 SCL=14 addr=0x09 (9) ACK
+[HIT] SDA=8 SCL=14 addr=0x0A (10) ACK
+[HIT] SDA=8 SCL=14 addr=0x0B (11) ACK
+[HIT] SDA=8 SCL=14 addr=0x0C (12) ACK
+[HIT] SDA=8 SCL=14 addr=0x0D (13) ACK
+[HIT] SDA=8 SCL=14 addr=0x0E (14) ACK
+[HIT] SDA=8 SCL=14 addr=0x10 (16) ACK
+[HIT] SDA=8 SCL=14 addr=0x11 (17) ACK
+[HIT] SDA=8 SCL=14 addr=0x12 (18) ACK
+[HIT] SDA=8 SCL=14 addr=0x13 (19) ACK
+[HIT] SDA=8 SCL=14 addr=0x14 (20) ACK
+[HIT] SDA=8 SCL=14 addr=0x15 (21) ACK
+[HIT] SDA=8 SCL=14 addr=0x16 (22) ACK
+[HIT] SDA=8 SCL=14 addr=0x24 (36) ACK
+[HIT] SDA=8 SCL=14 addr=0x25 (37) ACK
+[pair] SDA=8 SCL=14 -> 16 device(s)
+[HIT] SDA=8 SCL=15 addr=0x08 (8) ACK
+[HIT] SDA=8 SCL=15 addr=0x09 (9) ACK
+[HIT] SDA=8 SCL=15 addr=0x0A (10) ACK
+[HIT] SDA=8 SCL=15 addr=0x0B (11) ACK
+[HIT] SDA=8 SCL=15 addr=0x0C (12) ACK
+[HIT] SDA=8 SCL=15 addr=0x0D (13) ACK
+[HIT] SDA=8 SCL=15 addr=0x0E (14) ACK
+[HIT] SDA=8 SCL=15 addr=0x10 (16) ACK
+[HIT] SDA=8 SCL=15 addr=0x11 (17) ACK
+[HIT] SDA=8 SCL=15 addr=0x12 (18) ACK
+[HIT] SDA=8 SCL=15 addr=0x13 (19) ACK
+[HIT] SDA=8 SCL=15 addr=0x14 (20) ACK
+[HIT] SDA=8 SCL=15 addr=0x15 (21) ACK
+[HIT] SDA=8 SCL=15 addr=0x24 (36) ACK
+[HIT] SDA=8 SCL=15 addr=0x25 (37) ACK
+[pair] SDA=8 SCL=15 -> 15 device(s)
+[HIT] SDA=8 SCL=16 addr=0x08 (8) ACK
+[HIT] SDA=8 SCL=16 addr=0x09 (9) ACK
+[HIT] SDA=8 SCL=16 addr=0x0A (10) ACK
+[HIT] SDA=8 SCL=16 addr=0x0B (11) ACK
+[HIT] SDA=8 SCL=16 addr=0x0C (12) ACK
+[HIT] SDA=8 SCL=16 addr=0x0D (13) ACK
+[HIT] SDA=8 SCL=16 addr=0x0E (14) ACK
+[HIT] SDA=8 SCL=16 addr=0x10 (16) ACK
+[HIT] SDA=8 SCL=16 addr=0x11 (17) ACK
+[HIT] SDA=8 SCL=16 addr=0x12 (18) ACK
+[HIT] SDA=8 SCL=16 addr=0x13 (19) ACK
+[HIT] SDA=8 SCL=16 addr=0x14 (20) ACK
+[HIT] SDA=8 SCL=16 addr=0x15 (21) ACK
+[HIT] SDA=8 SCL=16 addr=0x16 (22) ACK
+[HIT] SDA=8 SCL=16 addr=0x24 (36) ACK
+[HIT] SDA=8 SCL=16 addr=0x25 (37) ACK
+[pair] SDA=8 SCL=16 -> 16 device(s)
+[HIT] SDA=8 SCL=17 addr=0x08 (8) ACK
+[HIT] SDA=8 SCL=17 addr=0x09 (9) ACK
+[HIT] SDA=8 SCL=17 addr=0x0A (10) ACK
+[HIT] SDA=8 SCL=17 addr=0x0B (11) ACK
+[HIT] SDA=8 SCL=17 addr=0x0C (12) ACK
+[HIT] SDA=8 SCL=17 addr=0x0D (13) ACK
+[HIT] SDA=8 SCL=17 addr=0x10 (16) ACK
+[HIT] SDA=8 SCL=17 addr=0x11 (17) ACK
+[HIT] SDA=8 SCL=17 addr=0x12 (18) ACK
+[HIT] SDA=8 SCL=17 addr=0x13 (19) ACK
+[HIT] SDA=8 SCL=17 addr=0x14 (20) ACK
+[HIT] SDA=8 SCL=17 addr=0x15 (21) ACK
+[HIT] SDA=8 SCL=17 addr=0x16 (22) ACK
+[HIT] SDA=8 SCL=17 addr=0x22 (34) ACK
+[HIT] SDA=8 SCL=17 addr=0x24 (36) ACK
+[HIT] SDA=8 SCL=17 addr=0x25 (37) ACK
+[pair] SDA=8 SCL=17 -> 16 device(s)
+[HIT] SDA=8 SCL=18 addr=0x08 (8) ACK
+[HIT] SDA=8 SCL=18 addr=0x09 (9) ACK
+[HIT] SDA=8 SCL=18 addr=0x0A (10) ACK
+[HIT] SDA=8 SCL=18 addr=0x0B (11) ACK
+[HIT] SDA=8 SCL=18 addr=0x0C (12) ACK
+[HIT] SDA=8 SCL=18 addr=0x0D (13) ACK
+[HIT] SDA=8 SCL=18 addr=0x0E (14) ACK
+[HIT] SDA=8 SCL=18 addr=0x10 (16) ACK
+[HIT] SDA=8 SCL=18 addr=0x11 (17) ACK
+[HIT] SDA=8 SCL=18 addr=0x12 (18) ACK
+[HIT] SDA=8 SCL=18 addr=0x13 (19) ACK
+[HIT] SDA=8 SCL=18 addr=0x14 (20) ACK
+[HIT] SDA=8 SCL=18 addr=0x15 (21) ACK
+[HIT] SDA=8 SCL=18 addr=0x16 (22) ACK
+[HIT] SDA=8 SCL=18 addr=0x24 (36) ACK
+[HIT] SDA=8 SCL=18 addr=0x25 (37) ACK
+[pair] SDA=8 SCL=18 -> 16 device(s)
+[pair] SDA=9  SCL=1  -> none
+[pair] SDA=9  SCL=2  -> none
+[pair] SDA=9  SCL=7  -> none
+[pair] SDA=9  SCL=8  -> none
+[pair] SDA=9  SCL=10 -> none
+[pair] SDA=9  SCL=11 -> none
+[pair] SDA=9  SCL=12 -> none
+[pair] SDA=9  SCL=13 -> none
+[pair] SDA=9  SCL=14 -> none
+[pair] SDA=9  SCL=15 -> none
+[pair] SDA=9  SCL=16 -> none
+[pair] SDA=9  SCL=17 -> none
+[pair] SDA=9  SCL=18 -> none
+[pair] SDA=10 SCL=1  -> none
+[pair] SDA=10 SCL=2  -> none
+[pair] SDA=10 SCL=7  -> none
+[pair] SDA=10 SCL=8  -> none
+[pair] SDA=10 SCL=9  -> none
+[pair] SDA=10 SCL=11 -> none
+[pair] SDA=10 SCL=12 -> none
+[pair] SDA=10 SCL=13 -> none
+[pair] SDA=10 SCL=14 -> none
+[pair] SDA=10 SCL=15 -> none
+[pair] SDA=10 SCL=16 -> none
+[pair] SDA=10 SCL=17 -> none
+[pair] SDA=10 SCL=18 -> none
+[pair] SDA=11 SCL=1  -> none
+[pair] SDA=11 SCL=2  -> none
+[pair] SDA=11 SCL=7  -> none
+[pair] SDA=11 SCL=8  -> none
+[pair] SDA=11 SCL=9  -> none
+[pair] SDA=11 SCL=10 -> none
+[pair] SDA=11 SCL=12 -> none
+[pair] SDA=11 SCL=13 -> none
+[pair] SDA=11 SCL=14 -> none
+[pair] SDA=11 SCL=15 -> none
+[pair] SDA=11 SCL=16 -> none
+[pair] SDA=11 SCL=17 -> none
+[pair] SDA=11 SCL=18 -> none
+[pair] SDA=12 SCL=1  -> none
+[pair] SDA=12 SCL=2  -> none
+[pair] SDA=12 SCL=7  -> none
+[pair] SDA=12 SCL=8  -> none
+[pair] SDA=12 SCL=9  -> none
+[pair] SDA=12 SCL=10 -> none
+[pair] SDA=12 SCL=11 -> none
+[pair] SDA=12 SCL=13 -> none
+[pair] SDA=12 SCL=14 -> none
+[pair] SDA=12 SCL=15 -> none
+[pair] SDA=12 SCL=16 -> none
+[pair] SDA=12 SCL=17 -> none
+[pair] SDA=12 SCL=18 -> none
+[pair] SDA=13 SCL=1  -> none
+[pair] SDA=13 SCL=2  -> none
+[pair] SDA=13 SCL=7  -> none
+[pair] SDA=13 SCL=8  -> none
+[pair] SDA=13 SCL=9  -> none
+[pair] SDA=13 SCL=10 -> none
+[pair] SDA=13 SCL=11 -> none
+[pair] SDA=13 SCL=12 -> none
+[pair] SDA=13 SCL=14 -> none
+[pair] SDA=13 SCL=15 -> none
+[pair] SDA=13 SCL=16 -> none
+[pair] SDA=13 SCL=17 -> none
+[pair] SDA=13 SCL=18 -> none
+[pair] SDA=14 SCL=1  -> none
+[pair] SDA=14 SCL=2  -> none
+[pair] SDA=14 SCL=7  -> none
+[pair] SDA=14 SCL=8  -> none
+[pair] SDA=14 SCL=9  -> none
+[pair] SDA=14 SCL=10 -> none
+[pair] SDA=14 SCL=11 -> none
+[pair] SDA=14 SCL=12 -> none
+[pair] SDA=14 SCL=13 -> none
+[pair] SDA=14 SCL=15 -> none
+[pair] SDA=14 SCL=16 -> none
+[pair] SDA=14 SCL=17 -> none
+[pair] SDA=14 SCL=18 -> none
+[pair] SDA=15 SCL=1  -> none
+[pair] SDA=15 SCL=2  -> none
+[pair] SDA=15 SCL=7  -> none
+[pair] SDA=15 SCL=8  -> none
+[pair] SDA=15 SCL=9  -> none
+[pair] SDA=15 SCL=10 -> none
+[pair] SDA=15 SCL=11 -> none
+[pair] SDA=15 SCL=12 -> none
+[pair] SDA=15 SCL=13 -> none
+[pair] SDA=15 SCL=14 -> none
+[pair] SDA=15 SCL=16 -> none
+[pair] SDA=15 SCL=17 -> none
+[pair] SDA=15 SCL=18 -> none
+[pair] SDA=16 SCL=1  -> none
+[pair] SDA=16 SCL=2  -> none
+[pair] SDA=16 SCL=7  -> none
+[pair] SDA=16 SCL=8  -> none
+[pair] SDA=16 SCL=9  -> none
+[pair] SDA=16 SCL=10 -> none
+[pair] SDA=16 SCL=11 -> none
+[pair] SDA=16 SCL=12 -> none
+[pair] SDA=16 SCL=13 -> none
+[pair] SDA=16 SCL=14 -> none
+[pair] SDA=16 SCL=15 -> none
+[pair] SDA=16 SCL=17 -> none
+[pair] SDA=16 SCL=18 -> none
+[pair] SDA=17 SCL=1  -> none
+[pair] SDA=17 SCL=2  -> none
+[pair] SDA=17 SCL=7  -> none
+[pair] SDA=17 SCL=8  -> none
+[pair] SDA=17 SCL=9  -> none
+[pair] SDA=17 SCL=10 -> none
+[pair] SDA=17 SCL=11 -> none
+[pair] SDA=17 SCL=12 -> none
+[pair] SDA=17 SCL=13 -> none
+[pair] SDA=17 SCL=14 -> none
+[pair] SDA=17 SCL=15 -> none
+[pair] SDA=17 SCL=16 -> none
+[pair] SDA=17 SCL=18 -> none
+[pair] SDA=18 SCL=1  -> none
+[pair] SDA=18 SCL=2  -> none
+[pair] SDA=18 SCL=7  -> none
+[pair] SDA=18 SCL=8  -> none
+[pair] SDA=18 SCL=9  -> none
+[pair] SDA=18 SCL=10 -> none
+[pair] SDA=18 SCL=11 -> none
+[pair] SDA=18 SCL=12 -> none
+[pair] SDA=18 SCL=13 -> none
+[pair] SDA=18 SCL=14 -> none
+[pair] SDA=18 SCL=15 -> none
+[pair] SDA=18 SCL=16 -> none
+[pair] SDA=18 SCL=17 -> none
+=== TOTAL ACKs ACROSS ALL PAIRS: 173 ===
+VERDICT: an I2C device IS present on the pair(s) marked HIT
+=== v6 done — board idle ===

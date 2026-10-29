@@ -1,0 +1,39 @@
+Starting pigpulse-mic-pcm16-20261013 (I2S32 >>16 -> S16LE stereo)...
+[wifi] scan count=2
+[wifi] target BSSID=DC:A6:32:87:63:A1 channel=6 RSSI=-66
+[wifi] txPower set=1 actual=34
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0x2b (SPI_FAST_FLASH_BOOT)
+Saved PC:0x4207b08e
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fce3808,len:0x4bc
+load:0x403c9700,len:0xbd8
+load:0x403cc700,len:0x2a0c
+entry 0x403c98d0
+ESP-ROM:esp32s3-20210327
+Build:Mar 27 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0x2b (SPI_FAST_FLASH_BOOT)
+Saved PC:0x4207b08e
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fce3808,len:0x4bc
+load:0x403c9700,len:0xbd8
+load:0x403cc700,len:0x2a0c
+entry 0x403c98d0
+Starting pigpulse-mic-pcm16-20261013 (I2S32 >>16 -> S16LE stereo)...
+[wifi] scan count=2
+[wifi] target BSSID=DC:A6:32:87:63:A1 channel=6 RSSI=-62
+[wifi] txPower set=1 actual=34
+[wifi] disconnected reason=2
+[wifi] disconnected reason=2
+[wifi] disconnected reason=2
+[wifi] disconnected reason=2
+[wifi] disconnected reason=2
+[wifi] disconnected reason=2
+[wifi] disconnected reason=2
+[wifi] disconnected reason=2
+[wifi] disconnected reason=2
+[wifi] disconnected reason=2
+[wifi] disconnected reason=2
