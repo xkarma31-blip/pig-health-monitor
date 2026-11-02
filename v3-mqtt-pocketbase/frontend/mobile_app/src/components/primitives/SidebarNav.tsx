@@ -4,9 +4,8 @@ import { useTabTrigger } from 'expo-router/ui';
 import { useTheme } from '../../theme';
 import { LogoMark } from './LogoMark';
 import {
-  HomeIcon,
+  PulseIcon,
   BellIcon,
-  RosterIcon,
   SettingsIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -82,7 +81,7 @@ function SidebarItem({ name, label, icon, badge, collapsed }: SidebarItemProps) 
           <Text
             style={[
               typography.h2,
-              { color, fontSize: 14, marginLeft: spacing.md, fontWeight: active ? '700' : '600' },
+              { color, fontSize: 16, marginLeft: spacing.md, fontWeight: active ? '700' : '600' },
             ]}
           >
             {label}
@@ -164,10 +163,9 @@ export function SidebarNav({ collapsed, onToggle, unreadEvents = 0 }: SidebarNav
         </TouchableOpacity>
       </View>
 
-      <SidebarItem name="home" label="Home" icon={(c) => <HomeIcon color={c} />} collapsed={collapsed} />
-      <SidebarItem name="events" label="Events" icon={(c) => <BellIcon color={c} />} badge={unreadEvents} collapsed={collapsed} />
-      <SidebarItem name="roster" label="Roster" icon={(c) => <RosterIcon color={c} />} collapsed={collapsed} />
-      <SidebarItem name="settings" label="Settings" icon={(c) => <SettingsIcon color={c} />} collapsed={collapsed} />
+      <SidebarItem name="monitor" label="Monitor" icon={(c) => <PulseIcon size={22} color={c} />} collapsed={collapsed} />
+      <SidebarItem name="events" label="Events" icon={(c) => <BellIcon size={22} color={c} />} badge={unreadEvents} collapsed={collapsed} />
+      <SidebarItem name="settings" label="Settings" icon={(c) => <SettingsIcon size={22} color={c} />} collapsed={collapsed} />
 
       <View style={{ flex: 1 }} />
       {!collapsed ? (
@@ -200,13 +198,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -6,
     right: -8,
-    minWidth: 15,
-    height: 15,
-    borderRadius: 8,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
     paddingHorizontal: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeText: { color: 'white', fontSize: 9.5, fontWeight: '700' },
+  badgeText: { color: 'white', fontSize: 11.5, fontWeight: '700' },
   version: { fontSize: 12 },
 });

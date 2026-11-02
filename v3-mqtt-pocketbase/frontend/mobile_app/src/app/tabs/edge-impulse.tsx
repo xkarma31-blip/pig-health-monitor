@@ -35,14 +35,12 @@ export default function EdgeImpulseScreen() {
     return () => clearInterval(interval);
   }, []);
 
-  // Ensure system text size preferences are respected
-  useEffect(() => {
-    const listener = () => {
-      setStatus(prev => prev);
-    };
-    const onChange = () => listener();
-    return () => {};
-  }, []);
+  // NOTE: a "system text size" effect lived here and did nothing — it defined an
+  // onChange handler that was never registered with any listener, and its only
+  // body was `setStatus(prev => prev)`. Removed 2026-11-02 (Track T5) so the
+  // lint gate is clean instead of permanently red. Re-add it properly with
+  // AccessibilityInfo.addEventListener('change', …) if text-size reaction is
+  // actually wanted.
 
   const getStatusColor = (status: string) => {
     switch (status) {

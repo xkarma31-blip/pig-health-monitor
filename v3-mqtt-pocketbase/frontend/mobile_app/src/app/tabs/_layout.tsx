@@ -71,9 +71,8 @@ export default function TabLayout() {
       )}
       {/* Defines the tab routes; the visible bars live above. */}
       <TabList style={styles.hiddenTabList}>
-        <TabTrigger name="home" href="/tabs" />
+        <TabTrigger name="monitor" href="/tabs" />
         <TabTrigger name="events" href="/tabs/events" />
-        <TabTrigger name="roster" href="/tabs/roster" />
         <TabTrigger name="settings" href="/tabs/settings" />
       </TabList>
     </Tabs>

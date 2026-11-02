@@ -105,6 +105,14 @@ function markNav() {
   document.querySelectorAll("nav a").forEach((a) => {
     if (a.getAttribute("href").endsWith(here)) a.classList.add("on");
   });
+  // One way out of the console: the live views (/, /static/fusion.html) share
+  // this palette, so a technician never has to edit the URL bar to get back.
+  const nav = document.querySelector("header nav");
+  if (nav && !nav.querySelector("a.exit")) {
+    const exit = el("a", "exit", "Live views →");
+    exit.href = "/";
+    nav.appendChild(exit);
+  }
 }
 
 async function boot() {

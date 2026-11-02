@@ -2,11 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { Animated, Text, TouchableOpacity, View, StyleSheet } from 'react-native';
 import { useTabTrigger } from 'expo-router/ui';
 import { useTheme } from '../../theme';
-import { HomeIcon, BellIcon, RosterIcon, SettingsIcon } from './Icons';
+import { PulseIcon, BellIcon, SettingsIcon } from './Icons';
 import { playSound } from '../../utils/sounds';
 import { haptic } from '../../utils/haptics';
 
-export type TabKey = 'home' | 'events' | 'roster' | 'settings';
+/**
+ * Primary navigation.
+ *
+ * `monitor` replaced `home` and `roster` was removed from the bar: the live
+ * feeds are the app's main view, and the pig roster now lives behind the
+ * monitor as an anonymous research log (`/research`), not as a peer tab.
+ */
+export type TabKey = 'monitor' | 'events' | 'settings';
 
 type NavButtonProps = {
   name: TabKey;
@@ -72,7 +79,7 @@ function NavButton({ name, label, icon, badge }: NavButtonProps) {
           ) : null}
         </Animated.View>
       </Animated.View>
-      <Text style={[typography.label, { color, fontSize: 10.5, marginTop: 2 }]}>{label}</Text>
+      <Text style={[typography.label, { color, fontSize: 15, marginTop: 3 }]}>{label}</Text>
     </TouchableOpacity>
   );
 }
@@ -91,10 +98,9 @@ export function BottomNav({ unreadEvents = 0 }: BottomNavProps) {
         { backgroundColor: colors.surface, borderTopColor: colors.divider, paddingTop: spacing.sm },
       ]}
     >
-      <NavButton name="home" label="Home" icon={(c) => <HomeIcon color={c} />} />
-      <NavButton name="events" label="Events" icon={(c) => <BellIcon color={c} />} badge={unreadEvents} />
-      <NavButton name="roster" label="Roster" icon={(c) => <RosterIcon color={c} />} />
-      <NavButton name="settings" label="Settings" icon={(c) => <SettingsIcon color={c} />} />
+      <NavButton name="monitor" label="Monitor" icon={(c) => <PulseIcon size={22} color={c} />} />
+      <NavButton name="events" label="Events" icon={(c) => <BellIcon size={22} color={c} />} badge={unreadEvents} />
+      <NavButton name="settings" label="Settings" icon={(c) => <SettingsIcon size={22} color={c} />} />
     </View>
   );
 }
@@ -107,12 +113,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -2,
     right: 1,
-    minWidth: 15,
-    height: 15,
-    borderRadius: 8,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
     paddingHorizontal: 4,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  badgeText: { color: 'white', fontSize: 9.5, fontWeight: '700' },
+  badgeText: { color: 'white', fontSize: 11.5, fontWeight: '700' },
 });
