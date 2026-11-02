@@ -7,6 +7,12 @@ Wants=network-online.target
 Type=simple
 User=pigpulse
 WorkingDirectory=/home/pigpulse/cctv
+# RTSP credentials live in a 0600 env file, never in the source. Both paths
+# are optional (the "-" prefix) so a missing file does not block the unit —
+# but the server fails closed with a clear message if the credentials are
+# absent, because a camera feed without them is just a 401 loop.
+EnvironmentFile=-/etc/pigpulse/cctv.env
+EnvironmentFile=-%h/.config/pigpulse/cctv.env
 # stdlib only (fcntl/array not needed) -> system python is fine and keeps this
 # unit independent of the thermal venv.
 ExecStart=/usr/bin/python3 /home/pigpulse/cctv/tapo_mjpeg_server.py

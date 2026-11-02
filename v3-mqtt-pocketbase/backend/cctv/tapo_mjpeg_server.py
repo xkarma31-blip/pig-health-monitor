@@ -12,6 +12,7 @@ import queue as _queue
 import socket
 import struct
 import subprocess
+import sys
 import threading
 import time
 from collections import deque
@@ -21,11 +22,19 @@ from collections import deque
 # .83 instead — probe both on startup so either addressing works, and allow an
 # explicit override.
 CANDIDATES = [h for h in (
-    os.environ.get("CCTV_RTSP_HOST", "").strip(),
+    os.getenv("TAPO_RTSP_HOST", "").strip(),
+    os.getenv("CCTV_RTSP_HOST", "").strip(),  # legacy name, still honoured
     "192.168.69.2",
     "192.168.69.83",
 ) if h]
-RTSP_USER, RTSP_PASS, RTSP_PORT = "pigpulse", "capstone", 554
+# RTSP credentials are NOT in the source. The AP is a shared barn network, so
+# the camera passphrase lives in a 0600 env file (/etc/pigpulse/cctv.env or
+# ~/.config/pigpulse/cctv.env), read by systemd's EnvironmentFile=. No
+# defaults: an unset credential must fail closed, never fall back to a
+# passphrase that is already published in git history.
+RTSP_USER = os.getenv("TAPO_RTSP_USER", "")
+RTSP_PASS = os.getenv("TAPO_RTSP_PASS", "")
+RTSP_PORT = int(os.getenv("TAPO_RTSP_PORT", "554") or 554)
 PORT = 8091
 BIND = "127.0.0.1"
 BOUNDARY = b"--frame\r\nContent-Type: image/jpeg\r\n\r\n"
@@ -48,6 +57,25 @@ def client_drop(q):
 
 def rtsp_url(host: str) -> str:
     return f"rtsp://{RTSP_USER}:{RTSP_PASS}@{host}:{RTSP_PORT}/stream1"
+
+
+def require_rtsp_credentials() -> None:
+    """Fail closed when the RTSP credentials are not in the environment.
+
+    Raising SystemExit (not a warning) is deliberate: a camera feed without
+    credentials is just a 401 loop, and systemd's Restart=on-failure plus this
+    message is far easier to diagnose than a blank MJPEG frame.
+    """
+    missing = [
+        name for name, val in (("TAPO_RTSP_USER", RTSP_USER),
+                               ("TAPO_RTSP_PASS", RTSP_PASS)) if not val
+    ]
+    if missing:
+        raise SystemExit(
+            "CCTV: FATAL missing RTSP credentials: " + ", ".join(missing) +
+            " — set them in /etc/pigpulse/cctv.env (mode 0600) or "
+            "~/.config/pigpulse/cctv.env"
+        )
 
 
 def pick_host(timeout: float = 2.0) -> str | None:
@@ -230,6 +258,7 @@ def handle_client(conn):
 
 
 def serve():
+    require_rtsp_credentials()
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     try:
@@ -250,5 +279,51 @@ def serve():
         threading.Thread(target=handle_client, args=(conn,), daemon=True).start()
 
 
+def selftest() -> int:
+    """Check the credential wiring end to end, in a child process.
+
+    The module reads the environment at import time, so the checks must run
+    with a controlled environment — hence the child processes.
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    url_code = (
+        "import sys; sys.path.insert(0, %r); import tapo_mjpeg_server as m; "
+        "print(m.rtsp_url('192.168.69.2'))" % here
+    )
+    guard_code = (
+        "import sys; sys.path.insert(0, %r); import tapo_mjpeg_server as m; "
+        "m.require_rtsp_credentials()" % here
+    )
+    failures = []
+
+    env = dict(os.environ)
+    env.update(TAPO_RTSP_USER="probe-user", TAPO_RTSP_PASS="probe-pass",
+               TAPO_RTSP_PORT="8554")
+    proc = subprocess.run([sys.executable, "-c", url_code], env=env,
+                          capture_output=True, text=True, timeout=60)
+    want = "rtsp://probe-user:probe-pass@192.168.69.2:8554/stream1"
+    if proc.returncode != 0 or proc.stdout.strip() != want:
+        failures.append(f"rtsp_url did not use the environment ({proc.stdout.strip()!r})")
+
+    bare = {k: v for k, v in os.environ.items() if not k.startswith("TAPO_RTSP_")}
+    proc2 = subprocess.run([sys.executable, "-c", guard_code], env=bare,
+                           capture_output=True, text=True, timeout=60)
+    if proc2.returncode == 0:
+        failures.append("missing credentials did not fail closed")
+    elif "FATAL missing RTSP credentials" not in proc2.stderr:
+        failures.append(f"unclear failure message: {proc2.stderr.strip()[:160]!r}")
+
+    if failures:
+        print("CCTV SELFTEST FAILED:")
+        for f in failures:
+            print("  -", f)
+        return 1
+    print("cctv selftest OK "
+          "(credentials read from env, missing credentials fail closed)")
+    return 0
+
+
 if __name__ == "__main__":
+    if "--selftest" in sys.argv:
+        sys.exit(selftest())
     serve()
