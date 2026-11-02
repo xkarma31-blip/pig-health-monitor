@@ -1,4 +1,4 @@
-export { HomeIcon, BellIcon, RosterIcon, SettingsIcon, SearchIcon, ChevronLeftIcon, ChevronRightIcon, PlusIcon, RefreshIcon, ThermometerIcon, SensorGridIcon, WaveformIcon, PulseIcon, PigPlusIcon, LockIcon, AlertIcon, CheckIcon, InfoIcon, WarningIcon, AnalyticsIcon, AIIcon, NodesIcon, FeedIcon, TemperatureIcon, EventsIcon } from './Icons';
+export { HomeIcon, BellIcon, RosterIcon, SettingsIcon, SearchIcon, ChevronRightIcon, PlusIcon, RefreshIcon, ThermometerIcon, SensorGridIcon, WaveformIcon, PulseIcon, PigPlusIcon, LockIcon, AlertIcon, CheckIcon, InfoIcon, WarningIcon, AnalyticsIcon, AIIcon, NodesIcon, FeedIcon, TemperatureIcon, EventsIcon } from './Icons';
 export { LogoMark } from './LogoMark';
 export { IconChip } from './IconChip';
 export { Badge } from './Badge';

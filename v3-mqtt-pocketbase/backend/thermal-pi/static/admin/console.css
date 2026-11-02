@@ -94,17 +94,6 @@ nav a.on {
   background: var(--accent);
   border-color: var(--accent);
 }
-/* Exit to the live views (/ and /static/fusion.html). Pushed to the far right
-   so it never reads as another console section. */
-nav a.exit {
-  margin-left: auto;
-  color: var(--accent);
-  border: 2px solid var(--accent);
-  border-radius: 999px;
-  padding: 7px 14px;
-  align-self: center;
-}
-nav a.exit:hover { color: #00140f; background: var(--accent); }
 
 main { padding: 20px 18px 60px; max-width: 1400px; }
 

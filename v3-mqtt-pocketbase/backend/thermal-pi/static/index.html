@@ -122,7 +122,7 @@
       transition: width 0.25s linear;
     }
     .vuRow {
-      display: grid; grid-template-columns: 64px minmax(0,1fr) 52px;
+      display: grid; grid-template-columns: 16px minmax(0,1fr) 44px;
       gap: 8px; align-items: center; margin-top: 8px;
       font-size: 14px; font-weight: 700; color: #dce5f3;
     }
@@ -147,23 +147,17 @@
       .controls { grid-template-columns: 1fr; }
     }
   </style>
-  <link rel="stylesheet" href="/static/monitor-nav.css">
 </head>
 <body>
   <div class="wrap">
-    <nav class="pulseNav" aria-label="PiPulse views">
-      <span class="pulseNavBrand">PigPulse Pi</span>
-      <span class="pulseNavHere" aria-current="page">Thermal</span>
-      <a href="/static/fusion.html">Camera + fusion</a>
-      <a href="/static/fusion.html#mic">Barn mic</a>
-      <a href="/admin">Technician console</a>
-    </nav>
     <div class="top">
       <div>
         <h1>PigPulse Thermal — Pi 4B</h1>
         <div class="sub">MLX90640 32×24 • I²C pin 3/5 • Melexis driver • live browser enhance</div>
       </div>
       <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+        <a class="pill" href="/static/fusion.html">🔥 Thermal + CCTV fusion →</a>
+        <a class="pill" href="/static/fusion.html#mic">ESP32-S3 barn mic — listen &amp; record →</a>
         <div class="pill"><span class="dot" id="liveDot"></span><span id="liveText">Connecting…</span></div>
       </div>
     </div>
@@ -207,16 +201,13 @@
             </div>
             <span class="dot" id="micDot"></span>
           </div>
-          <!-- The INMP441 is a single mono mic and the ingest exposes one
-               figure: the share of non-zero samples. A stereo L/R pair would
-               show two identical bars and read as channel loudness, which this
-               number is not. One bar, labelled for what it measures. -->
           <div class="vuRow">
-            <span>Signal</span><div class="vu"><div class="vuf" id="micBar"></div></div>
-            <span id="micVal">0%</span>
+            <span>L</span><div class="vu"><div class="vuf" id="micBarL"></div></div>
+            <span id="micValL">0%</span>
           </div>
-          <div class="micSub2" style="margin-top:6px">
-            Share of non-zero samples — signal presence, not loudness.
+          <div class="vuRow">
+            <span>R</span><div class="vu"><div class="vuf" id="micBarR"></div></div>
+            <span id="micValR">0%</span>
           </div>
           <div class="micMode" id="micMode">—</div>
           <div class="micErr" id="micErr"></div>
@@ -522,10 +513,12 @@ async function micRefresh() {
       : (s.socket ? 'ESP connected, no signal' : 'ESP32-S3 not connected');
     sub.textContent = `s3-mic-01 · ${s.rate} Hz · peer ${s.peer || '—'}`;
     // Ingest exposes a single signal-quality figure (nonzero sample % over a
-    // short rolling window), not per-channel levels and not loudness.
+    // short rolling window), not per-channel levels.
     const pl = Math.round(s.nonzeroPct || 0);
-    document.getElementById('micBar').style.width = pl + '%';
-    document.getElementById('micVal').textContent = pl + '%';
+    document.getElementById('micBarL').style.width = pl + '%';
+    document.getElementById('micBarR').style.width = pl + '%';
+    document.getElementById('micValL').textContent = pl + '%';
+    document.getElementById('micValR').textContent = pl + '%';
     if (s.bindError) { err.style.display = 'block'; err.textContent = s.bindError; }
     else if (s.stale) { err.style.display = 'block'; err.textContent = 'TCP socket open but no data arriving (stale).'; }
     else { err.style.display = 'none'; }

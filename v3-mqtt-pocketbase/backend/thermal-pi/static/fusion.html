@@ -6,9 +6,7 @@
 <title>PigPulse — Thermal + CCTV Fusion</title>
 <style>
   :root{
-    --ink:#0b0b14; --panel:#141428;
-    /* cyan/teal aligned with static/admin/console.css + the app Monitor stage */
-    --line:#35e0d0; --acc:#35e0d0;
+    --ink:#0b0b14; --panel:#141428; --line:#00e5ff; --acc:#00e5ff;
     --dim:#b9c2d6; --good:#39ff88; --warn:#ffd400; --bad:#ff4d6d;
   }
   *{box-sizing:border-box}
@@ -66,17 +64,9 @@
   .legend{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:16px;color:var(--dim)}
   .bar{flex:1;height:14px;border-radius:7px;border:1px solid #2b3157}
 </style>
-<link rel="stylesheet" href="/static/monitor-nav.css">
 </head>
 <body>
 <div class="wrap">
-<nav class="pulseNav" aria-label="PiPulse views">
-  <span class="pulseNavBrand">PigPulse Pi</span>
-  <a href="/">Thermal</a>
-  <span class="pulseNavHere" aria-current="page">Camera + fusion</span>
-  <a href="#mic">Barn mic</a>
-  <a href="/admin">Technician console</a>
-</nav>
 
   <header>
     <div>
@@ -159,7 +149,7 @@
           onchange="redraw()"> Hot / cold crosshairs</label>
       </div>
 
-      <h2 id="mic">Barn mic &amp; sound</h2>
+      <h2>Sound</h2>
       <div class="ctl" style="background:#0e0e1e;border:2px solid #2b3157;border-radius:10px;padding:10px 12px;margin-bottom:8px;">
         <strong>ESP32-S3 barn mic</strong> <span style="opacity:.75;">— s3-mic-01, TCP :9090</span>
       </div>
@@ -176,7 +166,6 @@
 
       <h2>Elsewhere</h2>
       <a href="/">← Thermal dashboard</a>
-      <a href="/admin">Technician console →</a>
       <a href="/wifi-setup.html">Wi-Fi setup QR →</a>
     </aside>
   </div>

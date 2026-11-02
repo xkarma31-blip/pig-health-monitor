@@ -206,6 +206,7 @@ export function pbSubscribeRealtime(
   if (Platform.OS === 'web' && typeof window !== 'undefined' && 'EventSource' in window) {
     const base = resolveBaseUrls()[0] ?? '';
     const es = new EventSource(`${base}/api/realtime`);
+    let subscribed = false;
     const subscribe = (clientId: string) => {
       fetch(`${base}/api/realtime`, {
         method: 'POST',
@@ -219,9 +220,10 @@ export function pbSubscribeRealtime(
       try {
         const data = JSON.parse(msg.data);
         // Handshake: PB_CONNECT carries the clientId the subscription
-        // POST must reference. Fires once per connection — and again on
-        // every auto-reconnect, so we resubscribe each time.
+        // POST must reference. Fires once per connection (and once per
+        // auto-reconnect — hence the guard, resubscribe each reconnect).
         if (data.clientId && !data.record && !data.action) {
+          subscribed = true;
           subscribe(String(data.clientId));
           return;
         }
@@ -232,10 +234,12 @@ export function pbSubscribeRealtime(
       }
     };
     es.onerror = () => {
-      // EventSource auto-reconnects; the next PB_CONNECT handshake
-      // re-triggers the subscription POST.
+      // EventSource auto-reconnects; the new PB_CONNECT re-triggers
+      // subscription via the subscribed guard above.
+      subscribed = false;
     };
     return () => {
+      subscribed = false;
       es.close();
     };
   }

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Slot } from 'expo-router';
-import { View, TouchableOpacity, Text } from 'react-native';
+import { View, TouchableOpacity, Text, useWindowDimensions } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '../theme';
 import { WebThemeProvider } from '../theme/WebThemeContext';
@@ -16,7 +16,9 @@ import { PulseView } from '../components/Animated/PulseView';
 function RootInner({ children }: { children: React.ReactNode }) {
   const [advisorVisible, setAdvisorVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const { colors, mode } = useTheme();
+  const { colors, spacing, mode } = useTheme();
+  const { width } = useWindowDimensions();
+  const isDesktop = width > 768;
 
   useEffect(() => {
     const initializeApp = async () => {

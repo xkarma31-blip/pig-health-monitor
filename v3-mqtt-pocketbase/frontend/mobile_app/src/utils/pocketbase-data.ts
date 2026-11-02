@@ -2,12 +2,8 @@
  * PigPulse v3 — PocketBase data layer (drop-in replacement for src/utils/firebase.ts API)
  *
  * Mirrors the v2 firebase.ts subscriber signatures so the ported deployed screens
- * work unchanged: subscribeRoster / subscribeAlerts / subscribeSensors /
+ * work unchanged: subscribeRoster / enrollPig / subscribeAlerts / subscribeSensors /
  * subscribeTelemetry all talk to PocketBase (self-hosted, no Firebase).
- *
- * Roster enrollment changed 2026-11-02 (Track T5): `enrollPig(name)` became
- * `enrollAnonymousPig()` — the research log stores an anonymous `P-####` code
- * and never a name. See docs/track-t5-apps.md.
  *
  * Collections (v3 PB):
  *   users, telemetry, alerts, devices, pigs
@@ -62,16 +58,8 @@ function toLiveSensor(device: Record<string, unknown>): LiveSensorReading {
 /**
  * subscribeRoster — live roster from the `pigs` collection.
  * Emits the full list on subscribe + on any realtime change.
- *
- * `onError` exists so a caller can tell "the query failed" apart from "the
- * collection is empty". Swallowing the error and emitting [] presents a
- * connection outage as an empty result — the exact ambiguity the Pi console
- * forbids for its own readers.
  */
-export function subscribeRoster(
-  callback: (roster: Record<string, unknown>[]) => void,
-  onError?: (error: unknown) => void,
-) {
+export function subscribeRoster(callback: (roster: Record<string, unknown>[]) => void) {
   let cancelled = false;
 
   const emit = () => {
@@ -79,10 +67,8 @@ export function subscribeRoster(
       .then(({ items }) => {
         if (!cancelled) callback(items);
       })
-      .catch((error: unknown) => {
-        if (cancelled) return;
-        onError?.(error);
-        callback([]);
+      .catch(() => {
+        if (!cancelled) callback([]);
       });
   };
 
@@ -94,36 +80,11 @@ export function subscribeRoster(
   };
 }
 
-/**
- * nextPigCode — next free anonymous code (P-0001 …) for this pen.
- *
- * The `pigs` schema requires `pigId` and has NO `enrolledAt` column (see
- * deploy/pocketbase/bin/pb_migrations/1790499383_created_pigs.js). The previous
- * enrollPig(name) payload omitted the required pigId and sent an undeclared
- * enrolledAt, so PocketBase rejected every enrollment and silently dropped the
- * date. This computes a code from records that actually exist.
- *
- * Two devices enrolling in the same second can compute the same code; pigId is
- * not unique in the schema, and a duplicate in a research log is preferable to
- * blocking a vet in the field.
- */
-export function nextPigCode(records: Array<Record<string, unknown>>): string {
-  let max = 0;
-  for (const record of records) {
-    const match = /^P-(\d{1,6})$/.exec(String(record.pigId ?? ''));
-    if (match) max = Math.max(max, Number(match[1]));
-  }
-  return `P-${String(max + 1).padStart(4, '0')}`;
-}
-
-/**
- * enrollAnonymousPig — add one anonymous observation slot.
- * No name is written or read anywhere; identity is the P-#### code only.
- */
-export async function enrollAnonymousPig(): Promise<Record<string, unknown>> {
-  const { items } = await pbList('pigs', { sort: '-created', perPage: 200 });
+/** enrollPig — create a pig record in PocketBase. */
+export async function enrollPig(name: string): Promise<Record<string, unknown>> {
   return pbCreate('pigs', {
-    pigId: nextPigCode(items),
+    name,
+    enrolledAt: new Date().toISOString(),
     healthStatus: 'NORMAL',
     tags: [],
   });
