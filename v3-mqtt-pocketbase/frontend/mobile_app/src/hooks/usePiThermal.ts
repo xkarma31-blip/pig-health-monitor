@@ -50,6 +50,8 @@ export interface PiThermalSnapshot {
   pbStats: PiPbStats | null;
   /** That row is fresh (published within ~90 s). */
   pbFresh: boolean;
+  /** State clock (ticks every second) — use for age labels, not Date.now() in render. */
+  now: number;
 }
 
 const FRAME_POLL_MS = 2000;
@@ -160,5 +162,5 @@ export function usePiThermal(): PiThermalSnapshot {
   const live = frameAt !== null && now - frameAt < LIVE_WINDOW_MS;
   const pbFresh = pbStats !== null && telemetryFresh(pbStats.timestamp, now);
 
-  return { frame, frameAt, ambient, esp, live, pbStats, pbFresh };
+  return { frame, frameAt, ambient, esp, live, pbStats, pbFresh, now };
 }

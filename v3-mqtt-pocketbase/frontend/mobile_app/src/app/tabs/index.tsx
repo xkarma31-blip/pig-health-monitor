@@ -5,6 +5,7 @@ import { useTheme, type Status } from '../../theme';
 import { useAuth } from '../../hooks/useAuth';
 import { usePocketbaseRealtime, type TelemetryFrame } from '../../hooks/usePocketbaseRealtime';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
+import { usePiThermal } from '../../hooks/usePiThermal';
 import {
   LogoMark,
   Badge,
@@ -18,7 +19,7 @@ import {
 } from '../../components/primitives';
 import { playSound } from '../../utils/sounds';
 import { haptic } from '../../utils/haptics';
-import { telemetryTime, telemetryFresh } from '../../utils/telemetry-time';
+import { telemetryTime } from '../../utils/telemetry-time';
 import { subscribeDeviceNames } from '../../utils/pocketbase-data';
 import { loadFarmerSetup } from '../../utils/setupStore';
 
@@ -143,11 +144,12 @@ export default function HomeScreen() {
   const topAlert = devices.find((d) => d.status === 'alert');
   const farmPrefix = farmName ? `${farmName} · ` : '';
 
-  // Live Pi thermal data — when the phone is on the PigPulse network the Pi
-  // publishes pi-thermal-01 rows; rows from an older session stay "Demo".
-  const piFrame = telemetry['pi-thermal-01'];
-  const piLive = !!piFrame && telemetryFresh(piFrame.timestamp);
-  const piTemp = typeof piFrame?.temperature === 'number' ? piFrame.temperature : undefined;
+  // Live barn status via the shared hook (console frames or fresh PB rows);
+  // "Stale"/"Offline" when nothing recent — never a fake demo label.
+  const pi = usePiThermal();
+  const piLive = pi.live || pi.pbFresh;
+  const piStale = !piLive && !!pi.pbStats;
+  const piTemp = (pi.live && pi.frame ? pi.frame.center : undefined) ?? pi.pbStats?.bodyTemp;
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -303,11 +305,13 @@ export default function HomeScreen() {
             <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 2, fontSize: 12.5 }]}>
               {piLive
                 ? `pi-thermal-01 · ${typeof piTemp === 'number' ? piTemp.toFixed(1) : '—'}°C · live`
-                : 'Simulated preview of the thermal camera'}
+                : piStale
+                  ? 'pi-thermal-01 · stale — check the barn'
+                  : 'No live thermal data — barn offline'}
             </Text>
           </View>
         </View>
-        <Badge label={piLive ? 'Live' : 'Demo'} status={piLive ? 'healthy' : 'info'} />
+        <Badge label={piLive ? 'Live' : piStale ? 'Stale' : 'Offline'} status={piLive ? 'healthy' : piStale ? 'watch' : 'info'} />
       </TouchableOpacity>
 
       {/* Needs attention */}

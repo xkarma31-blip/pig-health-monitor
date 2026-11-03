@@ -377,3 +377,29 @@ mic socket open, no data (stale).
   400'd the deployed stats tier. Production-verified: LIVE badge, HOT/COLD markers,
   SHT45 36.96 °C / 72.5 %, mic socket state — no demo label. Local regression stays
   24/24 (bridge absent → graceful demo fallback).
+
+---
+
+## Track note 2026-11-03 (phase 4) — the Live tab + honest offline states
+
+> Committed alongside this note; parent: `27a4a4a`.
+
+- **Roster tab → Live tab.** Navs (bottom + sidebar) are now Home · Events · **Live** ·
+  Settings. The Live tab hosts the shared `LiveThermalPanel` (also used by `/thermal`)
+  plus quick links: **Roster →** (kept routable at `/tabs/roster`, no longer a tab,
+  with "Back to Live") and **Full screen →** (`/thermal`). A STREAMS note states that
+  CCTV isn't wired into the app yet.
+- **Honest offline states — the fake heatmap is gone from the app's live surfaces.**
+  Four states: **LIVE** (console frames) · **LIVE STATS** (fresh PB) · **LAST KNOWN**
+  (stale PB, age-stamped) · **OFFLINE** (no imagery at all; guidance + auto-retry).
+  Home's thermal card mirrors this (Live / Stale / Offline badge).
+- **Pi-localhost findings (grounded 2026-11-03):** the Pi console is live and directly
+  reachable on the barn network (`/`, `/health`, `/data`, `/ambient`, `/esp/status` —
+  all 200; a browser on that origin works once the cert is accepted; a cross-origin
+  browser fetch is CORS-blocked — verified). Hence the proxy (local harness) and the
+  serverless bridge (deployed) are required for non-same-origin hosting. The Pi does
+  **not** host the app (`/app` → 404) and SSH was denied with available credentials —
+  hosting the app on the Pi (same-origin: no CORS, cert accepted once) is scoped as
+  a next step.
+- Verified: **69/69** (26 signed-out + 16 user + 7 admin + 5 nav + 12 live + 3 home).
+  Deployed: all routes 200 incl. `/app/tabs/live`.

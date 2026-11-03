@@ -22,8 +22,10 @@ import {
   Skeleton,
   useToast,
 } from '../../components/primitives';
+import { ChevronLeftIcon } from '../../components/primitives/Icons';
 import { playSound } from '../../utils/sounds';
 import { haptic } from '../../utils/haptics';
+import { useRouter } from 'expo-router';
 
 type Pig = { id: string; name: string; enrolled: string; temp?: string; status: Status; trend?: number[] };
 
@@ -165,6 +167,7 @@ export default function RosterScreen() {
   const tier = useBreakpoint();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const router = useRouter();
   const [enrollOpen, setEnrollOpen] = useState(false);
   const [liveHerd, setLiveHerd] = useState<Pig[] | null>(null);
   const [scale] = useState(() => new Animated.Value(1));
@@ -234,7 +237,23 @@ export default function RosterScreen() {
       ]}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={[typography.h1, { color: colors.textPrimary }]}>Roster</Text>
+      <TouchableOpacity
+        style={[styles.backBtn, { backgroundColor: colors.surface, borderRadius: radius.md }]}
+        activeOpacity={0.85}
+        onPress={() => {
+          playSound('tap');
+          haptic('light');
+          // Explicit tab return — history-back from a tab can land on Home.
+          router.navigate('/tabs/live');
+        }}
+        accessibilityRole="button"
+        accessibilityLabel="Back to Live"
+        accessibilityHint="Returns to the Live tab"
+      >
+        <ChevronLeftIcon size={18} color={colors.textPrimary} />
+        <Text style={[typography.h2, { color: colors.textPrimary, marginLeft: 6 }]}>Live</Text>
+      </TouchableOpacity>
+      <Text style={[typography.h1, { color: colors.textPrimary, marginTop: spacing.md }]}>Roster</Text>
       <View style={styles.subtitleRow}>
         <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 4, flex: 1 }]}>
           Manual enrollment and per-pig health
@@ -310,6 +329,14 @@ export default function RosterScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   subtitleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
+  backBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    minHeight: 44,
+  },
   demoPill: {
     alignSelf: 'flex-start',
     marginLeft: 10,
