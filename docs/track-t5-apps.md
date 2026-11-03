@@ -369,3 +369,11 @@ mic socket open, no data (stale).
 - Deployed-web nuance: the domain's `/api` only bridges telemetry — device-name
   lookups (`/api/collections/devices`) 404 there, so deployed rows show raw device
   ids until the bridge covers names (follow-up).
+- **Deployed LIVE thermal (2026-11-03, evening):** the ONLINE app now streams REAL
+  Pi frames — `api/pi.js` (single-path bridge `/api/pi?ep=data|ambient|esp/status`)
+  → Tailscale Funnel → laptop `readonly_pb_proxy` (new key-gated `/pi` passthrough,
+  endpoint allowlist, unverified TLS to the console) → Pi console. The proxy's
+  filter regex also now accepts quoted values (`deviceId='x'`), which had silently
+  400'd the deployed stats tier. Production-verified: LIVE badge, HOT/COLD markers,
+  SHT45 36.96 °C / 72.5 %, mic socket state — no demo label. Local regression stays
+  24/24 (bridge absent → graceful demo fallback).

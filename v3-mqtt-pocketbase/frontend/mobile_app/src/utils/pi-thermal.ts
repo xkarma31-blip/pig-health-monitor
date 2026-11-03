@@ -13,6 +13,7 @@
  *   3. null → no live fetch; callers keep the clearly-labeled simulation.
  */
 
+import { Platform } from 'react-native';
 import { loadFarmerSetup } from './setupStore';
 
 export interface PiFrameData {
@@ -72,30 +73,45 @@ export function piBaseFromEnv(): string | null {
 /**
  * Resolve the Pi console base URL. Host-parsing is done with a regex (not
  * `new URL`) — Hermes on Android has historically shipped a partial URL shim.
+ *
+ * Order: env override → farmer-saved PB host :8080 → (web only) the deployment's
+ * own /api/pi bridge, which api/pi.js serves through the read-only tunnel.
  */
 export async function resolvePiBase(): Promise<string | null> {
   const fromEnv = piBaseFromEnv();
   if (fromEnv) return fromEnv;
   try {
     const setup = await loadFarmerSetup();
-    if (!setup.pbUrl) return null;
-    const host = setup.pbUrl
-      .replace(/^[a-z]+:\/\//i, '')
-      .split('/')[0]
-      .split(':')[0];
-    if (!host) return null;
-    return `https://${host}:8080`;
+    if (setup.pbUrl) {
+      const host = setup.pbUrl
+        .replace(/^[a-z]+:\/\//i, '')
+        .split('/')[0]
+        .split(':')[0];
+      if (host) return `https://${host}:8080`;
+    }
   } catch {
-    return null;
+    /* fall through to the web fallback */
   }
+  // Deployed web builds ship api/pi.js (same-origin bridge). Local harnesses
+  // without that route simply 404 → the hook reports live:false as before.
+  if (Platform.OS === 'web') return '/api/pi';
+  return null;
 }
 
 /** GET JSON from the console; null on any failure (timeout, TLS, CORS, 4xx). */
 export async function fetchPiJson<T>(base: string, path: string, timeoutMs = 4000): Promise<T | null> {
+  // The deployed bridge is single-path (platform functions match one exact
+  // path): /api/pi?ep=<endpoint>&ts=… — LAN bases use plain subpaths.
+  let url = `${base}${path}`;
+  if (base === '/api/pi') {
+    const [p, q] = path.split('?');
+    const ep = p.replace(/^\//, '');
+    url = `${base}?ep=${encodeURIComponent(ep)}${q ? `&${q}` : ''}`;
+  }
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(`${base}${path}`, {
+    const res = await fetch(url, {
       headers: { Accept: 'application/json' },
       signal: controller.signal,
     });

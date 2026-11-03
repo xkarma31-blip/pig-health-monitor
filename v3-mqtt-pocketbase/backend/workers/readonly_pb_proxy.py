@@ -27,6 +27,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import ssl
 import sys
 import time
 import urllib.error
@@ -38,6 +39,11 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 # ── Config ───────────────────────────────────────────────────────────
 UPSTREAM = os.environ.get("PB_UPSTREAM", "http://127.0.0.1:8090").rstrip("/")
 PROXY_KEY = os.environ.get("PROXY_KEY", "")
+# Pi thermal console (feeds the deployed app's live thermal view). Read-only
+# GETs to an allowlist of console endpoints; the console cert is self-signed,
+# so the TLS context is deliberately unverified (local LAN hop).
+PI_UPSTREAM = os.environ.get("PI_UPSTREAM", "https://192.168.69.1:8080").rstrip("/")
+_PI_SSL = ssl._create_unverified_context()
 PORT = int(os.environ.get("PROXY_PORT", "8099"))
 HOST = os.environ.get("PROXY_HOST", "127.0.0.1")
 UPSTREAM_TIMEOUT = float(os.environ.get("UPSTREAM_TIMEOUT", "8"))
@@ -69,7 +75,8 @@ ALLOWED_FIELDS: dict[str, set[str]] = {
 }
 
 COLLECTION_RE = re.compile(r"^/api/collections/([a-zA-Z0-9_]+)/records$")
-SAFE_FILTER = re.compile(r"^[A-Za-z0-9_@=<>!\.\-]+$")
+SAFE_FILTER = re.compile(r"^[A-Za-z0-9_@=<>!\.\'\"\- ]+$")
+# quotes/space allowed: the app sends filters like deviceId='pi-thermal-01'
 
 _hits: dict[str, deque] = defaultdict(deque)
 
@@ -158,6 +165,30 @@ class Handler(BaseHTTPRequestHandler):
     def do_HEAD(self):
         self.do_GET()
 
+    # Read-only passthrough to the Pi thermal console (the deployed app's live
+    # thermal view rides this). Key gate applies like everything else.
+    PI_ROUTES = {"/data", "/ambient", "/esp/status", "/health"}
+
+    def _proxy_pi(self, path: str, query: str) -> None:
+        target_path = path[3:] or "/"
+        if target_path not in self.PI_ROUTES:
+            self._json(404, {"error": "pi endpoint not allowed"})
+            return
+        if query and len(query) > 120:
+            query = ""
+        url = f"{PI_UPSTREAM}{target_path}"
+        if query:
+            url += "?" + query
+        try:
+            req = urllib.request.Request(url, method="GET")
+            req.add_header("Accept", "application/json")
+            with urllib.request.urlopen(req, timeout=6, context=_PI_SSL) as resp:
+                raw = resp.read()
+        except Exception as e:  # noqa: BLE001
+            self._json(502, {"error": f"pi unreachable: {type(e).__name__}"})
+            return
+        self._send(200, raw)
+
     def do_GET(self):
         if not self._authorized():
             self._json(401, {"error": "unauthorized"})
@@ -177,6 +208,10 @@ class Handler(BaseHTTPRequestHandler):
         # Hard block on the admin surface, even for GET.
         if path.startswith("/api/admins") or "/admins/" in path:
             self._json(403, {"error": "admin surface is not proxied"})
+            return
+
+        if path == "/pi" or path.startswith("/pi/"):
+            self._proxy_pi(path, parsed.query)
             return
 
         m = COLLECTION_RE.match(path)
