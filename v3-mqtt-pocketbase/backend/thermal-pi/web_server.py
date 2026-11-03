@@ -19,6 +19,9 @@ Ambient (SHT45 on the ESP32-S3) — observed over MQTT, never polled:
 CCTV (Tapo camera), proxied to keep the browser on one (HTTPS) origin:
   GET /cctv          → multipart/x-mixed-replace MJPEG
 
+Camera audio (Tapo), grabbed straight from the Pi:
+  GET /camera-audio?seconds=N → WAV chunk from the camera's own mic (stream2)
+
 Usage:
   python3 web_server.py
   python3 web_server.py --port 8080
@@ -28,13 +31,15 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import queue
 import struct
+import subprocess
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, quote, urlparse
 
 import ambient_ingest
 import config
@@ -69,8 +74,83 @@ _CCTV_PORT = 8091
 # Hard cap for /esp/record?seconds= (WAV is built in memory: 60 s ~= 11 MB)
 ESP_RECORD_MAX_S = 60
 
+# Wall-clock grace added on top of the requested duration before
+# /esp/record gives up. The idle counter inside the capture loop only catches
+# a *silent* link; this catches a link that trickles chunks but never reaches
+# the requested length. Both end on the same honest 503, and the endpoint
+# therefore always answers within `seconds + ESP_RECORD_GRACE_S`.
+ESP_RECORD_GRACE_S = 20
+
+CAMERA_AUDIO_MAX_S = 8
+CAMERA_AUDIO_MIN_S = 2
+CAMERA_AUDIO_DEFAULT_S = 4
+
+# Only one camera-audio capture may run at a time. The Tapo camera exposes a
+# small, finite number of RTSP client slots; a second concurrent ffmpeg would
+# evict the MJPEG feed (or the capture itself) instead of adding capacity.
+_camera_audio_lock = threading.Lock()
+
+
+def _patch_wav_sizes(wav: bytes) -> bytes:
+    """Rewrite ffmpeg's placeholder RIFF/data size fields with real lengths.
+
+    When ffmpeg writes WAV to a pipe it cannot know the payload size
+    upfront, so it emits 0xFFFFFFFF in both the RIFF and the `data` size
+    field. The stream still plays, but the header then misdescribes the
+    payload. Walk the chunk list and patch both fields from the bytes we
+    actually received. A malformed/short buffer is returned untouched.
+    """
+    if len(wav) < 12 or wav[:4] != b"RIFF" or wav[8:12] != b"WAVE":
+        return wav
+    out = bytearray(wav)
+    pos = 12
+    while pos + 8 <= len(out):
+        cid = bytes(out[pos:pos + 4])
+        size = struct.unpack("<I", out[pos + 4:pos + 8])[0]
+        body = pos + 8
+        if cid == b"data":
+            payload = len(out) - body
+            if payload < 0:
+                return wav
+            struct.pack_into("<I", out, pos + 4, payload)
+            # All-or-nothing: only claim a corrected RIFF size once the
+            # payload length is known and the data chunk has been patched.
+            struct.pack_into("<I", out, 4, len(out) - 8)
+            return bytes(out)
+        if size == 0xFFFFFFFF:
+            # Unknown-size chunk: cannot walk past it safely.
+            break
+        pos = body + size + (size & 1)
+    # No data chunk found -> leave the buffer exactly as ffmpeg wrote it.
+    return wav
+
+# Tapo RTSP credentials — env-only, no committed defaults (fail closed).
+# The Pi-side systemd drop-in 20-cctv-audio.conf loads /etc/pigpulse/cctv.env.
+TAPO_RTSP_USER = os.environ.get("TAPO_RTSP_USER", "").strip()
+TAPO_RTSP_PASS = os.environ.get("TAPO_RTSP_PASS", "").strip()
+TAPO_RTSP_HOST = os.environ.get("TAPO_RTSP_HOST", "").strip()
+TAPO_RTSP_PORT = os.environ.get("TAPO_RTSP_PORT", "554").strip()
+
 _reader = MlxReader()
 _comp = pigpulse_stats.AmbientCompensator()
+
+# Radiometric correction chain (radiometry.ZoneFeverPipeline): drift
+# compensation, per-pixel baseline and zone-level fever logic. It consumes the
+# SAME driver-compensated 768-float frames — emissivity ownership stays with
+# the driver (the pipeline enforces eps_here=1.0, so a double correction is
+# impossible by construction). Kill switch: PIGPULSE_RADIOMETRY=0 restores the
+# legacy scalar path below, byte-for-byte.
+_radiometry = None
+if os.environ.get("PIGPULSE_RADIOMETRY", "1") != "0":
+    try:
+        from radiometry import ZoneFeverPipeline
+        _radiometry = ZoneFeverPipeline()
+        print("[web] radiometry correction chain ENABLED "
+              "(drift + baseline + zones; ambient from SHT45 when live)",
+              flush=True)
+    except Exception as e:  # noqa: BLE001 - must never take the sensor tier down
+        print(f"[web] radiometry unavailable ({e}) — legacy compensation in use",
+              flush=True)
 _lock = threading.Lock()
 _frame_seq = 0
 _last_ok = False
@@ -196,15 +276,64 @@ def _loop() -> None:
         with _lock:
             _read_ms = int((t1 - t0) * 1000)
             if ok:
+                # --- Ambient source: SHT45 (ambient_ingest) over internal Ta ---
+                # The driver's internal Ta (amb[0]) tracks the sensor die, not
+                # the air: measured 2026-11-04 at 43.6 C while the SHT45 beside
+                # the rig read 31.1 C — a ~12 C self-heat gap. Feeding that Ta
+                # into the ambient compensation over-pulled every reading by
+                # (43.6 - 31.1) * SOLAR_COMP_FACTOR ~= 1.25 C. state == "live"
+                # means the SHT value is <= LIVE_S (15 s) old; anything else
+                # falls back to the internal Ta, and the payload says which
+                # source was used.
+                amb_src = ambient_ingest.get().snapshot()
+                sht_c = (amb_src.get("temperature")
+                         if amb_src.get("state") == "live" else None)
+                ambient_c = sht_c if sht_c is not None else amb[0]
+
                 st = pigpulse_stats.frame_stats(img)
-                # use shared compensator
-                center_c = _comp.apply(st["center"], amb[0])
-                st["center"] = center_c
-                st["ambient"] = amb[0]
-                st["center_compensated"] = center_c
-                st["verdict"] = pigpulse_stats.verdict_text(center_c)
-                st["alerts"] = pigpulse_stats.evaluate_alerts(center_c)
-                st["pixels"] = [round(x, 2) for x in img]
+                if _radiometry is not None:
+                    # Correction chain: drift compensation (clamped, reference
+                    # region), per-pixel rolling baseline, zone classification.
+                    res = _radiometry.update(img, t1, ambient_c)
+                    bias = float(res.get("driftBiasC", 0.0))
+                    corrected = [x - bias for x in img]
+                    # Legacy dashboard/publisher keys, recomputed on the
+                    # drift-corrected frame so the heatmap, hotspot marker and
+                    # alert message positions all stay consistent.
+                    st.update(pigpulse_stats.frame_stats(corrected))
+                    # Pipeline verdicts replace the legacy scalar ones; the
+                    # alert flags keep the same 0x01/0x02 semantics.
+                    for k in ("center", "hotspot", "max", "min", "ambient",
+                              "status", "alerts", "verdict"):
+                        st[k] = res[k]
+                    st["center_compensated"] = st["center"]
+                    st["pixels"] = [round(x, 2) for x in corrected]
+                    st["ambientSrc"] = ("sht45" if sht_c is not None
+                                        else "mlx-internal")
+                    st["radiometry"] = {
+                        "zoneCount": res.get("zoneCount"),
+                        "baselineReady": res.get("baselineReady"),
+                        "baselineFrames": res.get("baselineFrames"),
+                        "herdRefC": res.get("herdRefC"),
+                        "animalCount": res.get("animalCount"),
+                        "driftBiasC": res.get("driftBiasC"),
+                        "driftMode": res.get("driftMode"),
+                        "refMedianC": res.get("refMedianC"),
+                        "driftAbsorbedC": res.get("driftAbsorbedC"),
+                        "reflectedTempC": res.get("reflectedTempC"),
+                        "roiPeakC": res.get("roiPeakC"),
+                    }
+                else:
+                    # Legacy path (PIGPULSE_RADIOMETRY=0 or import failure):
+                    # exactly as before this change.
+                    center_c = _comp.apply(st["center"], amb[0])
+                    st["center"] = center_c
+                    st["ambient"] = amb[0]
+                    st["center_compensated"] = center_c
+                    st["verdict"] = pigpulse_stats.verdict_text(center_c)
+                    st["alerts"] = pigpulse_stats.evaluate_alerts(center_c)
+                    st["pixels"] = [round(x, 2) for x in img]
+                    st["ambientSrc"] = "mlx-internal"
                 st["frame"] = _frame_seq + 1
                 st["readMs"] = _read_ms
                 dt = t1 - _last_t if _last_t else 0
@@ -291,6 +420,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/esp/record":
             self._record_esp(query)
+            return
+        if path == "/camera-audio":
+            self._camera_audio(query)
             return
         if path == "/esp/status":
             body = json.dumps(esp_audio_ingest.get().status(),
@@ -598,9 +730,14 @@ class Handler(BaseHTTPRequestHandler):
         want = seconds * rate * 4          # s16le stereo = 4 bytes per frame
         buf = bytearray()
         q = esp.subscribe()
+        # Wall-clock cap: the link may deliver chunks slowly forever, so the
+        # idle counter alone is not a bound. This one is.
+        deadline = time.monotonic() + seconds + ESP_RECORD_GRACE_S
         try:
             idle = 0
             while len(buf) < want:
+                if time.monotonic() >= deadline:
+                    break
                 try:
                     chunk = q.get(timeout=1.0)
                 except queue.Empty:
@@ -620,12 +757,70 @@ class Handler(BaseHTTPRequestHandler):
             return
 
         nframes = len(buf) // 4
+        # Trim to whole frames so the header's data size ALWAYS equals the
+        # bytes we send (s16le stereo = 4 bytes/frame). A partial trailing
+        # frame would otherwise be described but not delivered.
+        payload = bytes(buf[:nframes * 4])
         hdr = b"RIFF" + struct.pack("<I", 36 + nframes * 4) + b"WAVEfmt "
         hdr += struct.pack("<IHHIIHH", 16, 1, 2, rate, rate * 4, 4, 16)
         hdr += b"data" + struct.pack("<I", nframes * 4)
-        name = f"esp-{time.strftime('%Y%m%d-%H%M%S')}-{seconds}s.wav"
-        self._send(200, "audio/wav", bytes(hdr) + bytes(buf),
+        # Name the file after what was ACTUALLY captured, not what was asked
+        # for: a short/truncated capture must not claim the full duration.
+        actual_s = nframes / float(rate)
+        name = f"esp-{time.strftime('%Y%m%d-%H%M%S')}-{actual_s:.1f}s.wav"
+        self._send(200, "audio/wav", bytes(hdr) + payload,
                    {"Content-Disposition": f'attachment; filename="{name}"'})
+
+    def _camera_audio(self, query: dict) -> None:
+        """Grab N seconds of the Tapo camera's own audio track (WAV).
+
+        Runs ffmpeg on the Pi against the camera's RTSP stream2 (SD profile),
+        which carries the camera mic on A-law. Captured directly on the Pi so it
+        works even when the laptop is off or on a different network.
+        """
+        if not (TAPO_RTSP_USER and TAPO_RTSP_PASS and TAPO_RTSP_HOST):
+            self._send(503, "text/plain",
+                       b"camera RTSP credentials are not configured")
+            return
+        try:
+            seconds = int(query.get("seconds", [str(CAMERA_AUDIO_DEFAULT_S)])[0])
+        except (ValueError, IndexError, TypeError):
+            seconds = CAMERA_AUDIO_DEFAULT_S
+        seconds = max(CAMERA_AUDIO_MIN_S, min(seconds, CAMERA_AUDIO_MAX_S))
+        # Percent-encode the credentials: a password containing '@', '/' or ':'
+        # would otherwise be parsed as part of the host and break the RTSP URL.
+        user = quote(TAPO_RTSP_USER, safe="")
+        password = quote(TAPO_RTSP_PASS, safe="")
+        url = (f"rtsp://{user}:{password}@"
+               f"{TAPO_RTSP_HOST}:{TAPO_RTSP_PORT}/stream2")
+        cmd = [
+            "ffmpeg", "-nostdin", "-loglevel", "error",
+            "-rtsp_transport", "tcp",
+            "-i", url,
+            "-vn", "-t", str(seconds), "-ac", "1", "-ar", "16000",
+            "-f", "wav", "pipe:1",
+        ]
+        # One capture at a time (see _camera_audio_lock).
+        if not _camera_audio_lock.acquire(blocking=False):
+            self._send(503, "text/plain",
+                       b"camera audio busy - another capture in progress")
+            return
+        try:
+            proc = subprocess.run(cmd, capture_output=True,
+                                  timeout=seconds + 15, check=False)
+        except subprocess.TimeoutExpired:
+            self._send(502, "text/plain", b"camera audio capture timed out")
+            return
+        except Exception as e:  # noqa: BLE001
+            self._send(502, "text/plain",
+                       f"camera audio failed: {type(e).__name__}".encode())
+            return
+        finally:
+            _camera_audio_lock.release()
+        if proc.returncode != 0 or len(proc.stdout) < 44:
+            self._send(503, "text/plain", b"camera audio unavailable")
+            return
+        self._send(200, "audio/wav", _patch_wav_sizes(proc.stdout))
 
 
 def main() -> None:

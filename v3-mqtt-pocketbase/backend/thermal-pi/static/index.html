@@ -239,6 +239,11 @@
               <span class="value" id="ambHum">--</span>
               <div class="small">SHT45</div>
             </div>
+            <div class="box" style="min-height:64px; grid-column:1 / -1;">
+              <span class="label">Heat stress — THI</span>
+              <span class="value" id="ambThi">--</span>
+              <div class="small" id="ambThiClass">needs temp + humidity</div>
+            </div>
           </div>
           <div class="micMode" id="ambMode">—</div>
         </div>
@@ -656,6 +661,27 @@ async function ambientRefresh() {
     const a = await res.json();
     document.getElementById('ambTemp').textContent = ambFmt(a.temperature, 'C', 2);
     document.getElementById('ambHum').textContent = ambFmt(a.humidity, '%', 1);
+    // Heat stress — THI (server-computed from the SHT45 pair; null when absent)
+    const THI_CLASSES = {
+      'ok':       { color: 'var(--good)', text: '<74 — ok for swine' },
+      'mild':     { color: 'var(--warn)', text: '74–78 — mild stress' },
+      'moderate': { color: 'var(--bad)',  text: '78–82 — moderate stress' },
+      'severe':   { color: 'var(--bad)',  text: '>=82 — severe stress' },
+    };
+    const thiEl = document.getElementById('ambThi');
+    const thiClsEl = document.getElementById('ambThiClass');
+    if (a.thi !== null && a.thi !== undefined) {
+      thiEl.textContent = Number(a.thi).toFixed(1);
+      const tc = THI_CLASSES[a.thiClass] || { color: 'inherit', text: a.thiClass || '' };
+      thiEl.style.color = tc.color;
+      thiClsEl.textContent = tc.text;
+      thiClsEl.style.color = tc.color;
+    } else {
+      thiEl.textContent = '--';
+      thiEl.style.color = 'inherit';
+      thiClsEl.textContent = 'needs temp + humidity';
+      thiClsEl.style.color = 'inherit';
+    }
     const meta = AMB_STATES[a.state] || AMB_STATES['no-data'];
     text.textContent = meta.text;
     text.style.color = meta.color;

@@ -233,6 +233,20 @@ class AmbientIngest:
         else:
             state = "stale"
 
+        # Temperature-Humidity Index (THI) from the SHT45 pair — heat-stress
+        # metric standard for swine (livestock literature). Present ONLY when
+        # both values exist; never fabricated from one alone.
+        #   THI = (1.8T + 32) - (0.55 - 0.0055*RH) * (1.8T - 26)   [RH in %]
+        # Bands: <74 ok | 74-78 mild | 78-82 moderate | >=82 severe.
+        thi = None
+        thi_class = None
+        if temp is not None and hum is not None:
+            thi = round((1.8 * temp + 32.0)
+                        - (0.55 - 0.0055 * hum) * (1.8 * temp - 26.0), 1)
+            thi_class = ("ok" if thi < 74 else
+                         "mild" if thi < 78 else
+                         "moderate" if thi < 82 else "severe")
+
         return {
             "state": state,
             "ok": state in ("live", "stale"),
@@ -240,6 +254,8 @@ class AmbientIngest:
             "micOnline": mic,
             "temperature": temp,
             "humidity": hum,
+            "thi": thi,
+            "thiClass": thi_class,
             "ageS": round(age_msg, 1) if age_msg is not None else None,
             "ambientAgeS": round(age_amb, 1) if age_amb is not None else None,
             "lastAmbientWall": last_amb_wall,
