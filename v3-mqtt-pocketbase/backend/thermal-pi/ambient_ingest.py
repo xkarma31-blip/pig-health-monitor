@@ -24,14 +24,24 @@ STATE MODEL (what /ambient and the dashboard card show):
   mqtt-offline  Pi's broker link is down — nothing can be trusted
   no-data       connected, no telemetry seen yet
   esp-offline   last telemetry said mic:false (LWT) or is older than OFFLINE_S
-  sht-missing   ESP is live, but the latest telemetry carries no temperature/
-                humidity — the SHT45 itself is not reporting
-  stale         ambient values exist but the last good read is older than LIVE_S
-  live          ambient values are fresh
+  sht-missing   the SHT45 has produced no fresh reading — none at all, or none
+                within the last OFFLINE_S while the ESP keeps publishing. The
+                firmware attaches the ambient keys only while its read is
+                fresh, so a silent sensor and an absent sensor both mean the
+                same thing here: not reporting.
+  stale         the SHT45 was reporting, but the last good read is older than
+                LIVE_S (values stay on screen, marked old)
+  live          ambient values are fresh (last good read within LIVE_S)
 
-  "ok" in the snapshot means "an ambient reading exists" (live or stale) —
-  freshness is the state field's job, not ok's. Consumers that must not act on
-  an old value check state == "live".
+  NOTE ON THE WIRE (measured on the Pi, 2026-11-03): the ESP attaches the
+  ambient keys to only SOME of its ~1 s telemetry messages (bursts of two,
+  then one or two keyless ones). The state therefore keys off how long ago
+  the last ambient key ARRIVED — never off whether the single latest message
+  happened to carry keys. Reading the latest message flips a healthy sensor
+  to sht-missing between reads; the regression test covers that.
+
+  "ok" in the snapshot means "an ambient reading arrived recently" (live or
+  stale) — consumers that must not act on an old value check state == "live".
 
 Singleton contract matches esp_audio_ingest: get() / ensure_started().
 """
@@ -77,7 +87,6 @@ class AmbientIngest:
         self._last_ambient: float | None = None   # monotonic, ambient keys only
         self._last_msg_wall: float | None = None  # unix time, for display
         self._last_ambient_wall: float | None = None
-        self._last_had_ambient = False
         self._msg_count = 0
         self._ambient_count = 0
         self._error = ""
@@ -167,8 +176,7 @@ class AmbientIngest:
                     h_present = False
             # Values are kept after they stop arriving (a glitch must not blank
             # the card) — freshness is expressed by the state, not by erasure.
-            self._last_had_ambient = bool(t_present or h_present)
-            if self._last_had_ambient:
+            if t_present or h_present:
                 self._ambient_count += 1
                 self._last_ambient = now
                 self._last_ambient_wall = wall
@@ -186,7 +194,6 @@ class AmbientIngest:
             last_msg = self._last_msg
             last_amb = self._last_ambient
             last_amb_wall = self._last_ambient_wall
-            had_ambient = self._last_had_ambient
             msg_count = self._msg_count
             ambient_count = self._ambient_count
             error = self._error
@@ -194,15 +201,19 @@ class AmbientIngest:
         age_msg = (now - last_msg) if last_msg is not None else None
         age_amb = (now - last_amb) if last_amb is not None else None
 
+        # State is decided by AGES, not by the latest message's key set: the
+        # ESP only attaches the ambient keys to some messages (see module
+        # docstring), so "latest message had no keys" is normal and must not
+        # read as a missing sensor.
         if not connected:
             state = "mqtt-offline"
         elif last_msg is None:
             state = "no-data"
         elif mic is False or (age_msg is not None and age_msg > OFFLINE_S):
             state = "esp-offline"
-        elif not had_ambient:
+        elif age_amb is None or age_amb > OFFLINE_S:
             state = "sht-missing"
-        elif age_amb is not None and age_amb <= LIVE_S:
+        elif age_amb <= LIVE_S:
             state = "live"
         else:
             state = "stale"

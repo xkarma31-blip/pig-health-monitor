@@ -46,6 +46,11 @@ class AmbientStateTests(unittest.TestCase):
             if v is not None:
                 setattr(self.ing, attr, v - seconds)
 
+    def rewind_ambient_only(self, seconds: float):
+        """Age only the ambient clock (the ESP keeps publishing telemetry)."""
+        if self.ing._last_ambient is not None:
+            self.ing._last_ambient -= seconds
+
     # ---- baseline states ------------------------------------------------
 
     def test_broker_down_is_mqtt_offline(self):
@@ -85,6 +90,16 @@ class AmbientStateTests(unittest.TestCase):
         self.feed('{"humidity":65.0}')
         self.assertEqual(self.ing.snapshot()["state"], "live")
 
+    def test_keyless_message_between_reads_keeps_live(self):
+        """Regression (found live on the Pi 2026-11-03): the ESP attaches the
+        ambient keys to only SOME of its ~1 s messages — a keyless message
+        right after a fresh read must not read as a missing sensor."""
+        self.ing._connected = True
+        self.feed('{"mic":true,"temperature":33.4,"humidity":72.5}')
+        for _ in range(3):
+            self.feed('{"mic":true,"rms":10,"peak":20,"sr":48000}')
+        self.assertEqual(self.ing.snapshot()["state"], "live")
+
     # ---- ageing ---------------------------------------------------------
 
     def test_old_ambient_is_stale(self):
@@ -95,6 +110,14 @@ class AmbientStateTests(unittest.TestCase):
         self.assertEqual(s["state"], "stale")  # ...but the SHT read is old
         self.assertTrue(s["ok"])               # values exist; state marks staleness
         self.assertGreater(s["ambientAgeS"], ai.LIVE_S)
+
+    def test_ambient_silent_beyond_offline_window_is_sht_missing(self):
+        self.ing._connected = True
+        self.feed('{"mic":true,"temperature":33.4,"humidity":72.5}')
+        self.rewind_ambient_only(ai.OFFLINE_S + 30.0)   # ESP still publishing
+        s = self.ing.snapshot()
+        self.assertEqual(s["state"], "sht-missing")
+        self.assertAlmostEqual(s["temperature"], 33.4)  # old value is kept
 
     def test_silent_beyond_offline_window_is_esp_offline(self):
         self.ing._connected = True
