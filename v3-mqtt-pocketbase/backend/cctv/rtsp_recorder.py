@@ -97,15 +97,27 @@ def main():
         sys.exit("no RTSP password: set REC_RTSP_PASS or the cctv.env TAPO_RTSP_PASS")
     os.makedirs(OUTDIR, exist_ok=True)
     p = spawn()
+    spawned_at = time.time()
     last_data = time.time()
+    fast_exits = 0  # consecutive <10 s exits = camera likely unreachable
     while True:
         time.sleep(15)
         free = rotate()
         if free < FLOOR_MB:
             log("WARNING: below disk floor even after rotation")
         if p.poll() is not None:
-            log("ffmpeg exited rc=%s — relaunching" % p.returncode)
+            runtime = time.time() - spawned_at
+            if runtime < 10:
+                fast_exits += 1
+                backoff = min(15 * (2 ** fast_exits), 300)
+                log("ffmpeg exited fast (%.0fs) — backing off %ds"
+                    % (runtime, backoff))
+                time.sleep(backoff)
+            else:
+                fast_exits = 0
+                log("ffmpeg exited rc=%s — relaunching" % p.returncode)
             p = spawn()
+            spawned_at = time.time()
             last_data = time.time()
             continue
         mt, newest = newest_mtime()
@@ -118,6 +130,7 @@ def main():
             p.send_signal(signal.SIGKILL)
             p.wait()
             p = spawn()
+            spawned_at = time.time()
             last_data = time.time()
 
 
