@@ -303,8 +303,17 @@ export function ThermalLiveView({
       )}
 
       <View style={[styles.hudOverlay, { backgroundColor: colors.overlay }]}>
-        <Text style={[styles.hudText, { color: colors.accent }]}>FPS: 15 (SENSOR RATE) | RES: 32x24 RAW MAT</Text>
-        <Text style={[styles.hudText, { color: colors.accent }]}>MLX90640 PEN SENSOR (PIXELATED MODE)</Text>
+        {base64Frame ? (
+          <>
+            <Text style={[styles.hudText, { color: colors.accent }]}>FPS: 15 (SENSOR RATE) | RES: 32x24 RAW MAT</Text>
+            <Text style={[styles.hudText, { color: colors.accent }]}>MLX90640 PEN SENSOR (PIXELATED MODE)</Text>
+          </>
+        ) : (
+          <>
+            <Text style={[styles.hudText, { color: colors.accent }]}>SIMULATED PREVIEW | RES: 32x24</Text>
+            <Text style={[styles.hudText, { color: colors.accent }]}>NO SENSOR STREAM — DEMO FRAME</Text>
+          </>
+        )}
       </View>
     </View>
   );

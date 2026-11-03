@@ -22,14 +22,13 @@ type Node = { id: string; name: string; version: string; battery: string; rssi: 
 
 // Demo nodes shown while signed out — replaced by the live /sensors stream on sign-in.
 const DEMO_NODES: Node[] = [
-  { id: 'node-b', name: 'Node B (MLX90640)', version: 'v2.1.0-2026041312', battery: '84%', rssi: '-45 dBm', online: true },
-  { id: 'node-a', name: 'Node A (INMP441)', version: 'v2.1.0-2026041312', battery: '42%', rssi: '-52 dBm', online: true },
+  { id: 'node-b', name: 'Thermal node (MLX90640)', version: 'v2.1.0-2026041312', battery: '84%', rssi: '-45 dBm', online: true },
+  { id: 'node-a', name: 'Barn mic (ESP32-S3)', version: 'v2.1.0-2026041312', battery: '42%', rssi: '-52 dBm', online: true },
 ];
 
 function mapSensor(id: string, s: Record<string, unknown>): Node {
-  const label = String(s.label || id);
-  const type = String(s.type || 'sensor');
-  const name = `${label} (${type === 'acoustic' || type === 'sound' ? 'INMP441 mic' : type === 'thermal' ? 'MLX90640' : type})`;
+  // `label` is the PocketBase `devices.name` — show it as-is, no inferred suffixes.
+  const name = String(s.label || id);
   const battery = s.battery != null && Number.isFinite(Number(s.battery)) ? `${Math.round(Number(s.battery))}%` : '—';
   const rssi = s.rssi != null && Number.isFinite(Number(s.rssi)) ? `${Number(s.rssi)} dBm` : '—';
   const lastUpdated = Date.parse(String(s.lastUpdated ?? ''));
@@ -68,6 +67,7 @@ export default function SettingsScreen() {
   }, [user]);
 
   // Signed out → demo nodes; signed in → live sensor stream.
+  const showDemoPill = !user || user.admin || !liveNodes;
   const nodes = user && !user.admin && liveNodes ? liveNodes : DEMO_NODES;
   const nodeColumns = tier === 'expanded' ? 2 : 1;
 
@@ -96,9 +96,16 @@ export default function SettingsScreen() {
       <View style={{ marginTop: spacing.xl }}>
         <View style={styles.sectionHead}>
           <Text style={[typography.caption, { color: colors.textMuted }]}>Hardware nodes</Text>
-          <Text style={[typography.bodySmall, { color: colors.textMuted, fontSize: 12.5 }]}>
-            {nodes.length} {liveNodes ? 'paired' : 'demo'}
-          </Text>
+          <View style={styles.sectionHeadRight}>
+            {showDemoPill ? (
+              <View style={[styles.demoPill, { backgroundColor: colors.badgeBg }]}>
+                <Text style={[typography.label, { color: colors.badgeText, fontSize: 10 }]}>DEMO DATA</Text>
+              </View>
+            ) : null}
+            <Text style={[typography.bodySmall, { color: colors.textMuted, fontSize: 12.5, marginLeft: showDemoPill ? 8 : 0 }]}>
+              {nodes.length} {showDemoPill ? 'demo' : 'paired'}
+            </Text>
+          </View>
         </View>
         {loading ? (
           <Skeleton rows={2} />
@@ -237,7 +244,7 @@ export default function SettingsScreen() {
               <View style={{ flex: 1 }}>
                 <Text style={[typography.h2, { color: colors.textPrimary, flex: 0, fontSize: 15 }]}>Log in</Text>
                 <Text style={[typography.bodySmall, { color: colors.textMuted, marginTop: 2, fontSize: 12.5 }]}>
-                  Enable live events, roster, and sensor streaming
+                  Switch from demo data to live events, roster, and sensor readings
                 </Text>
               </View>
               <ChevronRightIcon size={16} color={colors.textMuted} />
@@ -258,6 +265,8 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 8 },
+  sectionHeadRight: { flexDirection: 'row', alignItems: 'center' },
+  demoPill: { paddingVertical: 3, paddingHorizontal: 8, borderRadius: 999 },
   nodeTop: { flexDirection: 'row', alignItems: 'center' },
   nodeStats: { flexDirection: 'row', justifyContent: 'space-between' },
   row: { flexDirection: 'row', alignItems: 'center' },

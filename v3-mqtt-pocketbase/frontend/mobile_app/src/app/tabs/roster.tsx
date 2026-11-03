@@ -52,7 +52,7 @@ function mapPig(id: string, record: Record<string, unknown>): Pig {
   return {
     id,
     name: String(record.name || `Pig ${id.slice(0, 4)}`),
-    enrolled: formatEnrolled(record.enrolledAt ?? record.lastSeen),
+    enrolled: formatEnrolled(record.created ?? record.enrolledAt),
     temp: typeof record.temp === 'string' ? record.temp : undefined,
     status: pigStatus(record),
   };
@@ -96,7 +96,7 @@ function EnrollModal({
         >
           <Text style={[typography.title, { color: colors.textPrimary }]}>Enroll new pig</Text>
           <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 6 }]}>
-            Keep the pig near Node A (INMP441) so a reference audio signature can be captured.
+            Adds this pig to the roster. The barn mic (s3-mic-01) monitors the whole pen — readings apply to the group.
           </Text>
           <TextInput
             value={name}
@@ -213,7 +213,7 @@ export default function RosterScreen() {
     try {
       await enrollPig(name);
       playSound('success');
-      showToast(`${name} enrolled — capture running on Node A`);
+      showToast(`${name} added to the roster`);
       setEnrollOpen(false);
     } catch {
       showToast('Enrollment failed — check your connection');
@@ -238,7 +238,7 @@ export default function RosterScreen() {
         <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 4, flex: 1 }]}>
           Manual enrollment and per-pig health
         </Text>
-        {!user ? (
+        {!user || user.admin || !liveHerd ? (
           <View style={[styles.demoPill, { backgroundColor: colors.badgeBg }]}>
             <Text style={[typography.label, { color: colors.badgeText, fontSize: 10 }]}>DEMO DATA</Text>
           </View>

@@ -80,11 +80,11 @@ export function subscribeRoster(callback: (roster: Record<string, unknown>[]) =>
   };
 }
 
-/** enrollPig — create a pig record in PocketBase. */
+/** enrollPig — create a pig record in PocketBase (schema: pigId, name, healthStatus, tags). */
 export async function enrollPig(name: string): Promise<Record<string, unknown>> {
   return pbCreate('pigs', {
+    pigId: `pig-${Date.now().toString(36)}`,
     name,
-    enrolledAt: new Date().toISOString(),
     healthStatus: 'NORMAL',
     tags: [],
   });
@@ -123,6 +123,39 @@ export function subscribeSensors(callback: (sensors: LiveSensorReading[]) => voi
       })
       .catch(() => {
         if (!cancelled) callback([]);
+      });
+  };
+
+  emit();
+  const unsub = pbSubscribeRealtime('devices', () => emit());
+  return () => {
+    cancelled = true;
+    unsub();
+  };
+}
+
+/**
+ * subscribeDeviceNames — deviceId → devices.name map.
+ * Lets screens label telemetry rows with the name set in PocketBase
+ * (each `devices` row) instead of the raw deviceId. Emits {} when the
+ * devices list can't be read.
+ */
+export function subscribeDeviceNames(callback: (names: Record<string, string>) => void) {
+  let cancelled = false;
+
+  const emit = () => {
+    pbList('devices', { perPage: 200 })
+      .then(({ items }) => {
+        if (cancelled) return;
+        const names: Record<string, string> = {};
+        for (const item of items) {
+          const id = String(item.deviceId || item.id || '');
+          if (id) names[id] = String(item.name || id);
+        }
+        callback(names);
+      })
+      .catch(() => {
+        if (!cancelled) callback({});
       });
   };
 

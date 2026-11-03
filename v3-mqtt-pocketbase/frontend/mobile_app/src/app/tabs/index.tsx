@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, Text, TouchableOpacity, View, StyleSheet } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import { useTheme, type Status } from '../../theme';
 import { useAuth } from '../../hooks/useAuth';
 import { usePocketbaseRealtime, type TelemetryFrame } from '../../hooks/usePocketbaseRealtime';
@@ -19,8 +19,9 @@ import {
 import { playSound } from '../../utils/sounds';
 import { haptic } from '../../utils/haptics';
 import { telemetryTime } from '../../utils/telemetry-time';
+import { subscribeDeviceNames } from '../../utils/pocketbase-data';
+import { loadFarmerSetup } from '../../utils/setupStore';
 
-const FARM = { name: 'Sundown Farm', penCount: 5, pigCount: 110 };
 const DEMO_STATS = { healthy: 3, watch: 1, alert: 1 };
 
 function inferStatus(frame: TelemetryFrame): Status {
@@ -76,6 +77,9 @@ export default function HomeScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [statsKey, setStatsKey] = useState(0);
+  const [farmName, setFarmName] = useState('');
+  const [penName, setPenName] = useState('');
+  const [deviceNames, setDeviceNames] = useState<Record<string, string>>({});
 
   // Debounce the loading indicator — give PB 850ms to deliver first frame.
   useEffect(() => {
@@ -83,11 +87,32 @@ export default function HomeScreen() {
     return () => clearTimeout(t);
   }, []);
 
+  // Saved farm / pen names from setup — re-read on focus so a rename shows here.
+  useFocusEffect(
+    useCallback(() => {
+      let mounted = true;
+      loadFarmerSetup()
+        .then((setup) => {
+          if (!mounted) return;
+          setFarmName(setup.farmName);
+          setPenName(setup.penName);
+        })
+        .catch(() => { /* keep defaults */ });
+      return () => { mounted = false; };
+    }, []),
+  );
+
+  // Human device names from the PocketBase `devices` collection.
+  useEffect(() => {
+    const unsub = subscribeDeviceNames(setDeviceNames);
+    return unsub;
+  }, []);
+
   // Derive device rows from realtime telemetry
   const devices: DeviceRow[] = useMemo(() => {
     return deviceIds.map((id) => {
       const frame = telemetry[id];
-      const name = String(frame?.deviceId || id);
+      const name = deviceNames[id] ?? String(frame?.deviceId || id);
       const temp = typeof frame?.temperature === 'number'
         ? `${frame.temperature.toFixed(1)}°`
         : '—';
@@ -101,7 +126,7 @@ export default function HomeScreen() {
         trend: [], // Sparkline needs historical frames; empty for now
       };
     });
-  }, [deviceIds, telemetry]);
+  }, [deviceIds, telemetry, deviceNames]);
 
   const stats = useMemo(() => {
     let healthy = 0, watch = 0, alert = 0;
@@ -116,6 +141,7 @@ export default function HomeScreen() {
   const hasLiveData = devices.length > 0;
   const isOnline = connectionStatus === 'connected' || connectionStatus === 'connecting';
   const topAlert = devices.find((d) => d.status === 'alert');
+  const farmPrefix = farmName ? `${farmName} · ` : '';
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -165,8 +191,10 @@ export default function HomeScreen() {
               : connectionStatus === 'error'
                 ? 'Connection unavailable · showing last known readings'
                 : hasLiveData
-                  ? `${FARM.name} · ${devices.length} device${devices.length !== 1 ? 's' : ''} streaming`
-                  : `${FARM.name} · connecting to PocketBase…`}
+                  ? `${farmPrefix}${devices.length} device${devices.length !== 1 ? 's' : ''} streaming`
+                  : farmName
+                    ? `${farmName} · connecting to PocketBase…`
+                    : 'Connecting to PocketBase…'}
           </Text>
         </View>
         <View
@@ -249,7 +277,7 @@ export default function HomeScreen() {
         ) : null}
       </View>
 
-      {/* Live thermal feed */}
+      {/* Thermal view */}
       <TouchableOpacity
         activeOpacity={0.85}
         onPress={() => {
@@ -259,19 +287,19 @@ export default function HomeScreen() {
         }}
         style={[styles.feedCard, { backgroundColor: colors.surface, borderRadius: radius.lg, marginTop: spacing.lg }]}
         accessibilityRole="button"
-        accessibilityLabel="Live thermal feed"
-        accessibilityHint="Opens the live thermal camera view"
+        accessibilityLabel="Thermal view"
+        accessibilityHint="Opens the thermal camera preview"
       >
         <View style={{ flexDirection: 'row' as any, alignItems: 'center', flex: 1 }}>
           <ThermalThumbnail />
           <View style={{ marginLeft: spacing.md, flex: 1 }}>
-            <Text style={[typography.h2, { color: colors.textPrimary }]}>Live thermal feed</Text>
+            <Text style={[typography.h2, { color: colors.textPrimary }]}>Thermal view</Text>
             <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 2, fontSize: 12.5 }]}>
-              {hasLiveData ? `${devices.length} device${devices.length !== 1 ? 's' : ''} streaming` : 'Node B · MLX90640 · 32×24 array'}
+              Simulated preview of the thermal camera
             </Text>
           </View>
         </View>
-        <Badge label={hasLiveData ? 'Live' : 'Demo'} status={hasLiveData ? 'alert' : 'info'} />
+        <Badge label="Demo" status="info" />
       </TouchableOpacity>
 
       {/* Needs attention */}
@@ -290,11 +318,13 @@ export default function HomeScreen() {
       <View style={{ marginTop: spacing.xl }}>
         <View style={styles.sectionHead}>
           <Text style={[typography.caption, { color: colors.textMuted }]}>
-            {devices.length > 0 ? 'Devices' : 'Pens'}
+            {devices.length > 0 ? 'Devices' : penName || 'Pens'}
           </Text>
-          <Text style={[typography.bodySmall, { color: colors.textMuted, fontSize: 12.5 }]}>
-            {devices.length > 0 ? `${devices.length} connected` : `${FARM.penCount} total`}
-          </Text>
+          {devices.length > 0 ? (
+            <Text style={[typography.bodySmall, { color: colors.textMuted, fontSize: 12.5 }]}>
+              {devices.length} connected
+            </Text>
+          ) : null}
         </View>
         {loading ? (
           <Skeleton rows={penColumns === 1 ? 5 : 3} />

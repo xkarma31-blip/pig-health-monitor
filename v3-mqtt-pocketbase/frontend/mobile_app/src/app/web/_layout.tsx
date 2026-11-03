@@ -33,7 +33,7 @@ function WebLayoutInner() {
   const currentRoute = segments[segments.length - 1] || 'dashboard';
 
   return (
-    <AuthGuard>
+    <AuthGuard requireAdmin>
       <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
         {Platform.OS !== 'web' && <StatusBar barStyle={theme.mode === 'dark' ? 'light-content' : 'dark-content'} />}
         <View style={styles.content}>

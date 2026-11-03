@@ -109,7 +109,7 @@ export default function EventsScreen() {
           <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 4, flex: 1 }]}>
             Searchable log of sound and temperature triggers
           </Text>
-          {!user ? (
+          {!user || user.admin || !liveEvents ? (
             <View style={[styles.demoPill, { backgroundColor: colors.badgeBg }]}>
               <Text style={[typography.label, { color: colors.badgeText, fontSize: 10 }]}>DEMO DATA</Text>
             </View>
