@@ -175,16 +175,17 @@ export default function RosterScreen() {
   }, []);
 
   useEffect(() => {
-    // End-user role → live roster from PocketBase. Admin & guests see mock (legacy demo).
-    if (!user || user.admin) return;
+    // ACTUAL data first: the roster streams from PocketBase in every state
+    // (open reads). The demo herd below is only a fallback when PB has none.
     const unsub = subscribeRoster((records) => {
-      setLiveHerd(records.map((r, i) => mapPig(String(r.id ?? i), r)));
+      setLiveHerd(records.length ? records.map((r, i) => mapPig(String(r.id ?? i), r)) : []);
     });
     return unsub;
-  }, [user]);
+  }, []);
 
-  // Signed out → demo herd; signed in → live stream.
-  const herd = user && !user.admin && liveHerd ? liveHerd : DEMO_HERD;
+  // Prefer the actual herd; fall back to the labeled demo only when empty.
+  const herd = liveHerd && liveHerd.length > 0 ? liveHerd : DEMO_HERD;
+  const demoHerd = !(liveHerd && liveHerd.length > 0);
 
   const sorted = useMemo(
     () =>
@@ -238,7 +239,7 @@ export default function RosterScreen() {
         <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 4, flex: 1 }]}>
           Manual enrollment and per-pig health
         </Text>
-        {!user || user.admin || !liveHerd ? (
+        {demoHerd ? (
           <View style={[styles.demoPill, { backgroundColor: colors.badgeBg }]}>
             <Text style={[typography.label, { color: colors.badgeText, fontSize: 10 }]}>DEMO DATA</Text>
           </View>

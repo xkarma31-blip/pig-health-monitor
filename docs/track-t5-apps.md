@@ -6,12 +6,12 @@
 **This change set (2026-11-03):** `frontend/mobile_app/src/**` only.
 **Never touched:** firmware, `backend/**` (incl. `thermal-pi/static/`), `CANON.md`, landing page.
 
-> **Status: phase 1 (split + labeling) committed 2026-11-03; phase 2 (live barn
-> thermal) + refinement (deep-link back navigation) implemented + verified —
-> UNCOMMITTED, approval pending.**
-> tsc 0 · eslint 0 · critic_loop 6/6 · export OK · suites: regression 41/41 ·
-> nav 3/3 · live 9/9 · home-live 3/3 — **56 checks total**.
-> Not deployed, no APK. Read "Honest limits" before claiming anything works on a phone.
+> **Status: 2026-11-03 — phase 1 (`9933f46`), phase 2 (`badc7a1`), refinement
+> (`6cb7843`) committed; phase 3 (actual sources first + laptop layouts) verified,
+> committing with this note.**
+> Suites: **62/62** · tsc 0 · eslint 0 · critic_loop pass.
+> Not deployed (Vercel login pending); read "Honest limits" before claiming anything
+> works on a phone.
 
 ---
 
@@ -303,7 +303,6 @@ mic socket open, no data (stale).
   the console if the console palette changes.
 
 ### 5. Refinement (2026-11-03, same day — after Master's deep-link test)
-
 - **Bug found by Master:** "Back" on `/thermal` did nothing when the screen was opened
   directly (shared URL / fresh tab). Root cause: `router.back()` is a no-op without
   history. Fix: `utils/navigation.ts` → `goBackOrHome()` (back when history exists,
@@ -332,3 +331,31 @@ mic socket open, no data (stale).
 - A **temporary Vercel deployment** of the plain web build was created for online
   viewing (demo states only — the cloud cannot reach the Pi or the laptop PocketBase;
   a permanent domain deploy needs a `vercel login`).
+
+---
+
+## Track note 2026-11-03 (phase 3) — actual sources first + laptop layouts
+
+> Committed alongside this note; parent: `6cb7843`.
+
+- **Actual data first, everywhere.** Roster / Events / Settings now subscribe to
+  PocketBase in EVERY state (reads are anon-open); the local demo constants are only a
+  fallback when PB has none — and only then does the DEMO pill show. Admin included
+  (the old "admin → mock" branches are gone).
+- **Web island dashboard is real:** `generateMockData()` (Bessie/Daisy/Coco/Lucy)
+  deleted. The island reads `pigs` + latest `telemetry` from PB: real counts, statuses,
+  breed/age from `tags`, real herd average — per-pig temps show "—" because monitoring
+  is whole-pen.
+- **Events timestamps fixed:** seeds write epoch seconds, the bridge writes ms;
+  `formatTimestamp` normalizes via `telemetryTime` (seeded alerts no longer show
+  "Jan 22, 1970").
+- **PB device names aligned with the real roles** (both laptop + Pi PocketBases):
+  `s3-mic-01 → "ESP32-S3 — mic · ambient"`; `pi-thermal-01 → "Pi 4B — thermal · CCTV ·
+  compute"` — visible in every device list.
+- **Laptop layouts:** thermal view is two-column at desktop widths (canvas left,
+  readings right; demo mode centers instead of leaving an empty half). The sidebar +
+  grid shell was verified against the previously deployed app at 1440×900 — it matches
+  (its `/app/thermal` route is a 404, ours is live).
+- Verified: **62/62** suites (24 regression + 16 user + 7 admin + 3 nav + 9 live +
+  3 home); desktop screenshots in `~/sandbox/app-revamp-20261103/refinement-shots/`
+  (`desktop-live/`, `desktop-regression/`).

@@ -64,16 +64,18 @@ export default function SettingsScreen() {
   }, []);
 
   useEffect(() => {
-    if (!user || user.admin) return;  // admin → demo nodes (legacy mock)
+    // ACTUAL data first: nodes come from the PocketBase devices list in every
+    // state (open reads). Demo nodes are only a fallback when PB lists none.
     const unsub = subscribeSensors((sensors) => {
       setLiveNodes(sensors.map((s, i) => mapSensor(String(s.id ?? i), s as unknown as Record<string, unknown>)));
     });
     return unsub;
-  }, [user]);
+  }, []);
 
-  // Signed out → demo nodes; signed in → live sensor stream.
-  const showDemoPill = !user || user.admin || !liveNodes;
-  const nodes = user && !user.admin && liveNodes ? liveNodes : DEMO_NODES;
+  // Prefer the actual devices; fall back to the labeled demo only when empty.
+  const demoNodes = !(liveNodes && liveNodes.length > 0);
+  const showDemoPill = demoNodes;
+  const nodes = liveNodes && liveNodes.length > 0 ? liveNodes : DEMO_NODES;
   const nodeColumns = tier === 'expanded' ? 2 : 1;
 
   const nodeRows = useMemo(() => {

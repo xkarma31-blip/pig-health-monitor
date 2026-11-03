@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { pbList } from '../../utils/pocketbase';
 import { useAuth } from '../../hooks/useAuth';
 import { useWebTheme } from '../../theme/WebThemeContext';
 import { TemperatureIcon, AlertIcon, InfoIcon } from '../../components/primitives/Icons';
@@ -22,60 +23,14 @@ interface PigData {
   id: string;
   name: string;
   status: 'healthy' | 'warning' | 'critical';
-  latestTemp: number;
+  /** Latest herd temperature (whole-pen monitoring) — null when unknown. */
+  latestTemp: number | null;
   breed: string;
   age: number;
   lastUpdate: Date;
   location: string;
   weight: number;
 }
-
-const generateMockData = (): PigData[] => [
-  {
-    id: 'PIG-001',
-    name: 'Bessie',
-    status: 'healthy',
-    latestTemp: 38.7,
-    breed: 'Yorkshire',
-    age: 12,
-    lastUpdate: new Date(Date.now() - 5 * 60000),
-    location: 'Pen A',
-    weight: 85,
-  },
-  {
-    id: 'PIG-002',
-    name: 'Daisy',
-    status: 'warning',
-    latestTemp: 39.8,
-    breed: 'Landrace',
-    age: 10,
-    lastUpdate: new Date(Date.now() - 3 * 60000),
-    location: 'Pen B',
-    weight: 78,
-  },
-  {
-    id: 'PIG-003',
-    name: 'Coco',
-    status: 'healthy',
-    latestTemp: 38.5,
-    breed: 'Duroc',
-    age: 8,
-    lastUpdate: new Date(Date.now() - 8 * 60000),
-    location: 'Pen A',
-    weight: 65,
-  },
-  {
-    id: 'PIG-004',
-    name: 'Lucy',
-    status: 'critical',
-    latestTemp: 40.2,
-    breed: 'Hampshire',
-    age: 15,
-    lastUpdate: new Date(Date.now() - 2 * 60000),
-    location: 'Pen C',
-    weight: 92,
-  },
-];
 
 export default function DashboardScreen() {
   const { user, logout } = useAuth();
@@ -87,16 +42,45 @@ export default function DashboardScreen() {
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  const [herdAvg, setHerdAvg] = useState<number | null>(null);
 
   const refresh = useCallback(async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // Simulate API call with real data structure
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      const mockData = generateMockData();
-      setPigs(mockData);
+      // ACTUAL sources: pigs + latest telemetry from PocketBase (open reads).
+      const [pigRes, teleRes] = await Promise.all([
+        pbList('pigs', { sort: 'created', perPage: 200 }),
+        pbList('telemetry', { sort: '-created', perPage: 60 }),
+      ]);
+      const temps = teleRes.items
+        .map((r) => Number((r as Record<string, unknown>).temperature))
+        .filter((n) => Number.isFinite(n) && n > 0);
+      setHerdAvg(temps.length ? temps.reduce((a, b) => a + b, 0) / temps.length : null);
+      const mapped: PigData[] = pigRes.items.map((r) => {
+        const rec = r as Record<string, unknown>;
+        const tags = (rec.tags && typeof rec.tags === 'object' ? rec.tags : {}) as Record<string, unknown>;
+        const hs = String(rec.healthStatus || 'NORMAL').toUpperCase();
+        const status: PigData['status'] =
+          hs === 'CRITICAL' || hs === 'ALERT' || hs === 'FEVER'
+            ? 'critical'
+            : hs === 'ELEVATED' || hs === 'WATCH'
+              ? 'warning'
+              : 'healthy';
+        return {
+          id: String(rec.pigId || rec.id || ''),
+          name: String(rec.name || 'Unnamed'),
+          status,
+          latestTemp: null, // per-pig temps don't exist — whole-pen monitoring
+          breed: tags.breed != null ? String(tags.breed) : '—',
+          age: Number.isFinite(Number(tags.age)) ? Number(tags.age) : 0,
+          lastUpdate: new Date(String(rec.updated || rec.created || Date.now())),
+          location: tags.pen != null ? String(tags.pen) : 'Pen —',
+          weight: 0,
+        };
+      });
+      setPigs(mapped);
       setLastRefresh(new Date());
     } catch (err) {
       setError('Failed to load pig data. Please check your connection.');
@@ -167,10 +151,10 @@ export default function DashboardScreen() {
     const healthy = pigs.filter(p => p.status === 'healthy').length;
     const warning = pigs.filter(p => p.status === 'warning').length;
     const critical = pigs.filter(p => p.status === 'critical').length;
-    const avgTemp = pigs.reduce((sum, p) => sum + p.latestTemp, 0) / total || 0;
+    const avgTemp = herdAvg ?? 0;
 
     return { total, healthy, warning, critical, avgTemp };
-  }, [pigs]);
+  }, [pigs, herdAvg]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -295,7 +279,7 @@ export default function DashboardScreen() {
                 <Text style={[styles.tempTitle, { color: theme.colors.textPrimary }]}>Average Herd Temperature</Text>
               </View>
               <Text style={[styles.tempValue, { color: theme.colors.textPrimary }]}>
-                {formatTemperature(stats.avgTemp)}
+                {herdAvg != null ? formatTemperature(herdAvg) : '—'}
               </Text>
               <Text style={[styles.tempSubtitle, { color: theme.colors.textSecondary }]}>
                 Normal range: 38.7°C - 39.8°C
@@ -400,7 +384,7 @@ export default function DashboardScreen() {
                         </Text>
                       </View>
                       <Text style={[styles.pigTemp, { color: theme.colors.textPrimary }]}>
-                        {formatTemperature(pig.latestTemp)}
+                        {pig.latestTemp != null ? formatTemperature(pig.latestTemp) : '—'}
                       </Text>
                     </View>
                   </TouchableOpacity>

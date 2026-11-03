@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { FlatList, Text, TextInput, View, StyleSheet } from 'react-native';
 import { useTheme, statusColor, type Status } from '../../theme';
-import { useAuth } from '../../hooks/useAuth';
 import { subscribeAlerts } from '../../utils/pocketbase-data';
+import { telemetryTime } from '../../utils/telemetry-time';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
 import {
   Badge,
@@ -32,7 +32,9 @@ const DEMO_EVENTS: EventItem[] = [
 ];
 
 function formatTimestamp(value: unknown): string {
-  const ts = typeof value === 'number' ? value : Date.parse(String(value ?? ''));
+  // Mixed writers: seeds write epoch seconds, the bridge writes ms — normalize
+  // with the same helper the rest of the app uses.
+  const ts = telemetryTime(value);
   if (!Number.isFinite(ts)) return String(value ?? '');
   return new Date(ts).toLocaleString(undefined, {
     month: 'short',
@@ -70,7 +72,6 @@ function mapAlert(id: string, record: Record<string, unknown>): EventItem {
 
 export default function EventsScreen() {
   const { colors, spacing, radius, typography } = useTheme();
-  const { user } = useAuth();
   const tier = useBreakpoint();
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -82,15 +83,17 @@ export default function EventsScreen() {
   }, []);
 
   useEffect(() => {
-    if (!user || user.admin) return;  // admin → mock demo events
+    // ACTUAL data first: alerts stream from PocketBase in every state (open
+    // reads). The demo log below is only a fallback when PB has none.
     const unsub = subscribeAlerts((records) => {
-      setLiveEvents(records.map((r, i) => mapAlert(String(r.id ?? i), r)));
+      setLiveEvents(records.length ? records.map((r, i) => mapAlert(String(r.id ?? i), r)) : []);
     });
     return unsub;
-  }, [user]);
+  }, []);
 
-  // Signed out → demo log; signed in → live stream (demo until first snapshot).
-  const events = user && !user.admin && liveEvents ? liveEvents : DEMO_EVENTS;
+  // Prefer the actual alerts; fall back to the labeled demo log only when empty.
+  const events = liveEvents && liveEvents.length > 0 ? liveEvents : DEMO_EVENTS;
+  const demoEvents = !(liveEvents && liveEvents.length > 0);
 
   const filtered = useMemo(() => {
     if (!query.trim()) return events;
@@ -109,7 +112,7 @@ export default function EventsScreen() {
           <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 4, flex: 1 }]}>
             Searchable log of sound and temperature triggers
           </Text>
-          {!user || user.admin || !liveEvents ? (
+          {demoEvents ? (
             <View style={[styles.demoPill, { backgroundColor: colors.badgeBg }]}>
               <Text style={[typography.label, { color: colors.badgeText, fontSize: 10 }]}>DEMO DATA</Text>
             </View>
