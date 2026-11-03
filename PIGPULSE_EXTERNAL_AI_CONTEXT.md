@@ -3,7 +3,7 @@
 > **⚠️ THIS FILE SUPERSEDES ALL PREVIOUS PIGPULSE CONTEXT IN THIS PROJECT.**
 > If you have older PigPulse context documents, briefings, orientation files,
 > `.planning/PROJECT.md` content, or any prior handoff — **ignore them where
-> they conflict with this file.** This is canon revision **2026-10-29**.
+> they conflict with this file.** This is canon revision **2026-10-29** (updated **2026-11-03**: SHT45 connected & reporting; PB `.js`-migration status corrected; bridge writes verified).
 >
 > Portable handoff for online AIs and collaborators without access to the local repository.
 > Sanitized: no credentials, tokens, private IP addresses, local usernames, or private filesystem paths.
@@ -26,6 +26,8 @@
 | Thermal super-resolution improves measurement | **Cosmetic only** at 32×24. RGB-guided SR causes texture leakage — actively harmful. |
 | One mic can localize which pig coughed | **Physics: 1 mic = zero spatial information.** Audio-visual fusion (mic + camera) can attribute coughs — see Sensor Fusion section. |
 | The project directory is `PigHealthMonitor` or `pig_health_monitor` | **The ONLY directory is `pig-health-monitor`** (lowercase, hyphenated). |
+| GY-SHT45 is unconnected / planned | **GY-SHT45 is CONNECTED and reporting** (2026-11-03): fresh temp/humidity in the s3-mic-01 telemetry bursts, live on the Pi dashboard (`/ambient`), stored in PocketBase. |
+| PocketBase cannot run `.js` migrations | **It CAN (measured 2026-11-03)** — the 0.22.20 binary applies old-style `.js` migrations; see CANON §2.6. |
 
 ## Mission
 
@@ -72,7 +74,7 @@ Deployment rules:
 │  ESP32-S3 "s3-mic-01" ──TCP:9090──► esp_audio_ingest               │
 │                        └──MQTT──► mosquitto :1883 ──► bridge ──► PB │
 │  Tapo C200C ──RTSP──► ffmpeg ──► tapo_mjpeg :8091                  │
-│  GY-SHT45 (planned) ──I2C──► ESP32-S3 (unconnected)               │
+│  GY-SHT45 (live) ──I2C──► ESP32-S3 (reporting)                    │
 │  hostapd + dnsmasq (AP)                                             │
 │  Router mode: armed, inert (activates with any upstream)            │
 └─────────────────────────────┬───────────────────────────────────────┘
@@ -91,7 +93,7 @@ Deployment rules:
 | Firmware | ESP32-S3 + C++/PlatformIO | Sensor acquisition, MQTT publishing, TCP audio stream |
 | Thermal | MLX90640 (32×24, I²C) | Infrared thermal frames, pen-level surface temperature |
 | Acoustic | INMP441 MEMS mic on ESP32-S3 | Farm sound and respiratory signal capture (mono, 48 kHz) |
-| Environmental | GY-SHT45 (planned, unconnected) | Pen-air temperature/humidity context |
+| Environmental | GY-SHT45 (connected, reporting via ESP32-S3) | Pen-air temperature/humidity context |
 | Broker | Mosquitto | MQTT topic routing |
 | Bridge | Python | MQTT message handling and PocketBase writes |
 | Database | PocketBase 0.22.20 / SQLite | REST records, auth, and realtime SSE |
@@ -106,7 +108,7 @@ Deployment rules:
 | Pi 4B Rev 1.2 | edge: thermal + ingest + AP + PB | ✅ online |
 | MLX90640 | thermal camera | ⚠️ intermittent — working as of 2026-10-29 |
 | ESP32-S3 (s3-mic-01) | mono mic, MQTT, TCP audio | ✅ USB accessible, firmware deployed |
-| GY-SHT45 | environmental sensor | 🔲 owned, unconnected |
+| GY-SHT45 | environmental sensor | ✅ connected — reporting live (2026-11-03) |
 | Tapo C200C | CCTV | ⚠️ video accessible on Pi AP only; management API blocked |
 | ~~ESP32-D0WD~~ | original node | ☠️ decommissioned |
 
@@ -154,14 +156,14 @@ The topic shape **must** be `pig/{deviceId}/{channel}`. The legacy `pig/telemetr
 
 `telemetry`, `alerts`, `devices`, `pigs`, `audio_events`, plus auth `users`.
 
-**PocketBase is version 0.22.20** — it cannot run `.js` migrations. Schema changes use `backend/scripts/add_thermal_fields.py` (writes both SQLite columns and `_collections.schema` JSON). PocketBase **silently discards unknown fields** — a schema drift loses data with no error.
+**PocketBase is version 0.22.20** — it DOES run `.js` migrations (measured 2026-11-03; see CANON §2.6): the humidity migration applied itself on both instances, and real rows store humidity. PocketBase **silently discards unknown fields** — schema changes must declare the field in `_collections.schema`; `backend/scripts/add_thermal_fields.py` remains a manual fallback that writes both halves. A schema drift loses data with no error.
 
 ## Key Open Items (2026-10-29)
 
 | Item | Status |
 |---|---|
 | Pi ↔ cloud sync (`cloud_sync.py`) | ⚠️ Built, never tested end-to-end |
-| PB admin password | 🔴 Unknown, blocks the bridge |
+| PB admin password | ⚠️ Bridge no longer blocked — writes verified 2026-11-03 (records stored); admin-UI login still unverified |
 | Pi WAN uplink | 🔴 None — router mode armed but no upstream |
 | Two SD cards unlabeled | 🔴 Always confirm which card is booted |
 | Camera management API | 🔴 Needs cloud-owner password |
@@ -213,11 +215,11 @@ Laptop: PocketBase + OpenResty gateway + readonly proxy → Vercel function
   → Expo dashboard
 
 Hardware: Pi 4B, MLX90640 (intermittent), ESP32-S3 mic (working), Tapo C200C,
-  GY-SHT45 (unconnected). ESP32-D0WD decommissioned. Firebase retired.
+  GY-SHT45 (connected — reporting temp/humidity live). ESP32-D0WD decommissioned. Firebase retired.
 
-PocketBase is 0.22.20 — cannot run .js migrations. Silently discards unknown fields.
+PocketBase is 0.22.20 — runs .js migrations (measured 2026-11-03). Silently discards unknown fields.
 cloud_sync.py is built but never tested end-to-end.
-PB admin password is unknown — blocks the bridge.
+PB admin password: does not block the bridge (writes verified 2026-11-03); admin-UI login unverified.
 
 Repository: branch `feat/v3-mqtt-pocketbase`
 - `v3-mqtt-pocketbase/backend/`: bridge, thermal-pi, cctv, workers, systemd

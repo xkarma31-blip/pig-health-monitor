@@ -261,8 +261,8 @@ can then reach both networks and the laptop no longer has to join the AP.
 |---|---|---|
 | **Pi 4B Rev 1.2** | edge: thermal + ingest + AP + PB | ✅ **booted and serving** as of 2026-09-30 |
 | **MLX90640** | thermal camera, I²C on Pi | ⚠️ **intermittent** — working as of 2026-10-13 (~2 FPS, confirmed by Master 2026-10-29). Has died and recovered before (dead 2026-09-28, back by 2026-10-13). Run `thermal_doctor.py --fix` if it drops again |
-| **ESP32-S3** (`s3-mic-01`) | the ONLY mic. TCP :9090 audio, MQTT telemetry | ✅ **USB accessible** (2026-10-13, §1). Firmware `pigpulse-mic-pcm16-20261013` deployed. Mic hardware intermittent — produced real audio 2026-10-13, returned all-samples-minus-one 2026-10-14. Master confirms working as of 2026-10-29. See `KNOWN_GOOD.md` for revert |
-| **GY-SHT45** | environmental temp/humidity sensor (I²C) | 🔲 **owned, unconnected, untested.** Planned for ESP32-S3 I²C bus. Measures pen-air context; must NOT replace MLX90640's internal temperature compensation — see §2.7 |
+| **ESP32-S3** (`s3-mic-01`) | the ONLY mic. TCP :9090 audio, MQTT telemetry | ✅ **USB accessible** (2026-10-13, §1). Firmware `pigpulse-mic-pcm16-20261013` deployed; 2026-11-03 wire reports build `pigpulse-mic-sht45-20261019` (SHT45-aware) with ~1 Hz telemetry and nonzero audio (`nonzero=99.9%`). Mic hardware intermittent — produced real audio 2026-10-13, returned all-samples-minus-one 2026-10-14. Master confirms working as of 2026-10-29. See `KNOWN_GOOD.md` for revert |
+| **GY-SHT45** | environmental temp/humidity sensor (I²C on ESP32-S3) | ✅ **CONNECTED and reporting (2026-11-03)** — fresh temp/humidity rides in the s3-mic-01 telemetry bursts (~33-34 °C / ~72 % RH), live on the dashboard at `/ambient`, and stores in PocketBase. Measures pen-air context; must NOT replace MLX90640's internal temperature compensation — see §2.7 |
 | **Tapo C200C** | CCTV, RTSP → MJPEG | ⚠️ video reachable on Pi AP only. Management API blocked (needs cloud-owner password). See §8 |
 | ~~ESP32-D0WD~~ | original node | ☠️ **DECOMMISSIONED — do not resurrect** |
 | ~~INMP441 on Pi GPIO~~ | fallback mic | ☠️ **REMOVED 2026-09-29** |
@@ -300,34 +300,46 @@ can then reach both networks and the laptop no longer has to join the AP.
 > (1,920,000 samples, all exactly 0, both channels — a null source, not a quiet
 > room). Do not re-add the overlay without a real codec present.
 
-### 2.6 PocketBase is 0.22.20 and CANNOT run `.js` migrations
+### 2.6 PocketBase 0.22.20 and `.js` migrations — corrected 2026-11-03
 
-> **MEASURED 2026-09-30, not inferred.** `pocketbase --version` on the shipped
-> binary returns `pocketbase version 0.22.20`, and its CLI exposes `admin`
-> (v0.22 naming), not `superuser` (v0.23+). JS migrations require **0.23+**.
-
-Consequences, all verified by inserting a real telemetry row and reading it
-back rather than by assumption:
-
-1. `pocketbase migrate up` prints `Applied <file>.js` for every `.js` file and
-   **changes nothing**. It does not execute them and does not record them.
-2. `ALTER TABLE telemetry ADD COLUMN verdict TEXT` also changes **nothing** —
-   PocketBase serves only fields declared in the `_collections.schema` JSON, so
-   an undeclared column is silently discarded. A thermal payload round-tripped
-   with 7 of 14 keys missing.
-3. So the thermal fields were applied with
-   `backend/scripts/add_thermal_fields.py`, which writes both the SQLite
-   columns and the `_collections.schema` JSON using the migration's own field
-   ids (`thmvrdct`, `thmhotpt`, …). It is idempotent.
-4. All 8 `.js` migrations are recorded in both databases' `_migrations` tables,
-   so 0.22.20 attempts none of them and boots clean.
-
-**`deploy/pocketbase/bin/pb_migrations/` and `bin/pb_data/` are the LAPTOP's
-live instance.** The Pi keeps its own copy at `/home/pigpulse/pocketbase/`.
-Renaming a migration file fixes one database and breaks the other — that
-happened on 2026-09-30 and put the laptop's `pigpulse-pocketbase.service` into
-the same crash loop. Reconcile both in the same change; see the README in that
-directory.
+> **The 2026-09-30 claim ("0.22.20 CANNOT run `.js` migrations") is superseded
+> by direct measurement.** On 2026-11-03 the shipped 0.22.20 binary executed
+> old-style `.js` migrations (`migrate((db) => {…})` with `new Dao(db)` —
+> exactly the format these files use), in four checks:
+>
+> 1. Sandbox probe: `pocketbase migrate up` against a copy of the live laptop
+>    DB with a throwaway `.js` printed `Applied`, added the field, and
+>    recorded the `_migrations` row.
+> 2. The real `1798100000_updated_telemetry_add_humidity.js` applied against a
+>    consistent snapshot of the **Pi's** DB state: `Applied`, field declared
+>    with the expected schema JSON.
+> 3. **Live on the Pi**: the file was copied into
+>    `/home/pigpulse/pocketbase/pb_migrations/` and
+>    `pigpulse-pocketbase.service` restarted — PocketBase itself applied it at
+>    startup (2026-11-03 08:44:24 local; the `_migrations` row carries PB's own
+>    microsecond timestamp), and a real ESP32-S3 telemetry row then
+>    round-tripped with humidity stored (33.43 °C / 72.22 %).
+> 4. The laptop instance auto-applied the same file at its 2026-11-03 04:31
+>    boot (service `ActiveEnterTimestamp` matches the `_migrations` row).
+>
+> What remains true from 2026-09-30 and still applies:
+>
+> 1. `ALTER TABLE telemetry ADD COLUMN …` **alone** is not enough —
+>    PocketBase serves only fields declared in the `_collections.schema`
+>    JSON, so an undeclared column is silently discarded. A migration writes
+>    both halves (SQLite column + schema JSON) and records itself.
+> 2. Migrations must exist in **each instance's own** `pb_migrations/` before
+>    that instance's next boot — the laptop and the Pi are separate stores;
+>    copying to one does nothing for the other.
+> 3. Renaming a migration file fixes one database and breaks the other — that
+>    happened on 2026-09-30 and put the laptop's `pigpulse-pocketbase.service`
+>    into the same crash loop. Reconcile both in the same change.
+> 4. `backend/scripts/add_thermal_fields.py` remains a working manual fallback
+>    that writes both halves (it was used for the thermal fields).
+>
+> **`deploy/pocketbase/bin/pb_migrations/` and `bin/pb_data/` are the LAPTOP's
+> live instance** (and are gitignored — deploy state, not source). The Pi
+> keeps its own copy at `/home/pigpulse/pocketbase/`.
 
 ### 2.7 Sensor fusion — what is grounded vs. aspirational (2026-10-29)
 
@@ -347,8 +359,11 @@ in a ventilated shaded guard, wired to the ESP-S3 over I²C. **SHT45 data must
 NOT replace MLX90640's internal temperature compensation** — the
 `CalculateTo()` function takes only `emissivity` and reflected temperature;
 it has no humidity or distance parameter. Environmental correction requires
-its own validation before adoption. Owned but unconnected/untested as of
-2026-10-29.
+its own validation before adoption. **Connected and reporting as of
+2026-11-03** — fresh readings (~33-34 °C / ~72 % RH) arrive in the s3-mic-01
+telemetry bursts, are live on the Pi dashboard (`/ambient`) and store in
+PocketBase. (The earlier note "owned but unconnected/untested as of
+2026-10-29" is superseded.)
 
 **Modality capability matrix:**
 
