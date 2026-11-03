@@ -218,6 +218,31 @@
           <div class="small" id="micRec" style="margin-top:8px;">Idle</div>
         </div>
 
+        <div class="controlTitle" style="margin-top:10px;">Barn ambient — SHT45 (ESP32-S3)</div>
+
+        <div class="control">
+          <div class="micHead">
+            <div>
+              <div class="micStatus" id="ambText">Checking ambient…</div>
+              <div class="micSub2" id="ambSub">SHT45 on s3-mic-01, seen live over MQTT</div>
+            </div>
+            <span class="dot" id="ambDot"></span>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;">
+            <div class="box" style="min-height:64px;">
+              <span class="label">Barn temp</span>
+              <span class="value" id="ambTemp">--</span>
+              <div class="small">SHT45</div>
+            </div>
+            <div class="box" style="min-height:64px;">
+              <span class="label">Humidity</span>
+              <span class="value" id="ambHum">--</span>
+              <div class="small">SHT45</div>
+            </div>
+          </div>
+          <div class="micMode" id="ambMode">—</div>
+        </div>
+
         <div class="controlTitle" style="margin-top:10px;">Image Controls</div>
 
         <div class="control">
@@ -607,6 +632,50 @@ if (window.PigPulseMic) {
 }
 micSetModeText(null);
 /* ---------- end mic panel ---------- */
+
+/* ---------- ambient panel (SHT45 on the ESP32-S3, via /ambient) ---------- */
+const AMBIENT_POLL_MS = 4000;
+const AMB_STATES = {
+  'live':         { cls: 'ok',  color: 'var(--good)', text: 'LIVE' },
+  'stale':        { cls: '',    color: 'var(--warn)', text: 'STALE — last SHT45 read is old' },
+  'sht-missing':  { cls: '',    color: 'var(--warn)', text: 'ESP32-S3 online — SHT45 not reporting' },
+  'esp-offline':  { cls: 'bad', color: 'var(--bad)',  text: 'ESP32-S3 offline' },
+  'mqtt-offline': { cls: 'bad', color: 'var(--bad)',  text: 'MQTT broker unreachable' },
+  'no-data':      { cls: '',    color: 'var(--warn)', text: 'Waiting for telemetry…' },
+};
+function ambFmt(v, unit, digits) {
+  return (v === null || v === undefined) ? '--' : Number(v).toFixed(digits) + ' ' + unit;
+}
+async function ambientRefresh() {
+  const text = document.getElementById('ambText');
+  const mode = document.getElementById('ambMode');
+  const dot = document.getElementById('ambDot');
+  if (!text) return;
+  try {
+    const res = await fetch('/ambient?ts=' + Date.now(), { cache: 'no-store' });
+    const a = await res.json();
+    document.getElementById('ambTemp').textContent = ambFmt(a.temperature, 'C', 2);
+    document.getElementById('ambHum').textContent = ambFmt(a.humidity, '%', 1);
+    const meta = AMB_STATES[a.state] || AMB_STATES['no-data'];
+    text.textContent = meta.text;
+    text.style.color = meta.color;
+    dot.className = 'dot' + (meta.cls ? ' ' + meta.cls : '');
+    const bits = [];
+    if (a.device) bits.push('device ' + a.device);
+    if (a.ambientAgeS !== null && a.ambientAgeS !== undefined) bits.push('last ambient ' + a.ambientAgeS.toFixed(0) + 's ago');
+    if (a.mqttBroker) bits.push('broker ' + a.mqttBroker);
+    if (a.error) bits.push(a.error);
+    mode.textContent = bits.length ? bits.join(' • ') : '—';
+  } catch (err) {
+    text.textContent = 'Ambient endpoint unreachable';
+    text.style.color = 'var(--bad)';
+    dot.className = 'dot bad';
+    mode.textContent = String(err);
+  }
+}
+setInterval(ambientRefresh, AMBIENT_POLL_MS);
+ambientRefresh();
+/* ---------- end ambient panel ---------- */
 
 setInterpolation(true);
 setPalette('iron');

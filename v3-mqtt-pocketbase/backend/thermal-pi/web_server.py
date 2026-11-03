@@ -13,6 +13,9 @@ ESP32-S3 barn mic (s3-mic-01) — the only audio source:
   GET /esp/stream    → raw PCM S16LE stereo, read-until-close
   GET /esp/record?seconds=N → record N s → WAV download
 
+Ambient (SHT45 on the ESP32-S3) — observed over MQTT, never polled:
+  GET /ambient       → JSON ambient state (temperature, humidity, age, state)
+
 CCTV (Tapo camera), proxied to keep the browser on one (HTTPS) origin:
   GET /cctv          → multipart/x-mixed-replace MJPEG
 
@@ -33,6 +36,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
+import ambient_ingest
 import config
 import esp_audio_ingest
 import i2c_scanDiag
@@ -293,6 +297,11 @@ class Handler(BaseHTTPRequestHandler):
                               separators=(",", ":")).encode()
             self._send(200, "application/json", body)
             return
+        if path == "/ambient":
+            body = json.dumps(ambient_ingest.get().snapshot(),
+                              separators=(",", ":")).encode()
+            self._send(200, "application/json", body)
+            return
         if path == "/esp/stream":
             self._stream_esp()
             return
@@ -345,6 +354,14 @@ class Handler(BaseHTTPRequestHandler):
                 if esp["connected"] else
                 f"NOT connected (bindError={esp['bindError']})"
             )
+            amb = ambient_ingest.get().snapshot()
+            if amb["temperature"] is None and amb["humidity"] is None:
+                amb_state = f"{amb['state']} (no SHT45 reading in telemetry)"
+            else:
+                amb_state = (
+                    f"{amb['state']} temp={amb['temperature']}C "
+                    f"hum={amb['humidity']}% age={amb['ambientAgeS']}s"
+                )
             lines = [
                 "PigPulse Raspberry Pi 4B MLX90640 Thermal",
                 f"Sensor ready: {'yes' if _reader.is_ready() else 'no'}",
@@ -364,6 +381,7 @@ class Handler(BaseHTTPRequestHandler):
                 f"Local IPv4: {', '.join(local_ips) or 'unknown'}",
                 f"Dashboard URL: {url_hint}",
                 f"ESP32-S3 mic: {esp_state}",
+                f"Ambient (SHT45): {amb_state}",
                 f"Thermal MQTT: {_publisher.status()}",
                 "",
                 f"Last error: {_last_error}",
@@ -703,6 +721,10 @@ def main() -> None:
         # ESP32-S3 barn mic — the only audio source; firmware pushes PCM to TCP :9090
         print("[web] starting ESP mic ingest (tcp :9090)...")
         esp_audio_ingest.ensure_started()
+        # Ambient SHT45 (on the ESP32-S3) — subscribe over MQTT, never poll:
+        # TCP :9090 is single-client, so asking the ESP would evict the mic.
+        print("[web] starting ambient MQTT watcher (pig/+/telemetry)...")
+        ambient_ingest.ensure_started()
         # Publish thermal readings over MQTT so the Pi is a pipeline node
         _publisher.start()
         # Brief wait for first frame so / isn't empty on first hit
