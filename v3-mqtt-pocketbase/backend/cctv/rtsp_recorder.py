@@ -99,6 +99,7 @@ def main():
     p = spawn()
     spawned_at = time.time()
     last_data = time.time()
+    wrote = False
     fast_exits = 0  # consecutive <10 s exits = camera likely unreachable
     while True:
         time.sleep(15)
@@ -119,19 +120,29 @@ def main():
             p = spawn()
             spawned_at = time.time()
             last_data = time.time()
+            wrote = False
             continue
         mt, newest = newest_mtime()
-        if mt:
+        if mt and mt > spawned_at:
             last_data = mt
+            wrote = True
+            fast_exits = 0
         stale = time.time() - last_data
         if stale > MAX_STALE_S:
             log("stale for %ds (newest: %s) — relaunching ffmpeg"
                 % (int(stale), os.path.basename(newest or "none")))
             p.send_signal(signal.SIGKILL)
             p.wait()
+            if not wrote:
+                # camera possibly unreachable: never drum a dead camera
+                fast_exits += 1
+                backoff = min(15 * (2 ** fast_exits), 300)
+                log("no data this run — backing off %ds" % backoff)
+                time.sleep(backoff)
             p = spawn()
             spawned_at = time.time()
             last_data = time.time()
+            wrote = False
 
 
 if __name__ == "__main__":
