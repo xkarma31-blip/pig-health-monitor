@@ -87,7 +87,7 @@ class AmbientStateTests(unittest.TestCase):
 
     def test_humidity_only_still_counts(self):
         self.ing._connected = True
-        self.feed('{"humidity":65.0}')
+        self.feed('{"mic":true,"humidity":65.0}')
         self.assertEqual(self.ing.snapshot()["state"], "live")
 
     def test_keyless_message_between_reads_keeps_live(self):
@@ -145,6 +145,43 @@ class AmbientStateTests(unittest.TestCase):
         self.feed('{"mic":true,"temperature":34.10,"humidity":65.00}')
         self.assertEqual(self.ing.snapshot()["state"], "live")
 
+    # ---- source discipline: only ESP telemetry feeds the card ------------
+
+    PI_THERMAL = ('{"deviceId":"pi-thermal-01","bodyTemp":35.8,'
+                  '"temperature":31.9,"center":35.8,"hotspot":37.1,'
+                  '"max":42.6,"min":30.8,"ambient":38.0}')
+    PI_THERMAL_TOPIC = "pig/pi-thermal-01/telemetry"
+
+    def test_pi_thermal_telemetry_is_ignored(self):
+        """Regression (live 2026-11-03): pi-thermal-01's thermal telemetry
+        carries a `temperature` key too — the MLX90640's ambient estimate,
+        not the SHT45. It must never feed the SHT45 card."""
+        self.ing._connected = True
+        self.feed('{"mic":true,"temperature":33.4,"humidity":72.5}')
+        self.feed(self.PI_THERMAL, topic=self.PI_THERMAL_TOPIC)
+        s = self.ing.snapshot()
+        self.assertEqual(s["state"], "live")            # ESP read still fresh
+        self.assertAlmostEqual(s["temperature"], 33.4)  # NOT the MLX estimate
+        self.assertEqual(s["device"], "s3-mic-01")
+        self.assertEqual(s["msgCount"], 1)              # pi-thermal ignored
+
+    def test_pi_thermal_telemetry_cannot_mask_an_offline_esp(self):
+        """The live failure this gate exists for: with the ESP down, the Pi's
+        ~1 Hz thermal telemetry kept the stream alive and the card displayed
+        the MLX estimate (31.9 C) labelled as the SHT45."""
+        self.ing._connected = True
+        self.feed('{"mic":true,"temperature":34.09,"humidity":65.07}')
+        self.feed('{"mic":false,"rms":0,"peak":0,"sr":48000}')  # retained will
+        for _ in range(3):
+            self.feed('{"deviceId":"pi-thermal-01","temperature":31.9}',
+                      topic=self.PI_THERMAL_TOPIC)
+        s = self.ing.snapshot()
+        self.assertEqual(s["state"], "esp-offline")
+        self.assertAlmostEqual(s["temperature"], 34.09)
+        self.assertAlmostEqual(s["humidity"], 65.07)
+        self.assertEqual(s["device"], "s3-mic-01")
+        self.assertEqual(s["msgCount"], 2)              # ESP + LWT only
+
     # ---- robustness -----------------------------------------------------
 
     def test_garbage_payload_is_ignored(self):
@@ -157,7 +194,7 @@ class AmbientStateTests(unittest.TestCase):
 
     def test_topic_without_device_is_tolerated(self):
         self.ing._connected = True
-        self.feed('{"temperature":1.0}', topic="pig/telemetry")
+        self.feed('{"mic":true,"temperature":1.0}', topic="pig/telemetry")
         s = self.ing.snapshot()
         self.assertIsNone(s["device"])
         self.assertEqual(s["state"], "live")

@@ -19,11 +19,19 @@ CONTRACT (re-verified 2026-11-02 against the flashed source):
         keeps those two apart on purpose.
     LWT, retained, same topic: {"mic":false,"rms":0,"peak":0,"sr":48000}
       A late subscriber receives this immediately when the ESP is down.
+    pi-thermal-01 ALSO publishes pig/pi-thermal-01/telemetry, and its payload
+      carries a `temperature` key too — the MLX90640's own ambient estimate,
+      NOT the SHT45 (measured on the wire 2026-11-03). Every ESP message,
+      live telemetry AND the retained LWT, carries the `mic` key; the Pi's
+      thermal telemetry never does. That presence is this watcher's ESP
+      signature: messages without it are ignored entirely, so the SHT45 card
+      can never be fed by the thermal camera (regression-tested).
 
 STATE MODEL (what /ambient and the dashboard card show):
   mqtt-offline  Pi's broker link is down — nothing can be trusted
-  no-data       connected, no telemetry seen yet
-  esp-offline   last telemetry said mic:false (LWT) or is older than OFFLINE_S
+  no-data       connected, no ESP telemetry seen yet
+  esp-offline   the ESP's last telemetry said mic:false (LWT) or is older
+                than OFFLINE_S
   sht-missing   the SHT45 has produced no fresh reading — none at all, or none
                 within the last OFFLINE_S while the ESP keeps publishing. The
                 firmware attaches the ambient keys only while its read is
@@ -83,7 +91,7 @@ class AmbientIngest:
         self._mic_online: bool | None = None
         self._temperature: float | None = None
         self._humidity: float | None = None
-        self._last_msg: float | None = None       # monotonic, any telemetry
+        self._last_msg: float | None = None       # monotonic, ESP telemetry
         self._last_ambient: float | None = None   # monotonic, ambient keys only
         self._last_msg_wall: float | None = None  # unix time, for display
         self._last_ambient_wall: float | None = None
@@ -148,6 +156,13 @@ class AmbientIngest:
         except (ValueError, UnicodeDecodeError):
             return
         if not isinstance(payload, dict):
+            return
+
+        # ESP-signature gate — see CONTRACT in the module docstring. Only the
+        # ESP's messages (always `mic`-keyed, LWT included) may feed this
+        # card: pi-thermal-01's thermal telemetry also carries `temperature`
+        # (the MLX90640's ambient estimate) and must never pass.
+        if "mic" not in payload:
             return
 
         parts = msg.topic.split("/")
