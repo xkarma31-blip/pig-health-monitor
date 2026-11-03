@@ -117,18 +117,21 @@ def check_pb_tables():
     except Exception as e:
         return False, str(e)[:180]
 
-def check_mqtt_bridge_log():
+def check_unit_journal(unit, markers, ok_msg, user_journal=False):
     try:
         # -b + --grep: look since boot (server-side filter keeps output tiny).
         # The old "-n 5" window showed only recent inserts, so any traffic
         # hid the startup markers → false warn.
-        out=subprocess.check_output(
-            ["journalctl","-u","pigpulse-bridge","-b","--no-pager",
-             "--grep","Connected to MQTT|PocketBase authenticated"],
+        cmd=["journalctl","-u",unit,"-b","--no-pager","--grep","|".join(markers)]
+        if user_journal:
+            # User-manager units (e.g. laptop pigpulse-cloud-sync) log to the
+            # user journal; plain `journalctl -u` reads only the system one.
+            cmd.insert(1,"--user")
+        out=subprocess.check_output(cmd,
             stderr=subprocess.DEVNULL, timeout=5).decode()
-        if "Connected to MQTT" in out and "PocketBase authenticated" in out:
-            return True, "bridge connected since boot"
-        return None, out.strip()[-180:] or "no startup markers since boot"
+        if all(m in out for m in markers):
+            return True, ok_msg
+        return None, out.strip()[-180:] or f"no {'|'.join(markers)} since boot"
     except Exception as e:
         return None, str(e)[:120]
 
@@ -161,6 +164,7 @@ if ON_PI:
     add("systemd hostapd (AP PigPulse)", systemctl_active("hostapd"), "active" if systemctl_active("hostapd") else "inactive")
     add("systemd dnsmasq (DHCP + CCTV lease)", systemctl_active("dnsmasq"), "active" if systemctl_active("dnsmasq") else "inactive")
     add("systemd pigpulse-cctv", systemctl_active("pigpulse-cctv"), "active" if systemctl_active("pigpulse-cctv") else "inactive")
+    add("systemd pigpulse-bridge", systemctl_active("pigpulse-bridge"), "active" if systemctl_active("pigpulse-bridge") else "inactive")
     ok, d=tcp_ping("127.0.0.1",8091); add("CCTV mjpeg :8091", ok, d)
 else:
     # --- laptop rig: docker stack + gateway (absent on the Pi) ---
@@ -169,12 +173,14 @@ else:
     ok, d=tcp_ping("127.0.0.1",6380); add("ValKey docker :6380", ok, d)
     add("ValKey docker pigpulse-valkey", docker_running("pigpulse-valkey"), "Running" if docker_running("pigpulse-valkey") else "not")
     add("systemd openresty", systemctl_active("openresty"), "active" if systemctl_active("openresty") else "inactive")
+    # T2: the laptop no longer runs a bridge (the Pi's anchored bridge is the
+    # only MQTT->PB writer); the laptop's cloud role is the sync worker.
+    add("systemd pigpulse-cloud-sync", systemctl_active("pigpulse-cloud-sync"), "active" if systemctl_active("pigpulse-cloud-sync") else "inactive")
     st, body, _ = http_get("127.0.0.1",80,"/health")
     add("OpenResty gateway :80 /health", st==200, body[:100].decode(errors='ignore') if st else str(body[:80]))
 
 # both rigs
 add("systemd pigpulse-pocketbase", systemctl_active("pigpulse-pocketbase"), "active" if systemctl_active("pigpulse-pocketbase") else "inactive")
-add("systemd pigpulse-bridge", systemctl_active("pigpulse-bridge"), "active" if systemctl_active("pigpulse-bridge") else "inactive")
 
 st, body, _ = http_get("127.0.0.1",8090,"/api/health")
 add("PocketBase /api/health direct", st==200, body[:120].decode(errors='ignore') if st else str(body[:80]))
@@ -202,11 +208,24 @@ if shutil.which("docker"):
 else:
     add("Thermal-WS docker pigpulse-thermal-ws", None, "skip: no docker binary")
 
-ok, d = check_mqtt_bridge_log()
-add("Bridge journal", ok, d)
+if ON_PI:
+    ok, d = check_unit_journal(
+        "pigpulse-bridge", ["Connected to MQTT", "PocketBase authenticated"],
+        "bridge connected since boot")
+    add("Bridge journal", ok, d)
+else:
+    ok, d = check_unit_journal(
+        "pigpulse-cloud-sync", ["pass:"],
+        "cloud sync logged passes since boot", user_journal=True)
+    add("Cloud-sync journal", ok, d)
 
-# MQTT publish round-trip (if paho available)
-try:
+# MQTT publish round-trip (if paho available). Pi rig only: it needs a local
+# bridge to consume the probe, and the laptop no longer runs one — its ingest
+# path is the cloud-sync worker, not MQTT.
+if not ON_PI:
+    add("MQTT→PB round-trip", None, "skip: no laptop bridge (ingest = cloud-sync)")
+else:
+  try:
     import paho.mqtt.client as mqtt, json as j, time as t, requests
     c=mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
     c.connect("127.0.0.1",1883,60)
@@ -236,18 +255,22 @@ try:
     else:
         if removed: add("healthcheck probe cleanup", True, f"deleted {removed} probe row(s)")
     add("MQTT→PB round-trip", after>before, f"telemetry {before}->{after} (publish healthcheck-001, probe removed)")
-except Exception as e:
+  except Exception as e:
     add("MQTT→PB round-trip", None, f"skip: {e}"[:160])
 
 # Also test gateway proxy (laptop rig only — the Pi has no OpenResty on :80)
 if not ON_PI:
-    try:
-        import requests as rq
-        tok=rq.post(f"{PB_URL}/api/admins/auth-with-password", json={"identity":PB_ADMIN_EMAIL,"password":PB_ADMIN_PASS}, timeout=4).json()["token"]
-        r=rq.get("http://127.0.0.1:80/api/collections/telemetry/records?perPage=1", headers={"Authorization":f"Bearer {tok}"}, timeout=4)
-        add("Gateway /api/ proxy :80", r.status_code==200, f"status {r.status_code} items {r.json().get('totalItems','?')}")
-    except Exception as e:
-        add("Gateway /api/ proxy :80", False, str(e)[:140])
+    if not HAVE_PB_CREDS:
+        add("Gateway /api/ proxy :80", None,
+            "skip: no PB credentials (export PB_EMAIL/PB_PASSWORD)")
+    else:
+        try:
+            import requests as rq
+            tok=rq.post(f"{PB_URL}/api/admins/auth-with-password", json={"identity":PB_ADMIN_EMAIL,"password":PB_ADMIN_PASS}, timeout=4).json()["token"]
+            r=rq.get("http://127.0.0.1:80/api/collections/telemetry/records?perPage=1", headers={"Authorization":f"Bearer {tok}"}, timeout=4)
+            add("Gateway /api/ proxy :80", r.status_code==200, f"status {r.status_code} items {r.json().get('totalItems','?')}")
+        except Exception as e:
+            add("Gateway /api/ proxy :80", False, str(e)[:140])
 else:
     add("Gateway /api/ proxy :80", None, "skip: no OpenResty on Pi rig")
 

@@ -9,7 +9,8 @@ Type=simple
 # Runs on the LAPTOP, not the Pi. The Pi AP has no WAN, so it can only be the
 # server; Tailscale cannot help because a node with no internet cannot reach
 # the coordination server to enrol.
-User=solrahk
+# NOTE: no User= here — in a user unit the manager already runs as the owner,
+# and setting User= in a non-root user manager fails with 216/GROUP.
 WorkingDirectory=/home/solrahk/pig-health-monitor/v3-mqtt-pocketbase/backend/workers
 # Credentials for BOTH PocketBases. Create once:
 #   install -d -m 0700 ~/.config/pigpulse

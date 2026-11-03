@@ -45,6 +45,15 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from pathlib import Path
+
+# The thermal guard lives in backend/bridge (single source of truth, shared
+# with the Pi bridge). Resolve it relative to this file so the worker works
+# both run directly (`python3 cloud_sync.py`) and loaded by path in tests.
+_BRIDGE_DIR = Path(__file__).resolve().parents[1] / "bridge"
+if str(_BRIDGE_DIR) not in sys.path:
+    sys.path.insert(0, str(_BRIDGE_DIR))
+from thermal_guard import apply_telemetry_guard, is_thermal_alert  # noqa: E402
 
 # ---------------------------------------------------------------- config ---
 # Source = the Pi. Reached over the PigPulse AP, so this is the AP address.
@@ -67,8 +76,57 @@ SYNCED_COLLECTIONS = ("telemetry", "alerts", "audio_events")
 BATCH = int(os.environ.get("SYNC_BATCH", "200"))
 INTERVAL_S = float(os.environ.get("SYNC_INTERVAL_S", "60"))
 TIMEOUT = float(os.environ.get("SYNC_TIMEOUT_S", "10"))
-# Preserve historical readings, including questionable device timestamps.
-# Freshness is a presentation concern, never evidence of successful delivery.
+
+# ── T2: Pi clock eras ────────────────────────────────────────────────────────
+# Source stamps are the Pi clock's OPINION. The Pi has no RTC and its wall
+# clock has stepped four times; offsets map raw stamps onto the true timeline.
+# Derived live from the Pi PocketBase on 2026-11-03 (eras 0-2 exact to the
+# millisecond, era 3 to ~1 s from 3 laptop-NTP cross-checks):
+#   corrected(Era0_last) == Era1_first_raw
+#   corrected(Era1_last) == Era2_first_raw
+#   Era 2: true time, through the 2026-11-03T07:00Z reboot.
+#   Era 3: that reboot restored a fake-hwclock snapshot 2 h 25 m 15 s stale
+#          (pi-laptop = -8_715 s, free-running). Ends at the anchored-bridge
+#          redeploy; the raw gap to the first anchored row is verified empty.
+#   Era 4: the anchored bridge stamps true time directly (offset 0).
+# The ~70 s reboot seam (raw 1_793_689_236_030..1_793_689_291_164, where the
+# dying boot's stream overlaps the rebooted bridge's warm-up) cannot be
+# attributed from raw stamps alone; those rows are treated as Era 2.
+ERA_OFFSETS_MS = (
+    (1_790_819_471_315, 246_036_936),      # Era 0: clock 2.85 d behind
+    (1_793_658_731_063, 2_836_325_167),    # Era 1: clock 32.83 d behind
+    (1_793_689_301_461, 0),                # Era 2: true time, through the 2026-11-03 reboot
+    (1_793_697_285_166, 8_715_000),        # Era 3: clock 2 h 25 m 15 s behind (fake-hwclock restore)
+    (None, 0),                             # Era 4: anchored bridge, already true
+)
+
+
+def correct_source_timestamp(raw_ms):
+    """Map a raw Pi-stamped timestamp (ms) onto the true timeline (ms)."""
+    if raw_ms is None:
+        return None
+    try:
+        raw = int(raw_ms)
+    except (TypeError, ValueError):
+        return raw_ms  # not a number: pass through untouched
+    for upper, offset in ERA_OFFSETS_MS:
+        if upper is None or raw < upper:
+            return raw + offset
+    return raw
+
+
+def to_dest_timestamp(raw_ms):
+    """Corrected true time in SECONDS — the destination's unit.
+
+    The laptop's legacy rows are seconds; PocketBase `sort=-timestamp`
+    silently breaks on mixed units, so the destination always receives
+    seconds regardless of what the source stored.
+    """
+    corrected = correct_source_timestamp(raw_ms)
+    if isinstance(corrected, int):
+        return corrected // 1000
+    return corrected
+
 
 # Fields PocketBase generates; sending them back causes a validation error.
 SERVER_FIELDS = {"id", "created", "updated", "collectionId", "collectionName",
@@ -179,7 +237,8 @@ _quarantine: dict[tuple[str, str], int] = {}
 
 
 def sync_once(src: PocketBase, dst: PocketBase, dry_run: bool = False) -> dict:
-    stats = {"sent": 0, "failed": 0, "quarantined": 0, "per_collection": {}}
+    stats = {"sent": 0, "failed": 0, "quarantined": 0, "suppressed": 0,
+             "per_collection": {}}
     for coll in SYNCED_COLLECTIONS:
         if not src.ensure():
             log.error("source unreachable — aborting this pass")
@@ -198,7 +257,33 @@ def sync_once(src: PocketBase, dst: PocketBase, dry_run: bool = False) -> dict:
             if attempts >= QUARANTINE_AFTER and attempts % QUARANTINE_AFTER != 0:
                 stats["quarantined"] += 1
                 continue
+            # Thermal alert rows are scene-camera claims with impossible
+            # values (T2 decision 2026-11-02): suppress instead of deliver.
+            # The source row stays intact; marking it handled keeps it out of
+            # every future batch instead of retrying a row that must never
+            # arrive. (Going forward the Pi bridge suppresses these at
+            # ingest; this path drains the historical backlog.)
+            if coll == "alerts" and is_thermal_alert(rec):
+                if dry_run:
+                    log.info("[dry-run] would suppress thermal alert %s",
+                             rec.get("id"))
+                    stats["suppressed"] += 1
+                    continue
+                if src.mark_synced(coll, rec["id"]):
+                    stats["suppressed"] += 1
+                    log.info("suppressed thermal alert %s (marked handled)",
+                             rec.get("id"))
+                else:
+                    stats["failed"] += 1
+                continue
             payload = strip_server_fields(rec)
+            if coll == "telemetry":
+                payload, dropped = apply_telemetry_guard(payload)
+                if dropped:
+                    log.info("telemetry/%s: dropped semantic fields %s",
+                             rec.get("id"), ", ".join(sorted(dropped)))
+            if "timestamp" in payload:
+                payload["timestamp"] = to_dest_timestamp(payload["timestamp"])
             payload["synced"] = True
             if dry_run:
                 log.info("[dry-run] would send %s/%s: %s",
@@ -268,7 +353,8 @@ def main() -> int:
     while True:
         try:
             st = sync_once(src, dst, dry_run=args.dry_run)
-            if st["sent"] or st["failed"] or st["quarantined"]:
+            if (st["sent"] or st["failed"] or st["quarantined"]
+                    or st["suppressed"]):
                 log.info("pass: %s", json.dumps(st))
         except Exception as e:  # a worker that dies on one bad batch is useless
             log.error("pass failed: %s", e, exc_info=True)
