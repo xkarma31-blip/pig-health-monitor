@@ -61,6 +61,12 @@ def connect():
     except ImportError:
         sys.exit("pytapo is not installed here. Run: python3 -m pip install pytapo")
 
+    # Newer camera firmware rejects the legacy encrypt_type-3 login with
+    # -40211 and only accepts the tpap/SPAKE2+ scheme. Auto-detection can mis-
+    # pick pytapo's legacy transport, so force it via env when needed:
+    #   TAPO_TRANSPORT=tpap   (or klap / pytapo)
+    transport_method = os.environ.get("TAPO_TRANSPORT", "").strip() or None
+
     host = probe_host()
     if host is None:
         sys.exit(
@@ -80,7 +86,8 @@ def connect():
     if os.environ.get("TAPO_AUTH_MODE", "auto").strip().lower() == "cloud":
         if not cloud_password:
             sys.exit("TAPO_AUTH_MODE=cloud requires TAPO_CLOUD_PASS.")
-        tapo = Tapo(host, "admin", cloud_password, cloudPassword=cloud_password)
+        tapo = Tapo(host, os.environ.get("TAPO_CLOUD_USER", "admin").strip(), cloud_password,
+                    cloudPassword=cloud_password, transportMethod=transport_method)
         tapo.getBasicInfo()
         return tapo, "cloud password (SPAKE2+)"
 
@@ -93,13 +100,17 @@ def connect():
     # Primary: the Camera Account the app creates. Fallback: newer firmware
     # dropped that login and wants admin + cloud password via SPAKE2+.
     try:
-        tapo = Tapo(host, user, password)
+        tapo = Tapo(host, user, password, transportMethod=transport_method)
         tapo.getBasicInfo()
         return tapo, "Camera Account"
     except Exception:
-        if not cloud_password:
+        # A forced transport must never double-shoot: if the caller pinned a
+        # scheme (e.g. TAPO_TRANSPORT=tpap), a failure here is final — falling
+        # back would burn a second login attempt against a lockout-prone cam.
+        if transport_method or not cloud_password:
             raise
-    tapo = Tapo(host, "admin", cloud_password, cloudPassword=cloud_password)
+    tapo = Tapo(host, os.environ.get("TAPO_CLOUD_USER", "admin").strip(), cloud_password,
+                cloudPassword=cloud_password, transportMethod=transport_method)
     tapo.getBasicInfo()
     return tapo, "cloud password (SPAKE2+)"
 

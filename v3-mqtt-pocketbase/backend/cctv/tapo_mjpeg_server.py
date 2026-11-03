@@ -9,6 +9,7 @@ PigPulse.
 """
 import os
 import queue as _queue
+import select
 import socket
 import struct
 import subprocess
@@ -133,8 +134,22 @@ def read_frames():
                 daemon=True,
             ).start()
             buf = b""
+            fd = stdout.fileno()
             while True:
-                chunk = stdout.read(65536)
+                # Stall watchdog (2026-11-03): a half-open RTSP connection
+                # (camera rebooted/wedged without closing TCP) leaves ffmpeg
+                # blocked in read() forever, so a plain stdout.read() here
+                # would never return and the re-probe loop could never fire —
+                # the feed latched dead until a manual restart. select()
+                # with a timeout detects the stall and kills ffmpeg so the
+                # outer loop re-probes and reconnects.
+                ready, _, _ = select.select([fd], [], [], 15.0)
+                if not ready:
+                    print("CCTV: no frames for 15s — restarting ffmpeg",
+                          flush=True)
+                    proc.kill()
+                    break
+                chunk = os.read(fd, 65536)  # short read; never waits to fill
                 if not chunk:
                     if proc.poll() is not None:
                         break

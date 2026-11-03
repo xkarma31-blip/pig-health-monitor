@@ -1,0 +1,16 @@
+[Unit]
+Description=PigPulse RTSP 24/7 segment recorder (camera -> Pi disk)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pigpulse
+WorkingDirectory=/home/pigpulse/cctv
+EnvironmentFile=/etc/pigpulse/cctv.env
+ExecStart=/usr/bin/python3 /home/pigpulse/cctv/rtsp_recorder.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

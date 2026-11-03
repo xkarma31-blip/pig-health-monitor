@@ -16,6 +16,23 @@ it; the archive must be complete first (confirmed by Solrahk/opencode).
 
 ---
 
+## LED status decoder (and what NOT to trust it for)
+
+- **Solid red** — booting. Stays red >30 s = **app wedged** (what the full/corrupt
+  SD card caused on every card-in).
+- **Blinking red + green** — setup mode, waiting for app pairing.
+- **Blinking green** — joining WiFi.
+- **Solid green** — Tapo cloud reachable + device registered. Cosmetic for us.
+- **Solid amber (orange)** — WiFi fine, Tapo cloud unreachable. **Expected in
+  the barn topology; harmless.** At distance/dim light amber reads as red.
+
+**Ground truth rule: judge the camera by the dashboard feed (`/cctv`), never by
+the LED.** The LED cannot be read remotely (no cloud API available — CANON #18;
+Pi has no conntrack table to enumerate outbound links). If the picture moves on
+`/cctv`, the camera app is alive regardless of light color.
+
+---
+
 ## Phase 0 — pre-flight (opencode, done before you start)
 
 - [x] Archive of the 86 valid clips complete on the laptop
@@ -44,8 +61,10 @@ use the **phone's hotspot** (mobile data on) as the setup WiFi:
      complete setup on any internet WiFi (e.g. home router), then move the
      camera to the barn and do the "reconnect to a different network" flow
      from the PigPulse WiFi (Phase 3 covers it).
-5. **Log in / bind with `kuroyamimori746@gmail.com`** — the camera is now
-   *yours*.
+5. **Log in / bind with the Tapo app's own account** — whatever the phone app
+   is signed into (2026-11-03: the owner turned out to be the account on the
+   app at bind time, **NOT** `kuroyamimori746@gmail.com` — that Gmail is only
+   the Google Drive storage account).
 
 ## Phase 3 — in-app configuration (same creds as the rig, ~5 minutes)
 
@@ -71,8 +90,10 @@ While still in the app with the camera online:
 > kills ordinary cards.
 
 1. Tell opencode — it arms 24/7 continuous + circular recording via the local
-   API (this now authenticates with `kuroyamimori746`'s own password) and
-   verifies by read-back, then fills `~/.config/pigpulse/tapo.env` so the
+   API. **Important (2026-11-03 measured):** the local API authenticates with
+   the **Tapo app account password** (cloud-bound at rebind), NOT the camera
+   account's password (`pigpulse`/`capstone` is RTSP-only now). On success it
+   verifies by read-back and fills `~/.config/pigpulse/tapo.env` so the
    hourly offload activates.
 2. Camera **unplugged** → insert the SD card → power on.
 3. The camera formats the card fresh and starts recording per the armed plan.
@@ -90,3 +111,25 @@ While still in the app with the camera online:
   re-run the WiFi switch from the app; nothing is lost.
 - Fusion page shows "CCTV offline" after the move → wait ~60 s (auto-
   reconnect retries every 3 s), then reload the page once.
+
+---
+
+## 2026-11-03 update — old card retired; camera runs cardless
+
+Autopsy of the original SD card (read on the Pi's USB card reader, mounted
+**read-only**, 235 files):
+
+- **100% FULL:** 63G used of 63G (613 MB free) — the card had no room at all,
+  which is why every card-in wedged the camera app at boot.
+- **FAT directory damage:** 96 of 235 names are mangled (`xxxxxxxx_000000_tp00NNN.mp4`), newest entries all share one frozen mtime
+  (2026-09-22 23:33). Sample reads still succeed — the read side is
+  intermittently healthy; the filesystem metadata is not trustworthy.
+- **Nothing recorded after 2026-09-24.** The 2026-10-21 laptop archive
+  (99 files, 25G, clips tp00000–tp00085 + .pic frames) already covers the
+  usable history.
+- **Decision (final):** card stays OUT of the camera. Cardless operation is
+  proven stable (feed uninterrupted for hours; relay watchdog recovers any
+  stall within ~15 s). Replacement when ready: new high-endurance card
+  (SanDisk Max Endurance / Samsung PRO Endurance, 64–128 GB).
+  ~150 pre-Oct-21 chunks (38G) remain unarchived on the card itself — copy
+  them off the Pi reader only if Master wants the extra raw footage.
