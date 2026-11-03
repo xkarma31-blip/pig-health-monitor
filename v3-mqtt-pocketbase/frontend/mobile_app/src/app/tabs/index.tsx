@@ -18,7 +18,7 @@ import {
 } from '../../components/primitives';
 import { playSound } from '../../utils/sounds';
 import { haptic } from '../../utils/haptics';
-import { telemetryTime } from '../../utils/telemetry-time';
+import { telemetryTime, telemetryFresh } from '../../utils/telemetry-time';
 import { subscribeDeviceNames } from '../../utils/pocketbase-data';
 import { loadFarmerSetup } from '../../utils/setupStore';
 
@@ -142,6 +142,12 @@ export default function HomeScreen() {
   const isOnline = connectionStatus === 'connected' || connectionStatus === 'connecting';
   const topAlert = devices.find((d) => d.status === 'alert');
   const farmPrefix = farmName ? `${farmName} · ` : '';
+
+  // Live Pi thermal data — when the phone is on the PigPulse network the Pi
+  // publishes pi-thermal-01 rows; rows from an older session stay "Demo".
+  const piFrame = telemetry['pi-thermal-01'];
+  const piLive = !!piFrame && telemetryFresh(piFrame.timestamp);
+  const piTemp = typeof piFrame?.temperature === 'number' ? piFrame.temperature : undefined;
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -295,11 +301,13 @@ export default function HomeScreen() {
           <View style={{ marginLeft: spacing.md, flex: 1 }}>
             <Text style={[typography.h2, { color: colors.textPrimary }]}>Thermal view</Text>
             <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 2, fontSize: 12.5 }]}>
-              Simulated preview of the thermal camera
+              {piLive
+                ? `pi-thermal-01 · ${typeof piTemp === 'number' ? piTemp.toFixed(1) : '—'}°C · live`
+                : 'Simulated preview of the thermal camera'}
             </Text>
           </View>
         </View>
-        <Badge label="Demo" status="info" />
+        <Badge label={piLive ? 'Live' : 'Demo'} status={piLive ? 'healthy' : 'info'} />
       </TouchableOpacity>
 
       {/* Needs attention */}

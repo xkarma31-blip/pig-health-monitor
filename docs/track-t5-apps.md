@@ -6,8 +6,10 @@
 **This change set (2026-11-03):** `frontend/mobile_app/src/**` only.
 **Never touched:** firmware, `backend/**` (incl. `thermal-pi/static/`), `CANON.md`, landing page.
 
-> **Status: approved by Master and committed (2026-11-03; hash in `git log`).**
-> tsc 0 · eslint 0 errors · critic_loop 9/9 · expo web export OK · DOM checks 41/41.
+> **Status: phase 1 (split + labeling) committed 2026-11-03; phase 2 (live barn
+> thermal in the app) implemented + verified — UNCOMMITTED, approval pending.**
+> Phase 2: tsc 0 · eslint 0 errors · critic_loop 6/6 · expo web export OK ·
+> regression 41/41 · live 9/9 · home-live 3/3.
 > Not deployed, no APK. Read "Honest limits" before claiming anything works on a phone.
 
 ---
@@ -178,12 +180,11 @@ readable as history: `git show fd5f5f1:docs/track-t5-apps.md` (306 lines, supers
     with `generateMockData()` (Bessie/Daisy/Coco/Lucy, invented temps). The island is a
     legacy technician review surface. Decide: keep it as a clearly-labeled review surface
     or wire real PB data. (Review feedback 2026-11-03.)
-11. **Live thermal is NOT wired into the app.** The Pi serves live frames today (web
-    `/data` endpoint, MQTT `pig/+/thermal/live`, broker WS on `:9001`; console live at
-    `https://192.168.69.1:8080/` — reachable and verified 2026-11-03). The app's legacy
-    `/feed` route looks for `thermalFrame` from `esp32-s3-01` — a device id and field
-    names that no longer exist — so the app always falls back to the labeled simulation.
-    Next step: wire the Pi path when on the PigPulse network, keep the simulation otherwise.
+11. **Live thermal wiring — ADDRESSED in phase 2** (see the phase-2 track note at the
+    bottom): the app now reads `/data` + `/ambient` + `/esp/status` (console tier) and
+    falls back to PocketBase `pi-thermal-01` stats. Remaining caveat: native devices may
+    reject the console's self-signed certificate, so the phone-on-WiFi path can be
+    stats-only until that is solved (Pi HTTP endpoint, cert pinning, or MQTT-over-WS).
 12. **Data attribution model (Master's direction, 2026-11-03).** Unsigned sessions may show
     live data but unattributed ("temporary"); signing in should record/classify data to a
     farm/pen. Not implemented today — sign-in is currently view-only.
@@ -240,8 +241,62 @@ Local dev credentials come from `/etc/pigpulse/bridge.env` (never a default).
   collections are anon-readable).
 - Live-path facts (2026-11-03): the Pi is reachable at `192.168.69.1` and streams real
   data (PB `:8090`, thermal console `:8080`, MQTT `:1883`, broker WS `:9001`, mic TCP
-  `:9090`); the app wires **none** of it yet (§6.11). The web island's numbers are
+  `:9090`); the app now wires it in the phase-2 change set (console tier + PB stats
+  fallback) — native self-signed-cert caveat remains. The web island's numbers are
   hardcoded mock (§6.10).
 - Blocked technician screens must never dead-end: "← Back to app" + sign-in /
   switch-account affordances are part of the gate (AuthGuard).
 - Status: **committed** 2026-11-03 (`feat/v3-mqtt-pocketbase`); revert = `git revert <hash>`; not pushed.
+
+---
+
+## Track note 2026-11-03 (phase 2) — live barn thermal, at console quality, in the app theme
+
+> Status: implemented + verified, **UNCOMMITTED** (approval pending). Branch
+> `feat/v3-mqtt-pocketbase`, parent commit `9933f46`.
+
+### 1. What changed (6 files: 3 new + 3 edited)
+
+| File | Change |
+|---|---|
+| `src/utils/pi-thermal.ts` | **New.** Pi console client: types for `/data` (768-pixel frame + stats), `/ambient` (SHT45), `/esp/status` (mic); base resolution = `EXPO_PUBLIC_PI_THERMAL_URL` → saved PB host `https://<host>:8080` → null. |
+| `src/utils/thermal-palette.ts` | **New.** Iron colormap — the console's stop set, byte-for-byte — shared by the renderer and legend. |
+| `src/hooks/usePiThermal.ts` | **New.** Two-tier data: console endpoints (2 s frame poll / 6 s slow poll, 8 s freshness window) + PocketBase `pi-thermal-01` stats (90 s window — works wherever the app's PB channel works). |
+| `src/components/ThermalLiveView.tsx` | New `liveFrame` prop: iron-palette render (web smooth canvas — the console's "Smooth" default; native Svg pixel grid), HOT/COLD crosshair markers at the console's coordinates, live HUD; simulation overlays suppressed in live mode; demo path unchanged. |
+| `src/app/thermal.tsx` | Rebuilt around three honest states: **LIVE** (console) / **LIVE STATS** (PB only, frames marked unavailable) / **DEMO SIMULATION**. Quality display: legend bar, stat cards (Center + verdict chip, Min, Max, Avg, MLX ambient), SHT45 barn-ambient card, barn-mic card — all in app theme tokens. |
+| `src/app/tabs/index.tsx` | Home thermal card: when `pi-thermal-01` rows are fresh (<90 s) it shows "Live" + `pi-thermal-01 · NN.N°C · live`; otherwise the labeled demo stands. |
+
+### 2. Verification (measured 2026-11-03, Pi live throughout)
+
+| Gate | Result |
+|---|---|
+| tsc / eslint (changed files) / critic_loop | 0 / 0 errors / **6 PASS** |
+| expo web export | OK (regression build + live build) |
+| Regression suite (`:9301`, laptop PB, no live env) | **41/41** — demo labeling intact |
+| Live suite (`:9303`, live build via `/pi` proxy → real Pi) | **9/9** — LIVE badge, pi-thermal-01, stat labels, HOT/COLD markers, SHT45 card, mic card, plausible temps, no demo label |
+| Home suite (`:9304`, PB → Pi) | **3/3** — live subtitle, real Pi device row, not demo |
+| Evidence | `~/sandbox/app-revamp-20261103/thermal-live/` (app + home screenshots, dumps); `compare-live/console-vs-app.jpg` (sent to Master's Telegram) |
+
+Sample live read (frame 10364): center 36.91 °C OUT_OF_BAND · min 30.89 (x=30,y=10) ·
+max 40.46 (x=12,y=17) · avg 35.53 · MLX ambient 48.88 · SHT45 35.52 °C / 72.5 % RH ·
+mic socket open, no data (stale).
+
+### 3. Honest limits (phase 2)
+
+- **Native + self-signed cert:** a phone may not fetch `https://<pi>:8080` directly
+  (Android/iOS reject the self-signed cert). The app then shows the **LIVE STATS** tier
+  (PocketBase) — real numbers, frames marked unavailable — never a fake live image.
+  Fixes to consider: Pi HTTP listener, certificate pinning, or MQTT-over-WS `:9001`.
+- Browser fetch of the console also needs the cert accepted; the harness verified the
+  full path through a same-origin `/pi` proxy (`spa_server.py`, `PI_TARGET` env).
+- The live build bakes `EXPO_PUBLIC_PI_THERMAL_URL`; the regression build does not —
+  two dists, no runtime toggle yet (and Metro needs `--clear` when that env changes).
+- `/feed` still uses its legacy `thermalFrame`/`esp32-s3-01` path; untouched.
+
+### 4. Canon deltas (phase 2)
+
+- The app now consumes the Pi console contract: `GET /data` (pixels[768] + stats),
+  `GET /ambient` (SHT45 temp/humidity/state/age), `GET /esp/status` (mic socket).
+- Console base resolution: env override → farmer-saved PB host → none.
+- Iron palette stop set mirrored in `src/utils/thermal-palette.ts` — keep in sync with
+  the console if the console palette changes.

@@ -2,6 +2,8 @@ import React, { useMemo, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, Platform, Image } from 'react-native';
 import { useTheme } from '../theme';
 import Svg, { Rect } from 'react-native-svg';
+import { ironRgb } from '../utils/thermal-palette';
+import type { PiFrameData } from '../utils/pi-thermal';
 
 function decodeBase64(b64: string): Uint8Array {
   const sanitized = b64.replace(/[^A-Za-z0-9+/]/g, '');
@@ -40,6 +42,8 @@ const PEPPA_ICON = 'https://upload.wikimedia.org/wikipedia/en/3/3b/Peppa_Pig_cha
 
 interface ThermalLiveViewProps {
   base64Frame?: string;
+  /** Latest Pi console frame (768 temperature pixels) — renders the live view. */
+  liveFrame?: PiFrameData | null;
   targetX?: number;
   targetY?: number;
   identifiedPig?: string;
@@ -83,8 +87,54 @@ function getHeatmapColor(value: number): string {
   }
 }
 
+const clampPx = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v));
+
+/** HOT/COLD crosshair + label, positioned like the Pi console's markers. */
+function ThermalMarker({ width, height, x, y, label, color }: {
+  width: number; height: number; x: number; y: number; label: string; color: string;
+}) {
+  const px = (x / (COLS - 1)) * width;
+  const py = (y / (ROWS - 1)) * height;
+  const ring = 20;
+  const labelLeft = clampPx(px + 12, 4, Math.max(4, width - 100));
+  const labelTop = clampPx(py - 26, 4, Math.max(4, height - 20));
+  return (
+    <>
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          left: px - ring / 2,
+          top: py - ring / 2,
+          width: ring,
+          height: ring,
+          borderRadius: ring / 2,
+          borderWidth: 2,
+          borderColor: color,
+          opacity: 0.95,
+        }}
+      />
+      <View pointerEvents="none" style={{ position: 'absolute', left: labelLeft, top: labelTop }}>
+        <Text
+          style={{
+            color,
+            fontWeight: '800',
+            fontSize: 12,
+            textShadowColor: 'rgba(0,0,0,0.9)',
+            textShadowRadius: 4,
+            textShadowOffset: { width: 0, height: 1 },
+          }}
+        >
+          {label}
+        </Text>
+      </View>
+    </>
+  );
+}
+
 export function ThermalLiveView({
   base64Frame,
+  liveFrame,
   targetX,
   targetY,
   identifiedPig,
@@ -175,6 +225,21 @@ export function ThermalLiveView({
     return simulatedFrame;
   }, [base64Frame, simulatedFrame]);
 
+  const live = !!(liveFrame && Array.isArray(liveFrame.pixels) && liveFrame.pixels.length >= COLS * ROWS);
+
+  const liveRgb = useMemo(() => {
+    if (!live || !liveFrame) return null;
+    const span = Math.max(0.25, liveFrame.max - liveFrame.min);
+    const out = new Uint8Array(COLS * ROWS * 3);
+    for (let i = 0; i < COLS * ROWS; i++) {
+      const [r, g, b] = ironRgb((liveFrame.pixels[i] - liveFrame.min) / span);
+      out[i * 3] = r;
+      out[i * 3 + 1] = g;
+      out[i * 3 + 2] = b;
+    }
+    return out;
+  }, [live, liveFrame]);
+
   useEffect(() => {
     // Canvas rendering is web-only — guard ensures this block never executes on native
     if (Platform.OS !== 'web' || !canvasRef.current) return;
@@ -191,22 +256,33 @@ export function ThermalLiveView({
     if (!tempCtx) return;
 
     const imgData = tempCtx.createImageData(COLS, ROWS);
-    for (let i = 0; i < pixels.length; i++) {
-      const val = pixels[i];
-      const colorStr = getHeatmapColor(val);
-      const rgb = colorStr.match(/\d+/g);
-      if (rgb) {
-        imgData.data[i * 4] = parseInt(rgb[0]);
-        imgData.data[i * 4 + 1] = parseInt(rgb[1]);
-        imgData.data[i * 4 + 2] = parseInt(rgb[2]);
+    if (liveRgb) {
+      for (let i = 0; i < COLS * ROWS; i++) {
+        imgData.data[i * 4] = liveRgb[i * 3];
+        imgData.data[i * 4 + 1] = liveRgb[i * 3 + 1];
+        imgData.data[i * 4 + 2] = liveRgb[i * 3 + 2];
         imgData.data[i * 4 + 3] = 255;
+      }
+    } else {
+      for (let i = 0; i < pixels.length; i++) {
+        const val = pixels[i];
+        const colorStr = getHeatmapColor(val);
+        const rgb = colorStr.match(/\d+/g);
+        if (rgb) {
+          imgData.data[i * 4] = parseInt(rgb[0]);
+          imgData.data[i * 4 + 1] = parseInt(rgb[1]);
+          imgData.data[i * 4 + 2] = parseInt(rgb[2]);
+          imgData.data[i * 4 + 3] = 255;
+        }
       }
     }
     tempCtx.putImageData(imgData, 0, 0);
-    ctx.imageSmoothingEnabled = false;
+    // Live console frames render smoothed (matches the Pi console's default);
+    // the labeled demo keeps the chunky pixel look so the two never read alike.
+    ctx.imageSmoothingEnabled = !!liveRgb;
     ctx.clearRect(0, 0, width, height);
     ctx.drawImage(tempCanvas, 0, 0, width, height);
-  }, [pixels, width, height]);
+  }, [pixels, liveRgb, width, height]);
 
   const pixelSize = width / COLS;
 
@@ -252,15 +328,18 @@ export function ThermalLiveView({
           <Svg width={width} height={height} viewBox="0 0 32 24">
             {Array.from({ length: ROWS }).map((_, y) =>
               Array.from({ length: COLS }).map((_, x) => {
-                const val = pixels[y * COLS + x];
-                return <Rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={getHeatmapColor(val)} />;
+                const idx = y * COLS + x;
+                const fill = liveRgb
+                  ? `rgb(${liveRgb[idx * 3]},${liveRgb[idx * 3 + 1]},${liveRgb[idx * 3 + 2]})`
+                  : getHeatmapColor(pixels[idx]);
+                return <Rect key={`${x}-${y}`} x={x} y={y} width={1} height={1} fill={fill} />;
               }),
             )}
           </Svg>
         </View>
       )}
 
-      {isTracking && activeX !== undefined && activeY !== undefined && (
+      {!live && isTracking && activeX !== undefined && activeY !== undefined && (
         <View
           style={[
             styles.boundingBox,
@@ -280,7 +359,7 @@ export function ThermalLiveView({
         </View>
       )}
 
-      {isTracking && activeX !== undefined && activeY !== undefined && (
+      {!live && isTracking && activeX !== undefined && activeY !== undefined && (
         <View
           style={[
             styles.trackerLabel,
@@ -302,8 +381,38 @@ export function ThermalLiveView({
         </View>
       )}
 
+      {live && liveFrame ? (
+        <>
+          <ThermalMarker
+            width={width}
+            height={height}
+            x={liveFrame.maxX}
+            y={liveFrame.maxY}
+            label={`HOT ${liveFrame.max.toFixed(1)}°C`}
+            color="#FFFFFF"
+          />
+          <ThermalMarker
+            width={width}
+            height={height}
+            x={liveFrame.minX}
+            y={liveFrame.minY}
+            label={`COLD ${liveFrame.min.toFixed(1)}°C`}
+            color="#62D9FF"
+          />
+        </>
+      ) : null}
+
       <View style={[styles.hudOverlay, { backgroundColor: colors.overlay }]}>
-        {base64Frame ? (
+        {liveFrame && live ? (
+          <>
+            <Text style={[styles.hudText, { color: colors.accent }]}>
+              LIVE · MLX90640 32×24 · {(liveFrame.fps ?? 0).toFixed(1)} FPS
+            </Text>
+            <Text style={[styles.hudText, { color: colors.accent }]}>
+              IRON PALETTE · RANGE {liveFrame.min.toFixed(1)}–{liveFrame.max.toFixed(1)}°C
+            </Text>
+          </>
+        ) : base64Frame ? (
           <>
             <Text style={[styles.hudText, { color: colors.accent }]}>FPS: 15 (SENSOR RATE) | RES: 32x24 RAW MAT</Text>
             <Text style={[styles.hudText, { color: colors.accent }]}>MLX90640 PEN SENSOR (PIXELATED MODE)</Text>
