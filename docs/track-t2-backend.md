@@ -156,7 +156,7 @@ on a live bench is deliberate future work and should include a guard port.
 |---|---|---|
 | T2-1 | **3.5.3 collection-rule lockdown** | **DONE 2026-11-03 (Option A)** — see §13. Live via API + codified in migration `1798500000_updated_collections_lock_writes.js`; verified by probes. |
 | T2-2 | **3.5.1 PocketBase admin password rotation** | **DONE 2026-11-03** — both PBs: password + `adminAuthToken`/`recordAuthToken` secrets rotated; all consumers updated; see §13. |
-| T2-3 | **3.5.4 Tapo credential rotation** | Approved; shared with T3's open item (rotate at camera, update both env files). **Waiting on Master's camera-side step**; env files update the moment the new cred exists. |
+| T2-3 | **3.5.4 Tapo credential rotation** | Candidate pun password delivered to Master's Telegram (2026-11-04). Rotation happens **at Master's leisure** — he sets it at the camera, then both env files + restart + frame check (§13.3). Not urgent, deliberately open. |
 | T2-4 | **Laptop internet down** | **DONE 2026-11-03** — `nmcli con up uuid 716869f9-…` restored WAN (connectivity `full`, ping 6 ms). |
 | T2-5 | **Era-0 (Sep 28) truth** | Rests on Pi-internal journal/boot-log evidence only; no external corroboration. Documented as such. |
 | T2-6 | **Laptop as MQTT bench** | Re-enabling the retired bridge + porting the guard to it — deferred until needed. |
@@ -286,14 +286,28 @@ change to make knowingly (unignore + add all files).
 the down-migration or via admin UI/API. The Pi PB was never locked, so a
 rollback of the laptop leaves no asymmetry beyond the status quo ante.
 
-#### 13.3 3.5.4 — Tapo credential rotation (pending, blocked on camera)
+#### 13.3 3.5.4 — Tapo credential rotation (open, at Master's leisure)
 
-Approved. Sequence once Master rotates at the camera: update
-`~/.config/pigpulse/cctv.env` (laptop, 0600) and the Pi-side env
-(`/etc/pigpulse/cctv.env`, root 0600) in the same change, restart
-`pigpulse-cctv` on the Pi, verify a fresh RTSP frame lands on `:8091`. The
-readonly proxy holds only `PROXY_KEY` and blocks `/api/admins/**` — it is
-unaffected by the PB rotations above.
+**Decision record 2026-11-04:** Master is keeping the current camera
+credential for now and will rotate when convenient — a memorable pun
+password was sent to his Telegram (2026-11-04) for that moment. Do NOT
+re-flag this; it is deliberately open, not forgotten.
+
+Why the item exists (measured, so future agents don't re-derive it): the
+camera account is documented in `CANON.md` (~line 636) and the Codeberg
+repo is publicly readable (HTTP 200, no auth) — one word covers camera
+RTSP, the AP passphrase (~line 597), and the Pi SSH/sudo password
+(~line 710). Master has weighed this and **explicitly deferred the
+CANON.md credential scrub until after the research phase** — the doc's
+candor is deliberate agent-usability, not an oversight. The same deferral
+covers the T0 `admin123` scrub in §13.4. Respect it; revisit only if
+Master reopens the topic.
+
+Mechanics when the rotation happens: update `~/.config/pigpulse/cctv.env`
+(laptop, 0600) and the Pi-side env (`/etc/pigpulse/cctv.env`, root 0600)
+in the same change, restart `pigpulse-cctv` on the Pi, verify a fresh
+RTSP frame lands on `:8091`. The readonly proxy holds only `PROXY_KEY`
+and blocks `/api/admins/**` — unaffected by any of this.
 
 #### 13.4 Handoffs (documented, deliberately not tonight's work)
 
