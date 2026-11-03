@@ -9,6 +9,7 @@ import { usePiThermal } from '../hooks/usePiThermal';
 import { ironRgb } from '../utils/thermal-palette';
 import { playSound } from '../utils/sounds';
 import { haptic } from '../utils/haptics';
+import { goBackOrHome } from '../utils/navigation';
 
 /**
  * Thermal view — the app's window onto the barn's MLX90640.
@@ -98,7 +99,9 @@ export default function ThermalScreen() {
   const goBack = () => {
     playSound('tap');
     haptic('light');
-    router.back();
+    // Deep-link safe: falls back to Home when there is no history (e.g. the
+    // screen was opened from a shared URL).
+    goBackOrHome(router);
   };
 
   const chipFor = (verdict: string | undefined): Chip => {

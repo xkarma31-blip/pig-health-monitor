@@ -7,9 +7,10 @@
 **Never touched:** firmware, `backend/**` (incl. `thermal-pi/static/`), `CANON.md`, landing page.
 
 > **Status: phase 1 (split + labeling) committed 2026-11-03; phase 2 (live barn
-> thermal in the app) implemented + verified — UNCOMMITTED, approval pending.**
-> Phase 2: tsc 0 · eslint 0 errors · critic_loop 6/6 · expo web export OK ·
-> regression 41/41 · live 9/9 · home-live 3/3.
+> thermal) + refinement (deep-link back navigation) implemented + verified —
+> UNCOMMITTED, approval pending.**
+> tsc 0 · eslint 0 · critic_loop 6/6 · export OK · suites: regression 41/41 ·
+> nav 3/3 · live 9/9 · home-live 3/3 — **56 checks total**.
 > Not deployed, no APK. Read "Honest limits" before claiming anything works on a phone.
 
 ---
@@ -300,3 +301,34 @@ mic socket open, no data (stale).
 - Console base resolution: env override → farmer-saved PB host → none.
 - Iron palette stop set mirrored in `src/utils/thermal-palette.ts` — keep in sync with
   the console if the console palette changes.
+
+### 5. Refinement (2026-11-03, same day — after Master's deep-link test)
+
+- **Bug found by Master:** "Back" on `/thermal` did nothing when the screen was opened
+  directly (shared URL / fresh tab). Root cause: `router.back()` is a no-op without
+  history. Fix: `utils/navigation.ts` → `goBackOrHome()` (back when history exists,
+  else `replace('/tabs')`), applied to all **six** `router.back()` sites (`thermal`,
+  `feed` ×2, `login`, `tabs/feed`, `tabs/edge-impulse`).
+- **Click-level tests added:** `verify_dom.js` session `nav` clicks the real buttons
+  and asserts the resulting URL (thermal Back → `/tabs`; "Back to app" → `/tabs`;
+  "Admin sign-in" → `/login`). Render-only checks had missed this class of bug.
+- **Metro cache gotcha (both directions):** rebuilding a dist after toggling
+  `EXPO_PUBLIC_PI_THERMAL_URL` **requires `--clear`** — the transform cache does not
+  key on that env var (bit us twice: the live build missed the URL once; the plain
+  build later inherited it).
+- Removed a dead no-op effect in `tabs/edge-impulse.tsx` (unused `onChange`) — its
+  pre-existing lint error surfaced once the file was touched.
+- **Battery UI deferred (Master, 2026-11-03):** no battery hardware is fitted — the Pi
+  and the ESP32-S3 are port-powered, so node cards now show **Power: Plugged** (was
+  "Battery: NN%"). The battery formatting is kept in `settings.tsx` for when hardware ships.
+- **Node naming aligned with the real roles:** hardware labels are now
+  `Pi 4B — thermal · CCTV · compute` and `ESP32-S3 — mic · ambient` (the old
+  "Node A / Node B" labels are gone from the app UI).
+- **Live console URL is now baked RELATIVE (`/pi`)** so one dist works everywhere: the
+  laptop harness and a phone on the LAN each resolve `/pi` against the origin they
+  loaded the app from (`spa_server.py` proxies `/pi` → the Pi console).
+- Re-verified after the refinement: **59/59** — 44 regression (incl. 3 new settings
+  checks for Power: Plugged + node roles) + 3 nav + 9 live + 3 home.
+- A **temporary Vercel deployment** of the plain web build was created for online
+  viewing (demo states only — the cloud cannot reach the Pi or the laptop PocketBase;
+  a permanent domain deploy needs a `vercel login`).

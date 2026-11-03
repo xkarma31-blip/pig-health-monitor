@@ -5,6 +5,7 @@ import { useTheme } from '../../theme';
 import { useAuth } from '../../utils/auth';
 import { subscribeRoster, subscribeTelemetry } from '../../utils/pocketbase-data';
 import { haptic } from '../../utils/haptics';
+import { goBackOrHome } from '../../utils/navigation';
 import { router } from 'expo-router';
 
 // Real-time data structure
@@ -84,7 +85,7 @@ export default function FeedScreen() {
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.divider }]}>
         <TouchableOpacity
-          onPress={() => { haptic('light'); router.back(); }}
+          onPress={() => { haptic('light'); goBackOrHome(router); }}
           style={styles.backButton}
           accessibilityRole="button"
           accessibilityLabel="Close feed"

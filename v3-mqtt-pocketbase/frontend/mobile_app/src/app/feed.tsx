@@ -8,6 +8,7 @@ import { subscribeTelemetry } from '../utils/pocketbase-data';
 import { AuthBanner } from '../components/shared/AuthBanner';
 import { playSound } from '../utils/sounds';
 import { haptic } from '../utils/haptics';
+import { goBackOrHome } from '../utils/navigation';
 
 const ROSTER = [
   { id: 'Pig A (Peppa)', tag: 'EAR-001', temp: 38.4, status: 'healthy' as const, emoji: '🐷' },
@@ -102,7 +103,7 @@ export default function FeedScreen() {
           )}
           <View style={[styles.header, isShortScreen && styles.headerShort, { borderBottomColor: colors.divider }]}>
             <TouchableOpacity
-              onPress={() => { haptic('light'); playSound('tap'); router.back(); }}
+              onPress={() => { haptic('light'); playSound('tap'); goBackOrHome(router); }}
               style={styles.backButton}
               accessibilityRole="button"
               accessibilityLabel="Close feed"
@@ -138,7 +139,7 @@ export default function FeedScreen() {
 
               <TouchableOpacity
                 style={styles.floatCloseBtn}
-                onPress={() => router.back()}
+                onPress={() => goBackOrHome(router)}
                 activeOpacity={0.8}
                 accessibilityRole="button"
                 accessibilityLabel="Close thermal feed"

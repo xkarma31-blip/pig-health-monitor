@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { useTheme } from '../../theme';
 import { useAuth } from '../../utils/auth';
 import { haptic } from '../../utils/haptics';
+import { goBackOrHome } from '../../utils/navigation';
 import { router } from 'expo-router';
 
 export default function EdgeImpulseScreen() {
@@ -35,15 +36,6 @@ export default function EdgeImpulseScreen() {
     return () => clearInterval(interval);
   }, []);
 
-  // Ensure system text size preferences are respected
-  useEffect(() => {
-    const listener = () => {
-      setStatus(prev => prev);
-    };
-    const onChange = () => listener();
-    return () => {};
-  }, []);
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'ready': return colors.success;
@@ -68,7 +60,7 @@ export default function EdgeImpulseScreen() {
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.contentContainer}>
       <View style={[styles.header, { borderBottomColor: colors.divider }]}>
         <TouchableOpacity
-          onPress={() => { haptic('light'); router.back(); }}
+          onPress={() => { haptic('light'); goBackOrHome(router); }}
           style={styles.backButton}
           accessibilityRole="button"
           accessibilityLabel="Close Edge Impulse"

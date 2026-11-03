@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, Platform, StyleSheet, Activity
 import { router } from 'expo-router';
 import { useTheme } from '../theme';
 import { haptic } from '../utils/haptics';
+import { goBackOrHome } from '../utils/navigation';
 import { loginWithEmail, loginAdmin } from '../utils/pocketbase-auth';
 
 type Role = 'user' | 'admin';
@@ -81,7 +82,7 @@ export default function LoginScreen() {
             styles.closeBtn,
             { backgroundColor: theme.colors.surfaceVariant },
           ]}
-          onPress={() => { haptic('light'); router.back(); }}
+          onPress={() => { haptic('light'); goBackOrHome(router); }}
           accessibilityRole="button"
           accessibilityLabel="Close login"
           accessibilityHint="Returns to the previous screen"

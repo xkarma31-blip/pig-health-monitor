@@ -21,15 +21,20 @@ import { haptic } from '../../utils/haptics';
 type Node = { id: string; name: string; version: string; battery: string; rssi: string; online: boolean };
 
 // Demo nodes shown while signed out — replaced by the live /sensors stream on sign-in.
+// Battery display is DEFERRED — no battery hardware is fitted today; the Pi and
+// the ESP32-S3 are both port-powered, so nodes read "Plugged". The battery
+// formatting (a real value renders as N%) is kept for when hardware ships.
 const DEMO_NODES: Node[] = [
-  { id: 'node-b', name: 'Thermal node (MLX90640)', version: 'v2.1.0-2026041312', battery: '84%', rssi: '-45 dBm', online: true },
-  { id: 'node-a', name: 'Barn mic (ESP32-S3)', version: 'v2.1.0-2026041312', battery: '42%', rssi: '-52 dBm', online: true },
+  { id: 'pi-4b', name: 'Pi 4B — thermal · CCTV · compute', version: 'v2.1.0-2026041312', battery: 'Plugged', rssi: '—', online: true },
+  { id: 'esp32-s3', name: 'ESP32-S3 — mic · ambient', version: 'v2.1.0-2026041312', battery: 'Plugged', rssi: '—', online: true },
 ];
 
 function mapSensor(id: string, s: Record<string, unknown>): Node {
   // `label` is the PocketBase `devices.name` — show it as-is, no inferred suffixes.
   const name = String(s.label || id);
-  const battery = s.battery != null && Number.isFinite(Number(s.battery)) ? `${Math.round(Number(s.battery))}%` : '—';
+  // Battery feature deferred (see DEMO_NODES note): nodes are port-powered, so
+  // they read "Plugged" until real battery hardware/reporting ships.
+  const battery = 'Plugged';
   const rssi = s.rssi != null && Number.isFinite(Number(s.rssi)) ? `${Number(s.rssi)} dBm` : '—';
   const lastUpdated = Date.parse(String(s.lastUpdated ?? ''));
   // Unknown time must read offline, not silently "online".
@@ -141,7 +146,7 @@ export default function SettingsScreen() {
                         </Text>
                         <View style={[styles.nodeStats, { marginTop: spacing.md }]}>
                           <View>
-                            <Text style={[typography.label, { color: colors.textMuted, fontSize: 11 }]}>Battery</Text>
+                            <Text style={[typography.label, { color: colors.textMuted, fontSize: 11 }]}>Power</Text>
                             <Text style={[typography.body, { color: colors.textPrimary, marginTop: 3, fontWeight: '600' }]}>{node.battery}</Text>
                           </View>
                           <View>
