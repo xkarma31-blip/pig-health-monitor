@@ -403,3 +403,33 @@ mic socket open, no data (stale).
   a next step.
 - Verified: **69/69** (26 signed-out + 16 user + 7 admin + 5 nav + 12 live + 3 home).
   Deployed: all routes 200 incl. `/app/tabs/live`.
+
+---
+
+## Track note 2026-11-03 (phase 5) — CCTV in the app (separate tile) + per-source sound
+
+> Implemented; parent: `01d464e`.
+
+- **CCTV is real in the app now — as its OWN tile** (no overlay; per Master: "keep both
+  separate"). Chain: app → `api/pi?ep=cctv` (deployed) / `/pi/cctv` (local harness) →
+  read-only proxy (new `_cctv_frame`: bounded read of the Pi's MJPEG plane, returns the
+  freshest complete JPEG; the app polls ≈2.5 s) → Tailscale Funnel → laptop → Pi
+  `/cctv`. The tile shows "Live snapshot — updated Ns ago" or an honest offline state.
+- **Correction — the Pi's fusion page was never broken.** `/static/fusion.html` returns
+  200 and renders a working heat-over-camera overlay **with an alignment panel**
+  (opacity / fit / rotation sliders). The earlier "404" note tested the wrong path
+  (`/fusion.html`). App-side overlay stays deferred by Master's call; the Pi page
+  already demonstrates the approach.
+- **Sound controls — the sources are different and kept separate.** SOUND card with
+  `Barn mic (ESP32-S3)`: a Listen/Mute toggle playing 3-second WAV chunks from the
+  Pi's `/esp/record` (web playback; native lands with the APK pass). While the mic
+  stream is stale the Pi returns an honest `503 "ESP mic not connected"` — the toggle
+  renders disabled with that reason (verified live). `Camera sound (Tapo)`: a separate
+  track, labeled not-wired-yet (needs a barn-side transcoder).
+- Proxy allowlists extended: `cctv` (binary JPEG) and `esp/record` (bounded WAV,
+  upstream status forwarded). The serverless bridge passes both with correct types.
+- Verified: local chain `/pi/cctv` → 200 image/jpeg; `/pi/esp/record` → honest 503;
+  suite battery **72/72** (26 + 16 + 7 + 5 + **15** live incl. the new Live-tab checks
+  + 3 home); deployed Live tab verified in-browser (CCTV frame rendered, sound card
+  present, mic stale-state honest); deployed bridge `/api/pi?ep=cctv` → 200
+  image/jpeg.

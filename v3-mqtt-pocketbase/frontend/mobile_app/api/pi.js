@@ -12,7 +12,7 @@
  * - The key never reaches the client bundle.
  */
 
-const ALLOWED_ENDPOINTS = new Set(['data', 'ambient', 'esp/status', 'health']);
+const ALLOWED_ENDPOINTS = new Set(['data', 'ambient', 'esp/status', 'health', 'cctv', 'esp/record']);
 
 function env(name) {
   const v = process.env[name];
@@ -53,6 +53,30 @@ export default async function handler(req, res) {
 
   const upstreamQs = qs.toString();
   const target = `${upstream}/pi/${endpoint}${upstreamQs ? `?${upstreamQs}` : ''}`;
+
+  if (endpoint === 'cctv' || endpoint === 'esp/record') {
+    // Binary passthrough — snapshot JPEG / mic WAV chunk. Forwards the Pi's
+    // honest status (503 when the mic stream is stale).
+    const isAudio = endpoint === 'esp/record';
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 15000);
+    try {
+      const r = await fetch(target, { headers: { 'X-PigPulse-Key': key }, signal: controller.signal });
+      if (!r.ok) {
+        const body = await r.text();
+        res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+        return res.status(r.status).send(body || 'unavailable');
+      }
+      const buf = Buffer.from(await r.arrayBuffer());
+      res.setHeader('Content-Type', isAudio ? 'audio/wav' : 'image/jpeg');
+      res.setHeader('Cache-Control', 'no-cache');
+      return res.status(200).send(buf);
+    } catch (e) {
+      return res.status(502).json({ error: isAudio ? 'mic unreachable' : 'cctv unreachable' });
+    } finally {
+      clearTimeout(timer);
+    }
+  }
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 8000);

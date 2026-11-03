@@ -1,11 +1,13 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, Image, Platform, TouchableOpacity } from 'react-native';
 import { useTheme } from '../theme';
 import { ThermalLiveView } from './ThermalLiveView';
 import { useBreakpoint } from '../hooks/useBreakpoint';
 import type { PiThermalSnapshot } from '../hooks/usePiThermal';
+import { usePiCctv } from '../hooks/usePiCctv';
 import { ironRgb } from '../utils/thermal-palette';
 import { telemetryTime } from '../utils/telemetry-time';
+import { fetchPiAudioChunk } from '../utils/pi-thermal';
 
 /**
  * LiveThermalPanel — the shared live barn view (the Pi console's data, in the
@@ -96,6 +98,120 @@ function LegendBar({ min, max }: { min: number; max: number }) {
   );
 }
 
+/**
+ * Barn-mic listen/mute control. Audio is the ESP32-S3 mic — a DIFFERENT source
+ * from the camera's own track (kept separate on purpose). Web playback (the
+ * browser app — also how phones see it): 3-second WAV chunks played back to
+ * back. Native playback lands with the APK pass.
+ */
+function BarnMicToggle({ base, healthy }: { base: string | null; healthy: boolean }) {
+  const { colors, spacing, radius, typography } = useTheme();
+  const [on, setOn] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const stopRef = useRef<(() => void) | null>(null);
+
+  const stop = () => {
+    stopRef.current?.();
+    stopRef.current = null;
+    setOn(false);
+    setPlaying(false);
+  };
+
+  useEffect(() => () => stopRef.current?.(), []);
+
+  const start = () => {
+    if (!base || !healthy || Platform.OS !== 'web') return;
+    let cancelled = false;
+    let current: HTMLAudioElement | null = null;
+    const loop = async () => {
+      while (!cancelled) {
+        const url = await fetchPiAudioChunk(base, 3);
+        if (cancelled) {
+          if (url) {
+            try {
+              URL.revokeObjectURL(url);
+            } catch {
+              /* ignore */
+            }
+          }
+          return;
+        }
+        if (!url) {
+          setPlaying(false);
+          await new Promise((r) => setTimeout(r, 5000));
+          continue;
+        }
+        setPlaying(true);
+        await new Promise<void>((resolve) => {
+          try {
+            current = new Audio(url);
+            current.onended = () => resolve();
+            current.onerror = () => resolve();
+            void current.play().catch(() => resolve());
+          } catch {
+            resolve();
+          }
+        });
+        try {
+          URL.revokeObjectURL(url);
+        } catch {
+          /* ignore */
+        }
+      }
+    };
+    stopRef.current = () => {
+      cancelled = true;
+      try {
+        current?.pause();
+      } catch {
+        /* ignore */
+      }
+    };
+    setOn(true);
+    void loop();
+  };
+
+  const disabled = !healthy || Platform.OS !== 'web';
+  const sub = !healthy
+    ? 'No audio — mic stream stale'
+    : Platform.OS !== 'web'
+      ? 'Playback lands with the APK pass'
+      : on
+        ? playing
+          ? 'Playing…'
+          : 'Starting…'
+        : 'Muted — tap to listen';
+
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <View style={{ flex: 1, marginRight: spacing.md }}>
+        <Text style={[typography.h2, { color: colors.textPrimary, fontSize: 15 }]}>Barn mic (ESP32-S3)</Text>
+        <Text style={[typography.bodySmall, { color: colors.textMuted, marginTop: 4, fontSize: 12 }]}>{sub}</Text>
+      </View>
+      <TouchableOpacity
+        disabled={disabled}
+        onPress={() => (on ? stop() : start())}
+        accessibilityRole="button"
+        accessibilityLabel="Toggle barn mic audio"
+        accessibilityState={{ disabled, selected: on }}
+        style={{
+          paddingHorizontal: 16,
+          paddingVertical: 10,
+          minHeight: 44,
+          borderRadius: radius.md,
+          backgroundColor: on ? colors.accent : colors.surfaceVariant,
+          opacity: disabled ? 0.55 : 1,
+          justifyContent: 'center',
+        }}
+      >
+        <Text style={[typography.body, { color: on ? colors.onAccent : colors.textPrimary, fontWeight: '600' }]}>
+          {on ? 'Mute' : 'Listen'}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
   const { colors, spacing, radius, typography } = useTheme();
   const tier = useBreakpoint();
@@ -135,6 +251,7 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
 
   const ambient = pi.ambient;
   const esp = pi.esp;
+  const cctv = usePiCctv(pi.base);
 
   // ── Stage: real frame, or an honest placeholder. Never a fake image. ──
   const stageBlock = (
@@ -275,9 +392,74 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
     </View>
   ) : null;
 
+  const cctvBlock = (
+    <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
+      <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.sm }]}>
+        CCTV — TAPO CAMERA
+      </Text>
+      <View
+        style={[
+          styles.wideCard,
+          { backgroundColor: colors.surface, borderColor: colors.divider, borderRadius: radius.lg, padding: spacing.md },
+        ]}
+      >
+        {cctv.frameUrl ? (
+          <Image
+            source={{ uri: cctv.frameUrl }}
+            style={{ width: '100%', aspectRatio: 16 / 9, borderRadius: radius.md, backgroundColor: colors.bg }}
+            resizeMode="cover"
+            accessibilityLabel="CCTV camera frame"
+          />
+        ) : (
+          <View
+            style={{
+              width: '100%',
+              aspectRatio: 16 / 9,
+              borderRadius: radius.md,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: colors.bg,
+              padding: spacing.md,
+            }}
+          >
+            <Text style={[typography.bodySmall, { color: colors.textSecondary, textAlign: 'center' }]}>
+              {pi.base
+                ? 'Waiting for a camera frame…'
+                : 'CCTV shows here when the companion bridge is reachable.'}
+            </Text>
+          </View>
+        )}
+        <Text style={[typography.bodySmall, { color: colors.textMuted, marginTop: spacing.sm, fontSize: 12 }]}>
+          {cctv.live && cctv.at
+            ? `Live snapshot — updated ${Math.max(0, Math.round((cctv.now - cctv.at) / 1000))}s ago`
+            : 'No recent frame from the camera'}
+        </Text>
+      </View>
+    </View>
+  );
+
+  const soundBlock = (
+    <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
+      <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.sm }]}>SOUND</Text>
+      <View
+        style={[
+          styles.wideCard,
+          { backgroundColor: colors.surface, borderColor: colors.divider, borderRadius: radius.lg, padding: spacing.md },
+        ]}
+      >
+        <BarnMicToggle base={pi.base} healthy={!!esp && esp.socket && !esp.stale} />
+        <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.divider, marginVertical: spacing.md }} />
+        <Text style={[typography.h2, { color: colors.textPrimary, fontSize: 15 }]}>Camera sound (Tapo)</Text>
+        <Text style={[typography.bodySmall, { color: colors.textMuted, marginTop: 4, fontSize: 12 }]}>
+          A separate track from the barn mic — not wired yet (needs a transcoder on the barn side).
+        </Text>
+      </View>
+    </View>
+  );
+
   // Two columns on desktop only when there is side content to show; otherwise
   // a centered single column — never a lopsided empty half.
-  const useTwoColumns = isDesktop && !!(statsBlock || ambientBlock || micBlock);
+  const useTwoColumns = isDesktop && !!(statsBlock || ambientBlock || micBlock || cctvBlock || soundBlock);
 
   if (useTwoColumns) {
     return (
@@ -287,6 +469,8 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
           {statsBlock}
           {ambientBlock}
           {micBlock}
+          {cctvBlock}
+          {soundBlock}
         </View>
       </View>
     );
@@ -298,6 +482,8 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
       {statsBlock}
       {ambientBlock}
       {micBlock}
+      {cctvBlock}
+      {soundBlock}
     </>
   );
 }

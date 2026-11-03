@@ -52,6 +52,8 @@ export interface PiThermalSnapshot {
   pbFresh: boolean;
   /** State clock (ticks every second) — use for age labels, not Date.now() in render. */
   now: number;
+  /** Resolved console/bridge base for this session (null until resolved). */
+  base: string | null;
 }
 
 const FRAME_POLL_MS = 2000;
@@ -70,6 +72,7 @@ export function usePiThermal(): PiThermalSnapshot {
   const [esp, setEsp] = useState<PiEspStatus | null>(null);
   const [pbStats, setPbStats] = useState<PiPbStats | null>(null);
   const [now, setNow] = useState<number>(() => Date.now());
+  const [base, setBase] = useState<string | null>(null);
   const baseRef = useRef<string | null>(null);
 
   // Tier 2 — PocketBase stats (same channel the rest of the app uses).
@@ -103,7 +106,6 @@ export function usePiThermal(): PiThermalSnapshot {
     let alive = true;
     let frameTimer: ReturnType<typeof setInterval> | null = null;
     let slowTimer: ReturnType<typeof setInterval> | null = null;
-
     let frameInFlight = false;
     const pollFrame = async () => {
       const base = baseRef.current;
@@ -140,9 +142,10 @@ export function usePiThermal(): PiThermalSnapshot {
     };
 
     (async () => {
-      const base = await resolvePiBase();
-      if (!alive || !base) return;
-      baseRef.current = base;
+      const resolved = await resolvePiBase();
+      if (!alive || !resolved) return;
+      baseRef.current = resolved;
+      setBase(resolved);
       void pollFrame();
       void pollSlow();
       frameTimer = setInterval(() => void pollFrame(), FRAME_POLL_MS);
@@ -162,5 +165,5 @@ export function usePiThermal(): PiThermalSnapshot {
   const live = frameAt !== null && now - frameAt < LIVE_WINDOW_MS;
   const pbFresh = pbStats !== null && telemetryFresh(pbStats.timestamp, now);
 
-  return { frame, frameAt, ambient, esp, live, pbStats, pbFresh, now };
+  return { frame, frameAt, ambient, esp, live, pbStats, pbFresh, now, base };
 }

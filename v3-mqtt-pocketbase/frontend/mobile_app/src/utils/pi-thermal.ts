@@ -123,3 +123,49 @@ export async function fetchPiJson<T>(base: string, path: string, timeoutMs = 400
     clearTimeout(timer);
   }
 }
+
+async function blobToRenderable(blob: Blob): Promise<string> {
+  if (Platform.OS === 'web' && typeof URL !== 'undefined' && 'createObjectURL' in URL) {
+    return URL.createObjectURL(blob);
+  }
+  return await new Promise<string>((resolve, reject) => {
+    try {
+      const r = new FileReader();
+      r.onloadend = () => resolve(String(r.result || ''));
+      r.onerror = () => reject(new Error('blob read failed'));
+      r.readAsDataURL(blob);
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+/** One CCTV snapshot frame (JPEG) as a renderable URL; null when unavailable. */
+export async function fetchPiFrame(base: string): Promise<string | null> {
+  const url = base === '/api/pi' ? `${base}?ep=cctv` : `${base}/cctv`;
+  try {
+    const res = await fetch(url, { headers: { Accept: 'image/jpeg' } });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return await blobToRenderable(blob);
+  } catch {
+    return null;
+  }
+}
+
+/** Bounded WAV chunk from the barn mic (seconds 1–10); null when unavailable. */
+export async function fetchPiAudioChunk(base: string, seconds = 3): Promise<string | null> {
+  if (Platform.OS !== 'web') return null; // native playback lands with the APK pass
+  const url =
+    base === '/api/pi'
+      ? `${base}?ep=${encodeURIComponent('esp/record')}&seconds=${seconds}`
+      : `${base}/esp/record?seconds=${seconds}`;
+  try {
+    const res = await fetch(url, { headers: { Accept: 'audio/wav' } });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    return URL.createObjectURL(blob);
+  } catch {
+    return null;
+  }
+}

@@ -64,22 +64,6 @@ export default function LiveScreen() {
             <Text style={[typography.body, { color: colors.textPrimary, fontWeight: '600' }]}>Full screen →</Text>
           </TouchableOpacity>
         </View>
-
-        {/* Stream notes — honest status for the feed that is not wired yet */}
-        <View style={{ paddingHorizontal: spacing.lg, marginTop: spacing.xl }}>
-          <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.sm }]}>STREAMS</Text>
-          <View
-            style={[
-              styles.noteCard,
-              { backgroundColor: colors.surface, borderColor: colors.divider, borderRadius: radius.lg, padding: spacing.md },
-            ]}
-          >
-            <Text style={[typography.bodySmall, { color: colors.textSecondary, lineHeight: 20 }]}>
-              CCTV (Tapo camera) isn’t wired into the app yet — planned: subscribe its view and align it with the
-              thermal grid in a later pass.
-            </Text>
-          </View>
-        </View>
       </ScrollView>
     </View>
   );
@@ -95,5 +79,4 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     justifyContent: 'center',
   },
-  noteCard: { borderWidth: StyleSheet.hairlineWidth },
 });

@@ -171,6 +171,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def _proxy_pi(self, path: str, query: str) -> None:
         target_path = path[3:] or "/"
+        if target_path == "/esp/record":
+            self._esp_record(query)
+            return
         if target_path not in self.PI_ROUTES:
             self._json(404, {"error": "pi endpoint not allowed"})
             return
@@ -188,6 +191,78 @@ class Handler(BaseHTTPRequestHandler):
             self._json(502, {"error": f"pi unreachable: {type(e).__name__}"})
             return
         self._send(200, raw)
+
+    def _esp_record(self, query: str) -> None:
+        """Bounded WAV capture from the barn mic (seconds=1..10, default 3).
+
+        Forwards the Pi's honest 503 when the mic stream is stale — the app
+        shows "no audio" rather than pretending.
+        """
+        seconds = "3"
+        for pair in (query or "").split("&"):
+            k, _, v = pair.partition("=")
+            if k == "seconds" and v.isdigit() and 1 <= int(v) <= 10:
+                seconds = v
+        url = f"{PI_UPSTREAM}/esp/record?seconds={seconds}"
+        try:
+            req = urllib.request.Request(url, method="GET")
+            req.add_header("Accept", "audio/wav")
+            with urllib.request.urlopen(req, timeout=14, context=_PI_SSL) as resp:
+                raw = resp.read()
+            self._send(200, raw, ctype="audio/wav")
+        except urllib.error.HTTPError as e:
+            body = e.read() if hasattr(e, "read") else b""
+            self._send(e.code, body or b"mic unavailable", ctype="text/plain")
+        except Exception as e:  # noqa: BLE001
+            self._json(502, {"error": f"mic unreachable: {type(e).__name__}"})
+
+    def _cctv_frame(self) -> None:
+        """One JPEG frame from the Pi's MJPEG proxy (/cctv) — snapshot-friendly.
+
+        The raw stream never ends, so we read bounded chunks until a complete
+        JPEG is present (then return the freshest frame), with a hard time cap.
+        The app polls this every ~2 s; the full MJPEG stays console-only.
+        """
+        buf = b""
+        deadline = time.time() + 4.0
+        try:
+            req = urllib.request.Request(f"{PI_UPSTREAM}/cctv", method="GET")
+            req.add_header("Accept", "multipart/x-mixed-replace")
+            with urllib.request.urlopen(req, timeout=5, context=_PI_SSL) as resp:
+                while time.time() < deadline and len(buf) < 2_000_000:
+                    chunk = resp.read(16384)
+                    if not chunk:
+                        break
+                    buf += chunk
+                    if b"\xff\xd9" in buf:
+                        break
+        except Exception as e:  # noqa: BLE001
+            self._json(502, {"error": f"cctv unreachable: {type(e).__name__}"})
+            return
+        frame = None
+        pos = 0
+        while True:
+            i = buf.find(b"\xff\xd8", pos)
+            if i < 0:
+                break
+            j = buf.find(b"\xff\xd9", i + 2)
+            if j < 0:
+                break
+            frame = buf[i:j + 2]
+            pos = j + 2
+        if not frame:
+            self._json(502, {"error": "no complete frame"})
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", "image/jpeg")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Content-Length", str(len(frame)))
+        self.end_headers()
+        try:
+            self.wfile.write(frame)
+        except (BrokenPipeError, ConnectionResetError):
+            pass
 
     def do_GET(self):
         if not self._authorized():
@@ -208,6 +283,10 @@ class Handler(BaseHTTPRequestHandler):
         # Hard block on the admin surface, even for GET.
         if path.startswith("/api/admins") or "/admins/" in path:
             self._json(403, {"error": "admin surface is not proxied"})
+            return
+
+        if path == "/pi/cctv":
+            self._cctv_frame()
             return
 
         if path == "/pi" or path.startswith("/pi/"):
