@@ -40,8 +40,11 @@ if grep -rqE 'admin123|127\.0\.0\.1:18090|127\.0\.0\.1:8080' "$STAGE/app/_expo" 
 fi
 
 export NPM_CONFIG_USERCONFIG=/dev/null
-npx -y vercel deploy --prod --yes --project pig-health-monitor \
-  --scope solrahks-projects --cwd "$STAGE"
+# Run FROM the stage: the CLI validates ./vercel.json; running from the repo root
+# would pick up the root vercel.json (which deliberately carries a "//" note that
+# newer Vercel schemas reject).
+(cd "$STAGE" && npx -y vercel deploy --prod --yes \
+  --project pig-health-monitor --scope solrahks-projects)
 
 rm -rf "$STAGE"
 echo

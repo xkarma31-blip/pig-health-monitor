@@ -359,3 +359,13 @@ mic socket open, no data (stale).
 - Verified: **62/62** suites (24 regression + 16 user + 7 admin + 3 nav + 9 live +
   3 home); desktop screenshots in `~/sandbox/app-revamp-20261103/refinement-shots/`
   (`desktop-live/`, `desktop-regression/`).
+- **Deployed to production (2026-11-03):** combined site at
+  `https://pig-health-monitor.vercel.app/app` — added SPA fallback rewrites for the
+  app's non-tab routes (`/app/thermal`, `/app/login`, `/app/setup`, `/app/feed`,
+  `/app/web*`) which were live 404s; deploy scripts now run Vercel from the staging
+  dir (the repo-root `vercel.json` carries a `//` note newer schemas reject).
+  Autodeploy had been failing since Oct 31 (stale token) — the fresh login restores
+  it once the next upstream commit lands.
+- Deployed-web nuance: the domain's `/api` only bridges telemetry — device-name
+  lookups (`/api/collections/devices`) 404 there, so deployed rows show raw device
+  ids until the bridge covers names (follow-up).

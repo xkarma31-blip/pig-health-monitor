@@ -6,6 +6,12 @@
     { "source": "/app", "destination": "/app/index.html" },
     { "source": "/app/tabs/:path*", "destination": "/app/index.html" },
     { "source": "/app/tabs", "destination": "/app/index.html" },
+    { "source": "/app/thermal", "destination": "/app/index.html" },
+    { "source": "/app/login", "destination": "/app/index.html" },
+    { "source": "/app/setup", "destination": "/app/index.html" },
+    { "source": "/app/feed", "destination": "/app/index.html" },
+    { "source": "/app/web", "destination": "/app/index.html" },
+    { "source": "/app/web/:path*", "destination": "/app/index.html" },
     { "source": "/app/:path*", "destination": "/app/:path*" }
   ],
   "headers": [
