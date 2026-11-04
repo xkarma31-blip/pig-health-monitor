@@ -341,7 +341,7 @@ can then reach both networks and the laptop no longer has to join the AP.
 > live instance** (and are gitignored — deploy state, not source). The Pi
 > keeps its own copy at `/home/pigpulse/pocketbase/`.
 
-### 2.7 Sensor fusion — what is grounded vs. aspirational (2026-10-29)
+### 2.7 Sensor fusion — what is grounded vs. aspirational (2026-10-29; radiometry addendum 2026-11-04)
 
 > Researched against peer-reviewed literature; every claim below carries its
 > provenance. The objective is **whole-pen monitoring**, not close-range
@@ -415,6 +415,45 @@ demonstrated, Dionne-Pierre 2025). Pixel-level fusion of 32×24 thermal with
 end-to-end RTSP + tracking ≈ 1–2 FPS. This is sufficient for health
 monitoring (respiratory distress develops over hours), NOT for real-time 30
 FPS anything. A Coral USB TPU (~$60) lifts lighter models to 5–15 FPS.
+
+**Radiometry wiring — live 2026-11-04 (commit `b87332f`); three scope
+corrections from code-trace + live decomposition.** `radiometry.ZoneFeverPipeline`
+(drift comp → per-pixel baseline → zone scoring) now runs inside the live
+`web_server.py` feed; kill switch `PIGPULSE_RADIOMETRY=0` restores the legacy
+scalar path. Facts that are easy to get wrong:
+
+- **SHT45 ambient is NOT an input to the fever math.** In the pipeline path
+  `ambient_c` is used in exactly one place — `t_refl_c = ambient − 8 °C`
+  (ta_shift, Melexis self-heating convention; verified live 2026-11-04:
+  32.93 °C ambient → `reflectedTempC` 24.94) — and that value is only
+  *recorded* in `/data`, never used in verdicts. Verdicts come from drift +
+  baseline + zones, scene-relative by design (a whole-field ambient swing
+  must not read as fever). The SHT45 fixes dashboard room numbers, THI, and
+  the legacy fallback path — nothing else. The §2.6 internal-Ta discrepancy
+  (43.6 vs 31.1 °C, ~1.25 °C over-pull) applied to the LEGACY compensator
+  (`pull = (EMA − 25) × 0.1`), which the pipeline path bypasses.
+- **`center` semantics changed under the pipeline.** Legacy: smoothed 3×3
+  cluster average. Pipeline: zone-of-interest peak (`roiPeakC`). A "+2 °C"
+  delta between paths is methodology + drift, not a calibration fix — compare
+  like with like.
+- **`driftMode: "frozen"` is normal operation, not a fault** (no reference
+  thermometer in view): the first 8 frame medians set the zero point, only
+  drift away from it is removed, clamp ±2.5 °C, EMA α = 0.2
+  (ReferenceDriftCompensator, Jiao et al. 2022). `refMedianC` stability is
+  the tell that the correction absorbs sensor drift rather than scene change
+  (2026-11-04: absorbed 1.52 °C, refMedian moved ~0.2 °C — stable).
+
+**Scene lesson (2026-11-04 bulb bench).** Scenes evolve: the bulb heated the
+whole room (ambient 32.9 °C / 71 % RH → THI 85.9, "severe"), frame minimum
+rose to 33 °C with ~43 % of pixels ≥ 36.5 °C. A latched FEVER on a bulb
+hotspot is *expected* (alerts latch, no spam; verdict settled to NORMAL as
+history accumulated). Without pigs in view, verdicts are scene-relative
+sanity only — animal-health claims stay gated on pig-scene validation.
+THI bands (<74 ok / 74–78 mild / 78–82 moderate / ≥82 severe) follow general
+livestock convention; some swine sources place severe at ≥83 — variance
+acknowledged, no code change warranted (85.9 is severe under any variant).
+CCTV was offline this day ("no camera answering on any candidate"), so blob
+identity was inferred numerically from the thermal frame, not visually.
 
 ---
 
