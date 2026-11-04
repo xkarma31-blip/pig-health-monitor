@@ -369,7 +369,7 @@ PocketBase. (The earlier note "owned but unconnected/untested as of
 
 | Sensor | What it CAN do (demonstrated) | What it CANNOT do |
 |---|---|---|
-| **MLX90640 thermal** | Pen-level surface-temperature patterns; group thermal trends; display via bicubic interpolation | Individual pig temperature at pen distances (each pixel ≈ 6×5 cm at 2 m covers too much body); SR cannot recover optics-averaged detail or improve ±1.5°C sensor accuracy |
+| **MLX90640 thermal** | Pen-level surface-temperature patterns; group thermal trends; display via bicubic interpolation | Individual pig temperature at pen distances (each pixel ≈ 6×5 cm at 2 m for the D55 variant; the mounted unit is expected to be the wide-D110 — unverified — which doubles the footprint to ≈ 12×10 cm, see the 2026-11-04 addendum below); SR cannot recover optics-averaged detail or improve ±1.5°C sensor accuracy |
 | **Mono mic** | Detect THAT a cough happened (94–99% accuracy, heavily published) | Direction, distance, or which pig — physics: one mic encodes zero spatial information |
 | **Tapo CCTV** | Detect/count pigs (YOLOv8n 97.6% mAP); short-term tracking (minutes, Deep SORT-P 89.6% MOTA); group activity | Reliably identify unmarked same-breed pigs over hours; ear-tag reading at pen distance; real-time 30 FPS on Pi 4B |
 | **SHT45** | Representative pen-air temperature/humidity context | Replace thermal internal calibration; directly convert surface to core body temperature |
@@ -442,6 +442,18 @@ scalar path. Facts that are easy to get wrong:
   (ReferenceDriftCompensator, Jiao et al. 2022). `refMedianC` stability is
   the tell that the correction absorbs sensor drift rather than scene change
   (2026-11-04: absorbed 1.52 °C, refMedian moved ~0.2 °C — stable).
+
+**Field-of-view variant — expected D110, UNVERIFIED (2026-11-04).** The
+mounted MLX90640 is *supposed to be* the 110°×75° wide-angle variant
+(Master, 2026-11-04). No variant readout exists over I²C — the part number
+sits on the module silkscreen only — so this stays unverified until the
+physical test: film a known-width object at a known distance and compare the
+measured angular span against the datasheet (datasheet-derived: D55 ≈
+1.7°/pixel ≈ 6×5 cm per pixel at 2 m; D110 ≈ 3.4°/pixel ≈ 12×10 cm at 2 m —
+spec-sheet values, not measured). If D110: whole-pen framing is unaffected,
+individual-pig attribution is strictly worse, and the reference mask / zone
+geometry should be re-checked against the wider scene before trusting zone
+verdicts.
 
 **Scene lesson (2026-11-04 bulb bench).** Scenes evolve: the bulb heated the
 whole room (ambient 32.9 °C / 71 % RH → THI 85.9, "severe"), frame minimum
