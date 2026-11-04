@@ -150,9 +150,20 @@ export async function pbList<T = Record<string, unknown>>(
   if (token) headers['Authorization'] = `Bearer ${token}`;
   // Try every resolved base (setup-saved address first, then fallbacks)
   const urls = resolveBaseUrls();
+  const query = params.toString();
   let lastErr: string = '';
   for (const base of urls) {
-    const url = `${base}/api/collections/${collection}/records?${params.toString()}`;
+    // Web: a public browser cannot reach the laptop-bound PocketBase, and the
+    // deployed app has no `/api/collections/...` serverless function — that
+    // path answers HTTP 404 in production. The only public read path is the
+    // `/api/telemetry` bridge, which forwards the same allowlisted GET to the
+    // read-only proxy and returns PocketBase's own list payload shape
+    // (page/perPage/totalItems/totalPages/items), so the response contract is
+    // identical to a direct PB read.
+    // Native: direct PocketBase, unchanged.
+    const url = Platform.OS === 'web'
+      ? `${base}/api/telemetry?collection=${encodeURIComponent(collection)}${query ? `&${query}` : ''}`
+      : `${base}/api/collections/${collection}/records${query ? `?${query}` : ''}`;
     try {
       const res = await fetch(url, { headers });
       if (!res.ok) throw new Error(`pbList ${collection} ${res.status}: ${await res.text()}`);

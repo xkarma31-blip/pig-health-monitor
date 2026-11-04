@@ -153,19 +153,66 @@ export async function fetchPiFrame(base: string): Promise<string | null> {
   }
 }
 
+/**
+ * Outcome of an audio-chunk fetch.
+ *
+ * `url` is a blob URL for a playable WAV chunk, or null.
+ * `reason` is the upstream's own plain-text explanation when there is no
+ * audio ("ESP mic not connected - nothing to record", "camera audio busy -
+ * another capture in progress", …) — passed through so the UI can say WHAT
+ * is wrong instead of a generic "unreachable".
+ */
+export type PiAudioResult = { url: string | null; reason: string | null };
+
+/**
+ * Fetch one bounded WAV chunk. `signal` lets the caller abort an in-flight
+ * capture when the user mutes, so the request is not left running.
+ */
+async function fetchAudioChunk(url: string, signal?: AbortSignal): Promise<PiAudioResult> {
+  try {
+    const res = await fetch(url, { headers: { Accept: 'audio/wav' }, signal });
+    if (!res.ok) {
+      let reason = '';
+      try {
+        reason = (await res.text()).trim();
+      } catch {
+        /* ignore — the status alone is still honest */
+      }
+      return { url: null, reason: reason || `HTTP ${res.status}` };
+    }
+    const blob = await res.blob();
+    return { url: URL.createObjectURL(blob), reason: null };
+  } catch (e) {
+    // An aborted request is a user action (mute/unmount), not a failure.
+    if (signal?.aborted) return { url: null, reason: null };
+    return { url: null, reason: e instanceof Error ? e.name : 'request failed' };
+  }
+}
+
 /** Bounded WAV chunk from the barn mic (seconds 1–10); null when unavailable. */
-export async function fetchPiAudioChunk(base: string, seconds = 3): Promise<string | null> {
-  if (Platform.OS !== 'web') return null; // native playback lands with the APK pass
+export async function fetchPiAudioChunk(
+  base: string,
+  seconds = 3,
+  signal?: AbortSignal,
+): Promise<PiAudioResult> {
+  if (Platform.OS !== 'web') return { url: null, reason: null }; // native playback lands with the APK pass
   const url =
     base === '/api/pi'
       ? `${base}?ep=${encodeURIComponent('esp/record')}&seconds=${seconds}`
       : `${base}/esp/record?seconds=${seconds}`;
-  try {
-    const res = await fetch(url, { headers: { Accept: 'audio/wav' } });
-    if (!res.ok) return null;
-    const blob = await res.blob();
-    return URL.createObjectURL(blob);
-  } catch {
-    return null;
-  }
+  return fetchAudioChunk(url, signal);
+}
+
+/** Bounded WAV chunk from the camera's own audio track (seconds 2–8); null when unavailable. */
+export async function fetchPiCameraAudio(
+  base: string,
+  seconds = 4,
+  signal?: AbortSignal,
+): Promise<PiAudioResult> {
+  if (Platform.OS !== 'web') return { url: null, reason: null };
+  const url =
+    base === '/api/pi'
+      ? `${base}?ep=${encodeURIComponent('camera-audio')}&seconds=${seconds}`
+      : `${base}/camera-audio?seconds=${seconds}`;
+  return fetchAudioChunk(url, signal);
 }

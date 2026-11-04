@@ -27,8 +27,18 @@ import { subscribeTelemetry } from '../utils/pocketbase-data';
 import { telemetryFresh } from '../utils/telemetry-time';
 
 export interface PiPbStats {
+  /**
+   * Mean over the frame when the rig publishes it. Built from the real fields
+   * and normalised by pos(), so an absent value is `undefined` — never 0.
+   */
   avg?: number;
+  /** Legacy alias kept for compatibility — zeroed by the thermal guard. */
   bodyTemp?: number;
+  /**
+   * Real pen temperature: the thermal guard strips `temperature`/`bodyTemp`
+   * from thermal rows, so `center` is the only usable temperature field.
+   */
+  center?: number;
   hotspot?: number;
   max?: number;
   min?: number;
@@ -65,6 +75,16 @@ function num(v: unknown): number | undefined {
   return Number.isFinite(n) ? n : undefined;
 }
 
+/**
+ * A positive reading, or undefined. Thermal rows store 0 for an absent field
+ * (the bridge zeroes `temperature`/`bodyTemp`), and a 0 rendered as "0.00°C"
+ * is a fabricated reading — so 0 and negatives are treated as "no value".
+ */
+function pos(v: unknown): number | undefined {
+  const n = num(v);
+  return n !== undefined && n > 0 ? n : undefined;
+}
+
 export function usePiThermal(): PiThermalSnapshot {
   const [frame, setFrame] = useState<PiFrameData | null>(null);
   const [frameAt, setFrameAt] = useState<number | null>(null);
@@ -83,8 +103,11 @@ export function usePiThermal(): PiThermalSnapshot {
         return;
       }
       setPbStats({
-        avg: num(rec.temperature),
-        bodyTemp: num(rec.bodyTemp),
+        // A stored 0 is "field absent", not a reading. Prefer the real centre
+        // value and leave `avg` undefined rather than publishing a fake 0.0°.
+        avg: pos(rec.temperature) ?? pos(rec.center),
+        bodyTemp: pos(rec.bodyTemp),
+        center: pos(rec.center),
         hotspot: num(rec.hotspot),
         max: num(rec.max),
         min: num(rec.min),

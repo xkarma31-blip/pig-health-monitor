@@ -1,4 +1,18 @@
-import React, { useState, useEffect, useMemo } from 'react';
+/**
+ * PigPulse — web Analytics (admin island).
+ *
+ * EVERY number on this screen is read from PocketBase. There is no synthetic
+ * generator, no random seed and no placeholder series: when the database has
+ * no readings in the selected window the screen says so instead of drawing a
+ * plausible-looking curve.
+ *
+ * Read path (web): pbList() → /api/telemetry?collection=… → serverless bridge
+ * → read-only proxy → PocketBase. The proxy caps one page at 100 rows, so a
+ * window is read as fixed time buckets and every bucket contributes the mean
+ * of the readings it actually contains.
+ */
+
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,63 +21,24 @@ import {
   SafeAreaView,
   TouchableOpacity,
 } from 'react-native';
-import { useTheme } from '../../theme';
+import { useTheme, type ThemeColors, type ThemeTypography } from '../../theme';
 import { useAuth } from '../../utils/auth';
 import { router } from 'expo-router';
 
 import { ListGroup, Skeleton } from '../../components/primitives';
 import { AuthBanner } from '../../components/shared/AuthBanner';
+import { pbList } from '../../utils/pocketbase';
 
-interface TimeSeriesPoint {
-  timestamp: number;
-  value: number;
-  pigId?: string;
-}
-
-interface AnalyticsData {
-  temperature: TimeSeriesPoint[];
-  sound: TimeSeriesPoint[];
-  activity: TimeSeriesPoint[];
-  alerts: { timestamp: number; severity: 'info' | 'warning' | 'critical' }[];
-}
-
-const generateMockData = (days: number): AnalyticsData => {
-  const now = Date.now();
-  const dayMs = 86400000;
-  const data: AnalyticsData = {
-    temperature: [],
-    sound: [],
-    activity: [],
-    alerts: [],
-  };
-
-  for (let d = days - 1; d >= 0; d--) {
-    const dayStart = now - d * dayMs;
-    const pointsPerDay = 24;
-
-    for (let h = 0; h < pointsPerDay; h++) {
-      const t = dayStart + h * 3600000;
-      const baseTemp = 38.5 + Math.sin(h / 24 * Math.PI * 2) * 0.8 + (Math.random() - 0.5) * 0.5;
-      data.temperature.push({ timestamp: t, value: Math.max(37, Math.min(41, baseTemp)) });
-
-      const baseSound = 45 + Math.sin(h / 24 * Math.PI * 2) * 15 + Math.random() * 20;
-      data.sound.push({ timestamp: t, value: Math.max(30, Math.min(100, baseSound)) });
-
-      const baseActivity = 50 + Math.sin(h / 24 * Math.PI * 2) * 30 + Math.random() * 20;
-      data.activity.push({ timestamp: t, value: Math.max(0, Math.min(100, baseActivity)) });
-    }
-  }
-
-  const alertSeverities: ('info' | 'warning' | 'critical')[] = ['info', 'warning', 'critical'];
-  for (let i = 0; i < 20; i++) {
-    data.alerts.push({
-      timestamp: now - Math.random() * days * dayMs,
-      severity: alertSeverities[Math.floor(Math.random() * alertSeverities.length)],
-    });
-  }
-
-  return data;
-};
+/** Number of fixed time buckets a window is split into. */
+const BUCKETS = 8;
+/** The thermal rig publishes under this device id. */
+const THERMAL_DEVICE = 'pi-thermal-01';
+/** The ESP32-S3 barn mic publishes under this device id. */
+const MIC_DEVICE = 's3-mic-01';
+/** Real sensor fields — the proxy's allowlist carries exactly these. */
+const TELEMETRY_FIELDS =
+  'deviceId,timestamp,center,temperature,ambient,hotspot,max,min,rms,peak,sr,mic';
+const ALERT_FIELDS = 'severity,type,message,timestamp,pigId,deviceId';
 
 const TIME_RANGES = [
   { label: '24H', value: 1 },
@@ -74,6 +49,234 @@ const TIME_RANGES = [
 
 type TimeRange = typeof TIME_RANGES[number]['value'];
 
+interface Bucket {
+  /** Bucket start, epoch seconds. */
+  start: number;
+  /** Bucket end, epoch seconds. */
+  end: number;
+  /** Exact number of telemetry rows for the device inside the bucket. */
+  rows: number;
+  /** Rows that carried a usable value for this metric. */
+  used: number;
+  /** Mean of the sampled usable readings — null when the bucket has none. */
+  mean: number | null;
+  /** Min / max of the sampled usable readings. */
+  min: number | null;
+  max: number | null;
+  /** True when the read itself failed — the bucket is unknown, not empty. */
+  failed: boolean;
+}
+
+interface AlertSummary {
+  /** Rows actually fetched (≤ 100). */
+  rows: number;
+  /** Exact number of alerts matching the window. */
+  total: number;
+  critical: number;
+  warning: number;
+  other: number;
+  latest: number | null;
+  /** True when the alerts read failed — the window is unknown, not empty. */
+  failed: boolean;
+}
+
+interface Loaded {
+  thermal: Bucket[];
+  sound: Bucket[];
+  alerts: AlertSummary;
+  /** How many reads failed, out of `reads`. A failed read is NOT an empty one. */
+  failures: number;
+  reads: number;
+  /** First failure message, for the error card. */
+  reason: string | null;
+}
+
+/** Reads issued per window: 8 thermal buckets + 1 alerts call + 8 sound buckets. */
+const READS_PER_WINDOW = BUCKETS * 2 + 1;
+
+const num = (row: Record<string, unknown>, key: string): number => {
+  const v = Number(row[key]);
+  return Number.isFinite(v) ? v : 0;
+};
+
+/**
+ * Scene temperature lives in `center` — the thermal bridge deliberately strips
+ * `temperature`/`bodyTemp`, so a naive `temperature` read would report 0.0°.
+ * A positive `temperature` is accepted as a fallback for other rigs.
+ */
+const sceneTempOf = (row: Record<string, unknown>): number | null => {
+  const center = num(row, 'center');
+  if (center > 0) return center;
+  const temperature = num(row, 'temperature');
+  return temperature > 0 ? temperature : null;
+};
+
+/** Raw PCM RMS from the barn mic. Zero means "no signal", not "silence". */
+const soundRmsOf = (row: Record<string, unknown>): number | null => {
+  const rms = num(row, 'rms');
+  return rms > 0 ? rms : null;
+};
+
+/**
+ * Read one device's window as fixed buckets. Each bucket is one query; the
+ * per-page cap (100 rows) is why a bucket mean is always stated as a mean over
+ * the readings it contains, never as the bucket's total.
+ *
+ * A failed query yields `failed: true` and NO rows — it must never look like a
+ * successfully-read empty bucket, or a sleeping server would report a healthy
+ * empty barn.
+ */
+async function fetchBuckets(
+  deviceId: string,
+  since: number,
+  until: number,
+  pick: (row: Record<string, unknown>) => number | null
+): Promise<Bucket[]> {
+  const span = Math.max(1, until - since);
+  const width = span / BUCKETS;
+  const jobs: Promise<Bucket>[] = [];
+
+  for (let i = 0; i < BUCKETS; i++) {
+    const start = Math.floor(since + i * width);
+    const end = i === BUCKETS - 1 ? until : Math.floor(since + (i + 1) * width);
+    const filter = `deviceId='${deviceId}'&&timestamp>=${start}&&timestamp<${end}`;
+    jobs.push(
+      pbList<Record<string, unknown>>('telemetry', {
+        filter,
+        sort: '-timestamp',
+        perPage: 100,
+        fields: TELEMETRY_FIELDS,
+      })
+        .then(({ items, totalItems }) => {
+          const values: number[] = [];
+          for (const row of items) {
+            const v = pick(row);
+            if (v !== null) values.push(v);
+          }
+          return {
+            start,
+            end,
+            rows: Number.isFinite(totalItems) ? totalItems : items.length,
+            used: values.length,
+            mean: values.length ? values.reduce((a, b) => a + b, 0) / values.length : null,
+            min: values.length ? Math.min(...values) : null,
+            max: values.length ? Math.max(...values) : null,
+            failed: false,
+          };
+        })
+        .catch(() => ({
+          start,
+          end,
+          rows: 0,
+          used: 0,
+          mean: null,
+          min: null,
+          max: null,
+          failed: true,
+        }))
+    );
+  }
+  return Promise.all(jobs);
+}
+
+async function loadWindow(range: TimeRange): Promise<Loaded> {
+  const until = Math.floor(Date.now() / 1000);
+  const since = until - range * 86400;
+  let failures = 0;
+  let reason: string | null = null;
+  const noteFailure = (e: unknown) => {
+    failures += 1;
+    if (!reason) reason = String((e as Error)?.message || e || 'read failed').slice(0, 160);
+  };
+
+  // Round 1: thermal buckets + the alert list (9 concurrent bridge calls).
+  const [thermal, alerts] = await Promise.all([
+    fetchBuckets(THERMAL_DEVICE, since, until, sceneTempOf),
+    pbList<Record<string, unknown>>('alerts', {
+      filter: `timestamp>=${since}`,
+      sort: '-timestamp',
+      perPage: 100,
+      fields: ALERT_FIELDS,
+    })
+      .then(({ items, totalItems }) => {
+        let critical = 0;
+        let warning = 0;
+        let other = 0;
+        for (const alert of items) {
+          const severity = String(alert.severity || '').toLowerCase();
+          if (severity === 'critical') critical += 1;
+          else if (severity === 'warning') warning += 1;
+          else other += 1;
+        }
+        return {
+          rows: items.length,
+          total: Number.isFinite(totalItems) ? totalItems : items.length,
+          critical,
+          warning,
+          other,
+          latest: items[0] ? num(items[0], 'timestamp') || null : null,
+          failed: false,
+        };
+      })
+      .catch((e: unknown) => {
+        noteFailure(e);
+        return {
+          rows: 0,
+          total: 0,
+          critical: 0,
+          warning: 0,
+          other: 0,
+          latest: null,
+          failed: true,
+        };
+      }),
+  ]);
+  failures += thermal.filter((b) => b.failed).length;
+  const firstThermalFailure = thermal.find((b) => b.failed);
+  if (firstThermalFailure && !reason) reason = 'thermal bucket read failed';
+
+  // Round 2: sound buckets (8 concurrent bridge calls).
+  const sound = await fetchBuckets(MIC_DEVICE, since, until, soundRmsOf);
+  failures += sound.filter((b) => b.failed).length;
+  if (!reason && sound.some((b) => b.failed)) reason = 'barn-mic bucket read failed';
+
+  return { thermal, sound, alerts, failures, reads: READS_PER_WINDOW, reason };
+}
+
+const fmtClock = (ts: number) =>
+  new Date(ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+const fmtDay = (ts: number) =>
+  new Date(ts * 1000).toLocaleDateString([], { month: 'short', day: 'numeric' });
+
+const fmtStamp = (ts: number) =>
+  `${fmtDay(ts)} ${fmtClock(ts)}`;
+
+/** Weighted mean over the buckets that actually carry readings. */
+function weightedMean(buckets: Bucket[]): { mean: number | null; sampled: number; rows: number } {
+  let sum = 0;
+  let weight = 0;
+  let sampled = 0;
+  let rows = 0;
+  for (const b of buckets) {
+    rows += b.rows;
+    sampled += b.used;
+    if (b.mean === null) continue;
+    sum += b.mean * b.used;
+    weight += b.used;
+  }
+  return { mean: weight > 0 ? sum / weight : null, sampled, rows };
+}
+
+function peakOf(buckets: Bucket[]): number | null {
+  let peak: number | null = null;
+  for (const b of buckets) {
+    if (b.max === null) continue;
+    if (peak === null || b.max > peak) peak = b.max;
+  }
+  return peak;
+}
+
 export default function AnalyticsScreen() {
   const user = useAuth();
   const { colors, spacing, typography } = useTheme();
@@ -81,48 +284,82 @@ export default function AnalyticsScreen() {
 
   const [timeRange, setTimeRange] = useState<TimeRange>(7);
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<AnalyticsData | null>(null);
-  const [selectedMetric, setSelectedMetric] = useState<'temperature' | 'sound' | 'activity'>('temperature');
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<Loaded | null>(null);
+
+  const run = useCallback(async (range: TimeRange, isRefresh: boolean) => {
+    if (isRefresh) setRefreshing(true);
+    else setLoading(true);
+    setError(null);
+    try {
+      const loaded = await loadWindow(range);
+      setData(loaded);
+    } catch (e: any) {
+      setError(String(e?.message || e || 'read failed'));
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
-    setTimeout(() => {
-      setData(generateMockData(timeRange));
-      setLoading(false);
-    }, 600);
+    let cancelled = false;
+    (async () => {
+      // Inline the load so setState is not called synchronously inside the
+      // effect body (react-hooks/set-state-in-effect).
+      setLoading(true);
+      setError(null);
+      try {
+        const loaded = await loadWindow(timeRange);
+        if (!cancelled) setData(loaded);
+      } catch (e: unknown) {
+        if (!cancelled) setError(String((e as Error)?.message || e || 'read failed'));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [timeRange]);
 
-  const metrics = useMemo(() => {
-    if (!data) return null;
+  const windowLabel = timeRange === 1 ? 'last 24 hours' : `last ${timeRange} days`;
 
-    const recentTemp = data.temperature.slice(-24);
-    const recentSound = data.sound.slice(-24);
-    const recentActivity = data.activity.slice(-24);
+  const thermalFailed = data ? data.thermal.filter((b) => b.failed).length : 0;
+  const soundFailed = data ? data.sound.filter((b) => b.failed).length : 0;
+  const thermalEmpty = thermalFailed > 0
+    ? `${thermalFailed} of ${BUCKETS} reads failed — unknown`
+    : 'no readings in this window';
+  const soundEmpty = soundFailed > 0
+    ? `${soundFailed} of ${BUCKETS} reads failed — unknown`
+    : 'no signal readings in this window';
 
-    const avgTemp = recentTemp.reduce((a, b) => a + b.value, 0) / recentTemp.length;
-    const maxTemp = Math.max(...recentTemp.map(p => p.value));
-    const minTemp = Math.min(...recentTemp.map(p => p.value));
+  // A chart whose reads failed must not claim the window was empty — not even
+  // when only SOME of its buckets failed, because the successful ones may be
+  // empty for a reason we never saw.
+  const chartEmpty = (failed: number, what: string) =>
+    failed === BUCKETS
+      ? `Could not read ${what} — all ${failed} reads failed (unknown, not empty)`
+      : failed > 0
+        ? `No ${what} in the reads that succeeded — ${failed} of ${BUCKETS} reads failed, so this window is incomplete`
+        : `No ${what} in the ${windowLabel}`;
 
-    const avgSound = recentSound.reduce((a, b) => a + b.value, 0) / recentSound.length;
-    const maxSound = Math.max(...recentSound.map(p => p.value));
-
-    const avgActivity = recentActivity.reduce((a, b) => a + b.value, 0) / recentActivity.length;
-
-    const criticalAlerts = data.alerts.filter(a => a.severity === 'critical').length;
-    const warningAlerts = data.alerts.filter(a => a.severity === 'warning').length;
-
-    const tempTrend = recentTemp.length >= 2
-      ? recentTemp[recentTemp.length - 1].value - recentTemp[0].value
-      : 0;
-
-    return {
-      temperature: { avg: avgTemp, max: maxTemp, min: minTemp, trend: tempTrend },
-      sound: { avg: avgSound, max: maxSound, trend: 0 },
-      activity: { avg: avgActivity, trend: 0 },
-      alerts: { critical: criticalAlerts, warning: warningAlerts, total: data.alerts.length },
-    };
-  }, [data]);
+  const thermalStats = useMemo(
+    () => (data ? weightedMean(data.thermal) : null),
+    [data]
+  );
+  const soundStats = useMemo(
+    () => (data ? weightedMean(data.sound) : null),
+    [data]
+  );
+  const thermalPeak = useMemo(() => (data ? peakOf(data.thermal) : null), [data]);
+  const soundPeak = useMemo(() => (data ? peakOf(data.sound) : null), [data]);
 
   const openLogin = () => router.push('/login');
+
+  const tempFormat = (v: number) => `${v.toFixed(1)}°C`;
+  const soundFormat = (v: number) => Math.round(v).toLocaleString();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -130,7 +367,7 @@ export default function AnalyticsScreen() {
         {!user && (
           <AuthBanner
             title="Not authenticated"
-            message="Log in to view analytics synced from Firebase"
+            message="Log in to read live telemetry from PocketBase"
             buttonLabel="LOG IN"
             onPress={openLogin}
           />
@@ -138,14 +375,14 @@ export default function AnalyticsScreen() {
 
         <View style={styles.header}>
           <Text style={[typography.h1, { color: colors.textPrimary }]}>Analytics</Text>
-          <Text style={[typography.caption, { color: colors.textSecondary, marginTop: 2 }]}>
-            Statistical insights & trend analysis
+          <Text style={[typography.body, styles.subtitle]}>
+            Real readings from PocketBase · {windowLabel} · no synthetic data
           </Text>
         </View>
 
         {/* Time Range Selector */}
         <View style={styles.timeRangeSelector}>
-          {TIME_RANGES.map((range, _index) => (
+          {TIME_RANGES.map((range) => (
             <TouchableOpacity
               key={range.value}
               style={[
@@ -155,326 +392,451 @@ export default function AnalyticsScreen() {
               onPress={() => setTimeRange(range.value)}
               accessibilityRole="button"
               accessibilityLabel={`${range.label} time range`}
-              accessibilityHint={`Shows analytics for the last ${range.value} days`}
+              accessibilityHint={`Shows real readings from the ${windowLabel}`}
             >
-              <Text style={[
-                typography.bodySmall,
-                { color: timeRange === range.value ? colors.background : colors.textPrimary, fontWeight: '600' },
-              ]}>
+              <Text
+                style={[
+                  typography.body,
+                  {
+                    color: timeRange === range.value ? colors.background : colors.textPrimary,
+                    fontWeight: '700',
+                    fontSize: 16,
+                  },
+                ]}
+              >
                 {range.label}
               </Text>
             </TouchableOpacity>
           ))}
+          <TouchableOpacity
+            style={styles.refreshButton}
+            onPress={() => run(timeRange, true)}
+            accessibilityRole="button"
+            accessibilityLabel="Refresh analytics"
+            accessibilityHint="Re-reads the selected window from PocketBase"
+          >
+            <Text style={[typography.body, { color: colors.accent, fontWeight: '700', fontSize: 16 }]}>
+              {refreshing ? '…' : 'REFRESH'}
+            </Text>
+          </TouchableOpacity>
         </View>
+
+        {error && (
+          <View style={[styles.errorCard, { borderLeftColor: colors.error }]}>
+            <Text style={[typography.body, { color: colors.error, fontWeight: '700', fontSize: 16 }]}>
+              Could not read telemetry
+            </Text>
+            <Text style={[typography.bodySmall, styles.errorText]}>{error}</Text>
+          </View>
+        )}
+
+        {/* A failed read is NOT an empty window. Say so, above the numbers. */}
+        {!loading && data && data.failures > 0 && (
+          <View style={[styles.errorCard, { borderLeftColor: colors.warning }]}>
+            <Text style={[typography.body, { color: colors.warning, fontWeight: '700', fontSize: 16 }]}>
+              {data.failures} of {data.reads} reads failed — these charts are incomplete
+            </Text>
+            <Text style={[typography.bodySmall, styles.errorText]}>
+              A failed read is unknown, not zero. Nothing below is a full picture of the window.
+              {data.reason ? ` First failure: ${data.reason}` : ''}
+            </Text>
+          </View>
+        )}
 
         {/* Key Metrics Grid */}
         {loading ? (
           <View style={styles.metricsGrid}>
-            {[1, 2, 3, 4].map(i => <Skeleton key={i} />)}
+            <Skeleton rows={2} />
           </View>
-        ) : metrics ? (
+        ) : data && thermalStats && soundStats ? (
           <>
-            <View style={[styles.alertSummaryCard, { borderLeftColor: colors.accent }]}>
-              <Text style={[typography.caption, { color: colors.textSecondary }]}>Avg Temperature</Text>
-              <Text style={[typography.h1, { color: colors.accent, fontSize: 24 }]}>{metrics.temperature.avg.toFixed(1)}°C</Text>
-              <Text style={[typography.caption, { color: colors.textSecondary }]}>Range: {metrics.temperature.min.toFixed(1)}–{metrics.temperature.max.toFixed(1)}°C</Text>
+            <View style={styles.metricsGrid}>
+              <View style={[styles.metricCard, { borderLeftColor: colors.accent }]}>
+                <Text style={[typography.caption, { color: colors.textSecondary, fontSize: 16, letterSpacing: 0.6 }]}>Avg scene temp</Text>
+                <Text style={[typography.stat, { color: colors.accent }]}>
+                  {thermalStats.mean === null ? '—' : tempFormat(thermalStats.mean)}
+                </Text>
+                <Text style={[typography.bodySmall, styles.metricNote]}>
+                  {thermalStats.sampled > 0
+                    ? `mean of ${thermalStats.sampled} sampled readings`
+                    : thermalEmpty}
+                </Text>
+              </View>
+              <View style={[styles.metricCard, { borderLeftColor: colors.warning }]}>
+                <Text style={[typography.caption, { color: colors.textSecondary, fontSize: 16, letterSpacing: 0.6 }]}>Peak scene temp</Text>
+                <Text style={[typography.stat, { color: colors.warning }]}>
+                  {thermalPeak === null ? '—' : tempFormat(thermalPeak)}
+                </Text>
+                <Text style={[typography.bodySmall, styles.metricNote]}>
+                  {thermalStats.sampled > 0
+                    ? `peak of ${thermalStats.sampled} sampled readings`
+                    : thermalEmpty}
+                </Text>
+              </View>
+              <View style={[styles.metricCard, { borderLeftColor: colors.info }]}>
+                <Text style={[typography.caption, { color: colors.textSecondary, fontSize: 16, letterSpacing: 0.6 }]}>Mean sound RMS</Text>
+                <Text style={[typography.stat, { color: colors.info }]}>
+                  {soundStats.mean === null ? '—' : soundFormat(soundStats.mean)}
+                </Text>
+                <Text style={[typography.bodySmall, styles.metricNote]}>
+                  {soundStats.sampled > 0
+                    ? `raw RMS, not dB · ${soundStats.sampled} sampled`
+                    : soundEmpty}
+                </Text>
+              </View>
+              <View style={[styles.metricCard, { borderLeftColor: colors.healthy }]}>
+                <Text style={[typography.caption, { color: colors.textSecondary, fontSize: 16, letterSpacing: 0.6 }]}>Peak sound RMS</Text>
+                <Text style={[typography.stat, { color: colors.healthy }]}>
+                  {soundPeak === null ? '—' : soundFormat(soundPeak)}
+                </Text>
+                <Text style={[typography.bodySmall, styles.metricNote]}>
+                  {soundStats.sampled > 0
+                    ? `raw RMS, not dB · peak of ${soundStats.sampled}`
+                    : soundEmpty}
+                </Text>
+              </View>
             </View>
-            <View style={[styles.alertSummaryCard, { borderLeftColor: colors.error }]}>
-              <Text style={[typography.caption, { color: colors.textSecondary }]}>Max Temperature</Text>
-              <Text style={[typography.h1, { color: colors.error, fontSize: 24 }]}>{metrics.temperature.max.toFixed(1)}°C</Text>
-              <Text style={[typography.caption, { color: colors.textSecondary }]}>{metrics.temperature.max > 39.5 ? 'Above critical' : 'Normal range'}</Text>
+
+            {/* Scene temperature */}
+            <View style={styles.section}>
+              <Text style={[typography.h2, { color: colors.textPrimary, marginBottom: spacing.sm, fontSize: 18 }]}>
+                Scene temperature
+              </Text>
+              <Text style={[typography.bodySmall, styles.sectionNote]}>
+                Mean `center` per time bucket from the {THERMAL_DEVICE} thermal rig. Scene
+                temperature, not pig body temperature.
+              </Text>
+              <MetricChart
+                buckets={data.thermal}
+                color={colors.accent}
+                format={tempFormat}
+                unit="°C"
+                colors={colors}
+                typography={typography}
+                emptyLabel={chartEmpty(thermalFailed, 'thermal readings')}
+              />
+              <CoverageNote
+                buckets={data.thermal}
+                range={timeRange}
+                colors={colors}
+                typography={typography}
+                label="thermal readings"
+              />
+              <BucketTable
+                buckets={data.thermal}
+                format={tempFormat}
+                range={timeRange}
+                colors={colors}
+                typography={typography}
+              />
             </View>
-            <View style={[styles.alertSummaryCard, { borderLeftColor: colors.info }]}>
-              <Text style={[typography.caption, { color: colors.textSecondary }]}>Avg Sound Level</Text>
-              <Text style={[typography.h1, { color: colors.info, fontSize: 24 }]}>{metrics.sound.avg.toFixed(0)} dB</Text>
-              <Text style={[typography.caption, { color: colors.textSecondary }]}>Peak: {metrics.sound.max.toFixed(0)} dB</Text>
+
+            {/* Sound */}
+            <View style={styles.section}>
+              <Text style={[typography.h2, { color: colors.textPrimary, marginBottom: spacing.sm, fontSize: 18 }]}>
+                Barn mic signal
+              </Text>
+              <Text style={[typography.bodySmall, styles.sectionNote]}>
+                Mean `rms` per time bucket from the {MIC_DEVICE} barn mic. Raw RMS amplitude as
+                stored by the mic bridge — not decibels, and not a 16-bit ceiling. Buckets without
+                signal are shown empty, never as zero.
+              </Text>
+              <MetricChart
+                buckets={data.sound}
+                color={colors.info}
+                format={soundFormat}
+                unit=""
+                colors={colors}
+                typography={typography}
+                emptyLabel={chartEmpty(soundFailed, 'barn-mic signal readings')}
+              />
+              <CoverageNote
+                buckets={data.sound}
+                range={timeRange}
+                colors={colors}
+                typography={typography}
+                label="barn-mic readings"
+              />
+              <BucketTable
+                buckets={data.sound}
+                format={soundFormat}
+                range={timeRange}
+                colors={colors}
+                typography={typography}
+              />
             </View>
-            <View style={[styles.alertSummaryCard, { borderLeftColor: colors.successContainer }]}>
-              <Text style={[typography.caption, { color: colors.textSecondary }]}>Avg Activity</Text>
-              <Text style={[typography.h1, { color: colors.healthy, fontSize: 24 }]}>{metrics.activity.avg.toFixed(0)}%</Text>
-              <Text style={[typography.caption, { color: colors.textSecondary }]}>Movement index</Text>
+
+            {/* Alert Summary */}
+            <View style={styles.section}>
+              <Text style={[typography.h2, { color: colors.textPrimary, marginBottom: spacing.sm, fontSize: 18 }]}>
+                Alerts ({windowLabel})
+              </Text>
+              {data.alerts.failed ? (
+                <View style={[styles.emptyCard, { borderLeftColor: colors.error }]}>
+                  <Text style={[typography.body, { color: colors.error, fontWeight: '700', fontSize: 16 }]}>
+                    Alert history could not be read
+                  </Text>
+                  <Text style={[typography.bodySmall, styles.sectionNote]}>
+                    The alerts query failed, so the number of alerts in the {windowLabel} is unknown.
+                    This is not the same as zero.
+                  </Text>
+                </View>
+              ) : data.alerts.total === 0 ? (
+                <View style={styles.emptyCard}>
+                  <Text style={[typography.body, { color: colors.textPrimary, fontWeight: '700', fontSize: 16 }]}>
+                    No alerts recorded
+                  </Text>
+                  <Text style={[typography.bodySmall, styles.sectionNote]}>
+                    The alerts collection has no rows in the {windowLabel}. This is the real count,
+                    not a placeholder.
+                  </Text>
+                </View>
+              ) : (
+                <>
+                  <View style={styles.alertSummaryGrid}>
+                    <View style={[styles.metricCard, { borderLeftColor: colors.error }]}>
+                      <Text style={[typography.caption, { color: colors.textSecondary, fontSize: 16, letterSpacing: 0.6 }]}>Critical</Text>
+                      <Text style={[typography.stat, { color: colors.error }]}>{data.alerts.critical}</Text>
+                    </View>
+                    <View style={[styles.metricCard, { borderLeftColor: colors.warning }]}>
+                      <Text style={[typography.caption, { color: colors.textSecondary, fontSize: 16, letterSpacing: 0.6 }]}>Warning</Text>
+                      <Text style={[typography.stat, { color: colors.warning }]}>{data.alerts.warning}</Text>
+                    </View>
+                    <View style={[styles.metricCard, { borderLeftColor: colors.info }]}>
+                      <Text style={[typography.caption, { color: colors.textSecondary, fontSize: 16, letterSpacing: 0.6 }]}>Other</Text>
+                      <Text style={[typography.stat, { color: colors.info }]}>{data.alerts.other}</Text>
+                    </View>
+                  </View>
+                  <Text style={[typography.bodySmall, styles.sectionNote]}>
+                    {data.alerts.total} alert{data.alerts.total === 1 ? '' : 's'} in the {windowLabel}.
+                    {data.alerts.rows < data.alerts.total
+                      ? ` Showing the ${data.alerts.rows} most recent of ${data.alerts.total}.`
+                      : ''}
+                    {data.alerts.latest
+                      ? ` Most recent: ${fmtStamp(data.alerts.latest)}.`
+                      : ''}
+                  </Text>
+                </>
+              )}
             </View>
           </>
         ) : null}
-
-        {/* Alert Summary */}
-        {metrics && (
-          <View style={styles.section}>
-            <Text style={[typography.h2, { color: colors.textPrimary, marginBottom: spacing.md }]}>
-              Alert Summary ({timeRange === 1 ? '24h' : `${timeRange}d`})
-            </Text>
-            <View style={styles.alertSummaryGrid}>
-              <View style={[styles.alertSummaryCard, { borderLeftColor: colors.error }]}>
-                <Text style={[typography.caption, { color: colors.textSecondary, textTransform: 'uppercase' }]}>Critical</Text>
-                <Text style={[typography.h1, { color: colors.error, fontSize: 32 }]}>{metrics.alerts.critical}</Text>
-              </View>
-              <View style={[styles.alertSummaryCard, { borderLeftColor: colors.warning }]}>
-                <Text style={[typography.caption, { color: colors.textSecondary, textTransform: 'uppercase' }]}>Warning</Text>
-                <Text style={[typography.h1, { color: colors.warning, fontSize: 32 }]}>{metrics.alerts.warning}</Text>
-              </View>
-              <View style={[styles.alertSummaryCard, { borderLeftColor: colors.info }]}>
-                <Text style={[typography.caption, { color: colors.textSecondary, textTransform: 'uppercase' }]}>Total</Text>
-                <Text style={[typography.h1, { color: colors.info, fontSize: 32 }]}>{metrics.alerts.total}</Text>
-              </View>
-            </View>
-          </View>
-        )}
-
-        {/* Chart Placeholder */}
-        <View style={styles.chartSection}>
-          <View style={styles.chartHeader}>
-            <Text style={[typography.h2, { color: colors.textPrimary }]}>Trend Analysis</Text>
-            <View style={styles.metricSelector}>
-              {(['temperature', 'sound', 'activity'] as const).map(metric => (
-                <TouchableOpacity
-                  key={metric}
-                  style={[
-                    styles.metricTab,
-                    selectedMetric === metric && styles.metricTabActive,
-                  ]}
-                  onPress={() => setSelectedMetric(metric)}
-                  accessibilityRole="button"
-                  accessibilityLabel={`${metric.charAt(0).toUpperCase() + metric.slice(1)} metric`}
-                  accessibilityHint={`Shows ${metric} trend analysis`}
-                >
-                  <Text style={[
-                    typography.caption,
-                    { color: selectedMetric === metric ? colors.background : colors.textSecondary, fontWeight: '600' },
-                  ]}>
-                    {metric.charAt(0).toUpperCase() + metric.slice(1)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          <View style={styles.chartContainer}>
-            {loading || !data ? (
-              <Skeleton />
-            ) : (
-              <ChartView
-                data={data[selectedMetric] || []}
-                color={selectedMetric === 'temperature' ? colors.accent : selectedMetric === 'sound' ? colors.info : colors.healthy}
-                timeRange={timeRange}
-                styles={styles}
-              />
-            )}
-          </View>
-
-          <View style={styles.chartLegend}>
-            <Text style={[typography.caption, { color: colors.textSecondary }]}>
-              Showing {selectedMetric} over {timeRange === 1 ? '24 hours' : `${timeRange} days`}
-            </Text>
-            {selectedMetric === 'temperature' && (
-              <View style={styles.thresholdLegend}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                  <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: colors.healthy }} />
-                  <Text style={[typography.caption, { color: colors.textSecondary }]}>Normal (37.5–38.8°C surface)</Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
-                  <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: colors.warning }} />
-                  <Text style={[typography.caption, { color: colors.textSecondary }]}>Elevated (38.9–39.4°C)</Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
-                  <View style={{ width: 12, height: 12, borderRadius: 6, backgroundColor: colors.error }} />
-                  <Text style={[typography.caption, { color: colors.textSecondary }]}>Critical (≥39.5°C)</Text>
-                </View>
-              </View>
-            )}
-          </View>
-        </View>
-
-        {/* Statistical Summary */}
-        {metrics && (
-          <View style={styles.section}>
-            <Text style={[typography.h2, { color: colors.textPrimary, marginBottom: spacing.md }]}>
-              Statistical Summary
-            </Text>
-            <ListGroup>
-              <View style={styles.statRow}>
-                <View style={styles.statItem}>
-                  <Text style={[typography.caption, { color: colors.textSecondary }]}>Mean Temperature</Text>
-                  <Text style={[typography.h2, { color: colors.textPrimary }]}>{metrics.temperature.avg.toFixed(2)}°C</Text>
-                </View>
-                <View style={styles.statItem}>
-                  <Text style={[typography.caption, { color: colors.textSecondary }]}>Std Deviation</Text>
-                  <Text style={[typography.h2, { color: colors.textPrimary }]}>{calculateStdDev(data!.temperature.slice(-24).map(p => p.value)).toFixed(2)}°C</Text>
-                </View>
-              </View>
-              <View style={styles.statRow}>
-                <View style={styles.statItem}>
-                  <Text style={[typography.caption, { color: colors.textSecondary }]}>Mean Sound Level</Text>
-                  <Text style={[typography.h2, { color: colors.textPrimary }]}>{metrics.sound.avg.toFixed(1)} dB</Text>
-                </View>
-                <View style={styles.statItem}>
-                  <Text style={[typography.caption, { color: colors.textSecondary }]}>Activity Correlation</Text>
-                  <Text style={[typography.h2, { color: colors.textPrimary }]}>{calculateCorrelation(
-                    data!.temperature.slice(-24).map(p => p.value),
-                    data!.activity.slice(-24).map(p => p.value)
-                  ).toFixed(2)}</Text>
-                </View>
-              </View>
-            </ListGroup>
-          </View>
-        )}
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-function calculateStdDev(values: number[]): number {
-  if (values.length === 0) return 0;
-  const mean = values.reduce((a, b) => a + b, 0) / values.length;
-  const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / values.length;
-  return Math.sqrt(variance);
-}
+/**
+ * Bar chart of the bucket means. Every bucket of the window is rendered — an
+ * empty bucket keeps its slot so the horizontal spacing stays proportional to
+ * real time — and the axis range is printed because the bars are scaled to the
+ * data, not to zero.
+ */
+function MetricChart({
+  buckets,
+  color,
+  format,
+  unit,
+  colors,
+  typography,
+  emptyLabel,
+}: {
+  buckets: Bucket[];
+  color: string;
+  format: (v: number) => string;
+  unit: string;
+  colors: ThemeColors;
+  typography: ThemeTypography;
+  emptyLabel: string;
+}) {
+  const PLOT_HEIGHT = 132;
+  const COLUMN_WIDTH = 92;
+  const styles = useAnalyticsStyles(colors);
 
-function calculateCorrelation(x: number[], y: number[]): number {
-  if (x.length !== y.length || x.length === 0) return 0;
-  const n = x.length;
-  const sumX = x.reduce((a, b) => a + b, 0);
-  const sumY = y.reduce((a, b) => a + b, 0);
-  const sumXY = x.reduce((a, b, i) => a + b * y[i], 0);
-  const sumX2 = x.reduce((a, b) => a + b * b, 0);
-  const sumY2 = y.reduce((a, b) => a + b * b, 0);
-  const numerator = n * sumXY - sumX * sumY;
-  const denominator = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
-  return denominator === 0 ? 0 : numerator / denominator;
-}
+  const values = buckets
+    .map((b) => b.mean)
+    .filter((v): v is number => v !== null);
+  const hasData = values.length > 0;
 
-function ChartView({ data, color, timeRange: _timeRange, styles }: { data: { timestamp: number; value: number }[]; color: string; timeRange: number; styles: any }) {
-  const { colors } = useTheme();
-
-  if (!data || data.length === 0) {
+  if (!hasData) {
     return (
       <View style={styles.emptyChart}>
-        <Text style={[styles.emptyChartText, { color: colors.textSecondary }]}>No data available</Text>
+        <Text style={[typography.body, { color: colors.textSecondary, fontSize: 16, textAlign: 'center' }]}>
+          {emptyLabel}
+        </Text>
       </View>
     );
   }
 
-  const width = 350;
-  const height = 200;
-  const padding = 40;
-  const chartWidth = width - padding * 2;
-  const chartHeight = height - padding * 2;
-
-  const values = data.map(d => d.value);
-  const minVal = Math.min(...values);
-  const maxVal = Math.max(...values);
-  const range = maxVal - minVal || 1;
-
-  const points = data.map((d, i) => {
-    const x = padding + (i / (data.length - 1 || 1)) * chartWidth;
-    const y = padding + chartHeight - ((d.value - minVal) / range) * chartHeight;
-    return { x, y };
-  });
-
-  const path = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  const lo = Math.min(...values);
+  const hi = Math.max(...values);
+  const spread = hi - lo;
+  const axisBase = spread === 0 ? lo - 1 : lo - spread * 0.2;
+  const axisTop = spread === 0 ? hi + 1 : hi + spread * 0.2;
+  const axisSpan = axisTop - axisBase || 1;
 
   return (
-    <View style={styles.chartWrapper}>
-      <View style={{ width, height }}>
-        <svg width={width} height={height} style={{ backgroundColor: 'transparent' }}>
-          {/* Grid lines */}
-          {[0, 0.25, 0.5, 0.75, 1].map(frac => (
-            <line
-              key={frac}
-              x1={padding}
-              y1={padding + chartHeight * frac}
-              x2={width - padding}
-              y2={padding + chartHeight * frac}
-              stroke={colors.border}
-              strokeWidth={0.5}
-              strokeDasharray="4,4"
-            />
-          ))}
-          {/* Y-axis labels */}
-          {[0, 0.5, 1].map(frac => (
-            <text
-              key={frac}
-              x={padding - 8}
-              y={padding + chartHeight * (1 - frac) + 4}
-              fill={colors.textSecondary}
-              fontSize={10}
-              textAnchor="end"
-              fontFamily="system-ui"
-            >
-              {(minVal + range * frac).toFixed(1)}
-            </text>
-          ))}
-          {/* Data line */}
-          <path
-            d={path}
-            stroke={color}
-            strokeWidth={2}
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-          {/* Area under curve */}
-          <path
-            d={`${path} L ${points[points.length - 1].x} ${padding + chartHeight} L ${points[0].x} ${padding + chartHeight} Z`}
-            fill={`${color}33`}
-          />
-          {/* Temperature threshold lines for temperature metric */}
-          {color === colors.accent && (
-            <>
-              <line
-                x1={padding}
-                y1={padding + chartHeight * (1 - (38.8 - minVal) / range)}
-                x2={width - padding}
-                y2={padding + chartHeight * (1 - (38.8 - minVal) / range)}
-                stroke={colors.healthy}
-                strokeWidth={1}
-                strokeDasharray="2,2"
-                opacity={0.5}
-              />
-              <line
-                x1={padding}
-                y1={padding + chartHeight * (1 - (39.5 - minVal) / range)}
-                x2={width - padding}
-                y2={padding + chartHeight * (1 - (39.5 - minVal) / range)}
-                stroke={colors.error}
-                strokeWidth={1}
-                strokeDasharray="2,2"
-                opacity={0.5}
-              />
-            </>
-          )}
-        </svg>
-      </View>
+    <View>
+      <Text style={[typography.bodySmall, { color: colors.textSecondary, marginBottom: 8, fontSize: 16, lineHeight: 22 }]}>
+        Axis {format(axisBase)} – {format(axisTop)}
+        {unit ? ` ${unit}` : ''} · each bar is one time bucket
+      </Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <View style={{ flexDirection: 'row', alignItems: 'flex-end' }}>
+          {buckets.map((b) => {
+            const height =
+              b.mean === null ? 0 : Math.max(6, ((b.mean - axisBase) / axisSpan) * PLOT_HEIGHT);
+            return (
+              <View key={b.start} style={{ width: COLUMN_WIDTH, alignItems: 'center' }}>
+                <Text style={styles.barValue}>
+                  {b.failed ? 'n/a' : b.mean === null ? '—' : format(b.mean)}
+                </Text>
+                <View
+                  style={[
+                    styles.plotColumn,
+                    { height: PLOT_HEIGHT, backgroundColor: `${color}22` },
+                    // A failed read is hatched-in-words, not silently blank.
+                    b.failed && { borderWidth: 1, borderColor: colors.error, borderStyle: 'dashed' },
+                  ]}
+                >
+                  {b.mean !== null && (
+                    <View style={{ height, width: 34, backgroundColor: color, borderRadius: 6 }} />
+                  )}
+                </View>
+                <Text style={styles.barLabel}>{b.failed ? 'failed' : fmtClock(b.start)}</Text>
+                <Text style={styles.barSubLabel}>{b.failed ? 'read' : fmtDay(b.start)}</Text>
+              </View>
+            );
+          })}
+        </View>
+      </ScrollView>
     </View>
   );
 }
 
-const useAnalyticsStyles = (colors: any) => {
+/** Exact, non-rounded statement of what the chart is built from. */
+function CoverageNote({
+  buckets,
+  range,
+  colors,
+  typography,
+  label,
+}: {
+  buckets: Bucket[];
+  range: TimeRange;
+  colors: ThemeColors;
+  typography: ThemeTypography;
+  label: string;
+}) {
+  const styles = useAnalyticsStyles(colors);
+  const stats = weightedMean(buckets);
+  const withData = buckets.filter((b) => b.used > 0);
+  const failed = buckets.filter((b) => b.failed).length;
+  const windowLabel = range === 1 ? 'last 24 hours' : `last ${range} days`;
+
+  // A failed read must never be reported as an empty window.
+  if (stats.rows === 0) {
+    return (
+      <Text style={[typography.bodySmall, styles.coverageNote]}>
+        {failed > 0
+          ? `Could not read ${label} — ${failed} of ${BUCKETS} reads failed. The window is unknown, not empty.`
+          : `0 ${label} in the ${windowLabel}.`}
+      </Text>
+    );
+  }
+  const covered = withData.length;
+  // The real per-bucket sample is at most 100 rows; `stats.sampled` is a window
+  // total, so quoting it as a per-bucket figure would overstate the sampling.
+  const perBucket = Math.min(100, Math.max(...buckets.map((b) => b.used)));
+  return (
+    <Text style={[typography.bodySmall, styles.coverageNote]}>
+      {stats.rows.toLocaleString()} {label} in the window · {covered} of {BUCKETS} buckets carry
+      readings · each mean uses that bucket&apos;s most recent readings (max {perBucket} of its own
+      rows)
+      {failed > 0 ? ` · ${failed} of ${BUCKETS} reads failed, so this window is incomplete` : ''}.
+    </Text>
+  );
+}
+
+/** Every bucket as text — the exact numbers behind the chart. */
+function BucketTable({
+  buckets,
+  format,
+  range,
+  colors,
+  typography,
+}: {
+  buckets: Bucket[];
+  format: (v: number) => string;
+  range: TimeRange;
+  colors: ThemeColors;
+  typography: ThemeTypography;
+}) {
+  const { spacing: themeSpacing } = useTheme();
+  const styles = useAnalyticsStyles(colors);
+  // Failed buckets are listed as well: omitting them would imply the window was
+  // fully read. Only a window with no data AND no failures has nothing to show.
+  const withData = buckets.filter((b) => b.used > 0 || b.failed);
+  if (!withData.length) return null;
+  // A bucket wider than a day must print both dates — a clock-only range like
+  // "02:59 AM–08:59 AM" would otherwise imply an 11-day bucket lasted 6 hours.
+  const multiDay = (b: Bucket) => b.end - b.start > 86400;
+  return (
+    <View style={{ marginTop: themeSpacing.md }}>
+      <Text style={[typography.caption, { color: colors.textSecondary, marginBottom: 6, fontSize: 16, letterSpacing: 0.6 }]}>
+        Bucket detail
+      </Text>
+      <ListGroup>
+        {withData.map((b) => (
+          <View key={b.start} style={styles.tableRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={[typography.body, { color: colors.textPrimary, fontWeight: '700', fontSize: 16 }]}>
+                {multiDay(b) ? `${fmtStamp(b.start)} → ${fmtStamp(b.end)}` : range === 1 ? fmtClock(b.start) : fmtStamp(b.start)}
+              </Text>
+              <Text style={[typography.bodySmall, { color: colors.textSecondary, fontSize: 16, lineHeight: 22 }]}>
+                {b.failed
+                  ? 'read failed — window unknown'
+                  : `${b.used} sampled of ${b.rows.toLocaleString()} rows${
+                      multiDay(b) ? '' : ` · ${fmtClock(b.start)}–${fmtClock(b.end)}`
+                    }`}
+              </Text>
+            </View>
+            <Text style={[typography.body, { color: b.failed ? colors.error : colors.textPrimary, fontWeight: '700', fontSize: 16 }]}>
+              {b.failed ? 'n/a' : b.mean === null ? '—' : format(b.mean)}
+            </Text>
+          </View>
+        ))}
+      </ListGroup>
+    </View>
+  );
+}
+
+const useAnalyticsStyles = (colors: ThemeColors) => {
   return StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.background },
     scrollView: { flex: 1 },
     content: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 100 },
     header: { marginBottom: 20 },
-    timeRangeSelector: { flexDirection: 'row', gap: 8, marginBottom: 20 },
-    timeRangeButton: { backgroundColor: colors.surface, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 8, borderWidth: 1, borderColor: colors.border },
+    subtitle: { color: colors.textSecondary, marginTop: 4, fontSize: 16 },
+    timeRangeSelector: { flexDirection: 'row', gap: 8, marginBottom: 20, flexWrap: 'wrap' },
+    timeRangeButton: { backgroundColor: colors.surface, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10, borderWidth: 1, borderColor: colors.border, minHeight: 44, justifyContent: 'center' },
     timeRangeButtonActive: { backgroundColor: colors.accent, borderColor: colors.accent },
+    refreshButton: { backgroundColor: colors.surface, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10, borderWidth: 1, borderColor: colors.accent, minHeight: 44, justifyContent: 'center' },
     metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 24 },
-    metricSkeleton: { width: '48%', height: 100 } as any,
+    metricCard: { flexGrow: 1, flexBasis: 150, backgroundColor: colors.surface, borderRadius: 12, padding: 16, borderLeftWidth: 4 },
+    metricNote: { color: colors.textSecondary, marginTop: 4, fontSize: 16, lineHeight: 22 },
     section: { marginBottom: 28 },
-    alertSummaryGrid: { flexDirection: 'row', gap: 12 },
-    alertSummaryCard: { flex: 1, backgroundColor: colors.surface, borderRadius: 12, padding: 16, borderLeftWidth: 4, alignItems: 'center' },
-    chartSection: { marginBottom: 28 },
-    chartHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-    metricSelector: { flexDirection: 'row', gap: 4 },
-    metricTab: { backgroundColor: colors.surface, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 6, borderWidth: 1, borderColor: colors.border },
-    metricTabActive: { backgroundColor: colors.accent, borderColor: colors.accent },
-    chartContainer: { marginBottom: 16 },
-    chartWrapper: { alignItems: 'center' },
-    chartSkeleton: { width: '100%', height: 200 },
-    emptyChart: { width: '100%', height: 200, alignItems: 'center', justifyContent: 'center' },
-    emptyChartText: { fontSize: 16 },
-    chartLegend: { paddingHorizontal: 4 },
-    thresholdLegend: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: colors.border },
-    statRow: { flexDirection: 'row', gap: 16, marginBottom: 12 },
-    statItem: { flex: 1 },
+    sectionNote: { color: colors.textSecondary, marginBottom: 10, fontSize: 16, lineHeight: 23 },
+    coverageNote: { color: colors.textSecondary, marginTop: 10, fontSize: 16, lineHeight: 23 },
+    errorCard: { backgroundColor: colors.surface, borderRadius: 12, padding: 16, borderLeftWidth: 4, marginBottom: 20 },
+    errorText: { color: colors.textSecondary, marginTop: 6, fontSize: 16, lineHeight: 22 },
+    emptyCard: { backgroundColor: colors.surface, borderRadius: 12, padding: 16, borderLeftWidth: 4, borderLeftColor: colors.border },
+    emptyChart: { height: 140, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, borderRadius: 12, paddingHorizontal: 16 },
+    alertSummaryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 12 },
+    barValue: { fontSize: 16, fontWeight: '700', color: colors.textPrimary, marginBottom: 4 },
+    barLabel: { fontSize: 16, color: colors.textSecondary, marginTop: 6 },
+    barSubLabel: { fontSize: 16, color: colors.textSecondary },
+    plotColumn: { justifyContent: 'flex-end', borderRadius: 6, overflow: 'hidden', width: 44 },
+    tableRow: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, gap: 12 },
   });
 };

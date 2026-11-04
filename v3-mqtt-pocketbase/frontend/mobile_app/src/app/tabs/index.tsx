@@ -52,6 +52,45 @@ function formatTimestamp(value: string | undefined): string {
   }
 }
 
+/**
+ * A usable numeric reading.
+ *
+ * PocketBase stores an absent numeric field as 0, and the thermal guard
+ * strips `temperature` / `bodyTemp` from thermal rows on purpose (the
+ * MLX90640 frames a barn scene, not a pig). So zero is "no reading", never a
+ * measurement — and it must never be rendered as 0.0°.
+ */
+function reading(v: unknown): number | null {
+  return typeof v === 'number' && Number.isFinite(v) && v !== 0 ? v : null;
+}
+
+/**
+ * The device-row reading.
+ *
+ * The Pi's thermal guard (backend/bridge/thermal_guard.py) strips
+ * `temperature` / `bodyTemp` from thermal telemetry rows on purpose: the
+ * MLX90640 frames a barn scene, not a pig, so those fields would be a
+ * pig-temperature claim the backend refuses to publish. What survives is
+ * the raw instrument values — `center` (scene centre) and `ambient`.
+ *
+ * So a genuine `temperature` is shown as-is; a thermal row shows its
+ * scene centre labelled "scene temp"; a row with no reading shows "—".
+ * It must NEVER render 0.0° — PocketBase stores an absent field as 0,
+ * so zero is "no reading", not a measurement.
+ */
+function deviceReading(frame: TelemetryFrame | undefined): { value: string; qualifier?: string } {
+  const temp = reading(frame?.temperature);
+  if (temp !== null) return { value: `${temp.toFixed(1)}°C` };
+
+  const center = reading(frame?.center);
+  if (center !== null) return { value: `${center.toFixed(1)}°C`, qualifier: 'scene temp' };
+
+  const ambient = reading(frame?.ambient);
+  if (ambient !== null) return { value: `${ambient.toFixed(1)}°C`, qualifier: 'ambient' };
+
+  return { value: '—' };
+}
+
 type DeviceRow = {
   id: string;
   name: string;
@@ -114,14 +153,13 @@ export default function HomeScreen() {
     return deviceIds.map((id) => {
       const frame = telemetry[id];
       const name = deviceNames[id] ?? String(frame?.deviceId || id);
-      const temp = typeof frame?.temperature === 'number'
-        ? `${frame.temperature.toFixed(1)}°`
-        : '—';
-      const note = formatTimestamp(frame?.timestamp);
+      const reading = deviceReading(frame);
+      const stamp = formatTimestamp(frame?.timestamp);
+      const note = reading.qualifier ? `${reading.qualifier} · ${stamp}` : stamp;
       return {
         id,
         name,
-        temp,
+        temp: reading.value,
         note,
         status: inferStatus(frame || {}),
         trend: [], // Sparkline needs historical frames; empty for now
@@ -149,7 +187,11 @@ export default function HomeScreen() {
   const pi = usePiThermal();
   const piLive = pi.live || pi.pbFresh;
   const piStale = !piLive && !!pi.pbStats;
-  const piTemp = (pi.live && pi.frame ? pi.frame.center : undefined) ?? pi.pbStats?.bodyTemp;
+  // The thermal card's headline number uses the SAME zero-guard as the
+  // device rows: the live console frame's scene centre, else the stored PB
+  // value — and if both are absent/zero, "—" rather than a fabricated 0.0°C.
+  const piTemp = reading(pi.live && pi.frame ? pi.frame.center : undefined) ??
+    reading(pi.pbStats?.bodyTemp);
 
   const onRefresh = () => {
     setRefreshing(true);
