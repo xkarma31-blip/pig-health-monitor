@@ -18,7 +18,17 @@
 
 const ALLOWED_COLLECTIONS = new Set(['telemetry', 'alerts', 'pigs', 'devices']);
 const ALLOWED_QUERY = new Set(['page', 'perPage', 'sort', 'filter', 'expand', 'fields']);
-const SAFE_FILTER = /^[A-Za-z0-9_@=<>!.-]+$/;
+// PocketBase's filter grammar needs single quotes around string values
+// (deviceId='pi-thermal-01') and `&&` to combine clauses
+// (deviceId='pi-thermal-01'&&timestamp>=1793000000). The previous charset
+// rejected both, so the bridge answered 400 for every scoped query and the
+// web read path could not filter by device or by time window.
+// Still no shell/URL metacharacters — only what PocketBase's grammar needs,
+// and the value is re-encoded by URLSearchParams before it is forwarded.
+// NOTE: keep this identical to SAFE_FILTER in
+// backend/workers/readonly_pb_proxy.py so the bridge's pre-check never
+// rejects a filter the upstream proxy would accept.
+const SAFE_FILTER = /^[A-Za-z0-9_@=<>!.,()'"&~:/\- ]+$/;
 
 function env(name) {
   const v = process.env[name];
@@ -71,12 +81,20 @@ export default async function handler(req, res) {
       return fail(res, 400, 'unsupported filter expression');
     }
     if (name === 'perPage') {
-      const n = Number.parseInt(raw, 10);
+      // Strict integer (no parseInt slicing: "50abc" must not become 50), and
+      // the SAME rule the upstream proxy applies, so both edges agree.
+      if (!/^\d+$/.test(raw)) return fail(res, 400, 'perPage must be an integer');
+      const n = Number(raw);
       if (!Number.isFinite(n)) return fail(res, 400, 'perPage must be an integer');
       params.set('perPage', String(Math.min(Math.max(n, 1), 100)));
       continue;
     }
-    if (raw.length > 200) continue;
+    if (raw.length > 200) {
+      // Never drop ANY parameter silently. A dropped `filter` would widen the
+      // row scope; a dropped `fields` widens the columns; a dropped `sort`
+      // changes the order the caller asked for. All are refusals, not no-ops.
+      return fail(res, 400, `${name} too long`);
+    }
     params.set(name, raw);
   }
 

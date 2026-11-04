@@ -43,6 +43,86 @@ PROXY_KEY = os.environ.get("PROXY_KEY", "")
 # GETs to an allowlist of console endpoints; the console cert is self-signed,
 # so the TLS context is deliberately unverified (local LAN hop).
 PI_UPSTREAM = os.environ.get("PI_UPSTREAM", "https://192.168.69.1:8080").rstrip("/")
+# The Pi is reachable at different addresses depending on how it is attached:
+# its own barn access point (192.168.69.1) or a LAN cable into the operator's
+# machine (a shared-connection lease) / the home router. A single hardcoded
+# address meant production silently 502'd the moment the rig was cabled
+# differently — even with a perfectly healthy Pi. So: try the candidates in
+# order, remember the one that answered, and try that first next time.
+PI_UPSTREAM_FALLBACKS = [
+    u.strip().rstrip("/")
+    for u in os.environ.get("PI_UPSTREAM_FALLBACKS", "").split(",")
+    if u.strip()
+]
+# Last candidate that answered. Sticky so the working path is tried first.
+_pi_current: str | None = None
+
+
+def pi_candidates() -> list[str]:
+    """Candidate Pi console bases, best-known first, de-duplicated."""
+    out: list[str] = []
+    for url in [_pi_current, PI_UPSTREAM, *PI_UPSTREAM_FALLBACKS]:
+        if url and url not in out:
+            out.append(url)
+    return out
+
+
+def pi_remember(url: str) -> None:
+    """Record the candidate that just answered, so it leads next time."""
+    global _pi_current
+    _pi_current = url
+
+
+class PiUnreachable(Exception):
+    """No candidate Pi address answered. `reason` is safe to return publicly."""
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(reason)
+        self.reason = reason
+
+
+def pi_open(suffix: str, *, timeout: float, accept: str):
+    """Open a GET against the Pi console, trying every candidate address.
+
+    Returns the open response — the caller owns it and must close it.
+    Raises the Pi's own HTTPError unchanged (so its honest 503s pass through),
+    or PiUnreachable when no candidate answered at all.
+    """
+    last = "unreachable"
+    for base in pi_candidates():
+        try:
+            req = urllib.request.Request(f"{base}{suffix}", method="GET")
+            if accept:
+                req.add_header("Accept", accept)
+            resp = urllib.request.urlopen(req, timeout=timeout, context=_PI_SSL)
+            pi_remember(base)
+            return resp
+        except urllib.error.HTTPError:
+            # The Pi answered: it is reachable, and this is its real status.
+            pi_remember(base)
+            raise
+        except Exception as e:  # noqa: BLE001
+            # Never echo the internal address into a public error body.
+            last = type(e).__name__
+    raise PiUnreachable(last)
+
+
+def pi_get(suffix: str, *, timeout: float, accept: str) -> bytes:
+    """Whole-body read from the Pi console, across every candidate address.
+
+    A failure *during* the body read (a stalled socket, not just a failed
+    connect) is folded into PiUnreachable, so every caller can answer 502 with
+    a real reason instead of letting the exception escape the request handler.
+    """
+    try:
+        with pi_open(suffix, timeout=timeout, accept=accept) as resp:
+            return resp.read()
+    except urllib.error.HTTPError:
+        raise
+    except PiUnreachable:
+        raise
+    except Exception as e:  # noqa: BLE001
+        raise PiUnreachable(type(e).__name__) from e
 _PI_SSL = ssl._create_unverified_context()
 PORT = int(os.environ.get("PROXY_PORT", "8099"))
 HOST = os.environ.get("PROXY_HOST", "127.0.0.1")
@@ -63,6 +143,14 @@ ALLOWED_FIELDS: dict[str, set[str]] = {
         "id", "deviceId", "timestamp", "temperature", "bodyTemp", "pigId",
         "status", "healthStatus", "batteryPct", "wifiRssi", "humidity",
         "pressure", "audioLevel", "coughCount", "created", "updated",
+        # Real sensor fields. `temperature`/`bodyTemp` are zeroed by the
+        # thermal bridge, so scene temperature lives in `center` (with
+        # `hotspot`/`max`/`min`/`ambient` alongside it) and the barn mic's
+        # real signal level lives in `rms`/`peak` with its sample rate `sr`.
+        # Without these the public read path silently returns zeros and the
+        # web UI has to invent numbers.
+        "center", "hotspot", "max", "min", "ambient",
+        "rms", "peak", "sr", "mic", "alerts", "verdict", "synced",
     },
     "alerts": {
         "id", "deviceId", "type", "severity", "message", "timestamp",
@@ -75,8 +163,73 @@ ALLOWED_FIELDS: dict[str, set[str]] = {
 }
 
 COLLECTION_RE = re.compile(r"^/api/collections/([a-zA-Z0-9_]+)/records$")
-SAFE_FILTER = re.compile(r"^[A-Za-z0-9_@=<>!\.\'\"\- ]+$")
-# quotes/space allowed: the app sends filters like deviceId='pi-thermal-01'
+# NOTE: JS `$` (telemetry.js) does NOT match before a trailing newline, while
+# Python `$` does — so this uses \Z (absolute end) to keep the two validators
+# character-identical in behaviour.
+SAFE_FILTER = re.compile(r"^[A-Za-z0-9_@=<>!\.,()'\"&~:/\- ]+\Z")
+# PocketBase's own filter syntax needs single quotes around string values
+# (deviceId='pi-thermal-01') and `&&` to combine clauses
+# (deviceId='pi-thermal-01'&&timestamp>=1793000000). The previous charset
+# rejected `&`, so every compound filter was answered with HTTP 400 and the
+# web read path could not scope a query to one device or one time window.
+# Still no shell/URL metacharacters: only the characters PocketBase's filter
+# grammar actually needs, and the value is re-encoded with urlencode() before
+# it is forwarded upstream.
+# NOTE: keep this identical to SAFE_FILTER in frontend/mobile_app/api/telemetry.js
+# so the bridge's pre-check never rejects a filter the proxy would accept.
+
+# Camera-audio capture length accepted from the client (seconds). The Pi
+# enforces the same range and clamps anything else.
+CAMERA_AUDIO_MIN_S = 2
+CAMERA_AUDIO_MAX_S = 8
+CAMERA_AUDIO_DEFAULT_S = 4
+
+# Barn-mic capture length accepted from the client (seconds).
+ESP_RECORD_MIN_S = 1
+ESP_RECORD_MAX_S = 10
+ESP_RECORD_DEFAULT_S = 3
+
+
+def _bounded_seconds(query: str, key: str, min_s: int, max_s: int, default: str) -> str:
+    """Parse a bounded integer query parameter — TOTAL by design.
+
+    The request line is decoded as latin-1, so a crafted raw byte can be a
+    Unicode digit such as '²' (U+00B2). `str.isdigit()` is True for those but
+    `int()` raises ValueError, and Python 3.11+ also raises on absurdly long
+    digit strings. Either escape would abort the request handler and leave the
+    client with ZERO responses instead of an error status — a direct breach of
+    the "exactly one response per request" contract.
+
+    So: ASCII digits only, bounded length, and the conversion is still guarded.
+    Anything unusable falls back to the default.
+    """
+    for pair in (query or "").split("&"):
+        k, _, value = pair.partition("=")
+        if k != key:
+            continue
+        if not value.isascii() or not value.isdigit() or len(value) > 2:
+            continue
+        try:
+            seconds = int(value)
+        except ValueError:
+            continue
+        if min_s <= seconds <= max_s:
+            return value
+    return default
+
+
+def camera_audio_seconds(query: str) -> str:
+    """Camera-audio capture length in seconds (2–8), default 4."""
+    return _bounded_seconds(
+        query, "seconds", CAMERA_AUDIO_MIN_S, CAMERA_AUDIO_MAX_S, str(CAMERA_AUDIO_DEFAULT_S)
+    )
+
+
+def esp_record_seconds(query: str) -> str:
+    """Barn-mic capture length in seconds (1–10), default 3."""
+    return _bounded_seconds(
+        query, "seconds", ESP_RECORD_MIN_S, ESP_RECORD_MAX_S, str(ESP_RECORD_DEFAULT_S)
+    )
 
 _hits: dict[str, deque] = defaultdict(deque)
 
@@ -123,7 +276,9 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.end_headers()
-        self.wfile.write(body)
+        # A HEAD response carries the same headers as GET but no body.
+        if self.command != "HEAD":
+            self.wfile.write(body)
 
     def _json(self, code: int, obj) -> None:
         self._send(code, json.dumps(obj).encode())
@@ -162,7 +317,35 @@ class Handler(BaseHTTPRequestHandler):
     def do_OPTIONS(self):
         self._refuse_write()
 
+    # Routes that trigger a REAL capture on the Pi (ffmpeg RTSP pull / mic
+    # record). A HEAD must never burn a capture slot — the Pi allows one
+    # capture at a time, so a stray health probe or link prefetcher would
+    # delay a legitimate GET.
+    PI_CAPTURE_ROUTES = {"/esp/record", "/camera-audio"}
+
     def do_HEAD(self):
+        # Auth FIRST. The capture-route refusal below answers 405, which would
+        # otherwise tell an unauthenticated caller that the route exists before
+        # the key was ever checked.
+        if not self._authorized():
+            self._json(401, {"error": "unauthorized"})
+            return
+        parsed = urllib.parse.urlparse(self.path)
+        path = parsed.path.rstrip("/") or "/"
+        if path.startswith("/pi/"):
+            target_path = path[3:] or "/"
+            if target_path in self.PI_CAPTURE_ROUTES:
+                # Honest answer: this route only exists as a GET. No capture
+                # is started, and no false success is reported.
+                self.send_response(405)
+                self.send_header("Allow", "GET")
+                self.send_header("Content-Type", "application/json")
+                body = json.dumps({"error": "capture route requires GET"}).encode()
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("X-Content-Type-Options", "nosniff")
+                self.end_headers()
+                return
         self.do_GET()
 
     # Read-only passthrough to the Pi thermal console (the deployed app's live
@@ -174,21 +357,24 @@ class Handler(BaseHTTPRequestHandler):
         if target_path == "/esp/record":
             self._esp_record(query)
             return
+        if target_path == "/camera-audio":
+            self._camera_audio(query)
+            return
         if target_path not in self.PI_ROUTES:
             self._json(404, {"error": "pi endpoint not allowed"})
             return
         if query and len(query) > 120:
             query = ""
-        url = f"{PI_UPSTREAM}{target_path}"
-        if query:
-            url += "?" + query
         try:
-            req = urllib.request.Request(url, method="GET")
-            req.add_header("Accept", "application/json")
-            with urllib.request.urlopen(req, timeout=6, context=_PI_SSL) as resp:
-                raw = resp.read()
-        except Exception as e:  # noqa: BLE001
-            self._json(502, {"error": f"pi unreachable: {type(e).__name__}"})
+            raw = pi_get(target_path + (("?" + query) if query else ""), timeout=6, accept="application/json")
+        except urllib.error.HTTPError as e:
+            # The Pi answered with its own status — forward it rather than
+            # pretending the box is unreachable.
+            body = e.read() if hasattr(e, "read") else b""
+            self._send(e.code, body or b'{"error": "pi error"}')
+            return
+        except PiUnreachable as e:
+            self._json(502, {"error": f"pi unreachable: {e.reason}"})
             return
         self._send(200, raw)
 
@@ -198,23 +384,42 @@ class Handler(BaseHTTPRequestHandler):
         Forwards the Pi's honest 503 when the mic stream is stale — the app
         shows "no audio" rather than pretending.
         """
-        seconds = "3"
-        for pair in (query or "").split("&"):
-            k, _, v = pair.partition("=")
-            if k == "seconds" and v.isdigit() and 1 <= int(v) <= 10:
-                seconds = v
-        url = f"{PI_UPSTREAM}/esp/record?seconds={seconds}"
+        seconds = esp_record_seconds(query)
         try:
-            req = urllib.request.Request(url, method="GET")
-            req.add_header("Accept", "audio/wav")
-            with urllib.request.urlopen(req, timeout=14, context=_PI_SSL) as resp:
-                raw = resp.read()
+            # The Pi answers within `seconds + ESP_RECORD_GRACE_S` (30 s for
+            # the 10 s cap this proxy allows). The timeout must exceed that,
+            # otherwise a slow-but-alive mic is cut off here and reported as
+            # "mic unreachable" instead of the Pi's honest 503.
+            raw = pi_get(f"/esp/record?seconds={seconds}", timeout=35, accept="audio/wav")
             self._send(200, raw, ctype="audio/wav")
         except urllib.error.HTTPError as e:
             body = e.read() if hasattr(e, "read") else b""
             self._send(e.code, body or b"mic unavailable", ctype="text/plain")
-        except Exception as e:  # noqa: BLE001
-            self._json(502, {"error": f"mic unreachable: {type(e).__name__}"})
+        except PiUnreachable as e:
+            self._json(502, {"error": f"mic unreachable: {e.reason}"})
+
+    def _camera_audio(self, query: str) -> None:
+        """Forward the Pi's camera-audio capture (WAV).
+
+        Capture happens on the Pi (ffmpeg against the camera's RTSP stream2),
+        so this path never depends on the laptop: there is deliberately no
+        local-capture fallback here. The Pi's honest status is passed through
+        unchanged — 503 when the camera is offline, so the app can say so
+        instead of showing a mute that is really a dead camera.
+        """
+        seconds = camera_audio_seconds(query)
+        try:
+            # The Pi's ffmpeg capture is bounded by `seconds + 15` (23 s at the
+            # 8 s cap) plus HTTP overhead, so this budget must stay above it —
+            # otherwise a recovering capture is aborted here and misreported as
+            # "camera audio unreachable" instead of the Pi's honest 503.
+            raw = pi_get(f"/camera-audio?seconds={seconds}", timeout=30, accept="audio/wav")
+            self._send(200, raw, ctype="audio/wav")
+        except urllib.error.HTTPError as e:
+            body = e.read() if hasattr(e, "read") else b""
+            self._send(e.code, body or b"camera audio unavailable", ctype="text/plain")
+        except PiUnreachable as e:
+            self._json(502, {"error": f"camera audio unreachable: {e.reason}"})
 
     def _cctv_frame(self) -> None:
         """One JPEG frame from the Pi's MJPEG proxy (/cctv) — snapshot-friendly.
@@ -226,9 +431,7 @@ class Handler(BaseHTTPRequestHandler):
         buf = b""
         deadline = time.time() + 4.0
         try:
-            req = urllib.request.Request(f"{PI_UPSTREAM}/cctv", method="GET")
-            req.add_header("Accept", "multipart/x-mixed-replace")
-            with urllib.request.urlopen(req, timeout=5, context=_PI_SSL) as resp:
+            with pi_open("/cctv", timeout=5, accept="multipart/x-mixed-replace") as resp:
                 while time.time() < deadline and len(buf) < 2_000_000:
                     chunk = resp.read(16384)
                     if not chunk:
@@ -236,8 +439,18 @@ class Handler(BaseHTTPRequestHandler):
                     buf += chunk
                     if b"\xff\xd9" in buf:
                         break
+        except urllib.error.HTTPError as e:
+            body = e.read() if hasattr(e, "read") else b""
+            self._send(e.code, body or b"cctv unavailable", ctype="text/plain")
+            return
+        except PiUnreachable as e:
+            self._json(502, {"error": f"cctv unreachable: {e.reason}"})
+            return
         except Exception as e:  # noqa: BLE001
-            self._json(502, {"error": f"cctv unreachable: {type(e).__name__}"})
+            # A stalled stream or a mid-body socket timeout: the camera/console
+            # answered but never completed a frame. Report it honestly instead
+            # of letting the handler die with no response at all.
+            self._json(502, {"error": f"cctv unavailable: {type(e).__name__}"})
             return
         frame = None
         pos = 0
@@ -259,6 +472,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Content-Length", str(len(frame)))
         self.end_headers()
+        if self.command == "HEAD":
+            return
         try:
             self.wfile.write(frame)
         except (BrokenPipeError, ConnectionResetError):
@@ -316,7 +531,12 @@ class Handler(BaseHTTPRequestHandler):
                     self._json(400, {"error": "unsupported filter expression"})
                     return
             if len(value) > 200:
-                continue
+                # Never drop a parameter silently. A dropped `filter` would widen
+                # the row scope to every device; a dropped `fields` widens the
+                # columns; a dropped `sort`/`page` changes the order the caller
+                # asked for. Refuse instead of answering a different question.
+                self._json(400, {"error": f"{key} too long"})
+                return
             params[key] = value
 
         # Bound page size so one request cannot pull the whole table.

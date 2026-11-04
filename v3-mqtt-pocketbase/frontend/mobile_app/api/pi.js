@@ -12,7 +12,12 @@
  * - The key never reaches the client bundle.
  */
 
-const ALLOWED_ENDPOINTS = new Set(['data', 'ambient', 'esp/status', 'health', 'cctv', 'esp/record']);
+const ALLOWED_ENDPOINTS = new Set(['data', 'ambient', 'esp/status', 'health', 'cctv', 'esp/record', 'camera-audio']);
+
+// Endpoints that start a REAL capture on the Pi (the Pi allows one capture at
+// a time). A HEAD must never burn that slot — the upstream proxy refuses it
+// too, but the bridge would otherwise turn every HEAD into an upstream GET.
+const CAPTURE_ENDPOINTS = new Set(['esp/record', 'camera-audio']);
 
 function env(name) {
   const v = process.env[name];
@@ -51,15 +56,35 @@ export default async function handler(req, res) {
   }
   qs.delete('ep');
 
+  // A HEAD must never start a real capture on the Pi (one capture at a time),
+  // so refuse it HERE, before any upstream fetch. Otherwise a stray health
+  // probe or link prefetcher turns into a full capture and occupies the slot
+  // a legitimate GET needs. Non-capture HEADs still read normally.
+  if (req.method === 'HEAD' && CAPTURE_ENDPOINTS.has(endpoint)) {
+    res.setHeader('Allow', 'GET, OPTIONS');
+    return res.status(405).json({ error: 'capture route requires GET' });
+  }
+
   const upstreamQs = qs.toString();
   const target = `${upstream}/pi/${endpoint}${upstreamQs ? `?${upstreamQs}` : ''}`;
 
-  if (endpoint === 'cctv' || endpoint === 'esp/record') {
-    // Binary passthrough — snapshot JPEG / mic WAV chunk. Forwards the Pi's
-    // honest status (503 when the mic stream is stale).
-    const isAudio = endpoint === 'esp/record';
+  if (endpoint === 'cctv' || endpoint === 'esp/record' || endpoint === 'camera-audio') {
+    // Binary passthrough — snapshot JPEG / mic WAV / camera-audio WAV. Forwards
+    // the upstream's honest status (e.g. 503 when the mic stream is stale).
+    const isAudio = endpoint === 'esp/record' || endpoint === 'camera-audio';
+    // Abort budgets must exceed the upstream proxy's own timeout, otherwise a
+    // slow-but-alive capture is killed here and misreported as unreachable
+    // instead of the Pi's honest 503.
+    //   cctv         → proxy gives up after ~5 s
+    //   camera-audio → proxy waits up to 30 s (ffmpeg capture ceiling)
+    //   esp/record   → proxy waits up to 35 s (Pi capture deadline + grace)
+    const ttl = {
+      cctv: 15000,
+      'camera-audio': 35000,
+      'esp/record': 40000,
+    }[endpoint];
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 15000);
+    const timer = setTimeout(() => controller.abort(), ttl);
     try {
       const r = await fetch(target, { headers: { 'X-PigPulse-Key': key }, signal: controller.signal });
       if (!r.ok) {
@@ -71,8 +96,9 @@ export default async function handler(req, res) {
       res.setHeader('Content-Type', isAudio ? 'audio/wav' : 'image/jpeg');
       res.setHeader('Cache-Control', 'no-cache');
       return res.status(200).send(buf);
-    } catch (e) {
-      return res.status(502).json({ error: isAudio ? 'mic unreachable' : 'cctv unreachable' });
+    } catch {
+      const what = endpoint === 'camera-audio' ? 'camera audio unreachable' : 'mic unreachable';
+      return res.status(502).json({ error: isAudio ? what : 'cctv unreachable' });
     } finally {
       clearTimeout(timer);
     }
@@ -93,7 +119,7 @@ export default async function handler(req, res) {
     res.setHeader('Content-Type', r.headers.get('content-type') || 'application/json; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     return res.status(r.status).send(body);
-  } catch (e) {
+  } catch {
     return res.status(502).json({ error: 'pi unreachable' });
   }
 }
