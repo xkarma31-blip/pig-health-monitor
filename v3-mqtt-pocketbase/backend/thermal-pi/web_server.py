@@ -70,6 +70,10 @@ _CTYPE = {
 # directly because this page is HTTPS and :8091 is plain HTTP.
 _CCTV_HOST = "127.0.0.1"
 _CCTV_PORT = 8091
+# How long /cctv waits for the camera's FIRST frame before answering 503.
+# Without a bound, the route returned 200 with an empty body whenever the
+# camera was unpowered and every client hung until its own timeout.
+_CCTV_FIRST_FRAME_S = 5.0
 
 # Hard cap for /esp/record?seconds= (WAV is built in memory: 60 s ~= 11 MB)
 ESP_RECORD_MAX_S = 60
@@ -640,6 +644,28 @@ class Handler(BaseHTTPRequestHandler):
                 if line.lower().startswith(b"content-type:"):
                     ctype = line.split(b":", 1)[1].strip().decode(errors="replace")
             body = hdr.split(b"\r\n\r\n", 1)[1]
+            # Wait for the FIRST frame before promising a stream. Without this,
+            # a camera that is powered off still got "200 OK" with an empty
+            # body: the <img> showed nothing and every client waited out its own
+            # timeout instead of being told the truth.
+            deadline = time.time() + _CCTV_FIRST_FRAME_S
+            # The upstream socket carries a 60 s streaming timeout; while we are
+            # waiting for the FIRST frame that must be the short deadline,
+            # otherwise recv() blocks past it and the client sees nothing at all.
+            up.settimeout(_CCTV_FIRST_FRAME_S)
+            while b"\xff\xd8" not in body and time.time() < deadline:
+                try:
+                    chunk = up.recv(65536)
+                except _socket.timeout:
+                    break
+                if not chunk:
+                    break
+                body += chunk
+            if b"\xff\xd8" not in body:
+                self._send(503, "text/plain",
+                           b"no frame from the camera - it is not sending video")
+                return
+            up.settimeout(60)
 
             self.send_response(200)
             self.send_header("Content-Type", ctype)

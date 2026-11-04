@@ -42,16 +42,19 @@ PROXY_KEY = os.environ.get("PROXY_KEY", "")
 # Pi thermal console (feeds the deployed app's live thermal view). Read-only
 # GETs to an allowlist of console endpoints; the console cert is self-signed,
 # so the TLS context is deliberately unverified (local LAN hop).
-PI_UPSTREAM = os.environ.get("PI_UPSTREAM", "https://192.168.69.1:8080").rstrip("/")
+PI_UPSTREAM = os.environ.get("PI_UPSTREAM", "https://raspberrypi.local:8080").rstrip("/")
 # The Pi is reachable at different addresses depending on how it is attached:
-# its own barn access point (192.168.69.1) or a LAN cable into the operator's
-# machine (a shared-connection lease) / the home router. A single hardcoded
-# address meant production silently 502'd the moment the rig was cabled
-# differently — even with a perfectly healthy Pi. So: try the candidates in
-# order, remember the one that answered, and try that first next time.
+# its own barn access point or a LAN cable into the operator's machine / the
+# home router. The mDNS hostname leads because it resolves to whichever address
+# is live — probing a hardcoded address first cost a full connect timeout on
+# every request whenever the rig was cabled differently.
+# A single hardcoded address also meant production silently 502'd the moment the
+# attachment changed, even with a perfectly healthy Pi. So: try the candidates
+# in order, remember the one that answered, and lead with that next time.
+_DEFAULT_FALLBACKS = ["https://192.168.69.1:8080"]
 PI_UPSTREAM_FALLBACKS = [
     u.strip().rstrip("/")
-    for u in os.environ.get("PI_UPSTREAM_FALLBACKS", "").split(",")
+    for u in os.environ.get("PI_UPSTREAM_FALLBACKS", ",".join(_DEFAULT_FALLBACKS)).split(",")
     if u.strip()
 ]
 # Last candidate that answered. Sticky so the working path is tried first.
@@ -431,7 +434,11 @@ class Handler(BaseHTTPRequestHandler):
         buf = b""
         deadline = time.time() + 4.0
         try:
-            with pi_open("/cctv", timeout=5, accept="multipart/x-mixed-replace") as resp:
+            # The Pi itself now waits up to _CCTV_FIRST_FRAME_S (5 s) before
+            # answering 503 "no frame from the camera". This budget must sit
+            # above that, or the proxy times out first and reports a network
+            # failure instead of the camera's real state.
+            with pi_open("/cctv", timeout=8, accept="multipart/x-mixed-replace") as resp:
                 while time.time() < deadline and len(buf) < 2_000_000:
                     chunk = resp.read(16384)
                     if not chunk:
