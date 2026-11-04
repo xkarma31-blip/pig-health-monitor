@@ -7,8 +7,9 @@
  * (theme / themeMode / mode / isDark / contrast / borderRadius / ...).
  */
 
-import React, { createContext, useContext, useState } from 'react';
-import { useColorScheme } from 'react-native';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { Platform, useColorScheme } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Theme,
   ThemeColors,
@@ -21,6 +22,56 @@ import {
   highContrastTheme,
   radius as baseRadius,
 } from './theme';
+
+// ── Persistence ────────────────────────────────────────────────────
+// The chosen mode must SURVIVE a reload. It did not: the choice lived in
+// React state only, so every reload reverted to the system scheme (dark on a
+// dark phone) and the setting appeared to do nothing. These are the same keys
+// the web island's provider reads, so both agree.
+const MODE_KEY = 'pigpulse-theme-mode';
+const CONTRAST_KEY = 'pigpulse-theme-contrast';
+
+const isMode = (v: unknown): v is ThemeMode => v === 'light' || v === 'dark' || v === 'auto';
+
+function readStoredMode(fallback: ThemeMode): ThemeMode {
+  if (Platform.OS !== 'web' || typeof localStorage === 'undefined') return fallback;
+  try {
+    const v = localStorage.getItem(MODE_KEY);
+    return isMode(v) ? v : fallback;
+  } catch {
+    return fallback; // private mode / storage disabled
+  }
+}
+
+function readStoredContrast(): boolean {
+  if (Platform.OS !== 'web' || typeof localStorage === 'undefined') return false;
+  try {
+    return localStorage.getItem(CONTRAST_KEY) === 'high';
+  } catch {
+    return false;
+  }
+}
+
+function persistMode(mode: ThemeMode, highContrast: boolean) {
+  const contrast = highContrast ? 'high' : 'normal';
+  if (Platform.OS === 'web') {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      localStorage.setItem(MODE_KEY, mode);
+      localStorage.setItem(CONTRAST_KEY, contrast);
+    } catch {
+      /* storage disabled — the in-memory choice still applies this session */
+    }
+    return;
+  }
+  // Native: fire-and-forget, exactly like the auth store does.
+  void Promise.all([
+    AsyncStorage.setItem(MODE_KEY, mode),
+    AsyncStorage.setItem(CONTRAST_KEY, contrast),
+  ]).catch(() => {
+    /* a failed write must not break the running app */
+  });
+}
 
 // ── Context type ───────────────────────────────────────────────────
 export interface ThemeContextType extends Theme {
@@ -53,9 +104,45 @@ interface ThemeProviderProps {
 
 export function ThemeProvider({ children, initialMode = 'auto' }: ThemeProviderProps) {
   const systemScheme = (useColorScheme() ?? 'light') as ColorScheme;
-  const initialOverride: SchemeOverride = initialMode === 'auto' ? 'system' : initialMode;
-  const [schemeOverride, setSchemeOverride] = useState<SchemeOverride>(initialOverride);
-  const [isHighContrast, setIsHighContrast] = useState(false);
+  // Web: read the stored choice synchronously so the first paint is already
+  // correct (no dark flash on a light setting). Native: AsyncStorage is async,
+  // so it is rehydrated below and nothing is written until that finishes —
+  // otherwise the default would overwrite the user's saved choice.
+  const [schemeOverride, setSchemeOverride] = useState<SchemeOverride>(() => {
+    const stored = readStoredMode(initialMode);
+    return stored === 'auto' ? 'system' : stored;
+  });
+  const [isHighContrast, setIsHighContrast] = useState<boolean>(() => readStoredContrast());
+  const [hydrated, setHydrated] = useState<boolean>(Platform.OS === 'web');
+
+  useEffect(() => {
+    if (Platform.OS === 'web') return;
+    let alive = true;
+    (async () => {
+      try {
+        const [mode, contrast] = await Promise.all([
+          AsyncStorage.getItem(MODE_KEY),
+          AsyncStorage.getItem(CONTRAST_KEY),
+        ]);
+        if (!alive) return;
+        if (isMode(mode)) setSchemeOverride(mode === 'auto' ? 'system' : mode);
+        if (contrast) setIsHighContrast(contrast === 'high');
+      } catch {
+        /* first run, or storage unavailable — keep the defaults */
+      } finally {
+        if (alive) setHydrated(true);
+      }
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // Persist every change (and only after a native rehydrate, see above).
+  useEffect(() => {
+    if (!hydrated) return;
+    persistMode(schemeOverride === 'system' ? 'auto' : schemeOverride, isHighContrast);
+  }, [schemeOverride, isHighContrast, hydrated]);
 
   const scheme: ColorScheme = schemeOverride === 'system' ? systemScheme : schemeOverride;
   const theme: Theme = isHighContrast ? highContrastTheme : scheme === 'dark' ? darkTheme : lightTheme;

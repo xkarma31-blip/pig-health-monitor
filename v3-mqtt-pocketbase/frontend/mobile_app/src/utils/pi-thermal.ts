@@ -92,10 +92,36 @@ export async function resolvePiBase(): Promise<string | null> {
   } catch {
     /* fall through to the web fallback */
   }
-  // Deployed web builds ship api/pi.js (same-origin bridge). Local harnesses
-  // without that route simply 404 → the hook reports live:false as before.
+  // Deployed web builds ship api/pi.js (same-origin bridge). A NATIVE build has
+  // no same-origin: the Pi console is only reachable on the barn LAN, over a
+  // self-signed certificate, so a phone on mobile data can only reach the
+  // deployed bridge. Fall back to it instead of returning null, which used to
+  // leave every live block (and both sound buttons) dead in the APK.
   if (Platform.OS === 'web') return '/api/pi';
-  return null;
+  return piBridgeBase();
+}
+
+/**
+ * Absolute origin of the deployed read-only bridge, used by native builds.
+ * Public, holds no secret — the bridge forwards through the operator's tunnel.
+ */
+export const PI_BRIDGE_ORIGIN = (
+  process.env.EXPO_PUBLIC_PI_BRIDGE_URL || 'https://pig-health-monitor.vercel.app'
+).replace(/\/+$/, '');
+
+/** The deployed bridge base (an absolute …/api/pi URL on native). */
+export function piBridgeBase(): string {
+  return `${PI_BRIDGE_ORIGIN}/api/pi`;
+}
+
+/**
+ * True when `base` addresses the single-path bridge rather than a LAN console.
+ * The bridge is one platform function: /api/pi?ep=<endpoint>, while a LAN
+ * console serves plain subpaths (/data, /cctv, …). Both the same-origin web
+ * base ('/api/pi') and the native absolute base must be recognised.
+ */
+function isBridgeBase(base: string): boolean {
+  return base === '/api/pi' || base.endsWith('/api/pi');
 }
 
 /** GET JSON from the console; null on any failure (timeout, TLS, CORS, 4xx). */
@@ -103,7 +129,7 @@ export async function fetchPiJson<T>(base: string, path: string, timeoutMs = 400
   // The deployed bridge is single-path (platform functions match one exact
   // path): /api/pi?ep=<endpoint>&ts=… — LAN bases use plain subpaths.
   let url = `${base}${path}`;
-  if (base === '/api/pi') {
+  if (isBridgeBase(base)) {
     const [p, q] = path.split('?');
     const ep = p.replace(/^\//, '');
     url = `${base}?ep=${encodeURIComponent(ep)}${q ? `&${q}` : ''}`;
@@ -142,7 +168,7 @@ async function blobToRenderable(blob: Blob): Promise<string> {
 
 /** One CCTV snapshot frame (JPEG) as a renderable URL; null when unavailable. */
 export async function fetchPiFrame(base: string): Promise<string | null> {
-  const url = base === '/api/pi' ? `${base}?ep=cctv` : `${base}/cctv`;
+  const url = isBridgeBase(base) ? `${base}?ep=cctv` : `${base}/cctv`;
   try {
     const res = await fetch(url, { headers: { Accept: 'image/jpeg' } });
     if (!res.ok) return null;
@@ -169,6 +195,10 @@ export type PiAudioResult = { url: string | null; reason: string | null };
  * capture when the user mutes, so the request is not left running.
  */
 async function fetchAudioChunk(url: string, signal?: AbortSignal): Promise<PiAudioResult> {
+  // React Native has no createObjectURL, so a blob cannot be produced there.
+  // Hand the player the remote URL instead and let it fetch + decode; failures
+  // are reported by the player, which can read the upstream's own reason.
+  if (Platform.OS !== 'web') return { url, reason: null };
   try {
     const res = await fetch(url, { headers: { Accept: 'audio/wav' }, signal });
     if (!res.ok) {
@@ -195,9 +225,9 @@ export async function fetchPiAudioChunk(
   seconds = 3,
   signal?: AbortSignal,
 ): Promise<PiAudioResult> {
-  if (Platform.OS !== 'web') return { url: null, reason: null }; // native playback lands with the APK pass
+  const isBridge = isBridgeBase(base);
   const url =
-    base === '/api/pi'
+    isBridge
       ? `${base}?ep=${encodeURIComponent('esp/record')}&seconds=${seconds}`
       : `${base}/esp/record?seconds=${seconds}`;
   return fetchAudioChunk(url, signal);
@@ -209,9 +239,8 @@ export async function fetchPiCameraAudio(
   seconds = 4,
   signal?: AbortSignal,
 ): Promise<PiAudioResult> {
-  if (Platform.OS !== 'web') return { url: null, reason: null };
   const url =
-    base === '/api/pi'
+    isBridgeBase(base)
       ? `${base}?ep=${encodeURIComponent('camera-audio')}&seconds=${seconds}`
       : `${base}/camera-audio?seconds=${seconds}`;
   return fetchAudioChunk(url, signal);

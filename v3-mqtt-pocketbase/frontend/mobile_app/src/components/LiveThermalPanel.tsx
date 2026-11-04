@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Image, Platform, TouchableOpacity } from 'react-native';
+import { playRemoteWav } from '../utils/native-wav';
 import { useTheme } from '../theme';
 import { ThermalLiveView } from './ThermalLiveView';
 import { useBreakpoint } from '../hooks/useBreakpoint';
@@ -208,7 +209,7 @@ function BarnMicToggle({ base, healthy }: { base: string | null; healthy: boolea
   useEffect(() => () => stopRef.current?.(), []);
 
   const start = () => {
-    if (!base || !healthy || Platform.OS !== 'web') return;
+    if (!base || !healthy) return;
     let cancelled = false;
     let current: HTMLAudioElement | null = null;
     // Unlock an audio element NOW, while this click is still the active user
@@ -226,7 +227,8 @@ function BarnMicToggle({ base, healthy }: { base: string | null; healthy: boolea
     let settle: (() => void) | null = null;
     const loop = async () => {
       while (!cancelled) {
-        const result = await fetchPiAudioChunk(base, 3, controller.signal);
+        const secondsHint = 3;
+        const result = await fetchPiAudioChunk(base, secondsHint, controller.signal);
         const url = result.url;
         if (cancelled) {
           if (url) {
@@ -244,6 +246,19 @@ function BarnMicToggle({ base, healthy }: { base: string | null; healthy: boolea
           setReason(result.reason);
           setStatus('noaudio');
           await new Promise((r) => setTimeout(r, 5000));
+          continue;
+        }
+        if (Platform.OS !== 'web') {
+          // Native: expo-audio downloads and plays the capture. The status
+          // follows the real outcome — never set optimistically.
+          setStatus('waiting');
+          const failure = await playRemoteWav(url, controller.signal, secondsHint);
+          if (cancelled) return;
+          if (failure) {
+            setReason(failure);
+            setStatus('noaudio');
+            await new Promise((r) => setTimeout(r, 5000));
+          }
           continue;
         }
         await new Promise<void>((resolve) => {
@@ -353,12 +368,10 @@ function BarnMicToggle({ base, healthy }: { base: string | null; healthy: boolea
 
   // While listening the button must stay tappable — a stale/unhealthy mic
   // must never lock the user out of their own Mute control.
-  const disabled = (!healthy && !on) || Platform.OS !== 'web';
+  const disabled = !healthy && !on;
   const sub = !healthy && !on
     ? 'No audio — mic stream stale'
-    : Platform.OS !== 'web'
-      ? 'Playback lands with the APK pass'
-      : on
+    : on
         ? status === 'playing'
           ? 'Playing…'
           : status === 'waiting'
@@ -427,7 +440,7 @@ function CameraSoundToggle({ base, cameraLive }: { base: string | null; cameraLi
   useEffect(() => () => stopRef.current?.(), []);
 
   const start = () => {
-    if (!base || Platform.OS !== 'web') return;
+    if (!base) return;
     let cancelled = false;
     let current: HTMLAudioElement | null = null;
     // Unlock during the gesture — the capture takes seconds, and mobile
@@ -442,7 +455,8 @@ function CameraSoundToggle({ base, cameraLive }: { base: string | null; cameraLi
     let settle: (() => void) | null = null;
     const loop = async () => {
       while (!cancelled) {
-        const result = await fetchPiCameraAudio(base, 4, controller.signal);
+        const secondsHint = 4;
+        const result = await fetchPiCameraAudio(base, secondsHint, controller.signal);
         const url = result.url;
         if (cancelled) {
           if (url) {
@@ -460,6 +474,19 @@ function CameraSoundToggle({ base, cameraLive }: { base: string | null; cameraLi
           setReason(result.reason);
           setStatus('noaudio');
           await new Promise((r) => setTimeout(r, 5000));
+          continue;
+        }
+        if (Platform.OS !== 'web') {
+          // Native: expo-audio downloads and plays the capture. The status
+          // follows the real outcome — never set optimistically.
+          setStatus('waiting');
+          const failure = await playRemoteWav(url, controller.signal, secondsHint);
+          if (cancelled) return;
+          if (failure) {
+            setReason(failure);
+            setStatus('noaudio');
+            await new Promise((r) => setTimeout(r, 5000));
+          }
           continue;
         }
         await new Promise<void>((resolve) => {
@@ -568,12 +595,10 @@ function CameraSoundToggle({ base, cameraLive }: { base: string | null; cameraLi
   };
 
   // Keep Mute tappable even if the bridge/base disappears mid-listen.
-  const disabled = (!base && !on) || Platform.OS !== 'web';
+  const disabled = !base && !on;
   const sub = !base && !on
     ? 'No bridge — camera audio needs the proxy'
-    : Platform.OS !== 'web'
-      ? 'Playback lands with the APK pass'
-      : on
+    : on
         ? status === 'playing'
           ? 'Playing…'
           : status === 'waiting'
