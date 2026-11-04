@@ -6,7 +6,8 @@
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "test:bridge": "node --test api/__tests__/pi.bridge.test.mjs"
   },
   "dependencies": {
     "@eslint/js": "^10.0.1",

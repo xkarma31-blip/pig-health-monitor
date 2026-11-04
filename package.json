@@ -6,10 +6,11 @@
     "test": "cd v3-mqtt-pocketbase/frontend/mobile_app && npx jest",
     "prepare": "husky",
     "ci:backend": "bash -n v3-mqtt-pocketbase/backend/scripts/*.sh v3-mqtt-pocketbase/backend/thermal-pi/scripts/*.sh && find v3-mqtt-pocketbase/backend -name '*.py' -not -path '*/__pycache__/*' -exec python3 -m py_compile {} + && echo 'backend OK'",
+    "test:backend": "python3 -m unittest discover -s v3-mqtt-pocketbase/backend/thermal-pi/tests -p 'test_*.py'",
     "scan:secrets": ".husky/pre-commit || true",
     "deploy:landing": "bash scripts/deploy-landing.sh",
-    "diag:pi": "ssh pigpulse@192.168.69.1 'python3 ~/thermal-pi/scripts/pi_diag.py'",
-    "health:pi": "ssh pigpulse@192.168.69.1 'python3 ~/scripts/health_check.py'",
+    "diag:pi": "PI_HOST=${PI_HOST:-raspberrypi.local}; ssh -o StrictHostKeyChecking=accept-new pigpulse@$PI_HOST 'python3 ~/thermal-pi/scripts/pi_diag.py'",
+    "health:pi": "PI_HOST=${PI_HOST:-raspberrypi.local}; ssh -o StrictHostKeyChecking=accept-new pigpulse@$PI_HOST 'python3 ~/scripts/health_check.py'",
     "health:local": "python3 v3-mqtt-pocketbase/backend/scripts/health_check.py --json"
   },
   "devDependencies": {
