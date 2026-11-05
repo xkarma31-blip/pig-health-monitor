@@ -1,0 +1,31 @@
+[Unit]
+Description=PigPulse soak collector — continuous hardware telemetry to /home/pigpulse/soak/soak.db
+# No ordering on network/thermal: the collector must start as early as possible
+# and record the state of everything (including other services being down).
+# Every source is read defensively, so a dead endpoint is data, not an error.
+After=local-fs.target
+
+[Service]
+Type=simple
+User=pigpulse
+WorkingDirectory=/home/pigpulse/scripts/soak
+# stdlib only -> system python, independent of the thermal venv (same reason
+# as pigpulse-cctv.service).
+ExecStart=/usr/bin/python3 /home/pigpulse/scripts/soak/soak_collect.py --db /home/pigpulse/soak/soak.db --interval 10
+# A soak monitor that dies is a hole in the dataset: always come back.
+Restart=always
+RestartSec=5
+# Never compete with the live pipeline (thermal ingest, bridge, PocketBase):
+# CPUWeight=50 is half a fair share, Nice=10 pushes it behind foreground work.
+CPUWeight=50
+Nice=10
+# Bound the long-running process; the collector itself is ~20 MB RSS.
+MemoryMax=192M
+# Inert unless the process does something unusual (same reasoning as
+# pigpulse-thermal.service: no ProtectHome/ReadWritePaths — the collector
+# legitimately reads /home/pigpulse and writes its own DB).
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -66,6 +66,7 @@
   │                        └──MQTT──► mosquitto :1883 ──► local_bridge ──► PB :8090│
   │  Tapo CCTV ──RTSP──► ffmpeg ──► tapo_mjpeg :8091 ──╳ NO /cctv PROXY (§2.4)  │
   │  hostapd + dnsmasq (AP)         wlan0-static-ip (192.168.69.1)                  │
+  │  pigpulse-soak ──► soak.db (SQLite; §2.8, live 2026-11-05)                      │
   └────────────────────────────────────┬───────────────────────────────────────────┘
                                        ╳   NO REPLICATION PATH EXISTS
   ┌────────────────────────────────────┴───────────────────────────────────────────┐
@@ -467,6 +468,26 @@ acknowledged, no code change warranted (85.9 is severe under any variant).
 CCTV was offline this day ("no camera answering on any candidate"), so blob
 identity was inferred numerically from the thermal frame, not visually.
 
+### 2.8 Soak monitoring — live 2026-11-05
+
+`pigpulse-soak.service` (Pi; unit
+`v3-mqtt-pocketbase/backend/systemd/pigpulse-soak.service`) runs
+`soak_collect.py` continuously → `/home/pigpulse/soak/soak.db` (SQLite, WAL):
+10 s samples of CPU temp/throttle, thermal/ambient state, ESP + MQTT health,
+PocketBase rates, plus state-change events (`esp_change`, `amb_state_change`,
+`th_ok_change`, `bench_start/end`). Interface doc (authoritative):
+`v3-mqtt-pocketbase/docs/SOAK_CONTRACT.md`. Tools
+(`v3-mqtt-pocketbase/backend/scripts/`): `soak_report.py` (PNG+MD+HTML),
+`soak_live.py` (read-only SSH stream), `soak_bench.py` (thermal capability
+bench — runs ON the Pi).
+
+- **WAL rule:** never `scp soak.db` while the collector runs — snapshot on
+  the Pi via the SQLite backup API first
+  (`docs/SESSION_ROLLOUT_20261105.md` §6). A plain file copy misses
+  un-checkpointed commits (tested 2026-11-05).
+- The collector is **autonomous**: it keeps recording with Wi-Fi, laptop, or
+  the thermal pipeline down; nothing else needs to run for the dataset to grow.
+
 ---
 
 
@@ -484,6 +505,7 @@ Branch: **`feat/v3-mqtt-pocketbase`**
 | ├ MQTT→PB bridge | `v3-mqtt-pocketbase/backend/bridge/` |
 | ├ CCTV | `v3-mqtt-pocketbase/backend/cctv/` |
 | ├ ops scripts | `v3-mqtt-pocketbase/backend/scripts/` |
+| ├ soak monitoring | `v3-mqtt-pocketbase/backend/scripts/soak_*.py` (§2.8, 2026-11-05) |
 | └ **systemd units** | `v3-mqtt-pocketbase/backend/systemd/` |
 | Firmware (ESP32-S3) | `v3-mqtt-pocketbase/firmware/esp32s3-mic-ambient/` |
 | PB migrations | `v3-mqtt-pocketbase/deploy/pocketbase/bin/pb_migrations/` |
@@ -554,6 +576,7 @@ the bridge expects `pig/{deviceId}/{channel}` (see §2.2).
 |---|---|
 | **Landing + dashboard (the only web deploy)** | `~/.local/bin/pigpulse-autodeploy.sh` (cron, 5 min) or `scripts/deploy-landing.sh` |
 | Pi backend | `rsync` repo `backend/` → `/home/pigpulse/`, then `systemctl restart` |
+| Soak collector (Pi, since 2026-11-05) | deployed copy `/home/pigpulse/scripts/soak/soak_collect.py`; re-rsync + `systemctl restart pigpulse-soak` after edits |
 
 - The web deploy is **combined**: the autodeploy stages the Expo export under
   the landing's `app/` before every push. Deploying the landing alone silently
