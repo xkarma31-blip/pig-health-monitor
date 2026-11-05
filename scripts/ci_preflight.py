@@ -70,23 +70,22 @@ def main() -> int:
         check("npx eslint . --ext .ts,.tsx" in workflow, "mobile lint gate",
               "Workflow runs ESLint against the mobile source.",
               "Workflow does not run the mobile ESLint gate."),
-        check("npx jest" in workflow, "mobile test gate", "Workflow invokes Jest.",
-              "Workflow does not invoke Jest."),
+        check("npm run test:bridge" in workflow, "mobile bridge test gate",
+              "Workflow runs the locked-in Node bridge regression suite.",
+              "Workflow does not invoke the mobile bridge regression suite."),
         check("ci:backend" in root_scripts, "local backend parity", "Root package exposes a local backend syntax gate.",
               "Root package lacks a ci:backend convenience gate.", severity="warn"),
-        check("permissions:" in workflow, "least-privilege token", "Workflow declares explicit GitHub token permissions.",
+        check("permissions:\n  contents: read" in workflow, "least-privilege token",
+              "Workflow declares read-only GitHub token permissions.",
               "Workflow relies on repository-default GitHub token permissions.", severity="warn"),
-        check("trufflesecurity/trufflehog@main" not in workflow, "immutable third-party actions",
-              "Credential scanner is not pinned to a mutable main branch.",
-              "Credential scanner references trufflesecurity/trufflehog@main; pin a reviewed commit SHA.", severity="warn"),
+        check("trufflesecurity/trufflehog@d411fff7b8879a62509f3fa98c07f247ac089a51" in workflow,
+              "immutable third-party actions", "Credential scanner is pinned to a reviewed full commit SHA.",
+              "Credential scanner is not pinned to the reviewed TruffleHog commit SHA.", severity="warn"),
     ])
 
-    # Tests are configured, but current package metadata must own the runner.
-    lock_text = app_lock.read_text(encoding="utf-8") if app_lock.is_file() else ""
-    checks.append(check('"node_modules/jest-expo"' in lock_text and '"node_modules/jest"' in lock_text,
-                        "declared Jest toolchain", "Jest and jest-expo are locked for clean CI installs.",
-                        "Jest config exists but jest/jest-expo are not locked in the app package; clean CI test runs can fail.",
-                        severity="warn"))
+    checks.append(check('"test:bridge"' in app_package.read_text(encoding="utf-8") if app_package.is_file() else False,
+                        "declared bridge test toolchain", "Bridge tests use Node's built-in test runner.",
+                        "Mobile package lacks the Node bridge test command.", severity="warn"))
 
     payload = {
         "project": "PigPulse",

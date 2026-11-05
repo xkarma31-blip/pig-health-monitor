@@ -10,7 +10,10 @@ Endpoints (contract matches downloads/esp32-mlx90640-thermal-camera/thermal_imag
 
 ESP32-S3 barn mic (s3-mic-01) — the only audio source:
   GET /esp/status    → JSON ingest state (connected, nonzero%, signal)
-  GET /esp/stream    → raw PCM S16LE stereo, read-until-close
+  GET /esp/stream    → raw PCM, read-until-close
+                       ?rate=native (default) s16le/2ch/48k
+                       ?rate=16000           s16le/1ch/16k (0.26 Mbit/s)
+                       X-Stream-Ts = Pi epoch ms of the first sample
   GET /esp/record?seconds=N → record N s → WAV download
 
 Ambient (SHT45 on the ESP32-S3) — observed over MQTT, never polled:
@@ -18,6 +21,7 @@ Ambient (SHT45 on the ESP32-S3) — observed over MQTT, never polled:
 
 CCTV (Tapo camera), proxied to keep the browser on one (HTTPS) origin:
   GET /cctv          → multipart/x-mixed-replace MJPEG
+  GET /cctv?snapshot=1 → one JPEG + X-Frame-Ts (Pi epoch ms, see handler)
 
 Camera audio (Tapo), grabbed straight from the Pi:
   GET /camera-audio?seconds=N → WAV chunk from the camera's own mic (stream2)
@@ -45,6 +49,7 @@ import ambient_ingest
 import config
 import esp_audio_ingest
 import i2c_scanDiag
+import pcm_downmix
 import pigpulse_stats
 import thermal_publish
 from mlx_reader import MlxReader, averaged_reading
@@ -78,6 +83,11 @@ _CCTV_FIRST_FRAME_S = 5.0
 # Hard cap for /esp/record?seconds= (WAV is built in memory: 60 s ~= 11 MB)
 ESP_RECORD_MAX_S = 60
 
+# How long /esp/stream waits for the mic's first chunk before answering 503.
+# Opening a stream that never carries audio would make the UI claim playback
+# over silence; the mic pushes every ~40 ms, so 2 s is already generous.
+ESP_STREAM_FIRST_CHUNK_S = 2.0
+
 # Wall-clock grace added on top of the requested duration before
 # /esp/record gives up. The idle counter inside the capture loop only catches
 # a *silent* link; this catches a link that trickles chunks but never reaches
@@ -93,6 +103,26 @@ CAMERA_AUDIO_DEFAULT_S = 4
 # small, finite number of RTSP client slots; a second concurrent ffmpeg would
 # evict the MJPEG feed (or the capture itself) instead of adding capacity.
 _camera_audio_lock = threading.Lock()
+
+
+def _last_jpeg(buf: bytes) -> bytes | None:
+    """Newest complete JPEG in `buf` (SOI … EOI), or None if still partial.
+
+    The camera writes whole frames, but a socket read can split one anywhere, so
+    callers keep reading until this returns something.
+    """
+    frame = None
+    pos = 0
+    while True:
+        i = buf.find(b"\xff\xd8", pos)
+        if i < 0:
+            break
+        j = buf.find(b"\xff\xd9", i + 2)
+        if j < 0:
+            break
+        frame = buf[i:j + 2]
+        pos = j + 2
+    return frame
 
 
 def _patch_wav_sizes(wav: bytes) -> bytes:
@@ -277,6 +307,10 @@ def _loop() -> None:
         amb: list[float] = []
         ok = _reader.read_frame(img, amb)
         t1 = time.monotonic()
+        # Wall clock for THIS frame, taken at the same instant as t1. A monotonic
+        # clock cannot be compared across machines; the app needs a shared epoch
+        # to line this frame up with timestamped audio and CCTV.
+        t1_wall = time.time()
         with _lock:
             _read_ms = int((t1 - t0) * 1000)
             if ok:
@@ -340,6 +374,11 @@ def _loop() -> None:
                     st["ambientSrc"] = "mlx-internal"
                 st["frame"] = _frame_seq + 1
                 st["readMs"] = _read_ms
+                # Pi-clock epoch ms of THIS frame's capture. The app needs it to
+                # place thermal, CCTV and audio on one presentation clock: the
+                # network adds seconds of variable delay per channel, so arrival
+                # time alone cannot tell you which barn moment a panel shows.
+                st["ts"] = int(round(t1_wall * 1000))
                 dt = t1 - _last_t if _last_t else 0
                 inst = (1.0 / dt) if dt > 0 else 0.0
                 _fps_ema = inst if _fps_ema <= 0.01 else 0.75 * _fps_ema + 0.25 * inst
@@ -420,7 +459,7 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, "application/json", body)
             return
         if path == "/cctv":
-            self._stream_cctv()
+            self._stream_cctv(query)
             return
         if path == "/esp/record":
             self._record_esp(query)
@@ -439,7 +478,7 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, "application/json", body)
             return
         if path == "/esp/stream":
-            self._stream_esp()
+            self._stream_esp(query)
             return
         if path == "/csv":
             with _lock:
@@ -607,16 +646,23 @@ class Handler(BaseHTTPRequestHandler):
         self._send(200, _CTYPE.get(f.suffix.lower(), "application/octet-stream"),
                    f.read_bytes())
 
-    def _stream_cctv(self) -> None:
+    def _stream_cctv(self, query: dict) -> None:
         """Proxy the local MJPEG feed over THIS origin (HTTPS :8080).
 
         The MJPEG server listens on plain HTTP :8091 — pointing <img> straight
         at it would be blocked as mixed content. Piping it through here keeps
         the browser on one origin, and means CCTV comes up as soon as the
         camera does (the MJPEG server retries on its own).
+
+        `?snapshot=1` answers with a single JPEG (plus `X-Frame-Ts`) instead of
+        an endless stream. The deployed app polls that shape: an MJPEG stream
+        cannot be buffered or aligned to a presentation clock, but a stamped
+        snapshot can.
         """
         import socket as _socket
 
+        snapshot = str(query.get("snapshot", ["0"])[0]).strip().lower() \
+            not in ("", "0", "false", "no")
         try:
             up = _socket.create_connection((_CCTV_HOST, _CCTV_PORT), timeout=4)
             up.settimeout(60)
@@ -653,7 +699,14 @@ class Handler(BaseHTTPRequestHandler):
             # waiting for the FIRST frame that must be the short deadline,
             # otherwise recv() blocks past it and the client sees nothing at all.
             up.settimeout(_CCTV_FIRST_FRAME_S)
-            while b"\xff\xd8" not in body and time.time() < deadline:
+            while time.time() < deadline:
+                if snapshot:
+                    # A snapshot must be COMPLETE, not merely started: half a
+                    # JPEG renders as nothing and cannot be aligned.
+                    if _last_jpeg(body) is not None:
+                        break
+                elif b"\xff\xd8" in body:
+                    break
                 try:
                     chunk = up.recv(65536)
                 except _socket.timeout:
@@ -661,6 +714,23 @@ class Handler(BaseHTTPRequestHandler):
                 if not chunk:
                     break
                 body += chunk
+
+            if snapshot:
+                frame = _last_jpeg(body)
+                if frame is None:
+                    self._send(503, "text/plain",
+                               b"no complete frame from the camera - it is not "
+                               b"sending video")
+                    return
+                self._send(200, "image/jpeg", frame, extra={
+                    # Pi-clock epoch ms at which this frame finished arriving at
+                    # the Pi. The camera exposes no capture timestamp, so its own
+                    # encode/delivery lag is NOT included: the picture is at
+                    # least this old. Say so rather than implying exactness.
+                    "X-Frame-Ts": str(int(time.time() * 1000)),
+                })
+                return
+
             if b"\xff\xd8" not in body:
                 self._send(503, "text/plain",
                            b"no frame from the camera - it is not sending video")
@@ -695,35 +765,101 @@ class Handler(BaseHTTPRequestHandler):
             except OSError:
                 pass
 
-    def _stream_esp(self) -> None:
-        """Raw ESP32-S3 mic over the browser: S16LE stereo 16 kHz, read-until-close.
+    def _stream_esp(self, query: dict) -> None:
+        """Raw ESP32-S3 mic over the browser, read-until-close.
 
         Source is TCP :9090 (esp_audio_ingest) — the firmware pushes S16LE
-        stereo (48 kHz, L/R duplicated on the ESP); we normalize per chunk and
-        let mic.js resample to the AudioContext.
+        stereo at 48 kHz. Two output shapes are offered:
+
+          ?rate=native (default) → S16LE stereo 48 kHz, exactly what the ESP
+              sent (the technician console's mic.js resamples in-browser).
+          ?rate=16000            → S16LE mono 16 kHz, 32 KB/s rather than
+              192 KB/s. The deployed app asks for this: the barn→cloud leg
+              measures ~100 KB/s, so 48 kHz can never play in real time.
+
+        `X-Stream-Ts` carries the Pi's epoch ms for the first sample emitted.
+        A client maps sample N to capture time `ts + N/rate`, which is what puts
+        the audio on the same clock as the timestamped thermal frame and CCTV
+        snapshot instead of guessing from arrival times.
         """
         esp = esp_audio_ingest.get()
+        rate_raw = (query.get("rate", ["native"])[0] or "native").strip().lower()
+        if rate_raw in ("", "native"):
+            out_rate = esp_audio_ingest.ESP_RATE
+        else:
+            try:
+                out_rate = int(rate_raw)
+            except (TypeError, ValueError):
+                self._send(400, "text/plain",
+                           b"rate must be an integer or 'native'")
+                return
+        if out_rate not in (esp_audio_ingest.ESP_RATE, 16000):
+            self._send(400, "text/plain",
+                       b"rate must be native (48000) or 16000")
+            return
+        downmix = out_rate != esp_audio_ingest.ESP_RATE
+        mixer = (pcm_downmix.Downmixer(esp_audio_ingest.ESP_RATE, out_rate)
+                 if downmix else None)
+        channels = 1 if downmix else 2
+
         q = esp.subscribe()
         try:
+            # Wait for the first chunk BEFORE promising a stream. Without this an
+            # idle ESP got "200 OK" with a body that never carried audio, and the
+            # UI claimed to be playing over silence.
+            try:
+                chunk = q.get(timeout=ESP_STREAM_FIRST_CHUNK_S)
+            except queue.Empty:
+                self._send(503, "text/plain",
+                           b"ESP mic is not sending audio - nothing to stream")
+                return
+
             self.send_response(200)
             self.send_header("Content-Type", "application/octet-stream")
-            self.send_header("X-Audio-Format",
-                             f"s16le/2ch/{esp_audio_ingest.ESP_RATE}")
+            self.send_header("X-Audio-Format", f"s16le/{channels}ch/{out_rate}")
+            self.send_header("X-Audio-Rate", str(out_rate))
+            self.send_header("X-Audio-Channels", str(channels))
+            # Same clock as /data `ts` and /cctv `X-Frame-Ts`. Back-date by the
+            # first chunk's own duration: its earliest sample was captured that
+            # long before this header is written (one 8 KiB chunk = 43 ms).
+            lead_ms = (len(chunk) // 4) * 1000.0 / esp_audio_ingest.ESP_RATE
+            self.send_header("X-Stream-Ts",
+                             str(int(round((time.time() - lead_ms / 1000.0) * 1000))))
             self.send_header("Cache-Control", "no-store")
             self.end_headers()
+
             idle = 0
             while True:
-                try:
-                    chunk = q.get(timeout=1.0)
-                except queue.Empty:
-                    idle += 1
-                    # ESP reconnects every 3 s; tolerate a long gap, then end
-                    # the stream so the browser button resets instead of lying.
-                    if idle >= 20 and not esp.status()["connected"]:
-                        break
-                    continue
+                if chunk is None:
+                    try:
+                        chunk = q.get(timeout=1.0)
+                    except queue.Empty:
+                        idle += 1
+                        # End the stream after a short idle, unconditionally.
+                        #
+                        # Why unconditional: the stream frame carries no marker
+                        # for a gap, so `X-Stream-Ts` would keep mapping sample N
+                        # as ts + N/rate *through* the silence — a gap mid-stream
+                        # silently drifts the client's clock by the gap length.
+                        # Ending the stream makes every connection exactly one
+                        # continuous audio run; each reconnect gets a fresh,
+                        # exact `X-Stream-Ts` anchor. Waiting on
+                        # `not connected` alone is not enough: a half-open ESP
+                        # socket can stay "connected" forever while no bytes move.
+                        #
+                        # Why 5 s: a healthy ESP delivers 8 KiB parcels every
+                        # ~21 ms with max 131 ms between parcels (measured, 145 s
+                        # window), so 5 s of silence is a disconnect, not jitter.
+                        # The client shows "reconnecting" instead of pretending
+                        # the stream is alive.
+                        if idle >= 5:
+                            break
+                        continue
                 idle = 0
                 pcm = esp_audio_ingest.to_pcm(chunk)
+                chunk = None
+                if pcm and mixer is not None:
+                    pcm = mixer.process(pcm, channels=2)
                 if pcm:
                     self.wfile.write(pcm)
                     self.wfile.flush()

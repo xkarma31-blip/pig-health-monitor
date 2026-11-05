@@ -103,7 +103,7 @@ test('HEAD on camera-audio is refused with 405 and no upstream fetch', async () 
   assert.equal(res.statusCode, 405);
   assert.equal(calls.length, 0, 'HEAD must not reach upstream — that would start a capture');
   assert.equal(res.headers.allow, 'GET, OPTIONS');
-  assert.deepEqual(res.body, { error: 'capture route requires GET' });
+  assert.deepEqual(res.body, { error: 'this endpoint requires GET' });
 });
 
 test('HEAD on esp/record is refused with 405 and no upstream fetch', async () => {

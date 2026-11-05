@@ -199,7 +199,7 @@ class CinemaFrameTests(unittest.TestCase):
     def test_capture_routes_are_still_head_refused_and_read_only(self):
         with open(os.path.join(WORKERS, "readonly_pb_proxy.py"), encoding="utf-8") as fh:
             src = fh.read()
-        self.assertIn('PI_CAPTURE_ROUTES = {"/esp/record", "/camera-audio"}', src)
+        self.assertIn('"/esp/record", "/camera-audio", "/esp/stream"', src)
         # The refusal must name the methods that DO work, and it must sit
         # behind the key check (asserted in test_camera_audio.py).
         self.assertIn('self.send_header("Allow", "GET")', src)

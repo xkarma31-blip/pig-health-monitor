@@ -12,12 +12,19 @@
  * - The key never reaches the client bundle.
  */
 
-const ALLOWED_ENDPOINTS = new Set(['data', 'ambient', 'esp/status', 'health', 'cctv', 'esp/record', 'camera-audio']);
+const ALLOWED_ENDPOINTS = new Set(['data', 'ambient', 'esp/status', 'health', 'cctv', 'esp/record', 'camera-audio', 'esp/stream']);
 
 // Endpoints that start a REAL capture on the Pi (the Pi allows one capture at
-// a time). A HEAD must never burn that slot — the upstream proxy refuses it
-// too, but the bridge would otherwise turn every HEAD into an upstream GET.
-const CAPTURE_ENDPOINTS = new Set(['esp/record', 'camera-audio']);
+// a time) or hold a live subscription (the barn-mic stream, which blocks
+// waiting for the first mic chunk). A HEAD must never burn that slot — the
+// upstream proxy refuses it too, but the bridge would otherwise turn every
+// HEAD into an upstream GET.
+const CAPTURE_ENDPOINTS = new Set(['esp/record', 'camera-audio', 'esp/stream']);
+
+// Upstream headers that pin a streamed/snapshot payload to the Pi's clock.
+// Forwarded verbatim: `X-Stream-Ts` = Pi epoch ms of the first PCM sample,
+// `X-Frame-Ts` = Pi epoch ms when a CCTV frame finished arriving there.
+const CLOCK_HEADERS = ['x-stream-ts', 'x-frame-ts', 'x-audio-format', 'x-audio-rate', 'x-audio-channels'];
 
 function env(name) {
   const v = process.env[name];
@@ -62,11 +69,75 @@ export default async function handler(req, res) {
   // a legitimate GET needs. Non-capture HEADs still read normally.
   if (req.method === 'HEAD' && CAPTURE_ENDPOINTS.has(endpoint)) {
     res.setHeader('Allow', 'GET, OPTIONS');
-    return res.status(405).json({ error: 'capture route requires GET' });
+    return res.status(405).json({ error: 'this endpoint requires GET' });
   }
 
   const upstreamQs = qs.toString();
   const target = `${upstream}/pi/${endpoint}${upstreamQs ? `?${upstreamQs}` : ''}`;
+
+  if (endpoint === 'esp/stream') {
+    // Continuous barn-mic PCM, streamed through to the browser as it arrives.
+    // This must NOT use the buffered path below: the body never ends, so
+    // `arrayBuffer()` would wait for a close that never comes and the phone
+    // would hear silence. Chunks are written on as the Pi produces them.
+    const controller = new AbortController();
+    // Header/first-byte budget only. The Pi answers 503 within ~2 s when the
+    // mic is silent and the proxy gives up after ~15 s; the stream itself is
+    // unbounded, so the timer is cleared the moment headers arrive.
+    const timer = setTimeout(() => controller.abort(), 20000);
+    let r;
+    try {
+      r = await fetch(target, {
+        headers: { 'X-PigPulse-Key': key, Accept: 'application/octet-stream' },
+        signal: controller.signal,
+      });
+    } catch {
+      clearTimeout(timer);
+      return res.status(502).json({ error: 'mic stream unreachable' });
+    }
+    clearTimeout(timer);
+    if (!r.ok) {
+      const body = await r.text().catch(() => '');
+      res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+      return res.status(r.status).send(body || 'mic stream unavailable');
+    }
+    res.statusCode = 200;
+    res.setHeader('Content-Type', r.headers.get('content-type') || 'application/octet-stream');
+    for (const h of CLOCK_HEADERS) {
+      const v = r.headers.get(h);
+      if (v) res.setHeader(h, v);
+    }
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    // Ask any intermediary not to sit on the first bytes.
+    res.setHeader('X-Accel-Buffering', 'no');
+    if (typeof res.flushHeaders === 'function') res.flushHeaders();
+    // When the listener closes the tab, stop reading: aborting the upstream
+    // fetch makes the proxy drop its Pi connection, which unsubscribes the
+    // mic there. Nobody pays for a stream nobody hears.
+    let clientGone = false;
+    res.on('close', () => {
+      if (!res.writableEnded) {
+        clientGone = true;
+        controller.abort();
+      }
+    });
+    try {
+      for await (const chunk of r.body) {
+        if (clientGone) break;
+        res.write(chunk);
+      }
+    } catch {
+      // client aborted, or the upstream ended (Pi idle-exit / ESP reconnect) —
+      // either way the client reconnects; nothing is claimed here.
+    }
+    try {
+      res.end();
+    } catch {
+      /* already closed */
+    }
+    return;
+  }
 
   if (endpoint === 'cctv' || endpoint === 'esp/record' || endpoint === 'camera-audio') {
     // Binary passthrough — snapshot JPEG / mic WAV / camera-audio WAV. Forwards
@@ -75,7 +146,8 @@ export default async function handler(req, res) {
     // Abort budgets must exceed the upstream proxy's own timeout, otherwise a
     // slow-but-alive capture is killed here and misreported as unreachable
     // instead of the Pi's honest 503.
-    //   cctv         → proxy gives up after ~5 s
+    //   cctv         → Pi answers 503 after ~5 s of camera silence; the proxy
+    //                  gives up at ~8 s
     //   camera-audio → proxy waits up to 30 s (ffmpeg capture ceiling)
     //   esp/record   → proxy waits up to 35 s (Pi capture deadline + grace)
     const ttl = {
@@ -95,6 +167,13 @@ export default async function handler(req, res) {
       const buf = Buffer.from(await r.arrayBuffer());
       res.setHeader('Content-Type', isAudio ? 'audio/wav' : 'image/jpeg');
       res.setHeader('Cache-Control', 'no-cache');
+      // CCTV snapshots carry `X-Frame-Ts`; the app aligns the picture to the
+      // same clock as thermal and audio with it. Losing it here would make
+      // the frame un-alignable, so it rides along with the bytes.
+      for (const h of CLOCK_HEADERS) {
+        const v = r.headers.get(h);
+        if (v) res.setHeader(h, v);
+      }
       return res.status(200).send(buf);
     } catch {
       const what = endpoint === 'camera-audio' ? 'camera audio unreachable' : 'mic unreachable';

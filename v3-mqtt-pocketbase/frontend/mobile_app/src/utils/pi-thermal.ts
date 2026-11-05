@@ -38,6 +38,8 @@ export interface PiFrameData {
   verdict: string;
   alerts?: number;
   pixels: number[];
+  /** Pi-clock epoch ms when the frame was produced (absent on older consoles). */
+  ts?: number;
 }
 
 export interface PiAmbientData {
@@ -166,17 +168,59 @@ async function blobToRenderable(blob: Blob): Promise<string> {
   });
 }
 
-/** One CCTV snapshot frame (JPEG) as a renderable URL; null when unavailable. */
-export async function fetchPiFrame(base: string): Promise<string | null> {
+/** One CCTV snapshot frame: a renderable URL plus its Pi-clock capture time. */
+export interface PiFrameCapture {
+  url: string;
+  /**
+   * Pi-clock epoch ms when the Pi captured the JPEG (from `X-Frame-Ts`), or
+   * null when the response carried no stamp (older console, or a proxy that
+   * does not expose the header).
+   */
+  ts: number | null;
+  /** Client clock ms when the response reached this device. */
+  at: number;
+}
+
+/** One CCTV snapshot frame (JPEG) with its capture time; null when unavailable. */
+export async function fetchPiFrame(base: string, timeoutMs = 10_000): Promise<PiFrameCapture | null> {
   const url = isBridgeBase(base) ? `${base}?ep=cctv` : `${base}/cctv`;
+  // A connection that is accepted but never answered (hung proxy, silently
+  // dropped Wi-Fi) must not pin the caller's in-flight flag forever — the
+  // CCTV poller skips every tick while a fetch is pending, so one hung fetch
+  // used to stop CCTV permanently. Same pattern as fetchPiJson.
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const res = await fetch(url, { headers: { Accept: 'image/jpeg' } });
+    const res = await fetch(url, { headers: { Accept: 'image/jpeg' }, signal: controller.signal });
     if (!res.ok) return null;
     const blob = await res.blob();
-    return await blobToRenderable(blob);
+    const renderable = await blobToRenderable(blob);
+    // Arrival is measured AFTER the payload is in hand (not at request start):
+    // the PiClock offset must under-estimate, and every later arrival
+    // timestamp makes the estimate more conservative. See pi-clock.ts.
+    const fetchAt = Date.now();
+    const rawTs = Number(res.headers.get('x-frame-ts'));
+    return {
+      url: renderable,
+      ts: Number.isFinite(rawTs) && rawTs > 0 ? rawTs : null,
+      at: fetchAt,
+    };
   } catch {
     return null;
+  } finally {
+    clearTimeout(timer);
   }
+}
+
+/**
+ * Continuous PCM stream URL for the barn mic (s16le, 16 kHz mono by default).
+ * The web player schedules blocks from this one never-ending response; the
+ * Pi closes it after a few idle seconds when the ESP mic is gone.
+ */
+export function piEspStreamUrl(base: string, rate = 16000): string {
+  return isBridgeBase(base)
+    ? `${base}?ep=${encodeURIComponent('esp/stream')}&rate=${rate}`
+    : `${base}/esp/stream?rate=${rate}`;
 }
 
 /**

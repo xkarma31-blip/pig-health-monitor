@@ -8,7 +8,10 @@ import type { PiThermalSnapshot } from '../hooks/usePiThermal';
 import { usePiCctv } from '../hooks/usePiCctv';
 import { ironRgb } from '../utils/thermal-palette';
 import { telemetryTime } from '../utils/telemetry-time';
-import { fetchPiAudioChunk, fetchPiCameraAudio } from '../utils/pi-thermal';
+import { fetchPiAudioChunk, fetchPiCameraAudio, piEspStreamUrl } from '../utils/pi-thermal';
+import { piClock, pickAligned } from '../utils/pi-clock';
+import { isPcmStreamSupported, startPcmStream, type PcmStreamState } from '../utils/pcm-stream';
+import { usePiNow } from '../hooks/usePiNow';
 
 /**
  * LiveThermalPanel — the shared live barn view (the Pi console's data, in the
@@ -184,15 +187,21 @@ function LegendBar({ min, max }: { min: number; max: number }) {
 
 /**
  * Barn-mic listen/mute control. Audio is the ESP32-S3 mic — a DIFFERENT source
- * from the camera's own track (kept separate on purpose). Web playback (the
- * browser app — also how phones see it): 3-second WAV chunks played back to
- * back. Native playback lands with the APK pass.
+ * from the camera's own track (kept separate on purpose).
+ *
+ * Web: one never-ending 16 kHz mono PCM response, scheduled on the shared
+ * PiClock at `capture + lag` — the same lag the thermal and CCTV panels show,
+ * so sound and image present the same barn moment. (The old web path fetched
+ * one 3-second WAV, played it, then fetched the next; every boundary contained
+ * a fetch gap — the audible "pause".) Native: the chunked WAV loop, unchanged.
  */
 function BarnMicToggle({ base, healthy }: { base: string | null; healthy: boolean }) {
   const { colors, spacing, radius, typography } = useTheme();
   const [on, setOn] = useState(false);
   const [status, setStatus] = useState<SoundStatus>('idle');
   const [reason, setReason] = useState<string | null>(null);
+  const [streamState, setStreamState] = useState<PcmStreamState | null>(null);
+  const [streamDetail, setStreamDetail] = useState<string | null>(null);
   const stopRef = useRef<(() => void) | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -204,12 +213,45 @@ function BarnMicToggle({ base, healthy }: { base: string | null; healthy: boolea
     setOn(false);
     setStatus('idle');
     setReason(null);
+    setStreamState(null);
+    setStreamDetail(null);
   };
 
   useEffect(() => () => stopRef.current?.(), []);
 
   const start = () => {
     if (!base || !healthy) return;
+    // Web: play the never-ending PCM stream, scheduled on the shared PiClock
+    // at `capture + lag`. Same lag as the thermal and CCTV panels, so the
+    // sound and the images present the same moment of the barn.
+    if (Platform.OS === 'web' && isPcmStreamSupported()) {
+      setOn(true);
+      setStatus('starting');
+      setReason(null);
+      setStreamState('connecting');
+      setStreamDetail(null);
+      try {
+        const handle = startPcmStream({
+          url: piEspStreamUrl(base),
+          onState: (state, detail) => {
+            setStreamState(state);
+            setStreamDetail(detail ?? null);
+          },
+        });
+        stopRef.current = () => {
+          handle.stop();
+          // Listening over: reset the shared lag to its default so a later
+          // session does not stay inflated by an old transit spike.
+          piClock.releaseLag();
+        };
+      } catch (e) {
+        setOn(false);
+        setStreamState(null);
+        setReason(e instanceof Error ? e.message : String(e));
+        setStatus('noaudio');
+      }
+      return;
+    }
     let cancelled = false;
     let current: HTMLAudioElement | null = null;
     // Unlock an audio element NOW, while this click is still the active user
@@ -369,16 +411,31 @@ function BarnMicToggle({ base, healthy }: { base: string | null; healthy: boolea
   // While listening the button must stay tappable — a stale/unhealthy mic
   // must never lock the user out of their own Mute control.
   const disabled = !healthy && !on;
+  // Copy for the web streaming path; null when the chunked path (native) is
+  // in use, so the two never fight over the same line.
+  const streamSub =
+    streamState === 'connecting'
+      ? 'Connecting to the barn mic…'
+      : streamState === 'live'
+        ? streamDetail
+          ? `Playing — ${streamDetail}`
+          : 'Playing…'
+        : streamState === 'reconnecting'
+          ? streamDetail
+            ? `Reconnecting — ${streamDetail.length > 60 ? `${streamDetail.slice(0, 57)}…` : streamDetail}`
+            : 'Reconnecting…'
+          : null;
   const sub = !healthy && !on
     ? 'No audio — mic stream stale'
     : on
-        ? status === 'playing'
-          ? 'Playing…'
-          : status === 'waiting'
-            ? 'Listening…'
-            : status === 'noaudio'
-              ? reasonLine(reason, 'mic')
-              : 'Starting…'
+        ? streamSub ??
+          (status === 'playing'
+            ? 'Playing…'
+            : status === 'waiting'
+              ? 'Listening…'
+              : status === 'noaudio'
+                ? reasonLine(reason, 'mic')
+                : 'Starting…')
         : 'Muted — tap to listen';
 
   return (
@@ -645,7 +702,15 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
   const tier = useBreakpoint();
   const isDesktop = tier === 'expanded';
 
-  const liveFrame = pi.live && pi.frame ? pi.frame : null;
+  // Everything on this card is shown at ONE shared delay — `piClock.lagMs` —
+  // so the thermal frame, the camera frame and the mic audio all present the
+  // same barn moment ("delayed together"). The displayed frame is the newest
+  // one the Pi captured at least `lag` ago. Until the clock has enough
+  // observations to mean anything, show the newest frame and say "aligning…"
+  // rather than pretend to be in sync.
+  const nowPi = usePiNow();
+  const alignedFrame = pickAligned(pi.frames, nowPi, piClock.lagMs);
+  const liveFrame = pi.live ? (alignedFrame ?? pi.frame) : null;
   const pb = pi.pbStats;
   const pbMode = !liveFrame && pi.pbFresh && !!pb;
   const staleStats = !liveFrame && !pbMode && !!pb;
@@ -684,6 +749,11 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
   const ambient = pi.ambient;
   const esp = pi.esp;
   const cctv = usePiCctv(pi.base);
+  // The camera frame that belongs to the shared delay, so CCTV shows the same
+  // moment as the thermal frame and the audio. Falls back to the newest frame
+  // until the clock is ready.
+  const cctvAligned = pickAligned(cctv.frames, nowPi, piClock.lagMs);
+  const cctvUrl = cctvAligned?.url ?? cctv.frameUrl;
 
   // ── Stage: real frame, or an honest placeholder. Never a fake image. ──
   const stageBlock = (
@@ -693,6 +763,20 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
       </View>
       {liveFrame ? (
         <>
+          <View
+            style={[
+              styles.alignBadge,
+              alignedFrame
+                ? { backgroundColor: colors.healthySoft, borderColor: colors.healthy }
+                : { backgroundColor: colors.watchSoft, borderColor: colors.watch },
+            ]}
+          >
+            <Text style={[typography.label, { color: alignedFrame ? colors.healthy : colors.watch }]}>
+              {alignedFrame
+                ? `In sync — all panels ≈${(piClock.lagMs / 1000).toFixed(1)} s behind live`
+                : 'Aligning — settling the shared delay…'}
+            </Text>
+          </View>
           <ThermalLiveView liveFrame={liveFrame} width={viewSize} height={canvasHeight} isFullscreen />
           <LegendBar min={liveFrame.min} max={liveFrame.max} />
         </>
@@ -835,9 +919,9 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
           { backgroundColor: colors.surface, borderColor: colors.divider, borderRadius: radius.lg, padding: spacing.md },
         ]}
       >
-        {cctv.frameUrl ? (
+        {cctvUrl ? (
           <Image
-            source={{ uri: cctv.frameUrl }}
+            source={{ uri: cctvUrl }}
             style={{ width: '100%', aspectRatio: 16 / 9, borderRadius: radius.md, backgroundColor: colors.bg }}
             resizeMode="cover"
             accessibilityLabel="CCTV camera frame"
@@ -863,7 +947,9 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
         )}
         <Text style={[typography.bodySmall, { color: colors.textMuted, marginTop: spacing.sm, fontSize: 12 }]}>
           {cctv.live && cctv.at
-            ? `Live snapshot — updated ${Math.max(0, Math.round((cctv.now - cctv.at) / 1000))}s ago`
+            ? cctvAligned && alignedFrame
+              ? `Live snapshot — in sync with the other panels · ≈${(piClock.lagMs / 1000).toFixed(1)} s behind live`
+              : `Live snapshot — updated ${Math.max(0, Math.round((cctv.now - cctv.at) / 1000))}s ago`
             : 'No recent frame from the camera'}
         </Text>
       </View>
@@ -924,6 +1010,7 @@ const styles = StyleSheet.create({
   desktopMain: { flex: 1.4, alignItems: 'center' },
   desktopSide: { flex: 1, maxWidth: 480, paddingTop: 46 },
   sourceBadge: { borderWidth: 1, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 8, marginBottom: 12 },
+  alignBadge: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 6, marginBottom: 12 },
   placeholderCard: { borderWidth: StyleSheet.hairlineWidth, alignItems: 'center', justifyContent: 'center' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   statCard: { flexGrow: 1, flexBasis: '46%', minWidth: 150, borderWidth: StyleSheet.hairlineWidth },

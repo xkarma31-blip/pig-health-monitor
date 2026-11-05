@@ -25,6 +25,7 @@ import {
 } from '../utils/pi-thermal';
 import { subscribeTelemetry } from '../utils/pocketbase-data';
 import { telemetryFresh } from '../utils/telemetry-time';
+import { piClock } from '../utils/pi-clock';
 
 export interface PiPbStats {
   /**
@@ -50,6 +51,11 @@ export interface PiPbStats {
 export interface PiThermalSnapshot {
   /** Latest console frame (with pixels) — null until one arrives. */
   frame: PiFrameData | null;
+  /**
+   * Recent console frames, oldest first (bounded) — for clock-aligned
+   * selection. `frame` is always the newest of these.
+   */
+  frames: PiFrameData[];
   /** Local clock ms when that frame arrived. */
   frameAt: number | null;
   ambient: PiAmbientData | null;
@@ -69,6 +75,7 @@ export interface PiThermalSnapshot {
 const FRAME_POLL_MS = 2000;
 const SLOW_POLL_MS = 6000;
 const LIVE_WINDOW_MS = 8000;
+const MAX_FRAMES = 12;
 
 function num(v: unknown): number | undefined {
   const n = Number(v);
@@ -87,6 +94,7 @@ function pos(v: unknown): number | undefined {
 
 export function usePiThermal(): PiThermalSnapshot {
   const [frame, setFrame] = useState<PiFrameData | null>(null);
+  const [frames, setFrames] = useState<PiFrameData[]>([]);
   const [frameAt, setFrameAt] = useState<number | null>(null);
   const [ambient, setAmbient] = useState<PiAmbientData | null>(null);
   const [esp, setEsp] = useState<PiEspStatus | null>(null);
@@ -94,6 +102,7 @@ export function usePiThermal(): PiThermalSnapshot {
   const [now, setNow] = useState<number>(() => Date.now());
   const [base, setBase] = useState<string | null>(null);
   const baseRef = useRef<string | null>(null);
+  const framesRef = useRef<PiFrameData[]>([]);
 
   // Tier 2 — PocketBase stats (same channel the rest of the app uses).
   useEffect(() => {
@@ -136,10 +145,22 @@ export function usePiThermal(): PiThermalSnapshot {
       frameInFlight = true;
       try {
         const data = await fetchPiJson<PiFrameData>(base, `/data?ts=${Date.now()}`);
+        // Arrival is measured AFTER the payload is in hand: the clock estimate
+        // must under-estimate the offset (see pi-clock.ts), and every later
+        // arrival timestamp makes the estimate more conservative.
+        const arrival = Date.now();
         if (!alive) return;
         if (data && Array.isArray(data.pixels) && data.pixels.length >= 768) {
+          framesRef.current = framesRef.current.concat(data);
+          while (framesRef.current.length > MAX_FRAMES) framesRef.current.shift();
+          setFrames(framesRef.current);
           setFrame(data);
-          setFrameAt(Date.now());
+          setFrameAt(arrival);
+          if (typeof data.ts === 'number' && Number.isFinite(data.ts) && data.ts > 0) {
+            piClock.observe(data.ts, arrival);
+            const nowPi = piClock.now();
+            if (nowPi !== null) piClock.ensureForAge(nowPi - data.ts, 600);
+          }
         }
       } finally {
         frameInFlight = false;
@@ -188,5 +209,5 @@ export function usePiThermal(): PiThermalSnapshot {
   const live = frameAt !== null && now - frameAt < LIVE_WINDOW_MS;
   const pbFresh = pbStats !== null && telemetryFresh(pbStats.timestamp, now);
 
-  return { frame, frameAt, ambient, esp, live, pbStats, pbFresh, now, base };
+  return { frame, frames, frameAt, ambient, esp, live, pbStats, pbFresh, now, base };
 }

@@ -234,6 +234,34 @@ def esp_record_seconds(query: str) -> str:
         query, "seconds", ESP_RECORD_MIN_S, ESP_RECORD_MAX_S, str(ESP_RECORD_DEFAULT_S)
     )
 
+
+# Barn-mic live-stream shape accepted from the client.
+#   16000  → s16le mono 16 kHz (0.26 Mbit/s) — the deployed app asks for this.
+#   native → s16le stereo 48 kHz (1.54 Mbit/s), exactly as the ESP32-S3 sends
+#            it. The barn→cloud leg measures ~0.8 Mbit/s, so `native` cannot
+#            play in real time through this proxy; it is honoured for
+#            completeness (a LAN caller), not for the phone.
+# Absent → 16000: this proxy's only public consumer is the deployed app, and a
+# silently-48k default would look like a broken stream rather than a busy one.
+ESP_STREAM_RATE_DEFAULT = "16000"
+ESP_STREAM_RATES = {"16000", "native"}
+
+
+def esp_stream_rate(query: str) -> str | None:
+    """Parse `rate` for /esp/stream; None means 'refuse, the caller asked for
+    something the Pi does not offer'. Never silently substitutes a different
+    shape than the one requested."""
+    value: str | None = None
+    for pair in (query or "").split("&"):
+        k, _, v = pair.partition("=")
+        if k == "rate":
+            value = v
+    if value is None or value == "":
+        return ESP_STREAM_RATE_DEFAULT
+    if value not in ESP_STREAM_RATES:
+        return None
+    return value
+
 _hits: dict[str, deque] = defaultdict(deque)
 
 
@@ -321,10 +349,11 @@ class Handler(BaseHTTPRequestHandler):
         self._refuse_write()
 
     # Routes that trigger a REAL capture on the Pi (ffmpeg RTSP pull / mic
-    # record). A HEAD must never burn a capture slot — the Pi allows one
-    # capture at a time, so a stray health probe or link prefetcher would
-    # delay a legitimate GET.
-    PI_CAPTURE_ROUTES = {"/esp/record", "/camera-audio"}
+    # record) or hold a live subscription (the barn-mic stream). A HEAD must
+    # never burn a capture slot or open a stream — the Pi allows one capture at
+    # a time and a stream blocks waiting for the first mic chunk, so a stray
+    # health probe or link prefetcher would delay a legitimate GET.
+    PI_CAPTURE_ROUTES = {"/esp/record", "/camera-audio", "/esp/stream"}
 
     def do_HEAD(self):
         # Auth FIRST. The capture-route refusal below answers 405, which would
@@ -362,6 +391,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if target_path == "/camera-audio":
             self._camera_audio(query)
+            return
+        if target_path == "/esp/stream":
+            self._esp_stream(query)
             return
         if target_path not in self.PI_ROUTES:
             self._json(404, {"error": "pi endpoint not allowed"})
@@ -424,28 +456,103 @@ class Handler(BaseHTTPRequestHandler):
         except PiUnreachable as e:
             self._json(502, {"error": f"camera audio unreachable: {e.reason}"})
 
-    def _cctv_frame(self) -> None:
-        """One JPEG frame from the Pi's MJPEG proxy (/cctv) — snapshot-friendly.
+    # Read timeout for the stream's own socket. The Pi waits up to 2 s for the
+    # first mic chunk before answering 503, then the ESP pushes continuously;
+    # 15 s tolerates a reconnect pause without holding a dead socket forever.
+    ESP_STREAM_TIMEOUT = 15.0
 
-        The raw stream never ends, so we read bounded chunks until a complete
-        JPEG is present (then return the freshest frame), with a hard time cap.
-        The app polls this every ~2 s; the full MJPEG stays console-only.
+    def _esp_stream(self, query: str) -> None:
+        """Live barn-mic PCM, relayed through — not buffered.
+
+        `_send()` cannot be used here: it needs the whole body up front, and
+        this body never ends. Instead the upstream response is framed with
+        `Connection: close` and relayed chunk by chunk, so the phone hears
+        audio while it is still being recorded.
+
+        The Pi's own headers ride through unchanged, `X-Stream-Ts` included
+        (epoch ms of the first sample) — that is the anchor the client uses to
+        place this audio on the same clock as thermal and CCTV. The Pi's
+        honest 503 ("mic is not sending audio") and 400 (bad rate) are
+        forwarded verbatim so the app can say "no audio" instead of playing
+        silence.
         """
-        buf = b""
-        deadline = time.time() + 4.0
+        rate = esp_stream_rate(query)
+        if rate is None:
+            self._json(400, {"error": "rate must be native or 16000"})
+            return
         try:
-            # The Pi itself now waits up to _CCTV_FIRST_FRAME_S (5 s) before
+            resp = pi_open(f"/esp/stream?rate={rate}",
+                           timeout=self.ESP_STREAM_TIMEOUT,
+                           accept="application/octet-stream")
+        except urllib.error.HTTPError as e:
+            body = e.read() if hasattr(e, "read") else b""
+            self._send(e.code, body or b"mic stream unavailable", ctype="text/plain")
+            return
+        except PiUnreachable as e:
+            self._json(502, {"error": f"mic stream unreachable: {e.reason}"})
+            return
+        except Exception as e:  # noqa: BLE001
+            self._json(502, {"error": f"mic stream unavailable: {type(e).__name__}"})
+            return
+        try:
+            self.send_response(200)
+            self.send_header("Content-Type", "application/octet-stream")
+            # Exactly the facts the client needs to schedule playback.
+            for h in ("X-Audio-Format", "X-Audio-Rate", "X-Audio-Channels",
+                      "X-Stream-Ts"):
+                v = resp.headers.get(h)
+                if v:
+                    self.send_header(h, v)
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            # An endless body has no Content-Length; connection close is how
+            # the client learns it ended (Pi idle-exit or ESP disconnect),
+            # which the app treats as "reconnect", never as "still live".
+            self.send_header("Connection", "close")
+            self.end_headers()
+            self.close_connection = True
+            if self.command == "HEAD":  # belt and braces; do_HEAD refuses first
+                return
+            while True:
+                chunk = resp.read(8192)
+                if not chunk:
+                    break
+                self.wfile.write(chunk)
+                self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError):
+            pass  # listener closed the tab / navigated away
+        except OSError as e:
+            # A stalled socket mid-stream: end this response the same way a
+            # natural close does. The client reconnects; nothing is claimed.
+            print(f"[pi/esp/stream] relay ended: {type(e).__name__}", flush=True)
+        finally:
+            try:
+                resp.close()
+            except OSError:
+                pass
+
+    def _cctv_frame(self) -> None:
+        """One timestamped JPEG from the Pi (`/cctv?snapshot=1`).
+
+        The Pi answers only once a COMPLETE frame is in hand (503 after ~5 s of
+        camera silence) and stamps `X-Frame-Ts` — Pi-clock epoch ms when the
+        frame finished arriving there. Forwarding that header is what lets the
+        app put CCTV on the same presentation clock as thermal and audio: an
+        un-stamped frame cannot be aligned, and an endless MJPEG stream cannot
+        be buffered to `now − lag`, which is why the app polls this shape.
+
+        Honest caveat, forwarded as-is: the camera exposes no capture
+        timestamp, so the frame is AT LEAST as old as `X-Frame-Ts` says — the
+        camera's own encode/delivery lag is not included.
+        """
+        try:
+            # The Pi itself waits up to _CCTV_FIRST_FRAME_S (5 s) before
             # answering 503 "no frame from the camera". This budget must sit
             # above that, or the proxy times out first and reports a network
             # failure instead of the camera's real state.
-            with pi_open("/cctv", timeout=8, accept="multipart/x-mixed-replace") as resp:
-                while time.time() < deadline and len(buf) < 2_000_000:
-                    chunk = resp.read(16384)
-                    if not chunk:
-                        break
-                    buf += chunk
-                    if b"\xff\xd9" in buf:
-                        break
+            with pi_open("/cctv?snapshot=1", timeout=8, accept="image/jpeg") as resp:
+                frame = resp.read()
+                frame_ts = str(resp.headers.get("X-Frame-Ts", "") or "").strip()
         except urllib.error.HTTPError as e:
             body = e.read() if hasattr(e, "read") else b""
             self._send(e.code, body or b"cctv unavailable", ctype="text/plain")
@@ -454,29 +561,20 @@ class Handler(BaseHTTPRequestHandler):
             self._json(502, {"error": f"cctv unreachable: {e.reason}"})
             return
         except Exception as e:  # noqa: BLE001
-            # A stalled stream or a mid-body socket timeout: the camera/console
-            # answered but never completed a frame. Report it honestly instead
-            # of letting the handler die with no response at all.
+            # A stalled socket: the console answered but never completed a
+            # frame. Report it honestly instead of letting the handler die
+            # with no response at all.
             self._json(502, {"error": f"cctv unavailable: {type(e).__name__}"})
             return
-        frame = None
-        pos = 0
-        while True:
-            i = buf.find(b"\xff\xd8", pos)
-            if i < 0:
-                break
-            j = buf.find(b"\xff\xd9", i + 2)
-            if j < 0:
-                break
-            frame = buf[i:j + 2]
-            pos = j + 2
-        if not frame:
+        if not frame.startswith(b"\xff\xd8") or not frame.endswith(b"\xff\xd9"):
             self._json(502, {"error": "no complete frame"})
             return
         self.send_response(200)
         self.send_header("Content-Type", "image/jpeg")
         self.send_header("Cache-Control", "no-cache")
         self.send_header("Access-Control-Allow-Origin", "*")
+        if frame_ts.isdigit():
+            self.send_header("X-Frame-Ts", frame_ts)
         self.send_header("Content-Length", str(len(frame)))
         self.end_headers()
         if self.command == "HEAD":
