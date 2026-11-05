@@ -74,6 +74,11 @@ DST_PASSWORD = os.environ.get("SYNC_DEST_PASSWORD", "")
 SYNCED_COLLECTIONS = ("telemetry", "alerts", "audio_events")
 
 BATCH = int(os.environ.get("SYNC_BATCH", "200"))
+# Which end of the backlog to drain. "+timestamp" (default) is a strict
+# backfill: oldest first, so history is ordered. "-timestamp" pushes the
+# freshest rows first, which is what a recovery run wants — the app shows live
+# data within one pass instead of waiting hours for history to catch up.
+SORT = os.environ.get("SYNC_SORT", "+timestamp")
 INTERVAL_S = float(os.environ.get("SYNC_INTERVAL_S", "60"))
 TIMEOUT = float(os.environ.get("SYNC_TIMEOUT_S", "10"))
 
@@ -195,7 +200,7 @@ class PocketBase:
             "GET", f"/api/collections/{collection}/records",
             # Oldest first: a backlog larger than one batch must drain FIFO.
             # Newest-first would keep displacing the oldest rows forever.
-            query=f"filter=(synced=false)&sort=+timestamp&perPage={BATCH}")
+            query=f"filter=(synced=false)&sort={SORT}&perPage={BATCH}")
         if st != 200 or not isinstance(body, dict):
             if st == 401:
                 self.token = None
