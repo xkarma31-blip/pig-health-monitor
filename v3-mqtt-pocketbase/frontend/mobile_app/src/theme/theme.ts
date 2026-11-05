@@ -324,6 +324,32 @@ export function getTheme(mode: ThemeMode, contrast: ContrastLevel = 'normal'): T
   return contrast === 'high' ? highContrastTheme : base;
 }
 
+/**
+ * Paint the document canvas from the resolved theme and declare the colour
+ * scheme we support.
+ *
+ * Why this exists: the app decides its own palette, so the browser must not
+ * also "help". Chromium's Auto Dark Mode (shipped on Brave for Android as
+ * Settings → Appearance → Night mode) re-darkens pages that look light. When
+ * it guesses on a page that already handles dark mode itself, the result is a
+ * half-inverted document — white canvas, dark translucent panels, and a theme
+ * toggle that appears to change only the background.
+ *
+ * `color-scheme: only light|dark` is the CSS-level opt-out from that behaviour
+ * (the `only` keyword forbids UA overrides). Painting html/body is the second
+ * half: without an explicit canvas colour, anything React does not paint falls
+ * through to the browser default, which is white.
+ */
+export function applyDocumentCanvas(theme: Theme): void {
+  if (typeof document === 'undefined') return;
+  const canvas = theme.colors.bg || (theme.isDark ? '#121314' : '#F2F6F1');
+  const root = document.documentElement;
+  root.style.backgroundColor = canvas;
+  root.style.colorScheme = theme.isDark ? 'only dark' : 'only light';
+  if (document.body) document.body.style.backgroundColor = canvas;
+  root.setAttribute('data-pigpulse-scheme', theme.isDark ? 'dark' : 'light');
+}
+
 // ── Semantic helpers ───────────────────────────────────────────────
 export function presetOnSolidBg(theme: Theme, preset: 'primary' | 'onPrimary' | 'accent' | 'onAccent' | 'destructive' | 'onDestructive' | 'surface' | 'onSurface' | 'muted' | 'onMuted') {
   switch (preset) {

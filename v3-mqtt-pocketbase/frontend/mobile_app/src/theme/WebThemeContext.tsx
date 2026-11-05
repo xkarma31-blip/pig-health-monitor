@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
-import { Theme, ThemeMode, getTheme } from './theme';
+import { Theme, ThemeMode, getTheme, applyDocumentCanvas } from './theme';
 
 interface WebThemeContextType {
   theme: Theme;
@@ -86,6 +86,9 @@ export const WebThemeProvider: React.FC<WebThemeProviderProps> = ({
       if (newTheme.contrast === 'high') {
         root.classList.add('theme-high-contrast');
       }
+
+      // Canvas + scheme ownership (blocks browser auto-darkening).
+      applyDocumentCanvas(newTheme);
     }
   }, [mode, contrast]);
 

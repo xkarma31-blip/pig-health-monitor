@@ -4,7 +4,7 @@
  */
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { Theme, ThemeMode, getTheme } from './theme';
+import { Theme, ThemeMode, getTheme, applyDocumentCanvas } from './theme';
 
 interface ThemeContextType {
   theme: Theme;
@@ -69,6 +69,10 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
       
       // Apply theme to document root
       document.documentElement.setAttribute('data-theme', mode);
+
+      // Paint the canvas and tell the browser which scheme we own, so it does
+      // not auto-darken our own light/dark palettes (see applyDocumentCanvas).
+      applyDocumentCanvas(theme);
       
       // Add/remove high-contrast class
       if (mode === 'dark') {
@@ -77,7 +81,7 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({
         document.documentElement.classList.remove('high-contrast');
       }
     }
-  }, [mode, isClient]);
+  }, [mode, isClient, theme]);
 
   const value: ThemeContextType = {
     theme,
