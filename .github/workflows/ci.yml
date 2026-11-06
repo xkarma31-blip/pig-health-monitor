@@ -96,7 +96,9 @@ jobs:
       - name: Import the thermal-pi modules (no hardware needed)
         run: |
           cd v3-mqtt-pocketbase/backend/thermal-pi
-          pip install -q mlx9064x-driver "setuptools<81"
+          # numpy backs pcm_downmix.py (48→16 kHz streaming downmix), which
+          # web_server.py imports at module load.
+          pip install -q mlx9064x-driver "setuptools<81" numpy
           python3 - <<'PY'
           import web_server, config, esp_audio_ingest, mlx_reader, pigpulse_stats, i2c_scanDiag
           print('thermal-pi imports OK')

@@ -11,7 +11,7 @@
  * Run:  node --test api/__tests__/pi.bridge.test.mjs
  */
 
-/* global Buffer, process, Response */
+/* global Response */
 
 import assert from 'node:assert/strict';
 import fs from 'node:fs';

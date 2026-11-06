@@ -16,7 +16,11 @@ export default [
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ['api/**/*.js'],
+    // Node-side JS: api/ serverless functions, scripts/, api/__tests__/, and
+    // the root dev harnesses. The app itself is TS (src/**) — every tracked
+    // .js/.mjs file in this repo executes under Node, where console, process,
+    // etc. are real globals rather than the browser's.
+    files: ['**/*.js', '**/*.mjs', '**/*.cjs'],
     languageOptions: { globals: nodeGlobals },
     rules: { 'no-undef': 'off' },
   },
