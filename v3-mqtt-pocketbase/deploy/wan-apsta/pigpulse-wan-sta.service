@@ -1,0 +1,31 @@
+[Unit]
+Description=PigPulse optional Wi-Fi uplink on wlan0sta (same-radio APSTA, one channel)
+Documentation=file:///etc/pigpulse/wan-sta.md
+# Ordering is the whole point: hostapd must start AFTER this unit.
+# The driver refuses to scan while an AP vif beacons (wpa_state=SCANNING
+# forever), and without a scan the association carries no BSSID — the firmware
+# then picks the venue's 5 GHz BSS and drags the shared radio off the AP's
+# channel (measured: AP configured 2437, radio on 5580, every client dropped).
+# So: plan the AP channel, scan, associate, and only then start hostapd.
+After=pigpulse-wan-ap-conf.service network-pre.target sys-subsystem-net-devices-wlan0.device
+Before=hostapd.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+# Association (20 s + 10 s retry) + DHCP (15 s) + slack.
+TimeoutStartSec=150
+ExecStart=/usr/local/sbin/pigpulse-wan-sta-up
+# Deliberately NO ExecStop: deleting the station vif while the AP runs has been
+# measured to wedge brcmfmac (brcm_cfg80211_stop_ap: setting AP mode failed
+# -52), which silences the AP until reboot. The script tears the station side
+# down itself, without removing the vif. To disable, remove the flag file and
+# reboot.
+#
+# No ConditionPathExists on purpose: the planning phase must always run so a
+# reboot with the mode OFF restores /etc/hostapd/hostapd.conf from
+# hostapd.conf.base. The on/off gate lives in the script
+# (/etc/pigpulse/wan-sta.enabled).
+
+[Install]
+WantedBy=multi-user.target

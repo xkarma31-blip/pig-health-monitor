@@ -1,0 +1,17 @@
+[Unit]
+Description=PigPulse AP channel planning (hostapd.conf from the saved venue)
+Documentation=file:///etc/pigpulse/wan-sta.md
+# This phase only writes /etc/hostapd/hostapd.conf from the saved venue profile,
+# so hostapd can come up on the same channel the uplink will use. It never
+# touches the radio, so it cannot wedge anything and must always succeed.
+Before=hostapd.service
+After=local-fs.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+TimeoutStartSec=30
+ExecStart=/usr/local/sbin/pigpulse-wan-sta-up --plan
+
+[Install]
+WantedBy=multi-user.target

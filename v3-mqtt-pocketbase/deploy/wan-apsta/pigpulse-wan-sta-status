@@ -1,0 +1,25 @@
+#!/bin/bash
+# pigpulse-wan-sta-status — one-screen view of the optional Wi-Fi uplink.
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+echo "flag      : $( [ -e /etc/pigpulse/wan-sta.enabled ] && echo 'enabled (APSTA at boot)' || echo 'disabled' )"
+echo "5 GHz     : $( [ -e /etc/pigpulse/wan-sta-allow-5g ] && echo 'allowed (2.4 GHz-only clients will NOT join)' || echo 'refused (2.4 GHz-only clients protected)' )"
+echo "venue ssid: $(head -1 /etc/pigpulse/wan-sta.ssid 2>/dev/null || echo '(unset)')"
+echo "venue bssid: $(head -1 /etc/pigpulse/wan-sta.bssid 2>/dev/null || echo '(none)')"
+echo "saved freq: $(head -1 /etc/pigpulse/wan-sta.freq 2>/dev/null || echo '(none — open the portal)') MHz"
+echo "boot plan : $(cat /run/pigpulse/wan-plan 2>/dev/null || echo '(not planned this boot)')"
+echo "units     : ap-conf=$(systemctl is-active pigpulse-wan-ap-conf.service 2>/dev/null) uplink=$(systemctl is-active pigpulse-wan-sta.service 2>/dev/null) / $(systemctl is-enabled pigpulse-wan-sta.service 2>/dev/null)"
+echo "status    : $(cat /run/pigpulse/wan-sta.status 2>/dev/null || echo '(not run this boot)')"
+echo "ap config : channel=$(sed -n 's/^channel=//p' /etc/hostapd/hostapd.conf 2>/dev/null | head -1) hw_mode=$(sed -n 's/^hw_mode=//p' /etc/hostapd/hostapd.conf 2>/dev/null | head -1) $( [ -e /etc/pigpulse/ap-channel.override ] && echo '(following uplink)' || echo '(base)' )"
+echo "last scan : $(grep -c '^BSS ' /run/pigpulse/scan.txt 2>/dev/null || echo 0) BSS in /run/pigpulse/scan.txt (discovery only)"
+echo
+echo "interfaces:"
+iw dev 2>/dev/null | grep -E "Interface|type|channel" | sed 's/^/  /'
+echo
+echo "uplink addr:"
+ip -4 -o addr show wlan0sta 2>/dev/null | awk '{print "  "$2" "$4}' || true
+echo "routes:"
+ip route | grep '^default' | sed 's/^/  /'
+echo
+echo "AP:"
+hostapd_cli -p /var/run/hostapd -i wlan0 status 2>/dev/null | grep -E '^state=|^freq=' | sed 's/^/  /'
+echo "  clients: $(hostapd_cli -p /var/run/hostapd -i wlan0 all_sta 2>/dev/null | grep -cE '^([0-9a-f]{2}:){5}')"

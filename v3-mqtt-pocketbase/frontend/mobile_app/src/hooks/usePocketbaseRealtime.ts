@@ -10,7 +10,8 @@
  *   - AsyncStorage offline cache (last-known frame per device)
  *
  * Environment:
- *   EXPO_PUBLIC_POCKETBASE_URL  (default http://127.0.0.1:18090)
+ *   EXPO_PUBLIC_POCKETBASE_URL  (optional; native defaults to the Pi hotspot,
+ *                                http://192.168.69.1:8090)
  *
  * Works on web (native EventSource) and native (polling fallback).
  */

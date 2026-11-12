@@ -1,0 +1,26 @@
+[Unit]
+Description=PigPulse local portal (Wi-Fi onboarding + offline landing page on :80)
+Documentation=file:///usr/local/lib/pigpulse-portal/README.md
+# The portal is the first page a phone sees, so it must survive the ISP, the
+# uplink and even hostapd being down. It binds 0.0.0.0:80, which exists as soon
+# as the kernel does, so there is nothing here that can hold it back.
+After=network-pre.target dnsmasq.service hostapd.service
+Wants=dnsmasq.service hostapd.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/lib/pigpulse-portal/portal.py
+Restart=always
+RestartSec=3
+TimeoutStopSec=10
+# root is required: it runs `iw` (scan), `ip link`, and asks systemd to stop and
+# start hostapd for the channel change.
+User=root
+NoNewPrivileges=no
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pigpulse-portal
+
+[Install]
+WantedBy=multi-user.target

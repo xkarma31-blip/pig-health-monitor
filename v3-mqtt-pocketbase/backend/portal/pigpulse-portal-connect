@@ -1,0 +1,241 @@
+#!/bin/bash
+# pigpulse-portal-connect — apply a venue chosen in the portal.
+#
+# The portal cannot do this itself: the radio has ONE channel (#channels <= 1), so
+# associating to a venue on a different channel means hostapd must go down and come
+# back on the new channel. That is exactly what this script sequences, and it
+# restores the previous working state if the new venue does not answer.
+#
+# Failure is NOT fatal: the AP always comes back. A Pi with no internet is still a
+# working Pi.
+set -u
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+umask 022
+
+RUN=/run/pigpulse
+PEND=$RUN/portal-pending.json
+RESULT=$RUN/portal-result.json
+STAGE=$RUN/portal-stage
+STATUS=$RUN/wan-sta.status
+TMPL=/etc/pigpulse/wpa-uplink.tmpl
+SSIDFILE=/etc/pigpulse/wan-sta.ssid
+BSSIDFILE=/etc/pigpulse/wan-sta.bssid
+FREQFILE=/etc/pigpulse/wan-sta.freq
+ENABLED=/etc/pigpulse/wan-sta.enabled
+SKIPPED=/etc/pigpulse/wan-sta.skipped
+UP=/usr/local/sbin/pigpulse-wan-sta-up
+STAMP=$(date +%Y%m%d-%H%M%S)
+BK=/root/pigpulse-backups/portal-$STAMP
+
+mkdir -p "$RUN"
+exec >>/var/log/pigpulse-portal.log 2>&1
+echo "===== $(date '+%F %T') portal-connect start (stamp $STAMP)"
+
+finish() { # $1 = ok|fail, $2 = reason
+  local ok="$1" reason="${2:-}" ip="" ch="" at
+  at=$(date +%s)
+  if [ "$ok" = ok ]; then
+    # Take it from the runner's own measurement (written while the station was
+    # associated). Starting hostapd re-inits the phy, so the live address can
+    # blip for a second right here and read back empty.
+    ip=$(sed -n 's/.* ip=\([0-9.]*\)\/[0-9]* .*/\1/p' "$STATUS" 2>/dev/null | head -1)
+    [ -n "${ip:-}" ] || ip=$(ip -4 -o addr show wlan0sta 2>/dev/null \
+         | sed -n 's/.*inet \([0-9.]*\).*/\1/p' | head -1)
+  fi
+  ch=$(iw dev wlan0 info 2>/dev/null | sed -n 's/.*channel \([0-9]*\) .*/\1/p')
+  {
+    printf '{"ok":%s,"reason":%s,"ssid":%s,"freq":%s,"bssid":%s,"ip":%s,"ap_channel":%s,"at":%s}\n' \
+      "$([ "$ok" = ok ] && echo true || echo false)" \
+      "$(printf '%s' "$reason" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')" \
+      "$(printf '%s' "$SSID" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')" \
+      "${FREQ:-0}" \
+      "$(printf '%s' "$BSSID" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')" \
+      "$(printf '%s' "${ip:-}" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')" \
+      "${ch:-0}" "$at"
+  } > "$RESULT.tmp" && mv -f "$RESULT.tmp" "$RESULT"
+  chmod 644 "$RESULT" 2>/dev/null
+  rm -f "$PEND"
+  rm -rf "$STAGE"
+  echo "$(date '+%F %T') portal-connect done: ok=$ok reason=$reason ip=${ip:-none} ap_ch=${ch:-?}"
+}
+
+restore() {
+  local had_flag=0
+  [ -e "$ENABLED" ] && had_flag=1
+  if [ -d "$BK" ]; then
+    [ -f "$BK/wpa-uplink.tmpl" ] && cp -a "$BK/wpa-uplink.tmpl" "$TMPL" 2>/dev/null
+    [ -f "$BK/wan-sta.ssid" ]  && cp -a "$BK/wan-sta.ssid"  "$SSIDFILE" 2>/dev/null
+    [ -f "$BK/wan-sta.bssid" ] && cp -a "$BK/wan-sta.bssid" "$BSSIDFILE" 2>/dev/null
+    [ -f "$BK/wan-sta.freq" ]  && cp -a "$BK/wan-sta.freq"  "$FREQFILE" 2>/dev/null
+    if [ ! -f "$BK/wan-sta.ssid" ]; then
+      rm -f "$SSIDFILE" "$BSSIDFILE" "$FREQFILE"
+    fi
+    [ "$had_flag" -eq 0 ] && rm -f "$ENABLED"
+  fi
+  # Put the PREVIOUS venue back to work, not merely the AP config: run the full
+  # connect with the restored profile while hostapd is still down, then start
+  # the AP. If the old venue is gone too, the connect fails and exits 0 having
+  # already rendered the AP config on the old channel, so the AP still returns.
+  "$UP" >/dev/null 2>&1 || true
+  systemctl start hostapd.service 2>/dev/null || true
+}
+
+# ---------------------------------------------------------------- read request
+if [ ! -r "$PEND" ]; then
+  echo "no pending request; nothing to do"
+  exit 0
+fi
+mkdir -p "$STAGE" && chmod 700 "$STAGE"
+if ! python3 - "$PEND" "$STAGE" <<'PY'
+import json, os, sys
+src, stage = sys.argv[1], sys.argv[2]
+try:
+    with open(src, "r", encoding="utf-8") as fh:
+        d = json.load(fh)
+except Exception as exc:
+    print("bad pending json:", exc)
+    sys.exit(1)
+for key in ("ssid", "psk", "bssid", "freq"):
+    path = os.path.join(stage, key)
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        fh.write(str(d.get(key, "")))
+PY
+then
+  SSID=""; BSSID=""; FREQ=0
+  rm -rf "$STAGE"
+  finish fail "unreadable request"
+  exit 0
+fi
+SSID=$(cat "$STAGE/ssid")
+PSK=$(cat "$STAGE/psk")
+BSSID=$(cat "$STAGE/bssid" | tr 'A-Z' 'a-z')
+FREQ=$(cat "$STAGE/freq")
+PKT=$(cat "$STAGE/psk" | wc -c)
+echo "$(date '+%F %T') request: ssid='$SSID' bssid=$BSSID freq=$FREQ psk_len=$PKT"
+
+case "$FREQ" in
+  ''|*[!0-9]*) finish fail "bad frequency"; exit 0 ;;
+esac
+if [ "$FREQ" -lt 2412 ] || [ "$FREQ" -gt 2472 ]; then
+  if [ ! -e /etc/pigpulse/wan-sta-allow-5g ]; then
+    finish fail "5 GHz refused: the ESP32-S3 mic and the CCTV camera are 2.4 GHz-only"
+    exit 0
+  fi
+fi
+
+# --------------------------------------------------------------- PSK -> hex
+if printf '%s' "$PSK" | grep -qE '^[0-9a-fA-F]{64}$'; then
+  PSK_HEX="$PSK"
+else
+  PSK_HEX=$(wpa_passphrase "$SSID" "$PSK" 2>/dev/null \
+            | sed -n 's/^[[:space:]]*psk=//p' | head -1)
+fi
+if ! printf '%s' "$PSK_HEX" | grep -qE '^[0-9a-f]{64}$'; then
+  finish fail "could not derive the key (password must be 8-63 characters)"
+  exit 0
+fi
+PSK=""
+SSID_HEX=$(printf '%s' "$SSID" | od -An -tx1 | tr -d ' \n')
+
+# ------------------------------------------------------------------- backups
+mkdir -p "$BK" && chmod 700 "$BK"
+cp -a "$TMPL" "$BK"/ 2>/dev/null
+cp -a "$SSIDFILE" "$BSSIDFILE" "$FREQFILE" "$BK"/ 2>/dev/null
+cp -a /etc/hostapd/hostapd.conf "$BK"/ 2>/dev/null
+echo "$(date '+%F %T') backup: $BK"
+
+# --------------------------------------------------------------- new template
+# ssid= as a hex string: an SSID containing a quote, backslash or space cannot
+# break the config, and there is no escaping rule to get wrong.
+cat > "$TMPL" <<EOF
+# PigPulse upstream Wi-Fi TEMPLATE — written by pigpulse-portal-connect.
+# PSK and SSID are hex-encoded so no character can break the config.
+# @BSSID@ / @FREQ@ are rendered by pigpulse-wan-sta-up from the saved profile.
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=0
+# ap_scan=1 with a pinned BSSID: ap_scan=2 drops the BSSID and the firmware then
+# picks the venue's 5 GHz BSS, which drags this single-channel radio off the AP.
+ap_scan=1
+disable_scan_offload=1
+country=PH
+freq_list=@FREQ@
+
+network={
+	ssid=$SSID_HEX
+	bssid=@BSSID@
+	scan_freq=@FREQ@
+	key_mgmt=WPA-PSK
+	ieee80211w=0
+	psk=$PSK_HEX
+}
+EOF
+chmod 600 "$TMPL"
+unset PSK_HEX
+
+printf '%s\n' "$SSID"  > "$SSIDFILE"
+printf '%s\n' "$BSSID" > "$BSSIDFILE"
+printf '%s\n' "$FREQ"  > "$FREQFILE"
+chmod 644 "$SSIDFILE" "$BSSIDFILE" "$FREQFILE"
+touch "$ENABLED"
+chmod 644 "$ENABLED"
+rm -f "$SKIPPED"
+
+# ------------------------------------------------------------- apply it
+# hostapd must be down: the driver refuses to move the channel while an AP vif
+# beacons, and the association IS a channel move on this hardware.
+#
+# It must also STAY down. pigpulse-ap-watchdog.timer runs every 30 s and
+# restarts hostapd whenever it thinks the radio is degraded — measured
+# 2026-11-12: it brought the AP back 4 s after `systemctl stop`, in the middle
+# of the association, and every portal connect then timed out at 90 s. The hold
+# file is honoured by the watchdog and the timer is paused for the whole
+# attempt; the EXIT trap restores both even if this script dies.
+HOLD=/run/pigpulse/ap-hold
+WATCHDOG_TIMER=pigpulse-ap-watchdog.timer
+mkdir -p /run/pigpulse
+: > "$HOLD"
+cleanup_hold() {
+  rm -f "$HOLD"
+  systemctl start "$WATCHDOG_TIMER" 2>/dev/null || true
+}
+trap cleanup_hold EXIT INT TERM
+systemctl stop "$WATCHDOG_TIMER" 2>/dev/null || true
+systemctl stop hostapd.service 2>/dev/null
+sleep 1
+
+# Wait until the AP is really gone. brcmfmac needs a moment to clear AP mode and
+# the station cannot associate while the firmware still holds it.
+for _i in 1 2 3 4 5 6 7 8 9 10; do
+  systemctl is-active --quiet hostapd.service 2>/dev/null || break
+  sleep 1
+done
+if systemctl is-active --quiet hostapd.service 2>/dev/null; then
+  echo "$(date '+%F %T') hostapd would not stop; aborting without hurting the AP"
+  finish fail "the access point could not be paused safely"
+  exit 0
+fi
+
+echo "$(date '+%F %T') running the uplink (AP is down)"
+"$UP" >/dev/null 2>&1
+RC=$?
+STATE=$(sed -n 's/^\([A-Z-]*\).*/\1/p' "$STATUS" 2>/dev/null | head -1)
+echo "$(date '+%F %T') uplink rc=$RC state=$STATE status='$(cat "$STATUS" 2>/dev/null)'"
+
+if [ "$STATE" = "UP" ]; then
+  systemctl start hostapd.service 2>/dev/null
+  sleep 2
+  APCH=$(iw dev wlan0 info 2>/dev/null | sed -n 's/.*channel \([0-9]*\) .*/\1/p')
+  echo "$(date '+%F %T') AP back on channel ${APCH:-?}"
+  finish ok ""
+  exit 0
+fi
+
+REASON=$(cat "$STATUS" 2>/dev/null)
+echo "$(date '+%F %T') venue did not come up; restoring the previous state"
+restore
+sleep 2
+APCH=$(iw dev wlan0 info 2>/dev/null | sed -n 's/.*channel \([0-9]*\) .*/\1/p')
+echo "$(date '+%F %T') AP restored on channel ${APCH:-?}"
+finish fail "${REASON:-no association}"
+exit 0

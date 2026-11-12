@@ -1,0 +1,537 @@
+#!/bin/bash
+# pigpulse-wan-sta-up — optional same-radio Wi-Fi uplink (APSTA), one channel.
+#
+# brcmfmac allows #{ AP } <= 1 and #{ managed } <= 1 but ONLY on ONE channel
+# (#channels <= 1). So the AP and the uplink must share a frequency, and the AP
+# wins every conflict: a Pi with no internet is still a working Pi.
+#
+# THREE PHASES — the order is what makes this reliable (all measured 2026-11-12):
+#
+#   --plan      runs BEFORE hostapd. Writes /etc/hostapd/hostapd.conf from the
+#               SAVED venue profile so the AP comes up on the channel the uplink
+#               needs. Touches no radio.
+#
+#   connect     runs BEFORE hostapd and needs NO SCAN. wpa_supplicant is given
+#               the saved BSSID + frequency, so it associates directly. Measured:
+#               COMPLETED in 2 s with `scans: 0`. Then hostapd starts on the
+#               channel the station already holds.
+#
+#   --discover  the only phase that scans. It runs with the AP DOWN, from the
+#               onboarding portal, and prints a band/freq/signal/SSID list.
+#
+# WHY THE BOOT PATH DOES NOT SCAN (this is the whole design)
+#   brcmfmac rejects chanspec work for the first ~20 s after power-on: `iw scan`
+#   returns -22 (EINVAL), get_channel -52, and a scan issued in that window
+#   silently returns 0 BSS *without an error*. Measured 2026-11-12: the identical
+#   `scan freq 2412..2472` returned 1 BSS on one boot and 0 BSS on ten
+#   consecutive attempts on the next, with the phy parked on 5 GHz ch 34 both
+#   times. A scanned-then-associated boot is therefore a coin flip.
+#   Association does not need the scan: with bssid + scan_freq + a GLOBAL
+#   freq_list in the config, wpa_supplicant issues the connect for that exact
+#   BSSID on that exact frequency. Discovery belongs in the portal, where the
+#   AP is deliberately down and the radio is warm.
+#
+# WHY NOT ap_scan=2 (tried first, reverted)
+#   With ap_scan=2 wpa_supplicant drops the BSSID from the request, so the
+#   FIRMWARE picks the BSS. It picks the venue's 5 GHz BSS, and because
+#   brcmfmac allows #channels <= 1 that dragged the radio to ch 116 — hostapd
+#   still reported freq=2437 while `iw dev wlan0 info` showed 5580 MHz, and
+#   every AP client was dropped. ap_scan=1 with a pinned BSSID keeps the choice.
+#
+# WHY freq_list MUST BE GLOBAL
+#   Inside a network={} block the option is silently ignored, and without it the
+#   firmware is free to pick another BSS of the same SSID (measured: it chose the
+#   venue's 5 GHz BSSID and the association collapsed with "No network
+#   configuration found for the current AP").
+#
+# Band policy:
+#   2.4 GHz anywhere (ch 1..13) -> use it, AP follows that channel. It is the
+#                                  only band the ESP32-S3 mic and the Tapo
+#                                  camera can see, so it always wins.
+#   5 GHz only                  -> refused by default: an AP on 5 GHz is
+#                                  invisible to those 2.4 GHz-only clients.
+#                                  Opt in with /etc/pigpulse/wan-sta-allow-5g
+#                                  (cloud sync works, sensors do not join).
+#
+# FAIL-SAFE RULE: the AP beats the WAN. Every failure in `connect` leaves the
+# AP running exactly where `--plan` put it, terminates only the station side,
+# and exits 0.
+set -u
+export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+PHASE=connect
+case "${1:-}" in
+  --plan)     PHASE=plan ;;
+  --discover) PHASE=discover ;;
+  "")         : ;;
+  *) echo "usage: $0 [--plan|--discover]" >&2; exit 2 ;;
+esac
+
+STA=wlan0sta
+AP=wlan0
+IW=$(command -v iw || echo /usr/sbin/iw)
+WPACLI=$(command -v wpa_cli || echo /sbin/wpa_cli)
+CONF=/etc/wpa_supplicant/wpa-pigpulse-uplink.conf
+TMPL=/etc/pigpulse/wpa-uplink.tmpl
+SSIDFILE=/etc/pigpulse/wan-sta.ssid
+PREFBSSIDFILE=/etc/pigpulse/wan-sta.bssid
+FREQFILE=/etc/pigpulse/wan-sta.freq
+ENABLED=/etc/pigpulse/wan-sta.enabled
+ALLOW5G=/etc/pigpulse/wan-sta-allow-5g
+HOSTAPD=/etc/hostapd/hostapd.conf
+HOSTAPD_BASE=/etc/hostapd/hostapd.conf.base
+CHMARK=/etc/pigpulse/ap-channel.override
+LOG=/var/log/pigpulse-wan-sta.log
+STATUS=/run/pigpulse/wan-sta.status
+PLAN=/run/pigpulse/wan-plan
+RESOLV=/etc/pigpulse/wan-resolv.conf
+PICK=/usr/local/sbin/pigpulse-wan-pick
+ASSOC_WAIT=20
+DHCP_TIMEOUT=15
+
+mkdir -p /run/pigpulse
+umask 022
+
+log() { echo "$(date '+%F %T') $*" | tee -a "$LOG" >&2; }
+status() { echo "$*" > "$STATUS"; log "STATUS: $*"; }
+STA_CH() { "$IW" dev "$STA" info 2>/dev/null | sed -n 's/.*channel \([0-9]*\) (\([0-9]*\) MHz).*/\1/p'; }
+AP_FREQ() { "$IW" dev "$AP" info 2>/dev/null | sed -n 's/.*channel [0-9]* (\([0-9]*\) MHz).*/\1/p'; }
+AP_CH() { "$IW" dev "$AP" info 2>/dev/null | sed -n 's/.*channel \([0-9]*\) (\([0-9]*\) MHz).*/\1/p'; }
+
+freq_to_channel() {
+  local f=$1
+  if [ "$f" -ge 2400 ] && [ "$f" -le 2500 ]; then
+    if [ "$f" -eq 2484 ]; then echo 14; else echo $(( (f - 2407) / 5 )); fi
+  elif [ "$f" -ge 4900 ] && [ "$f" -le 5900 ]; then
+    echo $(( (f - 5000) / 5 ))
+  else
+    return 1
+  fi
+}
+
+# --------------------------------------------------------------- resolvers
+# Merge the uplink's DNS in front of whatever the system resolver currently
+# has. dnsmasq reads ONLY this file (resolv-file= replaces /etc/resolv.conf),
+# so it must always be a working superset — including when the uplink is off.
+merge_resolv() {
+  local extra="$1" d key val rest seen=" " tmp tether emitted=0
+  tmp=$(mktemp) || return 0
+  # dnsmasq reads this file as its UPSTREAM list, so a loopback address here
+  # would make it query itself forever. Skip every loopback name server.
+  skip_ns() {
+    case "$1" in
+      127.*|::1|0.0.0.0|"") return 0 ;;
+    esac
+    return 1
+  }
+  {
+    echo "# merged by pigpulse-wan-sta-up on $(date '+%F %T')"
+    for d in $extra; do
+      skip_ns "$d" && continue
+      echo "nameserver $d"
+      seen="$seen$d "
+      emitted=1
+    done
+    if [ -r /etc/resolv.conf ]; then
+      while read -r key val rest; do
+        [ "${key:-}" = "nameserver" ] || continue
+        [ -n "${val:-}" ] || continue
+        skip_ns "$val" && continue
+        case "$seen" in *" $val "*) continue ;; esac
+        echo "nameserver $val"
+        seen="$seen$val "
+        emitted=1
+      done < /etc/resolv.conf
+    fi
+    # /etc/resolv.conf is now a static `nameserver 127.0.0.1`, so with the
+    # uplink down and no DHCP answer this block would otherwise be empty and
+    # every AP client would lose DNS. Ladder: tether gateway, then public.
+    if [ "$emitted" -eq 0 ]; then
+      tether=$(ip -4 route show default dev eth1 2>/dev/null \
+               | awk '{for (n = 1; n <= NF; n++) if ($n == "via") { print $(n + 1); exit }}')
+      for d in ${tether:-} 1.1.1.1 8.8.8.8; do
+        skip_ns "$d" && continue
+        echo "nameserver $d"
+      done
+    fi
+  } > "$tmp" 2>/dev/null
+  # Never replace a good file with an empty one: at boot NetworkManager may not
+  # have written /etc/resolv.conf yet, and an empty resolver file would take DNS
+  # away from every AP client.
+  if grep -q '^nameserver' "$tmp" 2>/dev/null; then
+    cat "$tmp" > "$RESOLV"
+    chmod 644 "$RESOLV" 2>/dev/null
+    if [ -r /run/dnsmasq/dnsmasq.pid ]; then
+      kill -HUP "$(cat /run/dnsmasq/dnsmasq.pid)" 2>/dev/null && log "dnsmasq reloaded"
+    fi
+  else
+    log "no resolvers known yet; keeping $RESOLV as it is"
+  fi
+  rm -f "$tmp"
+}
+
+# ------------------------------------------------------- hostapd.conf render
+# hostapd reads exactly one file. Regenerate it from the pristine base so the AP
+# lands on the channel the uplink will use. No argument = base channel.
+#
+# A marker records that we are the ones who changed the channel, so a normal
+# reboot with the mode off puts the base config back without ever stomping a
+# hand-edited hostapd.conf.
+render_ap_conf() {
+  local ch="${1:-}" mode="${2:-g}" tmp
+  [ -r "$HOSTAPD_BASE" ] || { log "no $HOSTAPD_BASE; leaving hostapd.conf untouched"; return 0; }
+  if [ -z "$ch" ]; then
+    if [ -e "$CHMARK" ]; then
+      cp -f "$HOSTAPD_BASE" "$HOSTAPD"
+      rm -f "$CHMARK"
+      log "AP config restored to base (channel $(sed -n 's/^channel=//p' "$HOSTAPD" 2>/dev/null | head -1))"
+    fi
+    return 0
+  fi
+  tmp=$(mktemp) || return 0
+  awk -v ch="$ch" -v mode="$mode" '
+    BEGIN { seen_ch = 0; seen_mode = 0 }
+    /^channel=/ { print "channel=" ch; seen_ch = 1; next }
+    /^hw_mode=/ { print "hw_mode=" mode; seen_mode = 1; next }
+    { print }
+    END {
+      if (!seen_ch)   print "channel=" ch
+      if (!seen_mode) print "hw_mode=" mode
+    }' "$HOSTAPD_BASE" > "$tmp"
+  # 5 GHz on a DFS channel (52..144) needs radar detection enabled, and hostapd
+  # refuses ieee80211h without a country. Append only what is missing.
+  if [ "$mode" = "a" ]; then
+    grep -q '^country_code=' "$tmp" || echo "country_code=PH" >> "$tmp"
+    grep -q '^ieee80211d='   "$tmp" || echo "ieee80211d=1"   >> "$tmp"
+    if [ "$ch" -ge 52 ] && [ "$ch" -le 144 ]; then
+      grep -q '^ieee80211h=' "$tmp" || echo "ieee80211h=1" >> "$tmp"
+    fi
+  fi
+  cat "$tmp" > "$HOSTAPD"
+  rm -f "$tmp"
+  printf '%s %s\n' "$ch" "$mode" > "$CHMARK"
+  log "AP config -> channel=$ch hw_mode=$mode"
+}
+
+# ap_scan=2 is forced here on purpose: the installed template may still say 1,
+# and ap_scan=1 cannot associate while the AP beacons.
+render_wpa_conf() { # $1 = bssid, $2 = freq
+  local tmp
+  [ -r "$TMPL" ] || return 1
+  tmp=$(mktemp) || return 1
+  sed -e "s/@BSSID@/$1/g" \
+      -e "s/@FREQ@/$2/g" \
+      -e 's/^ap_scan=.*/ap_scan=1/' "$TMPL" > "$tmp" || { rm -f "$tmp"; return 1; }
+  # freq_list is a GLOBAL option; inside a network block it is silently ignored.
+  # It keeps wpa_supplicant's scan on the one channel the AP will use, so the
+  # scan returns the 2.4 GHz BSS and the association carries its BSSID.
+  awk -v f="$2" '
+    BEGIN { innet = 0; dumped = 0 }
+    /^[[:space:]]*network=\{/ {
+      if (!dumped) { print "freq_list=" f; dumped = 1 }
+      innet = 1; print; next
+    }
+    innet && /^[[:space:]]*\}/ { innet = 0; print; next }
+    innet && /^[[:space:]]*freq_list=/ { next }
+    !innet && /^freq_list=/ { next }
+    { print }
+    END { if (!dumped) print "freq_list=" f }
+  ' "$tmp" > "$tmp.2" && mv -f "$tmp.2" "$tmp"
+  grep -q '^ap_scan=1' "$tmp" || echo "ap_scan=1" >> "$tmp"
+  install -m 600 "$tmp" "$CONF" || { rm -f "$tmp"; return 1; }
+  rm -f "$tmp"
+  return 0
+}
+
+# --------------------------------------------------------------- venue state
+SSID=""; BSSID=""; FREQ=""; PCH=""; PBAND=""; PREF=""
+read_profile() {
+  [ -r "$SSIDFILE" ]      && SSID=$(head -1 "$SSIDFILE" | sed 's/[[:space:]]*$//')
+  [ -r "$PREFBSSIDFILE" ] && BSSID=$(head -1 "$PREFBSSIDFILE" | tr -d '[:space:]')
+  PREF="${BSSID:-}"
+  if [ -r "$FREQFILE" ]; then
+    FREQ=$(head -1 "$FREQFILE" | tr -dc '0-9')
+  fi
+  [ -n "${FREQ:-}" ] || return 1
+  PCH=$(freq_to_channel "$FREQ") || { FREQ=""; return 1; }
+  case "$FREQ" in
+    24*) PBAND=24 ;;
+    5*)  PBAND=5G ;;
+    *)   FREQ=""; return 1 ;;
+  esac
+  return 0
+}
+
+save_profile() { # $1 bssid, $2 freq, $3 ssid
+  printf '%s\n' "$1" > "$PREFBSSIDFILE"
+  printf '%s\n' "$2" > "$FREQFILE"
+  [ -n "${3:-}" ] && printf '%s\n' "$3" > "$SSIDFILE"
+  chmod 644 "$PREFBSSIDFILE" "$FREQFILE" "$SSIDFILE" 2>/dev/null
+  return 0
+}
+
+# --------------------------------------------------------- station teardown
+# Never delete the station vif while the AP is beaconing: measured, that wedges
+# brcmfmac (brcm_cfg80211_stop_ap: setting AP mode failed -52) and silences the
+# AP until a reboot.
+stop_sta() {
+  "$WPACLI" -i "$STA" terminate >/dev/null 2>&1
+  pkill -f "wpa_supplicant .*-i $STA" >/dev/null 2>&1
+  dhcpcd -k "$STA" >/dev/null 2>&1
+  ip route del default dev "$STA" metric 200 >/dev/null 2>&1
+  ip link set "$STA" down >/dev/null 2>&1
+}
+# Only legal with hostapd stopped.
+remove_sta() { stop_sta; "$IW" dev "$STA" del >/dev/null 2>&1; }
+
+assoc_ok() { "$WPACLI" -i "$STA" status 2>/dev/null | grep -q '^wpa_state=COMPLETED'; }
+wait_assoc() {
+  local i=0 n="$1"
+  while [ "$i" -lt "$n" ]; do
+    assoc_ok && return 0
+    sleep 1
+    i=$((i + 1))
+  done
+  assoc_ok
+}
+assoc_reason() {
+  grep -E 'CTRL-EVENT-(ASSOC-REJECT|AUTH-REJECT)' /var/log/wpa_supplicant-wlan0sta.log 2>/dev/null \
+    | tail -1 | sed -n 's/.*CTRL-EVENT-\([A-Z-]*\).*status_code=\([0-9]*\).*/\1 status=\2/p'
+}
+
+create_sta() {
+  if ! "$IW" dev "$STA" info >/dev/null 2>&1; then
+    "$IW" dev "$AP" interface add "$STA" type managed >>"$LOG" 2>&1
+    if ! "$IW" dev "$STA" info >/dev/null 2>&1; then return 1; fi
+  fi
+  ip link set "$STA" up >/dev/null 2>&1
+  # brcmfmac shares one power state across both vifs, and a sleeping station
+  # misses the association response.
+  "$IW" dev "$STA" set power_save off >/dev/null 2>&1 || true
+  return 0
+}
+
+# `wpa_supplicant -B` cannot start on an interface that already has a supplicant:
+# it fails with "ctrl_iface exists". At boot there is none, but a portal-driven
+# reconnect runs with the boot-time supplicant still alive (measured 2026-11-12:
+# every portal connect died with supplicant-start-failed for exactly this).
+# Use the control interface, never pkill -f: that pattern also matches the caller.
+stop_supplicant() {
+  local pidfile="/run/wpa_supplicant-$STA.pid" i
+  "$WPACLI" -i "$STA" terminate >/dev/null 2>&1 || true
+  if [ -r "$pidfile" ]; then
+    kill "$(cat "$pidfile")" 2>/dev/null || true
+  fi
+  for i in 1 2 3 4 5 6 7 8 9 10; do
+    [ -r "$pidfile" ] || break
+    kill -0 "$(cat "$pidfile" 2>/dev/null)" 2>/dev/null || break
+    sleep 0.5
+  done
+  rm -f "$pidfile" 2>/dev/null || true
+  rm -f "/run/wpa_supplicant/$STA" 2>/dev/null || true
+  return 0
+}
+
+connect_sta() { # uses BSSID / FREQ, honours /etc/pigpulse/wan-sta.debug
+  local dbg=""
+  render_wpa_conf "$BSSID" "$FREQ" || return 1
+  [ -e /etc/pigpulse/wan-sta.debug ] && dbg="-dd"
+  wpa_supplicant -B $dbg -i "$STA" -c "$CONF" -D nl80211 \
+      -P "/run/wpa_supplicant-$STA.pid" -f /var/log/wpa_supplicant-wlan0sta.log >>"$LOG" 2>&1 || return 1
+  wait_assoc "$ASSOC_WAIT"
+}
+
+# ------------------------------------------------------------------- DHCP/DNS
+finish_uplink() { # $1 = band label
+  local ipaddr gw curm dns_list i=0
+  # -m 200 keeps the uplink BELOW the eth1 tether (metric 100) so plugging the
+  # cable in always wins. --nohook resolv.conf never rewrites dnsmasq's resolver.
+  dhcpcd -4 -m 200 -t "$DHCP_TIMEOUT" -q --nohook resolv.conf "$STA" >>"$LOG" 2>&1
+  # Read reality off the kernel rather than trusting `dhcpcd -U` (measured: it
+  # reports "dhcpcd is not running" on this build even with a valid lease).
+  ipaddr=
+  while [ "$i" -lt "$DHCP_TIMEOUT" ]; do
+    ipaddr=$(ip -4 -o addr show "$STA" 2>/dev/null | awk '{print $4}' | head -1)
+    [ -n "$ipaddr" ] && break
+    sleep 1
+    i=$((i + 1))
+  done
+  gw=$(ip -4 route show default dev "$STA" 2>/dev/null \
+       | awk '{for (n = 1; n <= NF; n++) if ($n == "via") { print $(n + 1); exit }}')
+  if [ -z "$ipaddr" ] || [ -z "$gw" ]; then
+    status "OFF no-dhcp ip=${ipaddr:-none} gw=${gw:-none} (AP is up)"
+    stop_sta
+    return 1
+  fi
+  curm=$(ip -4 route show default dev "$STA" 2>/dev/null | sed -n 's/.*metric \([0-9]*\).*/\1/p' | head -1)
+  if [ "${curm:-0}" != "200" ]; then
+    ip route replace default via "$gw" dev "$STA" metric 200 >>"$LOG" 2>&1 || {
+      status "OFF route-add-failed ip=$ipaddr gw=$gw (AP is up)"; stop_sta; return 1; }
+  fi
+  # DNS for the AP's clients: the venue gateway almost always answers DNS, and
+  # the merge keeps the tethered resolver as a fallback.
+  dns_list=$(dhcpcd -U "$STA" 2>/dev/null | sed -n "s/^domain_name_servers='\([^']*\)'.*/\1/p" | head -1)
+  [ -n "$dns_list" ] || dns_list=$gw
+  merge_resolv "$dns_list"
+  status "UP band=$1 ip=$ipaddr gw=$gw freq=$FREQ ch=$PCH bssid=$BSSID metric=200 dns=$dns_list"
+  log "default routes: $(ip route | grep '^default' | tr '\n' ' ')"
+  return 0
+}
+
+# ------------------------------------------------------------------- phases
+merge_resolv ""
+
+if [ "$PHASE" = "plan" ]; then
+  # Undo a previous boot's channel override first, so a failure below can never
+  # leave the AP parked on a stale venue channel.
+  render_ap_conf ""
+  read_profile || true
+  if [ ! -e "$ENABLED" ]; then
+    status "OFF disabled-flag-absent"; : > "$PLAN"; exit 0
+  fi
+  if [ -z "${SSID:-}" ] || [ -z "${FREQ:-}" ] || [ -z "${BSSID:-}" ]; then
+    status "OFF no-saved-venue (open the onboarding portal)"; : > "$PLAN"; exit 0
+  fi
+  if [ ! -r "$TMPL" ]; then
+    status "OFF uplink-config-missing"; : > "$PLAN"; exit 0
+  fi
+  if [ "$PBAND" = "5G" ] && [ ! -e "$ALLOW5G" ]; then
+    status "OFF saved-venue-is-5g-refused bssid=$BSSID freq=$FREQ (2.4 GHz-only sensors)"
+    : > "$PLAN"; exit 0
+  fi
+  [ "$PBAND" = "5G" ] && HWMODE=a || HWMODE=g
+  render_ap_conf "$PCH" "$HWMODE"
+  printf '%s %s %s %s\n' "$PBAND" "$PCH" "$FREQ" "$BSSID" > "$PLAN"
+  status "AP-PLANNED band=$PBAND ch=$PCH freq=$FREQ bssid=$BSSID ssid=$SSID"
+  exit 0
+fi
+
+# ---------------------------------------------------------------- discover
+# The ONLY phase that scans. Call it from the onboarding portal, with hostapd
+# stopped so no AP vif is beaconing. Prints one line per BSS:
+#   <band> <freq> <signal> <ssid>
+# and saves the raw dumps in /run/pigpulse/scan.txt.
+if [ "$PHASE" = "discover" ]; then
+  SCAN24="2412 2417 2422 2427 2432 2437 2442 2447 2452 2457 2462 2467 2472"
+  SCAN5="5180 5200 5220 5240 5260 5280 5300 5320 5500 5580 5745 5785 5825"
+  if systemctl is-active --quiet hostapd.service 2>/dev/null; then
+    echo "refused: hostapd is running — stop it first (the AP must be down to scan)" >&2
+    exit 3
+  fi
+  ip link set "$AP" up >/dev/null 2>&1
+  create_sta || { echo "refused: cannot create $STA" >&2; exit 4; }
+  : > /run/pigpulse/scan.txt
+  dump() { # $1 = band label, $2 = freq list
+    local raw n
+    raw=$(timeout 30 "$IW" dev "$STA" scan freq $2 2>>"$LOG")
+    n=$(printf '%s\n' "$raw" | grep -c '^BSS ')
+    log "discover $1: $n BSS"
+    [ "$n" -gt 0 ] || return 0
+    printf '# %s scan\n%s\n' "$1" "$raw" >> /run/pigpulse/scan.txt
+    printf '%s\n' "$raw" | awk -v band="$1" '
+      /^BSS /        { bssid = $2; sub(/\(.*/, "", bssid); ssid = ""; freq = ""; sig = "" }
+      /^\tfreq:/     { freq = $2 + 0 }
+      /^\tsignal:/   { sig = $2 }
+      /^\tSSID:/     { ssid = substr($0, index($0, ":") + 1); sub(/^ /, "", ssid);
+                       printf "%s %s %s %s\n", band, freq, sig, ssid }
+    '
+  }
+  dump 24 "$SCAN24"
+  dump 5G "$SCAN5"
+  exit 0
+fi
+
+# ------------------------------------------------------------------ connect
+if [ -r /etc/pigpulse/wan-sta.delay ]; then
+  D=$(head -1 /etc/pigpulse/wan-sta.delay | tr -dc '0-9')
+  [ -n "${D:-}" ] && [ "$D" -gt 0 ] && { log "settle delay ${D}s"; sleep "$D"; }
+fi
+
+read_profile || true
+if [ ! -e "$ENABLED" ]; then status "OFF disabled-flag-absent"; exit 0; fi
+if [ ! -r "$TMPL" ]; then status "OFF uplink-config-missing"; exit 0; fi
+
+# No saved venue means no boot-time discovery: a cold radio cannot scan reliably
+# (see the header). The AP stays on its base/planned channel until the portal
+# writes a profile.
+if [ -z "${SSID:-}" ] || [ -z "${BSSID:-}" ] || [ -z "${FREQ:-}" ]; then
+  status "OFF no-saved-venue (open the onboarding portal at http://192.168.69.1/)"
+  exit 0
+fi
+
+# hostapd must not be up yet: an AP vif that beacons blocks the chanspec change
+# the association needs.
+if systemctl is-active --quiet hostapd.service 2>/dev/null; then
+  status "OFF refused-ap-already-running"
+  exit 0
+fi
+
+PCH=$(freq_to_channel "$FREQ") || { status "OFF bad-freq freq=$FREQ"; exit 0; }
+[ "$PBAND" = "5G" ] && HWMODE=a || HWMODE=g
+if [ "$PBAND" = "5G" ] && [ ! -e "$ALLOW5G" ]; then
+  status "OFF saved-venue-is-5g-refused bssid=$BSSID freq=$FREQ (2.4 GHz-only ESP32-S3 and CCTV cannot join)"
+  exit 0
+fi
+log "profile: ssid=$SSID bssid=$BSSID freq=$FREQ band=$PBAND ch=$PCH"
+
+# The AP vif must be UP even though hostapd has not started: with every vif down
+# the phy has no channel context (measured: `iw dev wlan0sta info` shows no
+# channel and the association cannot place the chanspec).
+ip link set "$AP" up >/dev/null 2>&1
+create_sta || { status "OFF vif-create-failed"; exit 0; }
+log "vif up: sta_ch=$(STA_CH) ap_ch=$(AP_CH) ap_state=$(ip -br link show "$AP" 2>/dev/null | awk '{print $2}')"
+
+# Move the AP config BEFORE hostapd starts: #{channels} <= 1 means the AP and the
+# uplink must share a frequency, and hostapd takes whatever is in this file.
+render_ap_conf "$PCH" "$HWMODE"
+
+# --------------------------------------------------------- supplicant
+if ! render_wpa_conf "$BSSID" "$FREQ"; then
+  status "OFF wpa-conf-render-failed"
+  exit 0
+fi
+WPADBG=""
+[ -e /etc/pigpulse/wan-sta.debug ] && WPADBG="-dd"
+stop_supplicant
+: > /var/log/wpa_supplicant-wlan0sta.log
+if ! wpa_supplicant -B $WPADBG -i "$STA" -c "$CONF" -D nl80211 \
+       -P "/run/wpa_supplicant-$STA.pid" -f /var/log/wpa_supplicant-wlan0sta.log >>"$LOG" 2>&1; then
+  status "OFF supplicant-start-failed"
+  exit 0
+fi
+
+# A connect issued inside the ~20 s firmware settle window is accepted and then
+# stalls, so keep nudging instead of giving up on the first attempt. The AP is
+# not up yet, so retrying costs no client anything.
+BUDGET=90
+i=0
+while [ "$i" -lt "$BUDGET" ]; do
+  assoc_ok && break
+  if [ "$i" -gt 0 ] && [ $((i % 10)) -eq 0 ]; then
+    log "reassociate at ${i}s (wpa_state=$("$WPACLI" -i "$STA" status 2>/dev/null | sed -n 's/^wpa_state=//p'))"
+    "$WPACLI" -i "$STA" reassociate >/dev/null 2>&1
+  fi
+  sleep 1
+  i=$((i + 1))
+done
+
+if ! assoc_ok; then
+  REJ=$(assoc_reason)
+  status "OFF no-association-after-${BUDGET}s ${REJ:+($REJ)} (AP stays on its planned channel — re-pick the venue in the portal)"
+  stop_sta
+  exit 0
+fi
+log "associated: $("$IW" dev "$STA" link 2>/dev/null | grep -E 'Connected to|freq:|signal:' | tr '\n' ' ')"
+
+# AP and station share one channel. If the driver put the station anywhere else
+# the AP clients are about to be dropped, so refuse rather than half-work.
+SFREQ=$("$IW" dev "$STA" info 2>/dev/null | sed -n 's/.*channel [0-9]* (\([0-9]*\) MHz).*/\1/p')
+if [ -n "$SFREQ" ] && [ "$SFREQ" != "$FREQ" ]; then
+  status "OFF channel-mismatch want=$FREQ got=$SFREQ"
+  stop_sta
+  exit 0
+fi
+
+"$IW" dev "$STA" set power_save off >/dev/null 2>&1 || true
+finish_uplink "$PBAND"
+exit 0

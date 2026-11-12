@@ -1,0 +1,71 @@
+#!/usr/bin/awk -f
+# pigpulse-wan-pick — choose an uplink BSSID from `iw ... scan` text on stdin.
+#
+#   iw dev wlan0sta scan | pigpulse-wan-pick <ssid> [preferred-bssid]
+#
+# Output (one line, always exactly one):
+#   24 <bssid> <freq> <signal>   usable 2.4 GHz uplink (any channel)
+#   5G <bssid> <freq> <signal>   the SSID is visible only on 5 GHz
+#   NONE                         the SSID is not visible at all
+#
+# Why 2.4 wins when both bands are visible: the Pi's single radio forces the AP
+# and the station onto ONE channel (#channels <= 1). An AP on 5 GHz is invisible
+# to the ESP32-S3 mic and the Tapo camera, which are 2.4 GHz-only.
+#
+# A preferred BSSID gets a large bonus so a known-good access point keeps being
+# chosen over a marginally stronger one, while still losing to a real 2.4 GHz
+# alternative (the bonus only ranks inside the same band).
+
+BEGIN {
+  target = ARGV[1]
+  pref = tolower(ARGV[2])
+  ARGV[1] = ""
+  ARGV[2] = ""
+  best24sig = -999
+  best5sig = -999
+  bssid = ""
+}
+
+function finalize(   bonus) {
+  if (bssid == "" || ssid != target) return
+  bonus = (bssid == pref) ? 1000 : 0
+  if (freq >= 2400 && freq <= 2500) {
+    if (sig + bonus > best24sig) {
+      best24sig = sig + bonus
+      best24b = bssid; best24f = freq; best24s = sig
+    }
+  } else if (freq >= 4900 && freq <= 5900) {
+    if (sig + bonus > best5sig) {
+      best5sig = sig + bonus
+      best5b = bssid; best5f = freq; best5s = sig
+    }
+  }
+}
+
+# Anchor on a MAC so a "BSS Load:" line can never be mistaken for a new BSS.
+/^BSS [0-9a-f][0-9a-f]:/ {
+  finalize()
+  bssid = tolower($2)
+  sub(/\(.*/, "", bssid)
+  freq = 0
+  sig = -999
+  ssid = ""
+  next
+}
+
+$1 == "freq:"   { freq = $2 + 0; next }
+$1 == "signal:" { sig  = $2 + 0; next }
+
+$1 == "SSID:" {
+  ssid = $0
+  sub(/^[ \t]*SSID:[ \t]*/, "", ssid)
+  sub(/[ \t\r]+$/, "", ssid)
+  next
+}
+
+END {
+  finalize()
+  if (best24b != "")      printf "24 %s %d %.2f\n", best24b, best24f, best24s
+  else if (best5b != "")  printf "5G %s %d %.2f\n", best5b, best5f, best5s
+  else                    print "NONE"
+}

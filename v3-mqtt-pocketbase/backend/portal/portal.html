@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<title>PigPulse — Local</title>
+<style>
+  :root{
+    --bg:#0b0f18; --panel:#1a1a2e; --panel2:#161a26; --line:#2b3350;
+    --ink:#eaf6ff; --dim:#a8b8d0; --teal:#22d3ee; --teal-d:#0e7490;
+    --ok:#34d399; --warn:#fbbf24; --bad:#fb7185;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink)}
+  body{
+    font:18px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    padding:20px 16px 48px; -webkit-text-size-adjust:100%;
+  }
+  .wrap{max-width:720px;margin:0 auto}
+  header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .brand{font-size:30px;font-weight:800;letter-spacing:.5px;margin:0}
+  .brand span{color:var(--teal)}
+  .pill{
+    margin-left:auto;font-size:14px;font-weight:800;letter-spacing:.6px;
+    padding:8px 14px;border-radius:999px;border:2px solid var(--line);
+    background:var(--panel2);color:var(--dim);white-space:nowrap;
+  }
+  .pill.on{color:#052e2b;background:var(--ok);border-color:var(--ok)}
+  .pill.off{color:var(--warn);border-color:var(--warn)}
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:18px;
+    padding:22px;margin:0 0 18px;
+  }
+  .card.hi{border-color:var(--teal);box-shadow:0 0 0 3px rgba(34,211,238,.12)}
+  h2{margin:0 0 10px;font-size:23px;line-height:1.25}
+  p{margin:0 0 14px;color:var(--dim)}
+  p.strong{color:var(--ink);font-weight:600}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  button{
+    font:inherit;font-weight:800;border-radius:14px;border:2px solid var(--teal);
+    background:var(--teal);color:#04222b;padding:16px 22px;cursor:pointer;
+    min-height:56px;flex:1 1 auto;
+  }
+  button.ghost{background:transparent;color:var(--teal);border-color:var(--line)}
+  button:disabled{opacity:.5;cursor:progress}
+  button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid var(--warn);outline-offset:3px}
+  label{display:block;font-weight:800;margin:16px 0 8px}
+  input[type=password],input[type=text]{
+    width:100%;font:inherit;padding:16px;border-radius:14px;
+    background:#0c1220;color:var(--ink);border:2px solid var(--line);
+  }
+  .nets{display:grid;gap:10px;margin:8px 0 4px;max-height:340px;overflow:auto}
+  .net{
+    display:flex;gap:12px;align-items:center;text-align:left;width:100%;
+    background:var(--panel2);border:2px solid var(--line);color:var(--ink);
+    padding:14px 16px;border-radius:14px;font-weight:700;cursor:pointer;min-height:60px;
+    flex:0 0 auto;
+  }
+  .net[aria-pressed=true]{border-color:var(--teal);background:#0d2a33}
+  .net .name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .net .meta{font-size:14px;color:var(--dim);font-weight:600;white-space:nowrap}
+  .grid{display:grid;gap:12px;grid-template-columns:1fr}
+  @media(min-width:560px){.grid.two{grid-template-columns:1fr 1fr}}
+  a.tile{
+    display:block;text-decoration:none;background:var(--panel2);
+    border:2px solid var(--line);border-radius:16px;padding:18px;color:var(--ink);
+  }
+  a.tile:active,a.tile:hover{border-color:var(--teal)}
+  a.tile b{display:block;font-size:19px;margin-bottom:4px}
+  a.tile small{color:var(--dim);font-size:15px}
+  .msg{border-radius:14px;padding:16px;font-weight:700;margin:14px 0 0;border:2px solid}
+  .msg.ok{background:#062e26;border-color:var(--ok);color:#c9ffe9}
+  .msg.bad{background:#331019;border-color:var(--bad);color:#ffd8de}
+  .msg.busy{background:#2a2410;border-color:var(--warn);color:#ffe9b3}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:16px;color:var(--dim)}
+  .kv b{color:var(--ink)}
+  .hide{display:none!important}
+  footer{margin-top:26px;color:var(--dim);font-size:15px;text-align:center}
+  .spin{display:inline-block;width:14px;height:14px;border:3px solid currentColor;
+    border-right-color:transparent;border-radius:50%;animation:s .8s linear infinite;
+    vertical-align:-2px;margin-right:8px}
+  @keyframes s{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1 class="brand">Pig<span>Pulse</span></h1>
+    <div class="pill off" id="pill">CHECKING…</div>
+  </header>
+
+  <!-- ================= WIFI ONBOARDING (the first page) ================= -->
+  <section class="card hi" id="setup">
+    <h2>Connect this Pi to Wi-Fi</h2>
+    <p class="strong">PigPulse already works right here, with no internet.</p>
+    <p>Adding a Wi-Fi network lets the Pi send its data to the cloud and keeps the
+      clock in sync. You can skip this now and do it any time.</p>
+
+    <div class="row">
+      <button id="scanBtn" class="ghost">Find networks</button>
+    </div>
+
+    <div class="nets" id="nets" aria-live="polite"></div>
+
+    <label for="psk">Wi-Fi password</label>
+    <input id="psk" type="password" inputmode="text" autocomplete="current-password"
+           placeholder="8 characters or more" spellcheck="false">
+
+    <div class="row" style="margin-top:18px">
+      <button id="connectBtn">Connect</button>
+      <button id="skipBtn" class="ghost">Skip for now</button>
+    </div>
+
+    <div id="setupMsg" class="msg hide" role="status" aria-live="polite"></div>
+  </section>
+
+  <!-- ================= LOCAL APPS (always available) ================= -->
+  <section class="card">
+    <h2>Open on this Pi</h2>
+    <p>These work with no internet, no account, no cloud.</p>
+    <div class="grid two">
+      <a class="tile" href="https://192.168.69.1:8080/" data-local>
+        <b>Live dashboard</b>
+        <small>Thermal camera, mic level, sensor readings</small>
+      </a>
+      <a class="tile" href="https://192.168.69.1:8080/cctv" data-local>
+        <b>Camera</b>
+        <small>Live CCTV from the pen</small>
+      </a>
+      <a class="tile" href="https://192.168.69.1:8080/admin" data-local>
+        <b>Admin</b>
+        <small>Devices, settings, diagnostics</small>
+      </a>
+      <a class="tile" href="https://192.168.69.1:8080/csv" data-local>
+        <b>Download data</b>
+        <small>Sensor history as CSV</small>
+      </a>
+    </div>
+    <p class="msg busy" id="certNote" style="margin-top:16px">
+      These pages use HTTPS with the Pi's own certificate. If the browser warns
+      you, choose <b>Advanced → proceed</b>. The certificate never leaves this
+      network.
+    </p>
+  </section>
+
+  <!-- ================= OPTIONAL: hosted site ================= -->
+  <section class="card">
+    <h2>PigPulse website</h2>
+    <p>Optional. The hosted site needs internet, so it only opens once the Wi-Fi
+      above is connected.</p>
+    <div class="row">
+      <a class="tile" style="flex:1" id="hostedLink" href="#" target="_blank" rel="noopener">
+        <b>Open the hosted site</b>
+        <small id="hostedNote">needs internet</small>
+      </a>
+    </div>
+  </section>
+
+  <!-- ================= STATUS ================= -->
+  <section class="card">
+    <h2>Status</h2>
+    <div class="kv" id="kv"></div>
+    <div class="row" style="margin-top:16px">
+      <button id="changeBtn" class="ghost">Change Wi-Fi network</button>
+    </div>
+  </section>
+
+  <footer id="foot">PigPulse local portal</footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { nets: [], picked: null, status: null, busy: false, resultShown: false };
+  // ?setup=1 forces the onboarding view even when a venue is already saved —
+  // used by the "first run" link and by anyone who wants it on screen.
+  var FORCE_SETUP = /[?&]setup=1(&|$)/.test(location.search);
+
+  function pill(text, cls) {
+    var p = $("pill");
+    p.textContent = text;
+    p.className = "pill " + (cls || "");
+  }
+
+  function show(id, on) { $(id).classList.toggle("hide", !on); }
+
+  function msg(kind, html) {
+    var m = $("setupMsg");
+    m.className = "msg " + kind;
+    m.innerHTML = html;
+    show("setupMsg", true);
+  }
+
+  function api(method, path, body) {
+    var opt = { method: method, headers: { "Content-Type": "application/json" },
+                cache: "no-store" };
+    if (body) opt.body = JSON.stringify(body);
+    return fetch(path, opt).then(function (r) {
+      return r.json().then(function (j) {
+        if (!r.ok) throw new Error(j.error || ("HTTP " + r.status));
+        return j;
+      });
+    });
+  }
+
+  function bars(db) {
+    if (db > -55) return "●●●●";
+    if (db > -67) return "●●●○";
+    if (db > -78) return "●●○○";
+    return "●○○○";
+  }
+
+  function renderNets() {
+    var box = $("nets");
+    box.innerHTML = "";
+    if (!state.nets.length) {
+      box.innerHTML = '<p class="msg busy">No 2.4 GHz networks found. Move the Pi ' +
+                      'closer to the router and press Find networks again.</p>';
+      return;
+    }
+    state.nets.forEach(function (n) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "net";
+      b.setAttribute("aria-pressed", String(state.picked === n));
+      var open = (n.ssid === "" ? "hidden network" : n.ssid) +
+                 (n.band === "5G" ? " (5 GHz)" : "");
+      b.innerHTML = '<span class="name"></span><span class="meta"></span>';
+      b.querySelector(".name").textContent = open;
+      b.querySelector(".meta").textContent =
+        bars(n.signal || -99) + "  ch " + (n.freq ? (n.freq - 2407) / 5 : "?");
+      b.addEventListener("click", function () {
+        state.picked = n;
+        renderNets();
+        $("psk").focus();
+      });
+      box.appendChild(b);
+    });
+  }
+
+  function scan(force) {
+    var btn = $("scanBtn");
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span>Scanning…';
+    api(force ? "POST" : "GET", "/api/scan")
+      .then(function (j) { state.nets = j.networks || []; renderNets(); })
+      .catch(function (e) { msg("bad", "Scan failed: " + e.message); })
+      .then(function () { btn.disabled = false; btn.textContent = "Find networks"; });
+  }
+
+  function renderStatus(s) {
+    state.status = s;
+    var on = !!s.internet;
+    pill(on ? "ONLINE" : "LOCAL ONLY", on ? "on" : "off");
+    $("hostedNote").textContent = on ? "opens the live site"
+                                    : "needs internet — not connected yet";
+    var rows = [
+      ["Wi-Fi network", s.has_venue ? s.venue.ssid : "not set"],
+      ["Uplink", s.state + (s.uplink_ip ? " · " + s.uplink_ip : "")],
+      ["Internet", on ? "reachable" : "not reachable"],
+      ["Pi hotspot", (s.ap.ssid || "PigPulse") + " · channel " + (s.ap.channel || "?")],
+      ["Devices on hotspot", String(s.ap.clients)],
+      ["Portal version", s.version]
+    ];
+    var kv = $("kv");
+    kv.innerHTML = "";
+    rows.forEach(function (r) {
+      var k = document.createElement("span"); k.textContent = r[0];
+      var v = document.createElement("b"); v.textContent = r[1];
+      kv.appendChild(k); kv.appendChild(v);
+    });
+    $("hostedLink").href = s.hosted;
+    // Onboarding is the first page, but not once this Pi has a venue or the
+    // person already chose Skip on this phone.
+    var skipped = s.skipped || localStorage.getItem("pp_skipped") === "1";
+    var keep = state.busy || state.resultShown;
+    show("setup", FORCE_SETUP || keep || (!s.has_venue && !skipped));
+  }
+
+  function load() {
+    return api("GET", "/api/status").then(renderStatus).catch(function () {
+      pill("NO LINK", "off");
+    });
+  }
+
+  // ---- connect flow -----------------------------------------------------
+  function waitForResult(start) {
+    var deadline = Date.now() + 90000;
+    (function poll() {
+      api("GET", "/api/connect-result").then(function (j) {
+        if (j.result) return done(j.result);
+        if (Date.now() > deadline) {
+          return done({ ok: false, reason: "the Pi did not answer in time" });
+        }
+        setTimeout(poll, 2500);
+      }).catch(function () {
+        // Expected: the phone's Wi-Fi dropped while the radio changed channel.
+        msg("busy", '<span class="spin"></span>Switching channel — this page ' +
+                    "reconnects by itself…");
+        if (Date.now() > deadline) {
+          return done({ ok: false, reason: "lost contact with the Pi" });
+        }
+        setTimeout(poll, 2500);
+      });
+    })();
+    void start;
+  }
+
+  function done(r) {
+    state.busy = false;
+    state.resultShown = !r.ok;
+    $("connectBtn").disabled = false;
+    $("skipBtn").disabled = false;
+    if (r.ok) {
+      msg("ok", "<b>Connected to " + escapeHtml(r.ssid) + ".</b><br>" +
+                "The Pi has internet" + (r.ip ? " at " + escapeHtml(r.ip) : "") +
+                ". Devices on the hotspot keep working.");
+      localStorage.removeItem("pp_skipped");
+      setTimeout(function () {
+        state.resultShown = false;
+        show("setup", false);
+        load();
+      }, 2500);
+    } else {
+      msg("bad", "<b>That network did not answer.</b><br>" +
+                 escapeHtml(r.reason || "no association") +
+                 "<br>The hotspot is back on its old channel — nothing was lost.");
+      load();
+    }
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function connect() {
+    if (state.busy) return;
+    var n = state.picked;
+    if (!n) { msg("bad", "Pick a network from the list first."); return; }
+    var psk = $("psk").value;
+    if (psk.length < 8) { msg("bad", "The password needs at least 8 characters."); return; }
+    state.busy = true;
+    $("connectBtn").disabled = true;
+    $("skipBtn").disabled = true;
+    msg("busy", '<span class="spin"></span>Telling the Pi to join ' +
+                escapeHtml(n.ssid) + "…");
+    api("POST", "/api/connect", {
+      ssid: n.ssid, psk: psk, bssid: n.bssid, freq: n.freq
+    }).then(function () {
+      $("psk").value = "";
+      msg("busy", '<span class="spin"></span>Switching channel — the Wi-Fi drops ' +
+                  "for about 15 seconds. This page reconnects by itself.");
+      waitForResult(Date.now());
+    }).catch(function (e) {
+      state.busy = false;
+      $("connectBtn").disabled = false;
+      $("skipBtn").disabled = false;
+      msg("bad", "Could not start: " + escapeHtml(e.message));
+    });
+  }
+
+  $("scanBtn").addEventListener("click", function () { scan(true); });
+  $("connectBtn").addEventListener("click", connect);
+  $("skipBtn").addEventListener("click", function () {
+    api("POST", "/api/skip").catch(function () {});
+    localStorage.setItem("pp_skipped", "1");
+    show("setup", false);
+  });
+  $("changeBtn").addEventListener("click", function () {
+    localStorage.removeItem("pp_skipped");
+    show("setup", true);
+    $("setup").scrollIntoView({ behavior: "smooth", block: "start" });
+    scan(true);
+  });
+
+  load().then(function () {
+    if (!$("setup").classList.contains("hide")) scan(false);
+  });
+  setInterval(load, 15000);
+
+  // A cached result from a previous attempt should not be shown as news.
+  api("GET", "/api/connect-result").then(function (j) {
+    if (j.result && j.result.at && (Date.now() / 1000 - j.result.at) < 600) {
+      if (j.result.ok) show("setup", false);
+    }
+  }).catch(function () {});
+})();
+</script>
+</body>
+</html>

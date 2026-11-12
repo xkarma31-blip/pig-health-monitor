@@ -5,8 +5,9 @@
  * Works on web and native (Expo). No `pocketbase` npm needed.
  *
  * Env:
- *   EXPO_PUBLIC_POCKETBASE_URL  e.g. http://127.0.0.1:8090  (native) or http://localhost:8090 (web)
- *   fallback: http://127.0.0.1:8090 / http://localhost:8090
+ *   EXPO_PUBLIC_POCKETBASE_URL  Optional override. Unset is normal: native
+ *                               defaults to the Pi's own hotspot address.
+ *   fallback: http://192.168.69.1:8090 (Pi hotspot) / adb reverse / loopback
  *
  * Usage:
  *   import { pbList, pbCreate, pbSubscribeRealtime, pbAuthAdmin } from '../utils/pocketbase'
@@ -21,14 +22,22 @@ import { Platform } from 'react-native';
 // never reach a dev machine's loopback, and cross-origin hosts would be blocked
 // by the deployed CSP `connect-src 'self'`.
 // Native: the farmer-saved setup address is the source of truth when present,
-// then ADB reverse (127.0.0.1:18090), then direct PocketBase.
+// then the Pi's own hotspot gateway, then ADB reverse and direct loopback for
+// bench work on the laptop.
+// The hotspot address is FIRST because it is the only address that needs no
+// setup at all: a phone joined to the PigPulse AP reaches PocketBase on the Pi
+// (pocketbase serve --http=0.0.0.0:8090) with no adb tunnel and no laptop.
+// It was previously 127.0.0.1:18090, which only worked while `adb reverse` was
+// alive — i.e. only while the phone was tethered to the dev machine.
 // A tiny async indirection keeps this module import-synchronous; the setup
 // screen calls setConfiguredServer() before the wizard finishes.
+export const PB_HOTSPOT_URL = 'http://192.168.69.1:8090';
 const PB_FALLBACKS: string[] = (
   Platform.OS === 'web'
     ? ['']
     : [
-        'http://127.0.0.1:18090', // adb reverse tcp:18090 tcp:8090
+        PB_HOTSPOT_URL, // the Pi's own AP gateway — no tether required
+        'http://127.0.0.1:18090', // adb reverse tcp:18090 tcp:8090 (bench only)
         'http://127.0.0.1:8090',
       ]
 ).filter((url): url is string => typeof url === 'string');
@@ -56,7 +65,7 @@ export const PB_FALLBACK_URLS = PB_FALLBACKS;
  *   1. configuredServer — the farmer-saved setup address (runtime state,
  *      the source of truth once the wizard completes)
  *   2. EXPO_PUBLIC_POCKETBASE_URL — build-time default (e.g. EAS profiles)
- *   3. ADB reverse / loopback dev fallbacks
+ *   3. the Pi's hotspot gateway, then ADB reverse / loopback (bench)
  * The saved address must outrank the build-time env var: a device build
  * carrying a baked-in URL must still follow the farmer's saved box.
  * Web always resolves to same-origin ('') — public CSP forbids cross-origin.

@@ -193,17 +193,66 @@ private access path layered on top of an uplink, never a substitute for one.
 | ESP32-S3 `s3-mic-01` | 2.4 GHz only | The only audio sensor. |
 | Phone | dual-band | The only device that would survive a 5 GHz AP. |
 
-The Pi 4B's built-in radio (BCM43438) is **2.4 GHz only**. A single radio
-cannot be a WiFi client and an AP at the same time, so an adapter that becomes
-the **WAN client would take over the radio and drop the CCTV and the ESP32-S3**.
-Bandwidth is *not* the constraint — the sensors are tiny. Reach and having any
-uplink at all are.
+> **CORRECTED 2026-11-12 — measured, not assumed.** The claim below that the
+> Pi 4B's built-in radio is "2.4 GHz only" was **WRONG**. `iw phy phy0 info`
+> on the Pi reads:
+>
+> ```
+> Band 1:  * 2412.0 MHz [1] … * 2484.0 MHz [14]
+> Band 2:  * 5170.0 MHz [34] … * 5700.0 MHz [140]
+> ```
+>
+> The built-in radio (brcmfmac, BCM43438) is **dual-band 2.4 + 5 GHz**,
+> including channel 116 = 5580 MHz — exactly the farm router's 5 GHz channel.
+> With hostapd stopped, `iw dev wlan0 scan` sees **both** farm-router
+> BSSIDs: `2c:b6:c2:1e:9b:d4` (2437 MHz, -52 dBm) and
+> `2c:b6:c2:1e:9b:d5` (5580 MHz, -54 dBm).
+>
+> **Why it looked 2.4-only:** `wlan0` is owned by hostapd, so
+> `nmcli dev wifi list` silently scans `wlan1` (the 2.4 GHz USB dongle)
+> instead. Read the radio with `iw`, not nmcli.
+>
+> **The one-radio-one-band rule is still true** and is the real constraint
+> (`iw phy phy0 info`): with an AP active, `#{managed} <= 1, #{AP} <= 1,
+> #channels <= 1` — so an AP and a client on one radio must share a band.
+> That is why the **laptop** is pinned to a 2.4 GHz uplink (-55 dBm): its
+> hotspot must serve the 2.4 GHz-only CCTV and ESP32-S3. Two radios are
+> still mandatory — the correction is to *which* radio does what.
+>
+> **Corrected topology (both radios 5 GHz-capable is false; the built-in is,
+> the dongle is not):**
+>
+> ```
+> Built-in radio (wlan0, brcmfmac, DUAL-BAND) → 5 GHz client → farm router → WAN
+> USB adapter   (wlan1, rtl8192cu, 2.4 GHz only) → AP "PigPulse" 2.4 GHz → CCTV + ESP32-S3
+> ```
+>
+> **⚠️ Both USB radios tried on 2026-11-12 were hardware-faulty**, so this
+> topology is designed but not yet proven in anger:
+> - `rtl8192cu` (RTL8188CUS, no antenna) **works as an AP** — verified with a
+>   full WPA2 handshake. But as a *client* its USB endpoint fails:
+>   `rtl_usb: Urb has error status 0xFFFFFFB9`, every scan `EBUSY`, surviving
+>   `modprobe -r/-` and USB unbind/rebind. It cannot be the WAN client.
+> - Atheros AR9271 (the antenna adapter) **never enumerated** — `ath: phyN:
+>   Unable to initialize hardware; initialization status: -5` then
+>   `usb 1-1.1-port2: Cannot enable. Maybe the USB cable is bad?` ->
+>   `unable to enumerate USB device`. It is also 2.4 GHz only.
+>
+> So the remaining gap is: **one working 5 GHz-capable USB adapter**
+> (e.g. RTL8812AU/rtl88x2bu) for the AP role, with the built-in radio on
+> 5 GHz for WAN. Until then the Pi's only WAN is the laptop tether.
+
+A single radio cannot be a WiFi client and an AP at the same time on the
+*same band*, so an adapter that becomes the **WAN client would take over the
+radio and drop the CCTV and the ESP32-S3** *unless the two roles are split
+across the two radios*. Bandwidth is *not* the constraint — the sensors are
+tiny. Reach and having any uplink at all are.
 
 **Planned topology — two radios, independent interfaces:**
 
 ```
-Built-in radio (wlan0) → AP "PigPulse", 2.4 GHz → CCTV + ESP32-S3  [unchanged]
-USB adapter   (wlan1) → client, joins farm router (5 GHz) → WAN   [new]
+Built-in radio (wlan0, brcmfmac, DUAL-BAND) → client, farm router 5 GHz → WAN  [new]
+USB adapter   (wlan1, 2.4 GHz only)           → AP "PigPulse" 2.4 GHz → CCTV + ESP32-S3
 ```
 
 This is the only option that adds WAN without touching the sensor band. A
@@ -216,6 +265,30 @@ USB adapter can renumber interfaces, which would silently move the AP to
 `wlan1` and put `192.168.69.1` on the wrong interface — the ESP and CCTV would
 drop with no obvious cause. **Pin the AP to the built-in radio by MAC
 (udev rule) or set `WIFI_IFACE` per service before relying on this.**
+
+> **Measured 2026-11-12 — the renumber did NOT happen, and two services are
+> already parameterised:**
+> - `wlan0` = `brcmfmac` (built-in), `wlan1` = `rtl8192cu` (dongle). The AP
+>   stayed on `wlan0`; the USB adapter came up as `wlan1`.
+> - `config.py` honours `WIFI_IFACE` and `AP_IP` from the environment, and
+>   `pigpulse-ap-watchdog.sh` honours `PIGPULSE_AP_IFACE` (default `wlan0`).
+>   So moving the AP needs **env changes, not code edits**.
+> - The watchdog also hardcodes the stale-ctrl-socket path
+>   `/var/run/hostapd/wlan0` in two places — that must follow the new
+>   interface name, or the watchdog will not restart a failed hostapd.
+> - `wlan0-static-ip.service` and `pigpulse-ap-powersave.service` bind the
+>   interface name directly (`ip link set wlan0 up`, `iw dev wlan0 set
+>   power_save off`) and need editing, not just an env override.
+> - `dnsmasq.conf` has `interface=wlan0` plus `bind-interfaces` — it must
+>   follow the AP interface too, or DHCP leases stop.
+>
+> **Also:** `/etc/NetworkManager/system-connections/GFiber_E9BD4.nmconnection.bak`
+> on the Pi holds an 8-character **placeholder**, not the real farm-router PSK.
+> The real key is on the laptop in
+> `/etc/netplan/90-NM-716869f9-920f-42e7-a79a-7637c1176f68.yaml`
+> (`auth: password:`). The laptop keeps **two** profiles for the same SSID with
+> the same PSK: one pinned to the 2.4 GHz BSSID on `sta0`, one unpinned on
+> `wlo1`. The Pi's saved wifi profile could therefore never authenticate.
 
 **Two decisions this forces:**
 1. **Isolation.** The Pi becomes multi-homed. Do **not** forward or NAT between
@@ -245,6 +318,65 @@ channels 12/13 in some regions), and actual interface enumeration.
 Once an uplink exists, `cloud_sync.py` should move **onto the Pi**, since the Pi
 can then reach both networks and the laptop no longer has to join the AP.
 
+#### 2.4.1 Standalone WAN — built and measured 2026-11-12
+
+**The Pi no longer needs the laptop.** A 2.4 GHz venue on the AP's own channel
+(ch 6 = 2437 MHz) carries real traffic with the tether route removed: `ping
+8.8.8.8` 3/3, public IP `180.190.21.160`, `apt-get update` completes, and the
+AP keeps its clients throughout. Code lives in
+`v3-mqtt-pocketbase/deploy/wan-apsta/` (its README is the operator manual).
+
+| Fact | Measured value |
+|---|---|
+| Boot association | **7–8 s** after vif-up, two consecutive cold boots |
+| Radio at boot | phy parked on **5 GHz ch 34**; `iw dev … set channel` refused (`-95`) |
+| Boot scan (`iw scan freq 2412…2472`) | **non-deterministic**: 1 BSS on one boot, **0 BSS on ten straight attempts** on the next, no error |
+| Association without any scan | `COMPLETED` in **2 s**, `scans: 0` |
+| Default route | `wlan0sta` metric **200**; tether `eth1` metric 100 always wins while plugged |
+| Pi's own DNS | `nameserver 127.0.0.1` (its dnsmasq), NM `dns=none` |
+
+**Design rule that follows: the boot path must never scan.** brcmfmac rejects
+chanspec work for ~20 s after power-on, so a scan-then-associate boot is a coin
+flip. `pigpulse-wan-sta-up` associates from the saved profile (`bssid` +
+`scan_freq` + a **global** `freq_list`) and leaves discovery to a separate
+`--discover` phase. `freq_list` inside a `network={}` block is silently ignored —
+measured: the firmware then picked the venue's 5 GHz BSSID and the association
+collapsed.
+
+**`ap_scan=2` is reverted and must stay reverted.** It drops the BSSID from the
+request, the firmware picks the venue's 5 GHz BSS, and `#channels <= 1` drags the
+shared radio to ch 116 while hostapd still reports 2437.
+
+**Onboarding portal** — `backend/portal/`, plain HTTP on **:80**, no certificate,
+no framework, standard library only:
+
+- `GET /` — the first page: Wi-Fi onboarding (with **Skip**), local app tiles
+  (`https://192.168.69.1:8080/…`), the optional hosted-site link, live status.
+- `/api/status`, `/api/scan` (0.9 s, non-disruptive — scans while the AP
+  beacons), `/api/connect`, `/api/skip`, `/api/connect-result`.
+- Connect is **asynchronous**: the POST is answered `202` before the radio
+  moves, then `pigpulse-portal-connect` stops the AP, applies the venue, and
+  writes a result the page polls after it reconnects (~15 s).
+- A **failed** attempt restores the previous **venue and uplink**, not just the
+  AP config.
+- Why not the thermal dashboard: it is HTTPS with a private CA, so a phone that
+  has never seen the Pi gets a certificate warning before it has any way to
+  trust the cert.
+- `:80` is reachable from the venue LAN too (the Pi is a station there), so every
+  request is checked against an allowlist — AP subnet, tether subnet, loopback;
+  everything else gets `403`. Mutations are POST-only.
+
+> **`/run/pigpulse/ap-hold` is a hard contract.** `pigpulse-ap-watchdog.timer`
+> restarts hostapd every ~30 s and brought it back **4 s after `systemctl stop`**,
+> mid-association, making every portal connect time out at 90 s. The watchdog
+> now exits 0 when that file exists, and `pigpulse-portal-connect` creates it
+> (with an `EXIT` trap) for the duration of a venue change. Any future code that
+> deliberately drops the AP must do the same.
+
+**App side:** the Expo app's native default is now `http://192.168.69.1:8090`
+(PocketBase on the AP gateway, CORS `*`), not the `adb reverse` tunnel. A phone
+joined to the PigPulse hotspot therefore needs no laptop at all.
+
 ### 2.5 Hardware inventory
 
 > **BOARD RESOLVED 2026-09-30 from a device readout, not a spec sheet.**
@@ -263,7 +395,7 @@ can then reach both networks and the laptop no longer has to join the AP.
 | **Pi 4B Rev 1.2** | edge: thermal + ingest + AP + PB | ✅ **booted and serving** as of 2026-09-30 |
 | **MLX90640** | thermal camera, I²C on Pi | ⚠️ **intermittent** — working as of 2026-10-13 (~2 FPS, confirmed by Master 2026-10-29). Has died and recovered before (dead 2026-09-28, back by 2026-10-13). Run `thermal_doctor.py --fix` if it drops again |
 | **ESP32-S3** (`s3-mic-01`) | the ONLY mic. TCP :9090 audio, MQTT telemetry | ✅ **USB accessible** (2026-10-13, §1). Firmware `pigpulse-mic-pcm16-20261013` deployed; 2026-11-03 wire reports build `pigpulse-mic-sht45-20261019` (SHT45-aware) with ~1 Hz telemetry and nonzero audio (`nonzero=99.9%`). Mic hardware intermittent — produced real audio 2026-10-13, returned all-samples-minus-one 2026-10-14. Master confirms working as of 2026-10-29. See `KNOWN_GOOD.md` for revert |
-| **GY-SHT45** | environmental temp/humidity sensor (I²C on ESP32-S3) | ✅ **CONNECTED and reporting (2026-11-03)** — fresh temp/humidity rides in the s3-mic-01 telemetry bursts (~33-34 °C / ~72 % RH), live on the dashboard at `/ambient`, and stores in PocketBase. Measures pen-air context; must NOT replace MLX90640's internal temperature compensation — see §2.7 |
+| **GY-SHT45** | environmental temp/humidity sensor (I²C on ESP32-S3) | ✅ **WORKING and live as of 2026-11-12** — was never a hardware fault. The sensor had been reporting real values all along (measured 34.2–35.6 °C / 62–66 % RH); the readings were being **thrown away in transport**. The flashed build (`pigpulse-mic-sht45-20261111-pilevel`) appends a `drops` fragment ending in `"txp":%ld,` — a **trailing comma before `}`** — so every telemetry message was invalid JSON. A strict `json.loads` rejected 60 of 61 messages (`Illegal trailing comma before end of object`) and PocketBase stored `ambient=0, humidity=0` on ~498k rows. **Fixed 2026-11-12** by `backend/bridge/json_lenient.py` (`loads_lenient`, strips commas before `}`/`]`, re-raises anything genuinely broken) wired into `local_bridge.py`, `mqtt_bridge.py` and `ambient_ingest.py`; `/ambient` now returns `state=live` and rows carry `ambient≈35.3, humidity≈63.9`. A firmware source fix (comma removed + `payload[]` 512→768) is built and staged but **not yet flashed** — see `firmware/esp32s3-mic-ambient/docs/KNOWN_GOOD.md` and `~/sandbox/fw-experiments/20261112-144838-json-comma-fix`. The ESP32-S3 has no USB serial on the Pi; OTA is available (ArduinoOTA UDP 3232, `~/ota/ota-flash.sh`). Measures pen-air context; must NOT replace MLX90640's internal temperature compensation — see §2.7 |
 | **Tapo C200C** | CCTV, RTSP → MJPEG | ⚠️ video reachable on Pi AP only. Management API blocked (needs cloud-owner password). See §8 |
 | ~~ESP32-D0WD~~ | original node | ☠️ **DECOMMISSIONED — do not resurrect** |
 | ~~INMP441 on Pi GPIO~~ | fallback mic | ☠️ **REMOVED 2026-09-29** |
