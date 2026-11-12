@@ -27,6 +27,10 @@ from typing import Optional
 import paho.mqtt.client as mqtt
 import requests
 import urllib3
+
+# Tolerates the ESP32's trailing-comma telemetry payload (see the module
+# docstring for the measured impact).
+from json_lenient import loads_lenient
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 # ── Configuration ────────────────────────────────────────────────
@@ -148,7 +152,7 @@ def on_message(client, userdata, msg):
     """Called when a message is received."""
     try:
         topic = msg.topic
-        payload = json.loads(msg.payload.decode())
+        payload = loads_lenient(msg.payload.decode())
 
         # Extract device ID from topic: pig/{deviceId}/...
         parts = topic.split("/")

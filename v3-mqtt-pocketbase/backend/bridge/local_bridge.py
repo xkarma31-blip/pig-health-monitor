@@ -38,6 +38,9 @@ except ImportError:
 # Sibling modules (same directory as this script).
 from time_anchor import TimeAnchor
 from thermal_guard import apply_telemetry_guard, is_thermal_alert
+# Tolerates the ESP32's trailing-comma telemetry payload (see the module
+# docstring for the measured impact: 60 of 61 messages were being dropped).
+from json_lenient import loads_lenient
 
 MQTT_BROKER = os.getenv("MQTT_BROKER", "127.0.0.1")
 MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
@@ -315,7 +318,7 @@ def on_message(client, userdata, msg):
         if len(topic_parts) < 3:
             return
         _, device_id, channel = topic_parts[0], topic_parts[1], topic_parts[2]
-        payload = json.loads(msg.payload.decode("utf-8"))
+        payload = loads_lenient(msg.payload.decode("utf-8"))
 
         if not isinstance(payload, dict):
             return

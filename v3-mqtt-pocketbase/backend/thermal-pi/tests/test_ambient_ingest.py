@@ -199,6 +199,117 @@ class AmbientStateTests(unittest.TestCase):
         self.assertIsNone(s["device"])
         self.assertEqual(s["state"], "live")
 
+    # ---- the trailing-comma defect (measured 2026-11-12 on the Pi) --------
+
+    # Captured verbatim from the live board via
+    #   mosquitto_sub -h 127.0.0.1 -p 1883 -t pig/s3-mic-01/telemetry
+    # The trailing comma before `}` makes the document invalid JSON, so a
+    # strict parser rejects it and the SHT45 reading it carries is lost.
+    TRAILING_COMMA_PAYLOAD = (
+        '{"mic":true,"rms":162368,"peak":387570,"sr":48000,'
+        '"temperature":34.25,"humidity":65.50,"irf":0,"irr":0,'
+        '"txd":23489280,"txp":39,"txr":54,"rssi":-33,"heap":214384,'
+        '"sps":48031,"batch":512,"bps":96063,"opk":2968,"clip":0,'
+        '"dc":-33,"omin":-1580,"omax":2968,"smin":-2546,"smax":3297,'
+        '"boots":1,"rr":1,"br":0,"txp":34,}'
+    )
+
+    def test_trailing_comma_payload_is_accepted(self):
+        """The real broken payload must still yield its SHT45 reading."""
+        import json as _json
+        # Precondition: the strict parser really does reject it.
+        with self.assertRaises(ValueError):
+            _json.loads(self.TRAILING_COMMA_PAYLOAD)
+
+        self.ing._connected = True
+        self.feed(self.TRAILING_COMMA_PAYLOAD)
+        s = self.ing.snapshot()
+        self.assertEqual(s["state"], "live")
+        self.assertAlmostEqual(s["temperature"], 34.25, places=2)
+        self.assertAlmostEqual(s["humidity"], 65.50, places=2)
+        self.assertEqual(s["ambientCount"], 1)
+        self.assertEqual(s["msgCount"], 1)
+
+    def test_trailing_comma_without_ambient_keys_is_still_mic_online(self):
+        """The keyless variant (no SHT45 reading) must not look like a fault."""
+        self.ing._connected = True
+        self.feed(
+            '{"mic":true,"rms":154448,"peak":461978,"sr":48000,'
+            '"irf":0,"irr":0,"txd":23489280,"txp":39,"txr":54,'
+            '"rssi":-33,"heap":214384,"sps":48031,"batch":512,'
+            '"bps":96063,"opk":1628,"clip":0,"dc":-30,'
+            '"omin":-1253,"omax":464,"smin":-800,"smax":250,'
+            '"boots":1,"rr":1,"br":0,"txp":34,}'
+        )
+        s = self.ing.snapshot()
+        self.assertTrue(s["micOnline"])
+        self.assertEqual(s["state"], "sht-missing")
+        self.assertEqual(s["ambientCount"], 0)
+
+
+class TolerantJsonTests(unittest.TestCase):
+    """The transport-side helper that rescues the trailing-comma payload."""
+
+    def setUp(self):
+        sys.path.insert(0, os.path.join(
+            os.path.dirname(HERE), os.pardir, "bridge"))
+        from json_lenient import loads_lenient, strip_trailing_commas
+        self.loads = loads_lenient
+        self.strip = strip_trailing_commas
+
+    def tearDown(self):
+        sys.path.pop(0)
+
+    def test_valid_json_is_unchanged(self):
+        self.assertEqual(self.loads('{"a":1,"b":[1,2]}'), {"a": 1, "b": [1, 2]})
+
+    def test_trailing_comma_object_is_repaired(self):
+        self.assertEqual(self.loads('{"a":1,"b":2,}'), {"a": 1, "b": 2})
+
+    def test_trailing_comma_array_is_repaired(self):
+        self.assertEqual(self.loads('[1,2,]'), [1, 2])
+
+    def test_trailing_comma_before_whitespace_closing_brace(self):
+        self.assertEqual(self.loads('{"a":1,  }'), {"a": 1})
+
+    def test_genuinely_broken_payload_still_raises(self):
+        with self.assertRaises(ValueError):
+            self.loads('{"a":1,,"b":2}')
+
+    def test_not_json_still_raises(self):
+        with self.assertRaises(ValueError):
+            self.loads('not json at all')
+
+    def test_comma_inside_a_string_is_not_stripped(self):
+        self.assertEqual(self.loads('{"a":"x,}"}'), {"a": "x,}"})
+
+    def test_comma_in_string_survives_when_document_is_also_broken(self):
+        """The repair path must not corrupt a string value.
+
+        A naive regex that strips `,}` would turn the value "x,}" into "x}".
+        The document here is genuinely invalid (trailing comma) so the repair
+        path really runs -- this is the case that proves string awareness.
+        """
+        self.assertEqual(
+            self.loads('{"a":"x,}","b":1,}'),
+            {"a": "x,}", "b": 1},
+        )
+
+    def test_bracket_text_inside_string_survives(self):
+        self.assertEqual(
+            self.loads('{"a":"[1,2,]","b":[3,],}'),
+            {"a": "[1,2,]", "b": [3]},
+        )
+
+    def test_escaped_quote_does_not_end_the_string_early(self):
+        self.assertEqual(
+            self.loads(r'{"a":"say \"hi,\" now","b":1,}'),
+            {"a": 'say "hi," now', "b": 1},
+        )
+
+    def test_bytes_input_is_accepted(self):
+        self.assertEqual(self.loads(b'{"a":1,}'), {"a": 1})
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -56,11 +56,23 @@ Singleton contract matches esp_audio_ingest: get() / ensure_started().
 
 from __future__ import annotations
 
-import json
+import os
+import sys
 import threading
 import time
 
 import config
+
+# The tolerant parser lives in backend/bridge (single source of truth, shared
+# with the Pi bridge and the workers). Resolve it relative to this file so the
+# module works both run directly and imported by tests.
+_BRIDGE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), os.pardir, "bridge")
+if _BRIDGE_DIR not in sys.path:
+    sys.path.insert(0, _BRIDGE_DIR)
+# Tolerates the ESP32's trailing-comma telemetry payload. Measured on the Pi
+# 2026-11-12: 60 of 61 messages were rejected by the strict parser, so the
+# SHT45 readings they carried never reached this card.
+from json_lenient import loads_lenient  # noqa: E402
 
 try:
     import paho.mqtt.client as mqtt
@@ -152,7 +164,7 @@ class AmbientIngest:
 
     def _on_message(self, client, userdata, msg) -> None:
         try:
-            payload = json.loads(msg.payload.decode())
+            payload = loads_lenient(msg.payload.decode())
         except (ValueError, UnicodeDecodeError):
             return
         if not isinstance(payload, dict):
