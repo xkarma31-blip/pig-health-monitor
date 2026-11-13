@@ -108,6 +108,27 @@ gateway's 403 guards on `/_/` and `/admin/` still hold.
 | §2.4 | "the live config has exactly nine locations" | it has **eight**; the enumerated list also had eight. |
 | §6-11 | `PB_PASSWORD` unknown | the bridge still refuses to start without credentials, by design. |
 
+### 0.7 Decision on record — the theme's accessibility FAILs are accepted
+
+`tools/a11y/pigpulse_a11y.py audit` scores the live `theme.ts` and reports
+**twelve FAILs** in the light palette (the five badge labels, two row glyphs,
+"muted label on card", "thermal value", "card hairline boundary", "input
+border on bg", "body small"/"secondary label"). The tool computes an exact
+replacement hex for every one of them.
+
+**Master was shown those fixes on 2026-11-13 and declined them: the theme is
+to stay as it is.** These FAILs are a *measurement on record*, not an open
+defect list.
+
+> **Do not apply the `fix` suggestions to `src/theme/theme.ts`** without a
+> fresh, explicit instruction from Master. The a11y tool is a measurement and a
+> record — not a to-do list. The reason is documented in the tool's own header
+> so a future agent reading the audit output cannot mistake it for a mandate.
+
+Related: the healthy-green / alert-red pair keeps only ~17% of its separation
+for deuteranopes. That is carried deliberately by a text label and an icon
+shape on the badges (`Badge.tsx`), not by colour alone.
+
 ---
 
 ## 1. HARD RULES

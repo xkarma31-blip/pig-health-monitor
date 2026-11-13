@@ -1,6 +1,16 @@
 #!/usr/bin/env python3
 """PigPulse accessibility (a11y) contrast toolkit — standard library only.
 
+OWNER DECISION — 2026-11-13 — THE `audit` FAILs ARE KNOWN AND ACCEPTED.
+The light palette currently reports twelve FAILs (the five badge labels, two
+row glyphs, muted label on card, thermal value, card hairline boundary, input
+border on bg, body small / secondary label). Master was shown the exact
+computed fixes and **declined them**: the theme is to stay as it is. Do not
+apply the `fix` suggestions to `src/theme/theme.ts` without a fresh explicit
+instruction from him. This module is a measurement tool and a record of what
+it found — it is not a to-do list. The audit output is the evidence that the
+state was checked and accepted, not a defect report awaiting repair.
+
 Why this exists
 ---------------
 Master reads PigPulse on a laptop and a phone with low vision, and a farmer reads
@@ -671,6 +681,11 @@ _SEV_MARK = {"ok": "PASS", "warn": "WARN", "fail": "FAIL"}
 
 def _render_table(results: dict[str, list[Finding]]) -> str:
     lines: list[str] = []
+    lines.append(
+        "KNOWN AND ACCEPTED — Master was shown these fixes on 2026-11-13 and "
+        "declined them;\nthe theme stays as it is. Do not apply the 'fix' column "
+        "without a fresh explicit instruction."
+    )
     for palette, rows in results.items():
         lines.append(f"\n=== palette: {palette} ===")
         lines.append(f"{'result':6} {'pair':24} {'fg':8} {'bg':8} {'WCAG':9} {'Lc':>7} {'need':>6}  CVD(min)  fix")

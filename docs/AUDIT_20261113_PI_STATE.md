@@ -637,3 +637,24 @@ Every firmware image, with its sha256, is archived under
 `firmware/esp32s3-mic-ambient/docs/known-good-*/` and listed in
 `KNOWN_GOOD.md`. The rollback image for the live build is
 `firmware-nowriteblock.bin` (`db8f1641…`).
+
+### 7.10 Decision on record — the theme is NOT being changed
+
+The a11y audit (§7 discussion above, `tools/a11y/pigpulse_a11y.py audit`)
+reports **twelve FAILs** in the live light palette and computes an exact
+replacement hex for each. Master was shown them on 2026-11-13 and **declined:
+the theme stays as it is.**
+
+**Do not apply the `fix` suggestions** to
+`v3-mqtt-pocketbase/frontend/mobile_app/src/theme/theme.ts` without a fresh,
+explicit instruction from him. The a11y tool is a measurement and a record on
+disk — it is not a to-do list. This is recorded in three places so that a
+future agent reading the audit output cannot mistake it for a mandate:
+
+- the module header of `tools/a11y/pigpulse_a11y.py`
+- the first line of the `audit` command's own output
+- `CANON.md` §0.7 — "Decision on record"
+
+The underlying finding (healthy-green vs alert-red keeps only ~17% of its
+separation for deuteranopes) is carried deliberately by a text label and an
+icon shape on the badges, not by colour alone.
