@@ -492,3 +492,148 @@ backup exists, is one command to revert.
 - **[UNVERIFIED]** Whether the two USB radios CANON §2.4 discusses are still
   fault-faulty. `wlan1` (rtl8192cu) is currently **DOWN**; `wlan0` carries the AP and
   `wlan0sta` carries the venue uplink on the same radio.
+
+---
+
+## 7. REMEDIATION LOG — 2026-11-13
+
+Everything below was executed after the audit, with a backup or an archive for
+each change. Master approved items 1–9. Full record in
+`~/.local/state/` and the systemd `*.bak-20261113-*` files.
+
+### 7.1 P0 — public demo panel closed
+
+```
+tailscale funnel --https=8443 off
+```
+Verified: `https://…ts.net:8443/` → **HTTP 000** (connection refused);
+`https://…ts.net/health` → **401** (the key-gated PigPulse proxy, untouched).
+Revert: `tailscale funnel --https=8443 8788`.
+
+### 7.2 The SHT45 — three defects, one firmware rebuild
+
+The firmware was flashed four times under the CANON R8 discipline (archive
+before flash, sha256 recorded, measured before/after). Each intermediate build
+is archived under `firmware/esp32s3-mic-ambient/docs/known-good-*/`.
+
+| build | what it changed | ambient fragment | outcome |
+|---|---|---|---|
+| `nowriteblock` (the running baseline) | — | **14/40 (35%)** | the defect |
+| `shtcache` | gate on the cached reading; `drops[384]`→`512` | 38/60 (63%) | **5 messages still dropped by the MQTT buffer ceiling** |
+| `shtdiag` | six failure-kind counters on the wire | 33/60 (55%) | payload crossed the ceiling → **telemetry nearly dead** |
+| **`shtretry`** | fast retry + 30 s window + **MQTT buffer 384→1024** | **59/60 (98%)** | ✅ shipped |
+
+The four defects, in the order they were found:
+
+1. **`shtValid` cleared by transient failures.** The gate tested the last
+   attempt's outcome instead of the cached reading's age.
+2. **PubSubClient's 384-byte buffer capped the payload at 353 bytes** for our
+   24-char topic (`MQTT_MAX_HEADER_SIZE(5) + 2 + topic + payload`). The payload
+   was at **346** — seven bytes of margin. `mqtt.publish()` returns false and
+   **every** telemetry message is dropped, silently, while the audio keeps
+   streaming over a different socket. This was a live landmine: adding any
+   counter would have killed all telemetry.
+3. **The measurement was read 10 ms after the command** against an SHT45
+   high-precision conversion of up to 8.5 ms — a 1.5 ms race.
+4. **The SHT45 bus is genuinely faulty.** The instrumented build reported
+   `sfw=35` command NACKs (`sle=2`, NACK on its own address), `sfs=9` short
+   reads, `sfc=6` CRC mismatches. Firmware now retries a failed cycle after
+   8 ms, up to three times.
+
+**Measured result** (raw MQTT on `pig/s3-mic-01/telemetry`):
+
+| metric | before | after |
+|---|---|---|
+| messages carrying the ambient fragment | 14/40 (35%) | **59/60 (98%)** |
+| PocketBase zero-rate (`ambient=0 AND humidity=0`) | 48.3 → 32.2 → 21.7 → 4.5% | **0.0%** |
+| audio | 99.6% nonzero | 99.8% nonzero (unchanged) |
+| Pi rows carrying the signature | 304,862 | still historical; **none new** |
+
+**Residual, physical:** the SHT45's I²C connection still NACKs. The firmware
+tolerates it; **the wiring needs attention.**
+
+### 7.3 Pi app re-export (the missing worklet)
+
+`expo export` → deployed via `deploy-local-app.sh` → release
+`/usr/local/lib/pigpulse-portal/releases/20261113-114849`, symlink swapped
+atomically, portal restarted. Verified: `/app/` **200**, `/app/pcm-worklet.js`
+**200** (5,309 B, real worklet content). Backup at
+`/root/pigpulse-backups/local-app-20261113-114849`.
+
+### 7.4 PocketBase bound down — both hosts
+
+| host | before | after |
+|---|---|---|
+| laptop | `--http=0.0.0.0:8090 --dev` | `--http=127.0.0.1:8090 --dev` |
+| Pi | `--http=0.0.0.0:8090` | `--http=192.168.69.1:8090` (what the repo's unit already said) |
+| `sync.env` | `SYNC_SOURCE_URL=http://raspberrypi.local:8090` | `http://192.168.69.1:8090` |
+
+`raspberrypi.local` resolves to **10.42.0.28** (eth1), which the new Pi bind
+no longer serves — so both sides had to move together. Verified: admin UI
+**200 on loopback only**, **000 (refused)** on the home LAN, the tailnet,
+`10.42.0.28` and `192.168.254.194`. Gateway `/_/` still **403**; `cloud_sync`
+pass `sent 14, failed 0`. Backups: `*.bak-20261113-bind`.
+
+### 7.5 Repo — the tree could not build or boot itself
+
+Three commits, then a history rewrite to satisfy GitHub's 100 MB pre-receive
+limit:
+
+- `b2f4d30` — the firmware fix.
+- `76843ca` — committed the modules the tree already imported
+  (`portal/local_app.py`, `mobile_app/public/pcm-worklet.js`), made
+  `npm run test` real, added `mobile_app` to the CI canon-guard, added the
+  portal + unit suites to CI, removed the vestigial `jest.config.js`,
+  committed `tools/` (24 real, tested files), and fixed the a11y theme
+  lookup's `Path.home()` dependency.
+- `feb1f64` → `7dfeac5` — the CANON corrections.
+
+**The GitHub push was impossible until the history was rewritten.** A
+**116.83 MB** committed virtualenv (`scripts/venv/lib/python3.12/site-packages/
+playwright/driver/node`) was added in `92fec7f` and removed in `6d21888`, but
+the *object* stayed reachable from the branch and GitHub's pre-receive hook
+rejected the whole push. `git filter-repo --path scripts/venv/ --invert-paths`
+removed it from the branch's history.
+
+Verified after the rewrite: the blob is gone, the **final tree hash is
+byte-identical** (`93150cc56b5d22f44dcbc92f02cc9b0d50aec45b` before and
+after), `master` / `merge/teammate-access` / `backup/*` are untouched, and the
+original history is preserved on Codeberg as the tag
+`archive/pre-venv-rewrite-20261113`. Both remotes are at `7dfeac5`.
+
+**Note:** the blob is still reachable from `master` and from the backup tag —
+pushing *those* to GitHub would hit the same limit.
+
+### 7.6 Seeded data removed
+
+After a consistent `VACUUM INTO` backup (`data.db.bak-20261113-deseed`):
+6 seeded alerts, 41 seeded telemetry rows and 2 seeded devices deleted from
+the laptop PocketBase. The `alerts` collection is now **0**, and the Vercel
+API's default (oldest-first) view now returns real `s3-mic-01` rows instead of
+the fake `esp32-00x` demo data.
+
+### 7.7 Autodeploy cron restored
+
+The pause reason (invalid Vercel token) no longer held — `vercel whoami`
+succeeds. The cron line is live again with an accurate comment, and the
+script's own auth gate still stops the cycle early and says so if the token
+ever dies.
+
+### 7.8 Tests
+
+| suite | result |
+|---|---|
+| backend bridge | 18 OK |
+| backend workers | 18 OK |
+| backend thermal-pi | 121 OK |
+| backend portal | 10 OK (new — path traversal, SSRF, allowlist) |
+| `npm run test` | 12 bridge + pi-clock + telemetry-time, all pass |
+| `tools/` suites | 6/6 pass |
+| CI | `ci:backend` OK · ESLint clean · pre-commit secret guard **verified to fire** |
+
+### 7.9 Known-good register
+
+Every firmware image, with its sha256, is archived under
+`firmware/esp32s3-mic-ambient/docs/known-good-*/` and listed in
+`KNOWN_GOOD.md`. The rollback image for the live build is
+`firmware-nowriteblock.bin` (`db8f1641…`).
