@@ -1,0 +1,10 @@
+# Runtime dependencies — PigPulse on-device cough classifier
+#
+# The bundle is deliberately tiny. The PANNs body is loaded through
+# onnxruntime; everything in the front-end (STFT, mel filterbank, Hann
+# window) is plain numpy, so there is no torch dependency on a 4 GB Pi.
+#
+# Verified against the live bundle on the Pi
+# (/home/pigpulse/cough/.venv) on 2026-11-13.
+numpy==2.5.4
+onnxruntime==1.31.1

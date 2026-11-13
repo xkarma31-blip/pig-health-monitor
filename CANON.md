@@ -101,7 +101,7 @@ gateway's 403 guards on `/_/` and `/admin/` still hold.
 
 | § | Was | Now |
 |---|---|---|
-| §4.2 | "Funnel off" | **off** again. It had been on with **two** targets, one of them an unauthenticated demo panel published to the public internet. Closed 2026-11-13; the key-gated proxy path is untouched. |
+| §4.2 | "Funnel off" | **the demo panel is off; the key-gated data path is deliberately still on.** The Funnel had **two** targets — `:443 → 127.0.0.1:8099` (the key-gated read-only proxy) and `:8443 → 127.0.0.1:8788` (an unauthenticated demo panel published to the public internet). **`:8443` was closed** on 2026-11-13. **`:443` was left ON on purpose**: it is the only path the Vercel `/api/telemetry` function uses to reach the data, so closing it would empty the public dashboard. §4.2's "Funnel off" remains the correct *end state* to reach if that path is ever replaced — it is not the current state. The demo panel is also stopped at the process level, not only at the Funnel. |
 | §4 | autodeploy "cron, 5 min" | was **paused** since 2026-10-31 for a Vercel-token reason that no longer holds; restored 2026-11-13. The staging tree is `~/.local/state/pigpulse-stage/`, not `landing_page/app/`. |
 | §3.2 | `tools/` is an "empty orphan" | **not empty** — 24 real, tested files (accessibility checker, evidence ledger, perf benchmarks). Committed 2026-11-13. |
 | §6-9 | "no `/cctv` route" | still true of the **gateway**. But the read-only proxy serves a working **`/pi/cctv`** (live MJPEG) and Funnel republishes it — an undocumented public camera path. |
