@@ -4,10 +4,109 @@
 > Authority: repository location, branch, topology, deployment, safety rules.
 > If any other document (including dated briefings, orientation snapshots, or
 > a stale `AGENTS.md`) contradicts this file, **this file wins**.
-> Last verified against the working tree: **2026-10-29** (board model, regdom, PocketBase
-> version, migration filenames and thermal schema all verified from device
-> readouts; repo structure, open items, hardware status, and branch inventory
-> re-verified in a full Q&A review on this date).
+> Last verified against the working tree: **2026-11-13** (full end-to-end audit:
+> every claim below was read off the live Pi, the live laptop rig, raw MQTT on
+> the wire, or the databases — not from a spec sheet). The previous
+> verification was 2026-10-29.
+
+---
+
+## 0. CORRECTIONS OF 2026-11-13 — READ FIRST
+
+> Full audit record with every measurement: **`docs/AUDIT_20261113_PI_STATE.md`**.
+> This section is the short form. Where it contradicts a later section of this
+> file, **it wins**.
+
+### 0.1 The SHT45 diagnosis in §2.5 was WRONG — and the fix is different
+
+§2.5 says the SHT45's `ambient=0, humidity=0` rows were caused by the
+trailing-comma JSON bug and that *"Fixed 2026-11-12"*. **The comma was fixed.
+The zeros were not.** Three separate defects were behind them, all confirmed
+from the board's own counters:
+
+| # | Defect | Evidence |
+|---|---|---|
+| 1 | The publish gate tested the **last attempt's outcome**, not the age of the cached reading. `sht_task()` cleared `shtValid` on any transient failure, discarding a still-good value. | live counters; 14/40 messages carried the ambient fragment |
+| 2 | **PubSubClient silently dropped every telemetry message** once the payload crossed `bufferSize − (5 + 2 + topic)` = **353 bytes**. The payload had crept to **346** — seven bytes of margin. | `PubSubClient.cpp:450`; any added counter killed all telemetry while the audio kept streaming |
+| 3 | The SHT45 bus is **genuinely intermittent** — the sensor NACKs its own address (`sle=2`), plus short reads and CRC mismatches. | instrumented build: `sfw=35 sfs=9 sfc=6` |
+
+Fixed in firmware `pigpulse-mic-sht45-20261113-shtretry` (archived with
+sha256 under `firmware/esp32s3-mic-ambient/docs/known-good-20261113-shtretry/`).
+Measured before → after, from raw MQTT:
+
+```
+messages carrying the ambient fragment   14/40 (35%)  ->  59/60 (98%)
+PocketBase zero-rate, minute by minute   48.3% -> 32.2% -> 21.7% -> 4.5% -> 0.0%
+```
+
+**Residual, physical:** the SHT45's I²C connection still NACKs. The firmware
+tolerates it; **the wiring wants attention.** New telemetry counters publish
+the truth: `srf` (failed attempts), `sage` (ms since the last good reading),
+`sfs`/`sfc`/`sfw` (failure kind), `sle` (I²C error), `sdt` (command→read ms),
+`slr` (last CRC byte). **Absent is not zero** — check `sage`, not `ambient=0`.
+
+### 0.2 The Pi is no longer an island — §2.4's wording is superseded
+
+§2.4 describes an air-gapped Pi absent from the tailnet. Measured 2026-11-13:
+
+- `wlan0sta 192.168.254.194/24` — farm router (2.4 GHz venue BSSID, metric 200)
+- `eth1 10.42.0.28/24` — laptop tether (default route, metric 100)
+- `tailscale0 100.69.139.63` — **the Pi IS on the tailnet**
+- `ping 8.8.8.8` → 3/3, 23–31 ms
+
+Tailscale's objection in §2.4 (a node with no internet cannot enrol) is
+**moot** — the Pi now has WAN and did enrol. Read §2.4.1 for the mechanism.
+
+### 0.3 §2.5's "the laptop rig shows seeded demo data" is FALSE
+
+The Pi→cloud sync is **live and working**: 649,685 telemetry rows on the
+laptop PocketBase — 574,070 × `s3-mic-01` and 71,042 × `pi-thermal-01`, the
+freshest seconds old. Only 41 rows carry a seeded `esp32-00x` deviceId, all
+from 2026-09-02. The `synced` flag genuinely toggles (the Pi holds ~11 rows in
+flight against 634,007 synced). Interval is **10 s**, not the 60 s of §2.4.
+
+### 0.4 Thermal alerts are suppressed on purpose — now documented
+
+The Pi generates real thermal alerts (118 HYPERTHERMIA + 26 FEVER) and
+`cloud_sync.py` **marks them handled without ever delivering them**
+(`workers/cloud_sync.py:271-283`, via `bridge/thermal_guard.py:is_thermal_alert`).
+The reason is sound: those rows carry physically impossible values — one read
+*"unassigned centre 476.89C"* — so the bridge refuses to ship them. The Pi
+bridge also suppresses at ingest, which is why no new thermal alert has
+appeared since 2026-11-03.
+
+**Consequence to remember:** the cloud `alerts` collection holds **only
+seeded demo rows**, so the phone's alert feed shows fake "Peppa FEVER"
+data. The seeded rows were deleted on 2026-11-13. A cloud alert now means
+"a real non-thermal alert" (e.g. `MIC_DISCONNECTED`), never a thermal claim.
+
+### 0.5 The admin surfaces are back where this canon says they should be
+
+§4.1 ("admin UI, loopback only") and §6 item 1b ("Pi PocketBase now bound to
+`192.168.69.1`") were both **drifted from in practice**. Re-tightened
+2026-11-13, with backups:
+
+- laptop PocketBase → `--http=127.0.0.1:8090`
+- Pi PocketBase → `--http=192.168.69.1:8090` (the repo's unit already said so;
+  the live unit had drifted to `0.0.0.0`)
+- `~/.config/pigpulse/sync.env` → `SYNC_SOURCE_URL=http://192.168.69.1:8090`
+  (`raspberrypi.local` resolves to `10.42.0.28`/eth1, which the new bind no
+  longer serves)
+
+Verified: the admin UI answers **200 on loopback only** and **000 (refused)**
+on the home LAN, the tailnet, `10.42.0.28` and `192.168.254.194`. The
+gateway's 403 guards on `/_/` and `/admin/` still hold.
+
+### 0.6 Other corrections
+
+| § | Was | Now |
+|---|---|---|
+| §4.2 | "Funnel off" | **off** again. It had been on with **two** targets, one of them an unauthenticated demo panel published to the public internet. Closed 2026-11-13; the key-gated proxy path is untouched. |
+| §4 | autodeploy "cron, 5 min" | was **paused** since 2026-10-31 for a Vercel-token reason that no longer holds; restored 2026-11-13. The staging tree is `~/.local/state/pigpulse-stage/`, not `landing_page/app/`. |
+| §3.2 | `tools/` is an "empty orphan" | **not empty** — 24 real, tested files (accessibility checker, evidence ledger, perf benchmarks). Committed 2026-11-13. |
+| §6-9 | "no `/cctv` route" | still true of the **gateway**. But the read-only proxy serves a working **`/pi/cctv`** (live MJPEG) and Funnel republishes it — an undocumented public camera path. |
+| §2.4 | "the live config has exactly nine locations" | it has **eight**; the enumerated list also had eight. |
+| §6-11 | `PB_PASSWORD` unknown | the bridge still refuses to start without credentials, by design. |
 
 ---
 
@@ -176,7 +275,7 @@ Live schema lives in `v3-mqtt-pocketbase/deploy/pocketbase/bin/pb_migrations/`.
 > 2026-09-30. The Pi was offline, so none of this has been tested on device.
 > Do not quote any number here as a measurement.
 
-**Current state (measured 2026-09-30):** the Pi is an island. It runs hostapd
+**Current state (measured 2026-09-30; SUPERSEDED — see §0.2):** the Pi is an island. It runs hostapd
 + dnsmasq and serves `192.168.69.0/24`, with **no uplink and no WAN**. `ping
 192.168.69.1` gave 100% packet loss and the Pi is absent from the tailnet.
 
@@ -320,6 +419,15 @@ can then reach both networks and the laptop no longer has to join the AP.
 
 #### 2.4.1 Standalone WAN — built and measured 2026-11-12
 
+**2026-11-13 local-app addition:** `http://192.168.69.1/?setup=1` is the QR
+welcome URL. Skip and successful venue connection now open the full Expo app
+at `/app/`, statically hosted on the **Pi**, not the laptop. Same-origin
+read-only adapters use Pi PocketBase and thermal services; Vercel is optional.
+Operator/deploy/rollback instructions: `v3-mqtt-pocketbase/backend/portal/README.md`.
+Browser tested against the actual Pi with external requests blocked; physical
+phone QR scanning and a long offline soak remain untested. The portal's
+`ap.clients` value is DHCP leases, not a count of currently associated clients.
+
 **The Pi no longer needs the laptop.** A 2.4 GHz venue on the AP's own channel
 (ch 6 = 2437 MHz) carries real traffic with the tether route removed: `ping
 8.8.8.8` 3/3, public IP `180.190.21.160`, `apt-get update` completes, and the
@@ -395,7 +503,7 @@ joined to the PigPulse hotspot therefore needs no laptop at all.
 | **Pi 4B Rev 1.2** | edge: thermal + ingest + AP + PB | ✅ **booted and serving** as of 2026-09-30 |
 | **MLX90640** | thermal camera, I²C on Pi | ⚠️ **intermittent** — working as of 2026-10-13 (~2 FPS, confirmed by Master 2026-10-29). Has died and recovered before (dead 2026-09-28, back by 2026-10-13). Run `thermal_doctor.py --fix` if it drops again |
 | **ESP32-S3** (`s3-mic-01`) | the ONLY mic. TCP :9090 audio, MQTT telemetry | ✅ **USB accessible** (2026-10-13, §1). Firmware `pigpulse-mic-pcm16-20261013` deployed; 2026-11-03 wire reports build `pigpulse-mic-sht45-20261019` (SHT45-aware) with ~1 Hz telemetry and nonzero audio (`nonzero=99.9%`). Mic hardware intermittent — produced real audio 2026-10-13, returned all-samples-minus-one 2026-10-14. Master confirms working as of 2026-10-29. See `KNOWN_GOOD.md` for revert |
-| **GY-SHT45** | environmental temp/humidity sensor (I²C on ESP32-S3) | ✅ **WORKING and live as of 2026-11-12** — was never a hardware fault. The sensor had been reporting real values all along (measured 34.2–35.6 °C / 62–66 % RH); the readings were being **thrown away in transport**. The flashed build (`pigpulse-mic-sht45-20261111-pilevel`) appends a `drops` fragment ending in `"txp":%ld,` — a **trailing comma before `}`** — so every telemetry message was invalid JSON. A strict `json.loads` rejected 60 of 61 messages (`Illegal trailing comma before end of object`) and PocketBase stored `ambient=0, humidity=0` on ~498k rows. **Fixed 2026-11-12** by `backend/bridge/json_lenient.py` (`loads_lenient`, strips commas before `}`/`]`, re-raises anything genuinely broken) wired into `local_bridge.py`, `mqtt_bridge.py` and `ambient_ingest.py`; `/ambient` now returns `state=live` and rows carry `ambient≈35.3, humidity≈63.9`. A firmware source fix (comma removed + `payload[]` 512→768) is built and staged but **not yet flashed** — see `firmware/esp32s3-mic-ambient/docs/KNOWN_GOOD.md` and `~/sandbox/fw-experiments/20261112-144838-json-comma-fix`. The ESP32-S3 has no USB serial on the Pi; OTA is available (ArduinoOTA UDP 3232, `~/ota/ota-flash.sh`). Measures pen-air context; must NOT replace MLX90640's internal temperature compensation — see §2.7 |
+| **GY-SHT45** | environmental temp/humidity sensor (I²C on ESP32-S3) | ✅ **WORKING and live as of 2026-11-13** — was never a hardware fault. The sensor had been reporting real values all along (measured 34.2–35.6 °C / 62–66 % RH); the readings were being **thrown away in transport**. The trailing-comma JSON bug below is real but it is **NOT the whole cause** — see **§0.1** for the corrected diagnosis and the fix that actually landed (firmware `pigpulse-mic-sht45-20261113-shtretry`, verified: the ambient fragment now rides on 59 of every 60 messages and the PocketBase zero-rate is **0.0%**). The build (`pigpulse-mic-sht45-20261111-pilevel`) appended a `drops` fragment ending in `"txp":%ld,` — a **trailing comma before `}`** — so a strict `json.loads` rejected 60 of 61 messages (`Illegal trailing comma before end of object`). **The comma was removed** in `pigpulse-mic-sht45-20261113-nowriteblock` (archived, sha256 `db8f1641…`) and `backend/bridge/json_lenient.py` (`loads_lenient`) remains as belt-and-braces. **Two further defects** accounted for the rest: the publish gate discarded the cached reading on any transient failure, and **PubSubClient's 384-byte buffer capped the payload at 353 bytes** (it had crept to 346 — seven bytes of margin), silently dropping whole telemetry messages. The SHT45's **I²C connection still NACKs intermittently** (`sle=2`); the firmware now tolerates it, **the wiring needs attention**. OTA is available (ArduinoOTA UDP 3232, `~/ota/ota-flash.sh`); the ESP32-S3 has no USB serial on the Pi. Measures pen-air context; must NOT replace MLX90640's internal temperature compensation — see §2.7 |
 | **Tapo C200C** | CCTV, RTSP → MJPEG | ⚠️ video reachable on Pi AP only. Management API blocked (needs cloud-owner password). See §8 |
 | ~~ESP32-D0WD~~ | original node | ☠️ **DECOMMISSIONED — do not resurrect** |
 | ~~INMP441 on Pi GPIO~~ | fallback mic | ☠️ **REMOVED 2026-09-29** |
@@ -424,9 +532,13 @@ joined to the PigPulse hotspot therefore needs no laptop at all.
 > **2026-10-13 update:** both audio and thermal were confirmed working (§1).
 > ESP32-S3 USB is accessible — the "WEDGED" note from 2026-09-27 is resolved.
 > Firmware `pigpulse-mic-pcm16-20261013` was flashed and produced recognizable
-> audio. Thermal ran at ~2 FPS. The laptop rig continues to show **seeded demo
+> audio. Thermal ran at ~2 FPS. ~~The laptop rig continues to show **seeded demo
 > data** — live sensor data has not yet reached the laptop PocketBase (see §2.1:
-> `cloud_sync.py` is built but never tested end-to-end).
+> `cloud_sync.py` is built but never tested end-to-end).~~
+> **SUPERSEDED — see §0.3.** The Pi→cloud sync is live and working: 649,685
+> telemetry rows on the laptop PocketBase, 574,070 of them `s3-mic-01` and
+> 71,042 `pi-thermal-01`, the freshest seconds old. The `synced` flag genuinely
+> toggles. The 41 remaining seeded rows are all `esp32-00x` from 2026-09-02.
 
 > The removed Pi GPIO mic used `dtoverlay=googlevoicehat-soundcard`, which needs
 > a physical codec chip this board does not have. It returned **bit-exact zeros**
