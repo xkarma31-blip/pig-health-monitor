@@ -95,8 +95,10 @@
   <section class="card hi" id="setup">
     <h2>Connect this Pi to Wi-Fi</h2>
     <p class="strong">PigPulse already works right here, with no internet.</p>
-    <p>Adding a Wi-Fi network lets the Pi send its data to the cloud and keeps the
-      clock in sync. You can skip this now and do it any time.</p>
+    <p>Your phone stays on PigPulse Wi-Fi. This optional step connects the
+      <b>Pi</b> to the venue's internet. Skip it to open the full local app now.</p>
+    <p>Only compatible 2.4 GHz networks are listed with the current radio.
+      A 5 GHz-only venue needs a working second radio; offline use still works.</p>
 
     <div class="row">
       <button id="scanBtn" class="ghost">Find networks</button>
@@ -110,7 +112,7 @@
 
     <div class="row" style="margin-top:18px">
       <button id="connectBtn">Connect</button>
-      <button id="skipBtn" class="ghost">Skip for now</button>
+      <button id="skipBtn" class="ghost">Skip — continue offline</button>
     </div>
 
     <div id="setupMsg" class="msg hide" role="status" aria-live="polite"></div>
@@ -119,7 +121,12 @@
   <!-- ================= LOCAL APPS (always available) ================= -->
   <section class="card">
     <h2>Open on this Pi</h2>
-    <p>These work with no internet, no account, no cloud.</p>
+    <p>The full PigPulse app is stored on this Pi. No laptop or internet needed.</p>
+    <a class="tile" id="localAppLink" href="/app/" style="margin-bottom:16px">
+      <b>Open PigPulse app</b>
+      <small>Dashboard, herd, events, devices and settings — local to this Pi</small>
+    </a>
+    <h3>Sensor tools</h3>
     <div class="grid two">
       <a class="tile" href="https://192.168.69.1:8080/" data-local>
         <b>Live dashboard</b>
@@ -148,8 +155,8 @@
   <!-- ================= OPTIONAL: hosted site ================= -->
   <section class="card">
     <h2>PigPulse website</h2>
-    <p>Optional. The hosted site needs internet, so it only opens once the Wi-Fi
-      above is connected.</p>
+    <p>Optional alternative. Requires internet on your phone; local monitoring
+      does not depend on this site.</p>
     <div class="row">
       <a class="tile" style="flex:1" id="hostedLink" href="#" target="_blank" rel="noopener">
         <b>Open the hosted site</b>
@@ -262,7 +269,7 @@
       ["Uplink", s.state + (s.uplink_ip ? " · " + s.uplink_ip : "")],
       ["Internet", on ? "reachable" : "not reachable"],
       ["Pi hotspot", (s.ap.ssid || "PigPulse") + " · channel " + (s.ap.channel || "?")],
-      ["Devices on hotspot", String(s.ap.clients)],
+      ["Hotspot DHCP leases", String(s.ap.clients)],
       ["Portal version", s.version]
     ];
     var kv = $("kv");
@@ -288,7 +295,7 @@
 
   // ---- connect flow -----------------------------------------------------
   function waitForResult(start) {
-    var deadline = Date.now() + 90000;
+    var deadline = Date.now() + 210000;
     (function poll() {
       api("GET", "/api/connect-result").then(function (j) {
         if (j.result) return done(j.result);
@@ -320,10 +327,8 @@
                 ". Devices on the hotspot keep working.");
       localStorage.removeItem("pp_skipped");
       setTimeout(function () {
-        state.resultShown = false;
-        show("setup", false);
-        load();
-      }, 2500);
+        location.assign("/app/");
+      }, 1200);
     } else {
       msg("bad", "<b>That network did not answer.</b><br>" +
                  escapeHtml(r.reason || "no association") +
@@ -367,9 +372,10 @@
   $("scanBtn").addEventListener("click", function () { scan(true); });
   $("connectBtn").addEventListener("click", connect);
   $("skipBtn").addEventListener("click", function () {
-    api("POST", "/api/skip").catch(function () {});
+    api("POST", "/api/skip").catch(function () {}).then(function () {
+      location.assign("/app/");
+    });
     localStorage.setItem("pp_skipped", "1");
-    show("setup", false);
   });
   $("changeBtn").addEventListener("click", function () {
     localStorage.removeItem("pp_skipped");

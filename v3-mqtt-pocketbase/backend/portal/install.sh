@@ -10,6 +10,7 @@ PSK_OWNER=${SUDO_USER:-root}
 echo "== installing the portal"
 install -d -m 755 "$DEST"
 install -m 755 "$SRC/portal.py"   "$DEST/portal.py"
+install -m 644 "$SRC/local_app.py" "$DEST/local_app.py"
 install -m 644 "$SRC/portal.html" "$DEST/portal.html"
 [ -f "$SRC/README.md" ] && install -m 644 "$SRC/README.md" "$DEST/README.md"
 install -m 755 "$SRC/pigpulse-portal-connect" /usr/local/sbin/pigpulse-portal-connect

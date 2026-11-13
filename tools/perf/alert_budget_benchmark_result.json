@@ -1,0 +1,13 @@
+{
+  "window": 300,
+  "samples": 60000,
+  "repeats": 7,
+  "naive_ms": 1246.771,
+  "optimized_ms": 33.239,
+  "speedup": 37.51,
+  "parity": true,
+  "final_mean_c": 38.899,
+  "final_fever_samples": 90,
+  "final_fever_ratio": 0.3,
+  "final_level": "HEALTHY"
+}

@@ -32,6 +32,7 @@ import subprocess
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import local_app
 
 VERSION = "1.0.0"
 
@@ -197,9 +198,24 @@ def ap_info() -> dict:
     return info
 
 
+def associated() -> bool:
+    """Is the uplink station associated RIGHT NOW?
+
+    The status file is written once, when the uplink finishes. Nothing rewrites
+    it if the link drops later, so a stale `UP` would claim internet that is not
+    there — measured 2026-11-12: `wan-sta.status` said
+    `UP ip=192.168.254.194` while `iw dev wlan0sta link` said
+    `Not connected` and the interface held a 169.254 address.
+    """
+    return "Connected to" in run(["iw", "dev", "wlan0sta", "link"], 5)
+
+
 def status() -> dict:
     raw = read(STATUS_FILE)
     state = raw.split(" ", 1)[0] if raw else "UNKNOWN"
+    up = associated()
+    if state == "UP" and not up:
+        state = "DOWN link-lost"
     venue = {
         "ssid": read("/etc/pigpulse/wan-sta.ssid"),
         "bssid": read("/etc/pigpulse/wan-sta.bssid"),
@@ -210,12 +226,17 @@ def status() -> dict:
     ip = read_addr = ""
     out = run(["ip", "-4", "-o", "addr", "show", "wlan0sta"], 5)
     m = re.search(r"inet (\d+\.\d+\.\d+\.\d+)", out)
-    if m:
+    # A 169.254 address is not an uplink: it means DHCP failed. Reporting it as
+    # the uplink IP is how the page came to show "UP · 169.254.134.112".
+    if m and not m.group(1).startswith("169.254."):
         ip = read_addr = m.group(1)
+    if state == "UP" and not ip:
+        state = "DOWN no-dhcp"
     return {
         "version": VERSION,
         "state": state,
         "raw": raw,
+        "associated": up,
         "venue": venue,
         "has_venue": bool(venue["ssid"] and venue["bssid"] and venue["freq"]),
         "mode_enabled": os.path.exists(ENABLED),
@@ -310,6 +331,8 @@ class Portal(BaseHTTPRequestHandler):
             self.send_json({"error": "not allowed"}, 403)
             return
         path = self.path.split("?", 1)[0]
+        if local_app.get(self):
+            return
         if path in ("/", "/index.html", "/portal.html"):
             self.send_page(PAGE)
         elif path == "/api/status":
@@ -332,6 +355,9 @@ class Portal(BaseHTTPRequestHandler):
             self.send_json({"error": "not allowed"}, 403)
             return
         path = self.path.split("?", 1)[0]
+        if path == "/api/chat":
+            self.send_json({"error": "Cloud advisor needs internet; use the optional hosted site. Local monitoring still works."}, 503)
+            return
         if path == "/api/scan":
             self.send_json({"networks": scan_networks(force=True), "at": int(time.time())})
             return

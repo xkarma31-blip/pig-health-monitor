@@ -32,7 +32,7 @@ jobs:
           # repo root, where their filenames looked live. The guards below are
           # written as "if present, it must be labelled", so they still work
           # whether or not the directory exists.
-          if [ -d landing_page ] || [ -d firmware ]; then
+          if [ -d landing_page ] || [ -d firmware ] || [ -d mobile_app ]; then
             echo "::error::A frozen component reappeared at the repo root."
             echo "::error::They belong in legacy/ (see legacy/README.md)."
             echo "::error::Canonical copies: v3-mqtt-pocketbase/frontend/landing_page"
@@ -93,20 +93,35 @@ jobs:
           set -e
           find v3-mqtt-pocketbase/backend -name '*.sh' -exec bash -n {} \;
           echo "bash syntax OK"
+      - name: Install backend test dependencies
+        run: |
+          # Keep requirements files authoritative: the bridge suite imports
+          # paho-mqtt and the thermal suite imports the MLX driver.
+          python3 -m pip install -q \
+            -r v3-mqtt-pocketbase/backend/bridge/requirements.txt \
+            -r v3-mqtt-pocketbase/backend/thermal-pi/requirements.txt \
+            numpy
       - name: Import the thermal-pi modules (no hardware needed)
         run: |
           cd v3-mqtt-pocketbase/backend/thermal-pi
           # numpy backs pcm_downmix.py (48→16 kHz streaming downmix), which
           # web_server.py imports at module load.
-          pip install -q mlx9064x-driver "setuptools<81" numpy
           python3 - <<'PY'
           import web_server, config, esp_audio_ingest, mlx_reader, pigpulse_stats, i2c_scanDiag
           print('thermal-pi imports OK')
           assert config.NETWORK_MODE == 'ap', config.NETWORK_MODE
           assert config.AP_IP == '192.168.69.1', config.AP_IP
           PY
-      - name: Run thermal-pi regression suite
-        run: python3 -m unittest discover -s v3-mqtt-pocketbase/backend/thermal-pi/tests -p 'test_*.py'
+      - name: Run backend regression suites
+        run: |
+          set -e
+          (cd v3-mqtt-pocketbase/backend/bridge && python3 -m unittest discover -s tests -p 'test_*.py')
+          (cd v3-mqtt-pocketbase/backend/thermal-pi && python3 -m unittest discover -s tests -p 'test_*.py')
+          (cd v3-mqtt-pocketbase/backend/workers && python3 -m unittest discover -s tests -p 'test_*.py')
+          # The portal suite lives beside the module it tests (there is no
+          # tests/ subdirectory) and covers the path-traversal, SSRF and
+          # allowlist guards of the local onboarding portal.
+          (cd v3-mqtt-pocketbase/backend/portal && python3 -m unittest discover -s . -p 'test_*.py')
 
   mobile-app:
     name: Mobile App (Lint + Test)
@@ -126,6 +141,10 @@ jobs:
       - run: npm ci --legacy-peer-deps
       - run: npx eslint . --ext .ts,.tsx
       - run: npm run test:bridge
+      # The src/utils suites are plain import-time assertions, deliberately
+      # runner-agnostic ("run with any TS-aware runner"). tsx runs them
+      # without pulling jest + jest-expo into the dependency tree.
+      - run: npm run test:unit
 
   firmware:
     name: Firmware (PlatformIO lint)

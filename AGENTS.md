@@ -49,7 +49,7 @@ Tapo cam ──RTSP───► ffmpeg ──► :8091 (MJPEG, proxied through /
 
 ```bash
 npm run lint            # eslint, v3 app
-npm run test            # jest, v3 app
+npm run test            # v3 app: test:bridge (node --test) + test:unit (tsx)
 npm run ci:backend      # byte-compile + bash -n every backend file
 npm run health:local    # laptop rig health (rig-aware)
 npm run diag:pi         # 11-section diagnostic on the Pi

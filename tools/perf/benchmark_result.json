@@ -1,0 +1,12 @@
+{
+  "window": 300,
+  "samples": 30000,
+  "repeats": 5,
+  "naive_ms": 628.59,
+  "optimized_ms": 19.347,
+  "speedup": 32.49,
+  "parity": true,
+  "final_samples": 300,
+  "final_mean_c": 38.875,
+  "final_fever_samples": 93
+}

@@ -162,6 +162,59 @@ into `/etc/resolv.conf`, so unplugging the laptop tether left `nameserver
 `merge_resolv()` skips loopback addresses, because dnsmasq reads that file as
 its *upstream* list — `127.0.0.1` there would make it query itself forever.
 
+## DHCP recovery and honest status
+
+A failed attempt previously left `169.254.134.112/16` behind. On this Pi,
+`dhcpcd -k wlan0sta` did not remove it; a later association succeeded but DHCP
+returned without a usable lease. Flushing the address made the same attempt
+work. Teardown now flushes station IPv4 addresses, acquisition clears stale
+IPv4LL, and `--noipv4ll` disables that unusable fallback.
+
+Starting hostapd also briefly drops station carrier. The 2026-11-12 journal
+shows the restored lease at 20:27:50, four seconds after the old worker had
+published its result. The worker now waits up to 20 seconds for association,
+a non-link-local address and a default gateway after starting the AP. A new
+venue that fails this check triggers restoration of the previous venue.
+
+The portal checks live association and IPv4 state rather than trusting a
+historical `UP` file: `DOWN link-lost` means no association; `DOWN no-dhcp`
+means association without a usable address. Its `internet` probe follows the
+system route (possibly the tether), so it alone does not prove Wi-Fi WAN.
+The `ap.clients` field counts DHCP leases, not necessarily connected stations.
+
+Live retest 2026-11-12, after this change: real venue returned success with
+`192.168.254.194` already present; a bogus SSID timed out, then restored the
+previous association, lease and both default routes before returning failure.
+`ping -I wlan0sta 8.8.8.8` received 3/3 replies; HTTPS bound to `wlan0sta`
+returned 200. `iw dev wlan0 station dump` showed two associated stations
+(including the ESP32-S3), versus four retained DHCP leases. These are spot
+checks, not a long-term reliability claim.
+
+Pi archives (root-only, contain configuration secrets):
+
+- Before this recovery change: `/root/pigpulse-backups/recovery-20261112-203900/`
+- Tested files, package list, service configs and live evidence:
+  `/root/pigpulse-backups/recovery-tested-20261112-204246/`
+
+Rollback the recovery change from a root shell on the Pi (does not interrupt
+the running AP or station; the old worker takes effect on the next attempt):
+
+```bash
+bk=/root/pigpulse-backups/recovery-20261112-203900
+install -m 755 "$bk/pigpulse-portal-connect" /usr/local/sbin/pigpulse-portal-connect
+install -m 755 "$bk/pigpulse-wan-sta-up" /usr/local/sbin/pigpulse-wan-sta-up
+install -m 755 "$bk/portal.py" /usr/local/lib/pigpulse-portal/portal.py
+systemctl restart pigpulse-portal
+```
+
+Offline regressions (from the repository root):
+
+```bash
+python3 -m unittest discover -s v3-mqtt-pocketbase/backend/portal -v
+bash -n v3-mqtt-pocketbase/backend/portal/pigpulse-portal-connect
+bash -n v3-mqtt-pocketbase/deploy/wan-apsta/pigpulse-wan-sta-up
+```
+
 ## Known follow-ups
 
 - **A 5 GHz venue still needs a second radio** (a working AR9271/`ath9k_htc`, or
@@ -174,4 +227,3 @@ its *upstream* list — `127.0.0.1` there would make it query itself forever.
 - **Re-association costs a blip.** Measured: when the station associates while clients are
   connected, brcmfmac drops the AP's associations once. At boot this is free (no clients
   yet); if the uplink flaps later, expect a short client bump per recovery.
-

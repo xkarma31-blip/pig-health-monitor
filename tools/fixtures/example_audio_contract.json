@@ -1,0 +1,13 @@
+{
+  "source_sample_rate_hz": 48000,
+  "model_sample_rate_hz": 48000,
+  "source_channels": 1,
+  "model_channels": 1,
+  "bytes_per_sample": 2,
+  "conversion_pipeline": "none",
+  "slice_unit": "frames",
+  "arena_bytes": 131072,
+  "headroom_bytes": 16384,
+  "arena_capability": "spiram",
+  "audio_capability": "internal"
+}

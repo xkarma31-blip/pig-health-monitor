@@ -1,0 +1,18 @@
+{
+  "measurement_schema": "pigpulse-edge-memory-v1",
+  "provenance": {
+    "device": "example-esp32-s3",
+    "firmware_digest": "example-only-not-hardware",
+    "capture_method": "on_target_heap_caps"
+  },
+  "heaps": {
+    "spiram": {
+      "free_bytes": 400000,
+      "largest_free_block_bytes": 400000
+    },
+    "internal": {
+      "free_bytes": 120000,
+      "largest_free_block_bytes": 120000
+    }
+  }
+}

@@ -275,10 +275,18 @@ save_profile() { # $1 bssid, $2 freq, $3 ssid
 # brcmfmac (brcm_cfg80211_stop_ap: setting AP mode failed -52) and silences the
 # AP until a reboot.
 stop_sta() {
-  "$WPACLI" -i "$STA" terminate >/dev/null 2>&1
-  pkill -f "wpa_supplicant .*-i $STA" >/dev/null 2>&1
+  stop_supplicant
   dhcpcd -k "$STA" >/dev/null 2>&1
   ip route del default dev "$STA" metric 200 >/dev/null 2>&1
+  # Drop the ADDRESS as well as the link. `dhcpcd -k` releases the lease but
+  # leaves whatever address was configured, and a leftover 169.254 IPv4LL
+  # address poisons every later attempt: dhcpcd sees an address already
+  # configured, hands the request to the existing master and never solicits a
+  # lease again. Measured 2026-11-12 — one failed venue attempt left
+  # 169.254.134.112 behind and the next *successful* association got
+  # "OFF no-dhcp ip=169.254.134.112/16 gw=none" instead of a lease. Flushing it
+  # by hand made the identical run succeed in 7 s.
+  ip -4 addr flush dev "$STA" 2>/dev/null || true
   ip link set "$STA" down >/dev/null 2>&1
 }
 # Only legal with hostapd stopped.
@@ -344,9 +352,16 @@ connect_sta() { # uses BSSID / FREQ, honours /etc/pigpulse/wan-sta.debug
 # ------------------------------------------------------------------- DHCP/DNS
 finish_uplink() { # $1 = band label
   local ipaddr gw curm dns_list i=0
+  # A stale link-local address must go before we ask for a lease (see stop_sta).
+  if ip -4 -o addr show "$STA" 2>/dev/null | grep -q 'inet 169\.254\.'; then
+    log "flushing stale link-local address on $STA"
+    ip -4 addr flush dev "$STA" 2>/dev/null || true
+  fi
   # -m 200 keeps the uplink BELOW the eth1 tether (metric 100) so plugging the
   # cable in always wins. --nohook resolv.conf never rewrites dnsmasq's resolver.
-  dhcpcd -4 -m 200 -t "$DHCP_TIMEOUT" -q --nohook resolv.conf "$STA" >>"$LOG" 2>&1
+  # --noipv4ll: a 169.254 address cannot route to the internet, and configuring
+  # one only hides the failure and poisons the next attempt. Fail clean instead.
+  dhcpcd -4 -m 200 -t "$DHCP_TIMEOUT" -q --noipv4ll --nohook resolv.conf "$STA" >>"$LOG" 2>&1
   # Read reality off the kernel rather than trusting `dhcpcd -U` (measured: it
   # reports "dhcpcd is not running" on this build even with a valid lease).
   ipaddr=

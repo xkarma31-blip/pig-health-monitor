@@ -1,0 +1,44 @@
+{
+  "format_version": 1,
+  "claims": [
+    {
+      "id": "MLX-001",
+      "text": "MLX90640 supports zone-level thermal anomaly screening, not individual pig or ear identification at normal pen distance.",
+      "claim_kind": "specification",
+      "evidence_class": "official",
+      "source_url": "https://www.melexis.com/en/documents/documentation/datasheets/datasheet-mlx90640",
+      "source_locator": "MLX90640 datasheet; 32 by 24 pixel array and wide-angle optics.",
+      "retrieved_on": "2026-11-08",
+      "status": "verified",
+      "verification_basis": "The stated sensor resolution supports the bounded zone-level wording; individual-ID performance is deliberately not claimed."
+    },
+    {
+      "id": "POWER-001",
+      "text": "A battery runtime projection must remain a design estimate until measured under the deployed duty cycle.",
+      "claim_kind": "projection",
+      "evidence_class": "design_estimate",
+      "source_url": "file:///evidence/power-budget-v3.xlsx",
+      "source_locator": "Battery worksheet, duty-cycle calculation.",
+      "retrieved_on": "2026-11-08",
+      "status": "unverified",
+      "verification_basis": "No full-discharge field measurement has been attached."
+    },
+    {
+      "id": "THERM-001",
+      "text": "The deployed thermal node produced a documented zone anomaly during the bench run.",
+      "claim_kind": "measurement",
+      "evidence_class": "field_measurement",
+      "source_url": "file:///evidence/thermal-bench-20261108.csv",
+      "source_locator": "Run 11, frames 1 through 120.",
+      "retrieved_on": "2026-11-08",
+      "status": "verified",
+      "verification_basis": "Measurement record and method metadata are attached.",
+      "measurement_context": {
+        "device": "pi-thermal-01",
+        "method": "120-frame stationary bench capture with reference notes",
+        "conditions": "indoor shaded bench",
+        "sample_count": 120
+      }
+    }
+  ]
+}

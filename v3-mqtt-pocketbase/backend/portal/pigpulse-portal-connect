@@ -31,15 +31,28 @@ mkdir -p "$RUN"
 exec >>/var/log/pigpulse-portal.log 2>&1
 echo "===== $(date '+%F %T') portal-connect start (stamp $STAMP)"
 
+wait_uplink() { # bounded wait for hostapd's carrier/DHCP blip to settle
+  local waited=0 limit="${1:-20}" address
+  while [ "$waited" -lt "$limit" ]; do
+    address=$(ip -4 -o addr show wlan0sta 2>/dev/null \
+      | awk '$4 !~ /^169[.]254[.]/ { print $4; exit }')
+    if iw dev wlan0sta link 2>/dev/null | grep -q 'Connected to' \
+       && [ -n "$address" ] \
+       && ip -4 route show default dev wlan0sta 2>/dev/null | grep -q '^default via '; then
+      return 0
+    fi
+    sleep 1
+    waited=$((waited + 1))
+  done
+  return 1
+}
+
 finish() { # $1 = ok|fail, $2 = reason
   local ok="$1" reason="${2:-}" ip="" ch="" at
   at=$(date +%s)
   if [ "$ok" = ok ]; then
-    # Take it from the runner's own measurement (written while the station was
-    # associated). Starting hostapd re-inits the phy, so the live address can
-    # blip for a second right here and read back empty.
-    ip=$(sed -n 's/.* ip=\([0-9.]*\)\/[0-9]* .*/\1/p' "$STATUS" 2>/dev/null | head -1)
-    [ -n "${ip:-}" ] || ip=$(ip -4 -o addr show wlan0sta 2>/dev/null \
+    # Read live state only after wait_uplink, never a pre-hostapd status file.
+    ip=$(ip -4 -o addr show wlan0sta 2>/dev/null \
          | sed -n 's/.*inet \([0-9.]*\).*/\1/p' | head -1)
   fi
   ch=$(iw dev wlan0 info 2>/dev/null | sed -n 's/.*channel \([0-9]*\) .*/\1/p')
@@ -61,6 +74,7 @@ finish() { # $1 = ok|fail, $2 = reason
 
 restore() {
   local had_flag=0
+  systemctl stop hostapd.service 2>/dev/null || true
   [ -e "$ENABLED" ] && had_flag=1
   if [ -d "$BK" ]; then
     [ -f "$BK/wpa-uplink.tmpl" ] && cp -a "$BK/wpa-uplink.tmpl" "$TMPL" 2>/dev/null
@@ -78,6 +92,9 @@ restore() {
   # already rendered the AP config on the old channel, so the AP still returns.
   "$UP" >/dev/null 2>&1 || true
   systemctl start hostapd.service 2>/dev/null || true
+  if ! wait_uplink; then
+    echo "$(date '+%F %T') previous uplink did not recover; AP remains available"
+  fi
 }
 
 # ---------------------------------------------------------------- read request
@@ -224,7 +241,12 @@ echo "$(date '+%F %T') uplink rc=$RC state=$STATE status='$(cat "$STATUS" 2>/dev
 
 if [ "$STATE" = "UP" ]; then
   systemctl start hostapd.service 2>/dev/null
-  sleep 2
+  if ! wait_uplink; then
+    echo "$(date '+%F %T') uplink lost after AP restart; restoring previous venue"
+    restore
+    finish fail "uplink did not recover after access point restart"
+    exit 0
+  fi
   APCH=$(iw dev wlan0 info 2>/dev/null | sed -n 's/.*channel \([0-9]*\) .*/\1/p')
   echo "$(date '+%F %T') AP back on channel ${APCH:-?}"
   finish ok ""
