@@ -43,7 +43,7 @@
 // read waits 20 ms instead of 10 ms so it cannot beat the 8.5 ms conversion.
 // The nowriteblock build it supersedes is the rollback image.
 // shtdiag adds the six SHT45 failure-kind counters and the raised MQTT buffer.
-#define FIRMWARE_ID "pigpulse-mic-sht45-20261113-shtretry"
+#define FIRMWARE_ID "pigpulse-mic-sht45-20261113-shtfinal"
 
 const char* WIFI_SSID = "PigPulse";
 const char* WIFI_PASS = "capstone";
@@ -242,8 +242,47 @@ uint32_t shtFailsCmd = 0;
 uint8_t shtLastErr = 0;
 uint32_t shtLastDelay = 0;
 uint8_t shtLastCrcByte = 0;
-// Consecutive failed cycles; drives the fast-retry window.
+// Consecutive failed cycles across ALL failure kinds; drives the bus reset.
 uint8_t shtConsecFails = 0;
+// Fast retries inside the current measure cycle (the sensor NACKs, we try
+// again in 8 ms, up to three times, then wait the full 2 s).
+uint8_t shtCmdRetries = 0;
+uint32_t shtBusResets = 0;
+
+// SHT45 I2C clock.
+//
+// 2026-11-13: the clock was A/B tested as a hypothesis for the NACKs and the
+// hypothesis was WRONG. Over comparable 145 s windows, with sfw (command
+// NACKs, sle=2) still the dominant failure throughout:
+//     100 kHz (baseline)  srf  ~130  sfw ~75
+//      50 kHz ("shtbus")  srf  123   sfw 70   sfs 34   sfc 19
+//      10 kHz ("sht10k")  srf  98   sfw 46   sfs 25   sfc 27
+// A 10x reduction in the clock did not clear the address NACKs, so the fault
+// is NOT rise-time or bus capacitance -- it is a physical connection fault.
+// The clock therefore stays at 100 kHz: it is the fastest, it keeps the
+// blocking I2C time inside the loop shortest (~1.5 ms vs ~7 ms at 10 kHz,
+// against a 10.7 ms I2S buffer), and there is no measured reason to slow it.
+//
+// The timeout raise and the bus reset ARE kept -- they are free and they
+// cover a genuinely wedged bus.
+#define SHT_I2C_HZ 100000
+
+// 2026-11-13: after enough consecutive failures, rebuild the I2C peripheral.
+// A bus that has been mis-framed -- a NACK mid-transaction can leave the
+// peripheral's state machine out of step -- often clears on a re-init even
+// when the wiring itself is marginal. Cheap, and it costs nothing when the
+// bus is healthy because it only runs after repeated failures.
+void sht_bus_recover() {
+  if (shtConsecFails < 6) return;
+  shtConsecFails = 0;
+  shtCmdRetries = 0;
+  Wire.end();
+  delay(2);
+  shtBusReady = Wire.begin(8, 9, SHT_I2C_HZ);
+  Wire.setTimeOut(50);
+  shtBusResets++;
+  Serial.printf("[sht45] I2C bus reset (ready=%d)\n", shtBusReady);
+}
 // How long a cached reading stays publishable. Pen temperature/humidity
 // moves slowly, so a long window is honest -- and `sage` publishes the real
 // age of the value so the consumer can see it.
@@ -282,6 +321,7 @@ void sht_task() {
       // Come back in 8 ms instead of 2 s: the bus fault is transient and a
       // quick retry usually succeeds.
       started = millis() - 1992;
+      sht_bus_recover();
       Serial.println("[sht45] short/failed measurement read");
       return;
     }
@@ -294,6 +334,7 @@ void sht_task() {
       shtFailsCrc++;
       shtConsecFails++;
       started = millis() - 1992;
+      sht_bus_recover();
       Serial.println("[sht45] CRC failed");
       return;
     }
@@ -302,6 +343,7 @@ void sht_task() {
     shtHumidity = constrain(-6.0f + 125.0f * ((data[3] << 8) | data[4]) / 65535.0f, 0.0f, 100.0f);
     shtLastGood = millis();
     shtConsecFails = 0;
+    shtCmdRetries = 0;
     Serial.printf("[sht45] temperature=%.2f C humidity=%.2f %% CRC=OK\n", shtTemperature, shtHumidity);
   } else if (millis() - started >= 2000) {
     started = millis();
@@ -317,15 +359,18 @@ void sht_task() {
       // The sensor NACKs its own address on a marginal bus. Retry in 8 ms --
       // up to 3 times -- before falling back to the full 2 s cadence. A
       // transient NACK usually clears on the next attempt.
-      if (shtConsecFails >= 3) {
-        shtConsecFails = 0;
+      shtCmdRetries++;
+      if (shtCmdRetries >= 3) {
+        shtCmdRetries = 0;
         started = millis();
       } else {
         started = millis() - 1992;
       }
+      sht_bus_recover();
       Serial.printf("[sht45] address=0x44 SDA=8 SCL=9 I2C error=%u (2=NACK)\n", error);
     } else {
       shtConsecFails = 0;
+      shtCmdRetries = 0;
     }
   }
 }
@@ -824,7 +869,8 @@ void publish_telemetry(int rms, int peak) {
              "\"boots\":%lu,\"rr\":%lu,\"br\":%lu,\"txp\":%ld,"
              "\"pubms\":%lu,\"wrms\":%lu,\"pubn\":%lu,\"wrn\":%lu,"
              "\"srf\":%lu,\"sage\":%lu,"
-             "\"sfs\":%lu,\"sfc\":%lu,\"sfw\":%lu,\"sle\":%u,\"sdt\":%lu,\"slr\":%u",
+             "\"sfs\":%lu,\"sfc\":%lu,\"sfw\":%lu,\"sle\":%u,\"sdt\":%lu,\"slr\":%u,"
+             "\"sbr\":%lu",
              (unsigned long)i2sReadFails, (unsigned long)i2sReadRetries,
              (unsigned long)txDroppedBytes, (unsigned long)txPartialWrites,
              (unsigned long)tcpReconnects, (int)WiFi.RSSI(),
@@ -842,7 +888,8 @@ void publish_telemetry(int rms, int peak) {
              (unsigned long)(shtLastGood ? (millis() - shtLastGood) : 0),
              (unsigned long)shtFailsShort, (unsigned long)shtFailsCrc,
              (unsigned long)shtFailsCmd, (unsigned int)shtLastErr,
-             (unsigned long)shtLastDelay, (unsigned int)shtLastCrcByte);
+             (unsigned long)shtLastDelay, (unsigned int)shtLastCrcByte,
+             (unsigned long)shtBusResets);
     snprintf(payload, sizeof(payload),
              "{\"mic\":true,\"rms\":%d,\"peak\":%d,\"sr\":48000%s%s}", rms, peak, ambient, drops);
     String topic = String("pig/") + DEVICE_ID + "/telemetry";
@@ -874,8 +921,24 @@ void setup() {
   Serial.setTxTimeoutMs(0);
   delay(500);
   Serial.println("Starting " FIRMWARE_ID " (I2S32 >>16 -> S16LE MONO 48k)...");
-  shtBusReady = Wire.begin(8, 9, 100000);
-  Wire.setTimeOut(5);
+  // 2026-11-13: the SHT45 bus at 100 kHz was NACKing its own address
+  // (sle=2) roughly two attempts in three. The signature — address NACK,
+  // short reads, and CRC mismatches on otherwise plausible bytes — is what
+  // a marginal wire looks like electrically: long leads raise the bus
+  // capacitance, and the SHT45 then misreads the address byte and does not
+  // acknowledge it. Halving the clock quadruples the bit period and gives
+  // the level time to settle. 50 kHz is still ~2.4 ms of bus time per
+  // measure+read cycle, well inside the I2S buffer budget (512 samples =
+  // 10.7 ms at 48 kHz), so the audio loop is not at risk.
+  //
+  // If this does not clear the NACKs, the answer is physical: shorten the
+  // SDA/SCL leads, keep them away from the mic and the motorised cable, and
+  // check the module's pull-ups.
+  shtBusReady = Wire.begin(8, 9, SHT_I2C_HZ);
+  // 5 ms was tight enough to time a transaction out on a slow bus and be
+  // reported as a short read. 50 ms costs nothing here: the measurement
+  // cycle is 2 s.
+  Wire.setTimeOut(50);
   Serial.printf("[pins] mic SCK=4 WS=5 SD=6 LEFT; SHT45 SDA=8 SCL=9 init=%d\n", shtBusReady);
 
   i2s_install();

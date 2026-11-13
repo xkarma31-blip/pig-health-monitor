@@ -1,4 +1,97 @@
 
+## 2026-11-13 — shtfinal — the SHT45 bus fault is PHYSICAL (hypothesis tested and rejected)
+
+**STATUS: FLASHED AND VERIFIED — 2026-11-13.** This is the build on the board.
+Firmware ID: `pigpulse-mic-sht45-20261113-shtfinal`.
+
+### What this entry is about
+
+The data-loss bug is already fixed (see the `shtcache` / `shtretry` entries):
+the ambient fragment now rides on **119 of every 120** telemetry messages and
+the PocketBase zero-rate is **0.0%**. What remained was the *underlying* bus
+fault: the sensor intermittently **NACKs its own address** (`sle=2`), roughly
+one attempt in three.
+
+The obvious hypothesis was **bus capacitance** — long leads raise the
+capacitance, the SHT45 misreads the address byte and does not acknowledge it,
+so the obvious fix is to slow the clock. **That hypothesis was tested and
+rejected.**
+
+### The A/B — clock speed versus NACK rate
+
+Three builds, flashed in turn, measured over comparable ~145 s windows
+(120 telemetry messages + boot), same board, same wiring, same place:
+
+| build | clock | total fails (`srf`) | NACKs (`sfw`) | short reads (`sfs`) | CRC (`sfc`) | ambient present | audio |
+|---|---|---|---|---|---|---|---|
+| `shtbus` | 50 kHz | 123 | 70 | 34 | 19 | 119/120 | clean |
+| `sht10k` | 10 kHz | 98 | 46 | 25 | 27 | 119/120 | clean |
+| **`shtfinal`** | **100 kHz** | **60** | **36** | **17** | **7** | **119/120** | clean |
+
+**A 10x reduction in clock speed did not clear the address NACKs — and the
+slowest bus was measurably WORSE than the original.** The original 100 kHz is
+also the fastest and keeps the blocking I2C time shortest (~1.5 ms vs ~7 ms at
+10 kHz, against a 10.7 ms I2S buffer), so there is no reason to slow it.
+
+**Conclusion: the fault is physical.** A connection that fails to acknowledge
+its own address half the time, independent of clock speed, is a bad
+connection — a loose or cold solder joint, a marginal Dupont jumper, absent or
+too-weak pull-ups on the module, or leads run next to the mic and the camera
+cable. No firmware setting fixes it.
+
+### What this build keeps (all free, all measured harmless)
+
+- **Clock back at 100 kHz** — the fastest of the three and the best measured.
+- **`Wire.setTimeOut(50)`** instead of 5 ms. A transaction that timed out at
+  5 ms on a slow bus was being reported as a *short read*; 50 ms costs nothing
+  because the measurement cycle is 2 s.
+- **Bus reset after 6 consecutive failures** — `Wire.end()` + `Wire.begin()`.
+  A bus mis-framed by a mid-transaction NACK often clears on a re-init even
+  when the wiring is marginal. It fired once in this run (`sbr: 1`).
+- Everything from `shtcache`/`shtretry`: the cached-reading gate, the 30 s
+  staleness window, the 8 ms fast retry, and the MQTT buffer at 1024.
+
+### Build provenance
+
+| What | Where | sha256 |
+|---|---|---|
+| **Image (staged on the Pi)** | `/home/pigpulse/ota/firmware-shtfinal.bin` | `0b0b4ab1b80759cc7fe1fea98d61e2f87c0e71577c7d1602c1cf157754c1acf2` |
+| **Archived image** | `known-good-20261113-shtfinal/bin/firmware-shtfinal.bin` | `0b0b4ab1b80759cc7fe1fea98d61e2f87c0e71577c7d1602c1cf157754c1acf2` |
+| Source | `known-good-20261113-shtfinal/src/esp32s3_telemetry.ino` | see the archive |
+| Build config | `known-good-20261113-shtfinal/platformio.ini` | `aaad38f65d0d8de7ea896465de1008c3e10d4ac6bbbacba0a550c2416b152c17` |
+
+Build: espressif32 7.0.1 / Arduino 2.0.17, `board_upload.flash_size = 4MB`.
+RAM 116,900 B (35.7%) · Flash 781,485 B (59.6%) · image 781,872 B.
+
+### Rollback chain (all archived, all with sha256)
+
+| image | sha256 | role |
+|---|---|---|
+| `firmware-shtfinal.bin` | `0b0b4ab1…` | **live** |
+| `firmware-sht10k.bin` | `1847873e…` | 10 kHz experiment — rejected |
+| `firmware-shtbus.bin` | `4cb7d491…` | 50 kHz experiment — rejected |
+| `firmware-shtretry.bin` | `72b64f73…` | the data-loss fix, before the bus work |
+| `firmware-shtcache.bin` | `f63e0260…` | first gate fix |
+| `firmware-nowriteblock.bin` | `db8f1641…` | pre-2026-11-13 baseline |
+
+### The physical work this is waiting on
+
+1. Measure the SHT45 module's pull-up resistors (SDA and SCL to 3V3). They
+   should be ~4.7 kΩ. If the module has none, the bus is riding the
+   ESP32's internal ~45 kΩ pull-ups and will never be reliable on leads.
+2. Shorten the SDA/SCL leads, and keep them away from the I2S lines
+   (GPIO 4/5/6) and the camera cable.
+3. Re-seat or re-solder the module's SDA/SCL pads — an address NACK that
+   appears roughly half the time is the classic cold-joint signature.
+4. Confirm the module's address is 0x44 (7-bit 0x22) and that it is powered
+   from the same 3V3 rail with a common ground.
+
+Until then the firmware is fully tolerant of the fault: readings are
+continuous, the ambient fragment rides on 99%+ of messages, and the PocketBase
+zero-rate is 0.0%.
+
+---
+
 ## Pre-flash archive — 2026-11-13 — shtcache (SHT45 ambient gate fix)
 
 **STATUS: RECORDED BEFORE THE FLASH — 2026-11-13.**

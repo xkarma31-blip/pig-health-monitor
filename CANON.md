@@ -40,10 +40,31 @@ PocketBase zero-rate, minute by minute   48.3% -> 32.2% -> 21.7% -> 4.5% -> 0.0%
 ```
 
 **Residual, physical:** the SHT45's I²C connection still NACKs. The firmware
-tolerates it; **the wiring wants attention.** New telemetry counters publish
-the truth: `srf` (failed attempts), `sage` (ms since the last good reading),
-`sfs`/`sfc`/`sfw` (failure kind), `sle` (I²C error), `sdt` (command→read ms),
-`slr` (last CRC byte). **Absent is not zero** — check `sage`, not `ambient=0`.
+tolerates it; **the wiring wants attention.**
+
+> **The clock hypothesis was tested and rejected (2026-11-13).** The obvious
+> explanation — long leads raising bus capacitance so the sensor misreads its
+> own address — was tested by A/B-ing the I²C clock on the live board over
+> comparable ~145 s windows:
+>
+> | build | clock | total fails | address NACKs | ambient present | audio |
+> |---|---|---|---|---|---|
+> | `shtbus` | 50 kHz | 123 | 70 | 119/120 | clean |
+> | `sht10k` | 10 kHz | 98 | 46 | 119/120 | clean |
+> | **`shtfinal` (live)** | **100 kHz** | **60** | **36** | **119/120** | clean |
+>
+> A **10× reduction in clock speed did not clear the address NACKs**, and the
+> slowest bus was measurably *worse* than the original. The clock is therefore
+> back at 100 kHz — fastest, and best measured. **The fault is physical.**
+> The physical checklist is in `KNOWN_GOOD.md` (pull-ups, lead length, cold
+> joint, address, common ground).
+>
+> Kept because they are free and harmless: `Wire.setTimeOut(50)` instead of
+> 5 ms, and an I²C bus reset after 6 consecutive failures (it fired once).
+> New telemetry counters publish the truth: `srf` (failed attempts), `sage`
+> (ms since the last good reading), `sfs`/`sfc`/`sfw` (failure kind), `sle`
+> (I²C error), `sdt` (command→read ms), `slr` (last CRC byte), `sbr` (bus
+> resets). **Absent is not zero** — check `sage`, not `ambient=0`.
 
 ### 0.2 The Pi is no longer an island — §2.4's wording is superseded
 
