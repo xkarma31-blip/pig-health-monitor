@@ -93,3 +93,10 @@ v3-mqtt-pocketbase/firmware/esp32s3-mic-ambient/arduino/esp32s3_telemetry/build/
 # Enclosure research zips can exceed GitHub's 100MB file limit — host externally
 # (reference copy: ~/sandbox/pigpulse-enclosure-bigfiles/)
 v3-mqtt-pocketbase/enclosure/**/*.zip
+
+# 2026-11-13: the arduino/esp32s3_telemetry-flashed-* trees are snapshots of
+# intermediate builds. The canonical source now lives in
+# arduino/esp32s3_telemetry/ and every binary+source pair is archived under
+# firmware/esp32s3-mic-ambient/docs/known-good-*/ (CANON R8). Keeping both
+# would mean two copies that can drift.
+v3-mqtt-pocketbase/firmware/esp32s3-mic-ambient/arduino/esp32s3_telemetry-flashed-*/

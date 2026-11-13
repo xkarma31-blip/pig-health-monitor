@@ -1,4 +1,348 @@
+
+## Pre-flash archive — 2026-11-13 — shtcache (SHT45 ambient gate fix)
+
+**STATUS: RECORDED BEFORE THE FLASH — 2026-11-13.**
+Rollback image is the previous entry's `firmware-nowriteblock.bin`
+(`db8f16419b261f7ca85408bfaa644a005b1a5566b9919202b052b34d1e83c43b`),
+staged on the Pi at `/home/pigpulse/ota/firmware-nowriteblock.bin` and
+archived at `known-good-20261113/bin/`.
+
+### The defect this build fixes
+
+The SHT45 ambient fragment was gated on **the last attempt's outcome** rather
+than on **the age of the cached reading**:
+
+```c
+// BEFORE
+if (shtValid && millis() - shtLastGood < 5000)
+  snprintf(ambient, sizeof(ambient), ",\"temperature\":%.2f,\"humidity\":%.2f", ...);
+```
+
+`sht_task()` set `shtValid = false` on **every** failed measurement (short
+read, CRC fail, I2C error), so a single transient failure threw away a
+still-good cached reading. The publish gate then omitted the ambient fragment
+entirely, and PocketBase — which fills absent fields with `0` — stored
+`ambient=0, humidity=0`.
+
+Measured on the live board before the flash (raw MQTT, 40 consecutive
+messages from `pig/s3-mic-01/telemetry`):
+
+| metric | value |
+|---|---|
+| messages WITH the ambient fragment | **14 / 40 (35%)** |
+| messages WITHOUT it | **26 / 40 (65%)** |
+| messages that were invalid JSON | **0 / 40** — the trailing-comma bug is already fixed |
+| PocketBase zero-rate by hour (2026-11-13) | 50.6% / 52.4% / 51.3% / 58.8% |
+| Pi rows carrying `ambient=0 AND humidity=0` | **304,862** (2026-09-28 → still live) |
+
+**This is NOT the trailing-comma bug.** That comma was removed in the
+`nowriteblock` build; `backend/bridge/json_lenient.py` (commit `69912d1`) is
+now belt-and-braces for a fault that no longer exists on the board. The
+persistent ~51% was a separate, still-live firmware bug that CANON.md §2.5
+did not know about.
+
+A contributing cause: the measurement was read only **10 ms** after the
+command, against an SHT45 high-precision conversion of up to **8.5 ms** —
+about 1.5 ms of margin for I²C and Wi-Fi jitter. Reading before conversion
+completes fails the CRC, which is what cleared `shtValid`.
+
+### The change (one change, five edits, all in the SHT45 path)
+
+1. `shtValid` now means "we hold a good reading" — set on success, **never
+   cleared by a failed attempt**.
+2. The publish gate became
+   `shtValid && shtLastGood && (millis() - shtLastGood) < 5000` — the 5 s
+   window still makes a genuinely dead sensor drop the fragment on its own.
+3. The measurement read waits **20 ms** instead of 10 ms, clearing the
+   conversion race.
+4. Failed attempts are counted in `shtReadFails` instead of discarded.
+5. `drops[384]` → `drops[512]`: the worst-case fragment needs **439** bytes
+   and the old buffer held 384, so a long-lived counter set could truncate
+   the fragment into invalid JSON. (`snprintf` truncates safely — no memory
+   corruption — but truncated JSON is dropped by every consumer.)
+
+Two counters were added to the telemetry `drops` fragment so the fix is
+measurable straight off the wire: **`srf`** (SHT45 read failures) and
+**`sage`** (ms since the last good reading; 0 = never).
+
+### Build provenance
+
+| What | Where | sha256 |
+|---|---|---|
+| **Image (staged on the Pi)** | `/home/pigpulse/ota/firmware-shtcache.bin` | `f63e0260295669fe2511f36354738298c57fca14c95dfce37ae15d1d44bdbb3a` |
+| **Archived image** | `known-good-20261113-shtcache/bin/firmware-shtcache.bin` | `f63e0260295669fe2511f36354738298c57fca14c95dfce37ae15d1d44bdbb3a` |
+| Source | `known-good-20261113-shtcache/src/esp32s3_telemetry.ino` | `7a49213ea1b147d7e573474452364950751a05b41b9e9708a0c08a4118132bc0` |
+| Build config | `known-good-20261113-shtcache/platformio.ini` | `aaad38f65d0d8de7ea896465de1008c3e10d4ac6bbbacba0a550c2416b152c17` |
+
+Firmware ID: `pigpulse-mic-sht45-20261113-shtcache` (was
+`pigpulse-mic-sht45-20261113-nowriteblock`).
+
+Build: espressif32 7.0.1 / Arduino 2.0.17, `board_upload.flash_size = 4MB`.
+RAM 116,876 B (35.7%, +8 B) · Flash 780,993 B (59.6%, +68 B) · image 781,376 B.
+
+### Reproducibility note
+
+The image is **not** byte-reproducible: the ESP32 app descriptor embeds a
+build timestamp, so the checksum and validation hash differ between builds of
+identical source. What *is* reproducible and was verified: image size, the six
+segment lengths and load addresses, the entry point, and the RAM/Flash
+footprint — all identical between the rebuilt `nowriteblock` source and its
+archived binary.
+
+### Flash procedure
+
+```sh
+scp firmware-shtcache.bin pigpulse@192.168.69.1:/home/pigpulse/ota/
+ssh pigpulse@192.168.69.1 \
+  '/home/pigpulse/ota/ota-flash.sh 192.168.69.15 /home/pigpulse/ota/firmware-shtcache.bin \
+   f63e0260295669fe2511f36354738298c57fca14c95dfce37ae15d1d44bdbb3a'
+```
+
+### Post-flash verification
+
+*(appended after the flash)*
+
+---
+
+## Pre-flash archive — 2026-11-13 — blockprobe (blocking-time instrumentation)
+
+**STATUS: FLASHED AND VERIFIED — 2026-11-13 (wireless OTA, no USB attached).**
+Recorded here BEFORE the flash, per the firmware-change discipline; the
+post-flash measurements are at the end of this entry.
+
+### The actual defect this build fixes
+
+`tcp_flush()` destroyed the audio socket when a write could not place all its
+bytes:
+
+```c
+if (n == 0) {
+  txPartialWrites++;
+  tcpStream.stop();                                    // <- killed the stream
+  Serial.println("[tcp] stalled; buffer retained");   // <- the message lied
+}
+```
+
+The socket's TCP send buffer is **5760 bytes** (`CONFIG_LWIP_TCP_SND_BUF_DEFAULT`)
+= **59 ms of slack** at the stream's 96,000 B/s. Any WiFi hiccup longer than
+that filled the buffer, `tcp_write()` returned 0, the socket was thrown away,
+and the stream went silent until the reconnect finished - about 5 s. Then it
+happened again.
+
+Measured on the live board 2026-11-13 with the probe build's telemetry:
+
+| counter | value | meaning |
+|---|---|---|
+| `wrms` | **1211 ms** | longest `tcpStream.write()` in the AUDIO task |
+| `pubms` | 2 ms | longest `mqtt.publish()` in the MQTT task |
+| `pubn` | 0 | publishes that took >100 ms |
+| `wrn` | 1 | writes that took >100 ms |
+
+So it was never the radio (0 hostapd deassociations in the stall window) and
+never MQTT. It was this write, and the socket being killed instead of the
+data being kept.
+
+**The fix (round 1, `firmware-nostop.bin`):** keep the unsent bytes in the ring
+buffer and retry; never destroy the socket because of a full send buffer.
+`TX_BUF_SZ` also goes 32 KB -> 64 KB (340 ms -> 680 ms of audio at 96,000 B/s)
+so the ring rides out a hiccup without dropping a sample.
+
+### Round 2 - `firmware-nowriteblock.bin` - the 10-second write trap
+
+Round 1 stopped the socket from being destroyed, but the **stall remained**,
+because the stall was never in the ESP's code - it was inside Arduino's
+`NetworkClient::write()`:
+
+```c
+#define WIFI_CLIENT_MAX_WRITE_RETRY     (10)
+#define WIFI_CLIENT_SELECT_TIMEOUT_US   (1000000)   /* 1 second */
+...
+while (retry) {
+    tv.tv_sec = 0; tv.tv_usec = WIFI_CLIENT_SELECT_TIMEOUT_US;
+    retry--;
+    if (select(fd + 1, NULL, &set, NULL, &tv) < 0) return 0;
+    if (FD_ISSET(fd, &set)) { res = send(fd, buf, bytesRemaining, MSG_DONTWAIT); ... }
+}
+```
+
+So one `write()` call can block for **10 x 1 s = 10,000 ms** whenever the
+socket's send queue is full. Measured on the live board with the probe build's
+telemetry: `wrms = 10,003 ms` - an exact match for 10 x 1 s, while
+`pubms = 2 ms` (MQTT never blocked) and `hostapd` deassociations in the stall
+window were **0**.
+
+Measured effect of the stall (60 s window, live board 2026-11-13):
+
+| metric | value |
+|---|---|
+| audio offered by the ESP | 96,000 B/s |
+| bytes the ESP pushed into the socket (`bps`) | 85,844 B/s |
+| bytes the Pi actually received | 53,350 B/s (**56 %**) |
+| `txd` (bytes dropped by ring overflow) | 0 |
+
+The missing 32 KB/s is the time the ESP sat inside `write()` waiting for a
+writable socket. The Pi then saw 5 s of silence, closed the socket, and the
+ESP reconnected - a gap of seconds, repeatedly. That is the "weird pause".
+
+**The fix:** call `send()` directly with `MSG_DONTWAIT` (`tcp_send_nowait()`),
+bypassing the select()+retry loop entirely. A full queue returns `-1`/`EAGAIN`
+immediately; the bytes stay in the 64 KB ring and are retried on the next loop
+iteration. The write can no longer block, so the socket survives and the Pi
+never sees a 5 s silence.
+
+Pi-side companion change: `ESP_SILENCE_CLOSE_S` 5.0 -> 15.0 s in
+`/home/pigpulse/thermal-pi/esp_audio_ingest.py`, so a slow-but-alive link is not
+declared dead while the ESP is still holding buffered audio.
+
+| What | Where | sha256 |
+|---|---|---|
+| **Image (staged on the Pi)** | `/home/pigpulse/ota/firmware-nowriteblock.bin` | `db8f16419b261f7ca85408bfaa644a005b1a5566b9919202b052b34d1e83c43b` |
+| Previous build (nostop, superseded) | `/home/pigpulse/ota/firmware-nostop.bin` | `a479738fc6255b69dade431271d7f2be3da200b9d0074a4efe96a76f4a1714d4` |
+| Probe build (superseded, still archived) | `/home/pigpulse/ota/firmware-blockprobe.bin` | `f72efdfa7a9c1c77699b62a6c6ef3abc6198b1c38adcdfc6d031880a6417b71c` |
+| Image (laptop build) | `firmware/esp32s3-mic-ambient/docs/known-good-20261113/bin/` | same |
+| **Source** | `firmware/esp32s3-mic-ambient/docs/known-good-20261113/src/` | — |
+| Baseline it was built from | 2026-11-12 jsonfix source (922 lines) | — |
+| Rollback image (the known-good jsonfix build) | `/home/pigpulse/ota/firmware-jsonfix-20261112.bin` | `ccdf343a560de7881616e2027bc146e214c66c0116b0a030f77031fa363f80cd` |
+
+### Why
+
+The audio loop stalls for ~5 s at a time, repeatedly. Measured during the
+stall:
+
+* `hostapd` deassociations: **0** — the board stays associated
+* `boots` / `rr` in telemetry: **constant** — the board does not reboot
+
+So it is a **blocked write**, not a link loss. The only other user of the
+board's network stack is MQTT, so this build adds the counters that prove it:
+`pubms`/`pubn` (longest `mqtt.publish()`) and `wrms`/`wrn` (longest
+`tcpStream.write()`).
+
+### Incident note — a regression was flashed and has been reverted
+
+On 2026-11-13 21:0x a build made from a **stale copy** of the source was
+flashed. That copy had the **2026-11-12 telemetry trailing-comma fix
+reverted** (`"txp":%ld,` instead of `"txp":%ld`) and `payload[512]` instead
+of `payload[768]` — i.e. exactly the defect the 2026-11-12 entry documents,
+where a truncated/invalid payload is dropped by every consumer.
+
+The 2026-11-13 archive is built from the **jsonfix source**, so the fix is
+present again. The live telemetry JSON was re-verified valid.
+
 # KNOWN-GOOD RECORD — ESP32-S3 barn mic firmware
+
+## Pre-flash archive — 2026-11-12 — telemetry JSON trailing-comma fix
+
+**STATUS: FLASHED AND VERIFIED — 2026-11-12 16:19.** All four success criteria
+met; see "Post-flash result" below for the measurements. The board is now
+running `firmware-jsonfix-20261112.bin`.
+
+### The defect (measured on the live board 2026-11-12)
+
+`publish_telemetry()` concatenates a prefix + an optional SHT45 fragment + a
+`drops` fragment. The `drops` format string ended in a **comma before `}`**:
+
+```c
+snprintf(drops, sizeof(drops),
+         ..., "\"boots\":%lu,\"rr\":%lu,\"br\":%lu,\"txp\":%ld,", ...);
+```
+
+So the wire payload looked like `...,"br":0,"txp":34,}` — invalid JSON. Measured
+impact on the Pi: `json.loads` rejected **60 of 61** messages
+(`Illegal trailing comma before end of object: line 1 column ~303`), the bridge
+logged `Invalid JSON on pig/s3-mic-01/telemetry` once per second, and ~498,000
+telemetry rows were stored with `ambient=0, humidity=0, mic=False`. The SHT45
+was reporting correctly the whole time (34.2–35.6 °C / 62–66 % RH) and its
+readings were discarded in transport.
+
+**This is not a hardware fault and never was.** The earlier KNOWN_GOOD/CANON
+note blaming I²C wiring/pull-ups was wrong and has been corrected.
+
+### The fix (two changes, nothing else)
+
+1. Trailing comma removed: `"txp":%ld",` → `"txp":%ld"`
+2. `char payload[512]` → `char payload[768]`. The widest possible payload
+   (every counter at max + the SHT45 fragment) measures **436–452 bytes**;
+   512 was survivable but `-Wformat-truncation` was warning about a genuine
+   hazard, and truncating mid-JSON reproduces exactly this failure mode.
+
+Built clean (`pio run`, no warnings). The compiled artifact's format strings were
+extracted from `firmware.bin` and round-tripped through `json.loads`: valid with
+AND without the SHT45 fragment.
+
+### Artifacts
+
+| What | Where | sha256 |
+|---|---|---|
+| Fixed image (staged on the Pi) | `/home/pigpulse/ota/firmware-jsonfix-20261112.bin` | `ccdf343a560de7881616e2027bc146e214c66c0116b0a030f77031fa363f80cd` |
+| Fixed image (laptop build) | `~/sandbox/fw-experiments/20261112-144838-json-comma-fix/.pio/build/esp32-s3/firmware.bin` | same |
+| Fixed **source** | `~/sandbox/fw-experiments/20261112-144838-json-comma-fix/src/` | — |
+| Source of what is currently on the board | `arduino/esp32s3_telemetry-flashed-20261111/` | — |
+| Rollback images (19 prior) | `/home/pigpulse/ota/*.bin` on the Pi | see `sha256sum` there |
+
+Presumed-current rollback: `/home/pigpulse/ota/firmware-brwnout.bin`
+(781,200 B, sha `4baa292e…`) — the newest image staged before this build, dated
+2026-11-11 20:45. **Not independently confirmed against the board** (the
+firmware publishes no build tag and there is no USB serial on the Pi), so treat
+it as "most likely" rather than verified.
+
+### Flash command (ArduinoOTA, UDP 3232 — A/B slots, aborted upload leaves the board running)
+
+```bash
+# on the Pi
+cd ~/ota
+./ota-flash.sh 192.168.69.15 ./firmware-jsonfix-20261112.bin \
+  ccdf343a560de7881616e2027bc146e214c66c0116b0a030f77031fa363f80cd
+```
+
+### Rollback
+
+```bash
+cd ~/ota
+./ota-flash.sh 192.168.69.15 ./firmware-brwnout.bin
+```
+
+### Success criteria (measured, not assumed)
+
+1. `mosquitto_sub -t pig/s3-mic-01/telemetry -C 5` → every message parses with a
+   **strict** `json.loads` (no trailing comma before `}`).
+2. `curl -sk https://192.168.69.1:8080/ambient` → `state=live`, `temperature`
+   non-null.
+3. `curl -sk https://192.168.69.1:8080/health` → `ESP32-S3 mic: ... nonzero≈100%`
+   and `Ambient (SHT45): live`.
+4. `journalctl -u pigpulse-bridge -f` → no new `Invalid JSON` lines.
+
+The tolerant parser (`backend/bridge/json_lenient.py`) stays deployed regardless:
+it is the transport-side guard that made this incident non-fatal, and any future
+firmware regression of the same kind should also be survivable.
+
+### Post-flash result — measured 2026-11-12 16:19–16:21
+
+Flashed with the command above (`espota` authenticated, A/B slot, board
+rejoined `192.168.69.15` on its own). Evidence the new image is running, and
+that the defect is gone:
+
+| Criterion | Measurement |
+|---|---|
+| Strict `json.loads` on live MQTT | **12 / 12 messages parsed, 0 failed** |
+| Payload tail | `…"rr":3,"br":0,"txp":78}` — **no trailing comma** |
+| `pigpulse-bridge` `Invalid JSON` lines | **0** |
+| Board rebooted + rejoined | `txd:0` (fresh boot), mic `nonzero=100.0 %` |
+
+Note: `FIRMWARE_ID` was **not** bumped by this fix, so the `audio/fmt` banner
+still reads `pigpulse-mic-sht45-20261111-pilevel`. Do not use that string to
+decide whether this image is running — use the absence of the trailing comma,
+which is the actual proof.
+
+**Still open, and NOT caused by this image:** the SHT45 stopped reading at
+~16:16 and a board reboot did not restore it — 0 of 76 telemetry messages over
+75 s carried `temperature`, `ambientCount` froze at 261, `ambientAgeS` reached
+352 s. It had been reporting normally for the preceding ~16 minutes
+(`ambientCount` 44 → 261). This reproduces the 2026-10-19 entry below
+("SHT45 repeatedly NACKs (I2C error 2)") and is therefore a **board-side I²C
+fault — wiring, contact or sensor** — not a firmware or JSON defect. The JSON
+transport is now correct whenever the sensor does report.
+
+---
 
 ## Latest preserved functional baseline — 2026-10-19 14:33
 
@@ -543,3 +887,45 @@ not because it blocks the SHT.
 4. **A known-good entry requires measured evidence**, not "it compiled" —
    a distinct-value/RMS reading from `/esp/stream` or the USB serial.
 5. **Do not overwrite a known-good folder.** New good states get a new date.
+
+### Post-flash result — 2026-11-13
+
+Flashed OTA via `espota.py` (UDP 3232) with **no USB attached**; upload rc=0,
+board back ~10 s later, firmware ID confirmed as
+`pigpulse-mic-sht45-20261113-nowriteblock`.
+
+| metric | before | after |
+|---|---|---|
+| longest `tcpStream.write()` — telemetry `wrms` | 10,003 ms | **3–4 ms** |
+| writes over 100 ms — telemetry `wrn` | 84 | **0** |
+| longest `mqtt.publish()` — telemetry `pubms` | 2 ms | 2 ms (unchanged) |
+| bytes dropped by ring overflow — telemetry `txd` | 0 | **0** |
+| TCP reconnects — telemetry `txr` | 3 | **1** (one, at the flash itself) |
+| Pi received vs offered (60 s window) | 56 % | **98.8 %** |
+| Pi received vs offered (5-minute soak) | — | **91.2 %** |
+| 5 s silence-close stalls in the 5-minute soak | 7 | **0** |
+| `hostapd` deassociations | 0 | 0 |
+| sample rate — telemetry `sps` | 48,031 | 48,031 |
+
+**Ground-truth PCM check** (the authoritative one): a 39.72 s capture of
+`/esp/stream?format=raw48` was pulled off the Pi and analysed:
+
+| check | result |
+|---|---|
+| exact-zero runs ≥ 5 ms (digital silence = a gap) | **0** |
+| total digital silence | **0 ms (0.00 %)** |
+| non-zero samples | 99.7 % |
+| 20 ms block level p10 / median / p90 | −54.0 / −49.6 / −43.9 dBFS |
+| blocks below −60 dBFS | 0.05 % |
+| peak | 32,402 (no clipping) |
+
+The byte-rate counters read 91–99 % because of bytes in flight in the socket;
+the **decoded PCM itself has no gap at all**, which is what a listener hears.
+
+Pi-side companion change: `ESP_SILENCE_CLOSE_S` 5.0 → 15.0 s in
+`/home/pigpulse/thermal-pi/esp_audio_ingest.py` (backup
+`esp_audio_ingest.py.bak-20261113-silence`), so a slow-but-alive link is not
+declared dead while the ESP is still holding buffered audio.
+
+**Current source on the board:**
+`firmware/esp32s3-mic-ambient/arduino/esp32s3_telemetry-flashed-20261113/`.
