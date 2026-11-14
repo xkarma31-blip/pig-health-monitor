@@ -10,6 +10,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View, StyleSheet } from 'react-native';
 import { useTheme } from '../theme';
 import { pbList } from '../utils/pocketbase';
+import { cacheGet, cacheSet } from '../utils/storage-cache';
 import {
   ENVIRONMENTAL_FIELDS,
   aggregateBuckets,
@@ -57,7 +58,7 @@ export function EnvironmentalHistoryPanel() {
   const [series, setSeries] = useState<EnvironmentalSeries | null>(null);
   const [buckets, setBuckets] = useState<BucketAggregate | null>(null);
   const [now, setNow] = useState(() => Date.now());
-  const [reloadKey, setReloadKey] = useState(0);
+  const [reloadKey] = useState(0);
 
   const spec = ENVIRONMENTAL_FIELDS[field];
   const sourceOptions = spec.sources;
@@ -68,17 +69,18 @@ export function EnvironmentalHistoryPanel() {
     if (!sourceOptions.some((s) => s.source === source)) {
       setSource(sourceOptions[0]?.source ?? '');
     }
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   }, [field, sourceOptions, source]);
 
   const load = useCallback(async () => {
     const end = Date.now();
     const start = end - (PERIODS.find((p) => p.key === period)?.ms ?? PERIODS[0].ms);
     setNow(end);
-    try {
-      const { items } = await pbList('telemetry', { sort: 'timestamp', perPage: 5000 });
-      const detected = detectTimestampUnit(items[0]?.timestamp);
+
+    const apply = (rows: Record<string, unknown>[]) => {
+      const detected = detectTimestampUnit(rows[0]?.timestamp);
       const unit = detected === 'seconds' ? 'seconds' : 'milliseconds';
-      const normalized = normalizeSeries(items, {
+      const normalized = normalizeSeries(rows, {
         field,
         source,
         unit,
@@ -95,14 +97,32 @@ export function EnvironmentalHistoryPanel() {
       setSeries(normalized);
       setBuckets(aggregated);
       setState('ready');
+    };
+
+    // Show the on-phone cache immediately, then replace it with live data.
+    const hit = await cacheGet<Record<string, unknown>[]>('telemetry-history');
+    if (hit && Array.isArray(hit.v)) apply(hit.v);
+
+    try {
+      const { items } = await pbList('telemetry', { sort: 'timestamp', perPage: 5000 });
+      apply(items);
+      void cacheSet('telemetry-history', items);
     } catch {
-      setState('error');
+      if (hit && Array.isArray(hit.v)) {
+        setState('ready');
+      } else {
+        setState('error');
+      }
     }
   }, [field, period, source]);
 
   useEffect(() => {
-    setState('loading');
+    let mounted = true;
+    if (mounted) {
+      setState('loading');
+    }
     void load();
+    return () => { mounted = false; };
   }, [load, reloadKey]);
 
   const readiness = useMemo(() => {

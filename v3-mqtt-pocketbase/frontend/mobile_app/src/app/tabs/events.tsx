@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { FlatList, Image, Platform, Text, TextInput, View, StyleSheet } from 'react-native';
 import { useTheme, statusColor, type Status } from '../../theme';
 import { subscribeAlerts } from '../../utils/pocketbase-data';
+import { cacheGet, cacheSet } from '../../utils/storage-cache';
 import { ensureNotificationPermission, notifyAlert } from '../../utils/notifications';
 import { telemetryTime } from '../../utils/telemetry-time';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
@@ -102,17 +103,33 @@ export default function AlertsScreen() {
   }, [events, state]);
 
   useEffect(() => {
+    let mounted = true;
     setState('loading');
+    // Hydrate from the on-phone cache first so alerts stay visible offline.
+    void cacheGet<Record<string, unknown>[]>('alerts').then((hit) => {
+      if (!mounted || !hit || !Array.isArray(hit.v)) return;
+      setEvents(hit.v.map((r, i) => toEvent(String(r.id ?? i), r)));
+      setState((s) => (s === 'loading' ? 'ready' : s));
+    });
     // Honest states: a read failure shows an error + retry instead of an empty
     // list, and an empty result is a real "no alerts" rather than demo data.
     const unsub = subscribeAlerts(
       (records) => {
+        if (!mounted) return;
         setEvents(records.map((r, i) => toEvent(String(r.id ?? i), r)));
         setState('ready');
+        void cacheSet('alerts', records);
       },
-      () => setState('error'),
+      () => {
+        if (!mounted) return;
+        // Surface the error only when there is no cached list to show.
+        setState((s) => (s === 'ready' ? s : 'error'));
+      },
     );
-    return unsub;
+    return () => {
+      mounted = false;
+      unsub();
+    };
   }, [reloadKey]);
 
   const filtered = useMemo(() => {
