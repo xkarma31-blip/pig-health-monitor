@@ -17,6 +17,7 @@ import {
 } from './pocketbase';
 import type { SensorReading as LiveSensorReading, SensorStatus } from '../data/mockSensors';
 import { toDeviceFields, hasReading, UNKNOWN_READING } from './device-record';
+import { cacheGet, cacheSet } from './storage-cache';
 
 export type SensorReading = Record<string, unknown> & { id?: string; name?: string; temp?: number };
 
@@ -186,19 +187,31 @@ export function subscribeSensors(
 export function subscribeDeviceNames(callback: (names: Record<string, string>) => void) {
   let cancelled = false;
 
+  const toNames = (items: Record<string, unknown>[]): Record<string, string> => {
+    const names: Record<string, string> = {};
+    for (const item of items) {
+      const id = String(item.deviceId || item.id || '');
+      if (id) names[id] = String(item.name || id);
+    }
+    return names;
+  };
+
   const emit = () => {
     pbList('devices', { perPage: 200 })
       .then(({ items }) => {
         if (cancelled) return;
-        const names: Record<string, string> = {};
-        for (const item of items) {
-          const id = String(item.deviceId || item.id || '');
-          if (id) names[id] = String(item.name || id);
-        }
-        callback(names);
+        void cacheSet('devices', items);
+        callback(toNames(items));
       })
       .catch(() => {
-        if (!cancelled) callback({});
+        if (cancelled) return;
+        // Offline: keep the labels we already know. Blanking them would make
+        // every device row fall back to a raw deviceId, which is worse than
+        // a slightly stale name.
+        void cacheGet<Record<string, unknown>[]>('devices').then((hit) => {
+          if (cancelled) return;
+          callback(hit && Array.isArray(hit.v) ? toNames(hit.v) : {});
+        });
       });
   };
 
