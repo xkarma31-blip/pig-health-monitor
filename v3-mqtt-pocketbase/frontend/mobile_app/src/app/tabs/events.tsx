@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, Image, Platform, Text, TextInput, View, StyleSheet } from 'react-native';
+import { FlatList, Image, Platform, Pressable, Text, TextInput, View, StyleSheet } from 'react-native';
 import { useTheme, statusColor, type Status } from '../../theme';
 import { subscribeAlerts } from '../../utils/pocketbase-data';
 import { cacheGet, cacheSet } from '../../utils/storage-cache';
@@ -7,6 +7,7 @@ import { ensureNotificationPermission, notifyAlert } from '../../utils/notificat
 import { telemetryTime } from '../../utils/telemetry-time';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { mapAlert, typeDisplay, type AlertItem, type AlertKind } from '../../utils/alert-record';
+import { AlertDetail } from '../../components/AlertDetail';
 import {
   ActionButton,
   AlertIcon,
@@ -21,7 +22,11 @@ import {
 } from '../../components/primitives';
 
 /** Alert item plus its display timestamp, parsed once at the data boundary. */
-type EventItem = AlertItem & { timestamp: string };
+type EventItem = AlertItem & {
+  timestamp: string;
+  /** The raw PocketBase record — needed for the detail view (frame, cause). */
+  raw: Record<string, unknown>;
+};
 
 type LoadState = 'loading' | 'ready' | 'error';
 
@@ -43,6 +48,7 @@ function toEvent(id: string, record: Record<string, unknown>): EventItem {
   return {
     ...mapAlert(id, record),
     timestamp: formatTimestamp(record.timestamp ?? record.ts ?? record.createdAt),
+    raw: record,
   };
 }
 
@@ -68,6 +74,9 @@ export default function AlertsScreen() {
   const [reloadKey, setReloadKey] = useState(0);
   const [notifPermission, setNotifPermission] = useState<'unknown' | 'granted' | 'denied'>('unknown');
   const lastAlertId = useRef<string | null>(null);
+  // The alert the farmer tapped — opens the "what happened" detail (capture
+  // frame + cause + surrounding readings).
+  const [detail, setDetail] = useState<Record<string, unknown> | null>(null);
 
   // Ask once for notification permission; never block the list on it.
   useEffect(() => {
@@ -222,6 +231,12 @@ export default function AlertsScreen() {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: spacing.xxl + 60 }}
             renderItem={({ item }) => (
+              <Pressable
+                onPress={() => setDetail(item.raw)}
+                accessibilityRole="button"
+                accessibilityLabel={`Alert: ${item.message}`}
+                accessibilityHint="Opens what happened, with the camera capture frame"
+              >
               <View style={[styles.eventCard, { backgroundColor: colors.surface, borderRadius: radius.md, padding: spacing.md, marginBottom: spacing.sm }]}>
                 <View style={styles.eventTop}>
                   <Badge
@@ -250,10 +265,16 @@ export default function AlertsScreen() {
                   />
                 ) : null}
               </View>
+              </Pressable>
             )}
           />
         )}
       </View>
+      <AlertDetail
+        alert={detail}
+        visible={detail !== null}
+        onClose={() => setDetail(null)}
+      />
     </View>
   );
 }

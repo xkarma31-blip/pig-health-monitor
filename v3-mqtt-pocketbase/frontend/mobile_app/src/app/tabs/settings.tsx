@@ -87,7 +87,10 @@ export default function SettingsScreen() {
   }, []);
 
   useEffect(() => {
-    setState('loading');
+    let mounted = true;
+    if (mounted) {
+      setState('loading');
+    }
     // Honest states: a read failure shows an error + retry instead of an empty
     // or demo list; an empty result is a real "no nodes paired".
     const unsub = subscribeSensors(

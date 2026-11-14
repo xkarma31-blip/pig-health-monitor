@@ -34,6 +34,8 @@ interface AlertEvent {
   acknowledged: boolean;
   confidence?: number;
   model?: string;
+  /** The raw PocketBase record — needed for the detail view (frame, cause). */
+  raw: Record<string, unknown>;
 }
 
 // Map Firebase alert data to our local AlertEvent type
@@ -64,6 +66,8 @@ function mapAlertToEvent(alert: Record<string, unknown>): AlertEvent {
     acknowledged: false,
     confidence: alert.confidence as number | undefined,
     model: alert.model as string | undefined,
+    /** The raw PocketBase record — needed for the detail view (frame, cause). */
+    raw: alert,
   };
 }
 
