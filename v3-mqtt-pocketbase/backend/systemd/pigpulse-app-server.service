@@ -1,0 +1,18 @@
+[Unit]
+Description=PigPulse web app server (offline path: static SPA + /api proxy to PB)
+After=network.target pigpulse-pocketbase.service
+Wants=network.target
+
+[Service]
+Type=simple
+User=pigpulse
+WorkingDirectory=/home/pigpulse/thermal-pi
+Environment=APP_ROOT=/home/pigpulse/thermal-pi/app
+Environment=PB_URL=http://127.0.0.1:8090
+Environment=APP_PORT=8082
+ExecStart=/usr/bin/python3 /home/pigpulse/thermal-pi/app_server.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
