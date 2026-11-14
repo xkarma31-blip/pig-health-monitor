@@ -4,29 +4,31 @@
     "appVersionSource": "remote"
   },
   "build": {
-    "development": {
-      "developmentClient": true,
-      "distribution": "internal",
-      "env": {
-        "EXPO_PUBLIC_POCKETBASE_URL": "http://127.0.0.1:18090",
-        "EXPO_PUBLIC_PB_EMAIL": "admin@pigpulse.local",
-        "EXPO_PUBLIC_PB_PASSWORD": "",
-        "EXPO_PUBLIC_API_URL": "http://192.168.1.101:80"
-      }
-    },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_POCKETBASE_URL": "http://127.0.0.1:18090",
+        "EXPO_PUBLIC_POCKETBASE_URL": "http://192.168.69.1:8090",
         "EXPO_PUBLIC_PB_EMAIL": "admin@pigpulse.local",
-        "EXPO_PUBLIC_PB_PASSWORD": "",
+        "EXPO_PUBLIC_PB_PASSWORD": "capstone123",
         "EXPO_PUBLIC_API_URL": "http://192.168.1.101:80"
       }
     },
-    "production": {}
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_POCKETBASE_URL": "http://192.168.69.1:8090",
+        "EXPO_PUBLIC_PB_EMAIL": "admin@pigpulse.local",
+        "EXPO_PUBLIC_PB_PASSWORD": "capstone123",
+        "EXPO_PUBLIC_API_URL": "http://192.168.69.1:80"
+      }
+    }
   },
   "submit": {
     "production": {}

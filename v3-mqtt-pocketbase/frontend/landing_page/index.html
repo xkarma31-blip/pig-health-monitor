@@ -136,6 +136,10 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
     display:flex; align-items:center; justify-content:center; flex-shrink:0;
   }
   .brand-name{font-size:16px; font-weight:800; letter-spacing:-.3px;}
+  /* Official wordmark (pig/pulse mark + "Pigpulse") from the light/dark PDFs.
+     Transparent PNG; the <picture> swaps to the dark artwork automatically. */
+  .brand-logo{height:28px; width:auto; display:block;}
+  .brand-logo-sm{height:21px;}
   .nav-links{display:flex; align-items:center; gap:28px;}
   .nav-links a{font-size:13.5px; font-weight:600; color:var(--text-secondary); transition:color .2s; position:relative; padding-bottom:2px;}
   .nav-links a::after{
@@ -981,12 +985,10 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
 <header>
   <div class="wrap nav-inner">
     <div class="brand">
-      <div class="logo-mark">
-        <svg width="17" height="17" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-          <path d="M1 10H6L8.5 3L12 17L14.5 10H19" stroke="#0A140E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </div>
-      <span class="brand-name">Pigpulse</span>
+      <picture>
+        <source srcset="logo-dark.png" media="(prefers-color-scheme: dark)">
+        <img src="logo-light.png" alt="Pigpulse" class="brand-logo" width="700" height="147">
+      </picture>
     </div>
     <nav class="nav-links">
       <a href="#architecture">Architecture</a>
@@ -1629,10 +1631,10 @@ xTaskCreatePinnedToCore(<br>
 <footer>
   <div class="wrap footer-inner">
     <div class="brand">
-      <div class="logo-mark" style="width:26px; height:26px;">
-        <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M1 10H6L8.5 3L12 17L14.5 10H19" stroke="#0A140E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </div>
-      <span class="brand-name" style="font-size:14px;">Pigpulse</span>
+      <picture>
+        <source srcset="logo-dark.png" media="(prefers-color-scheme: dark)">
+        <img src="logo-light.png" alt="Pigpulse" class="brand-logo brand-logo-sm" width="700" height="147">
+      </picture>
     </div>
     <div class="footer-links">
       <a data-config-href="appUrl">Dashboard</a>
