@@ -3,6 +3,7 @@ import { Animated, Text, TouchableOpacity, View, StyleSheet } from 'react-native
 import { useTabTrigger } from 'expo-router/ui';
 import { useTheme } from '../../theme';
 import { LogoMark } from './LogoMark';
+import { BrandWordmark } from './BrandWordmark';
 import {
   HomeIcon,
   BellIcon,
@@ -131,13 +132,9 @@ export function SidebarNav({ collapsed, onToggle, unreadEvents = 0 }: SidebarNav
           { paddingHorizontal: spacing.sm, marginBottom: spacing.md, justifyContent: collapsed ? 'center' : 'flex-start' },
         ]}
       >
-        <LogoMark />
-        {!collapsed ? (
-          <Text style={[typoH1, { marginLeft: 9 }]}>
-            <Text style={{ color: colors.textPrimary }}>Pig</Text>
-            <Text style={{ color: colors.accent }}>pulse</Text>
-          </Text>
-        ) : null}
+        {/* Collapsed: just the glyph. Expanded: the official wordmark from
+            the brand PDFs, light/dark artwork selected by the app theme. */}
+        {collapsed ? <LogoMark size={26} /> : <BrandWordmark height={22} />}
       </View>
 
       {/* Collapse / expand toggle (44×44 min touch target) */}
@@ -178,8 +175,6 @@ export function SidebarNav({ collapsed, onToggle, unreadEvents = 0 }: SidebarNav
     </Animated.View>
   );
 }
-
-const typoH1 = { fontSize: 22, fontWeight: '800' as const, letterSpacing: -0.5 };
 
 const styles = StyleSheet.create({
   rail: {

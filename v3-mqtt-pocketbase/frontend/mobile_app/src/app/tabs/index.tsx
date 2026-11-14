@@ -18,7 +18,7 @@ import {
 import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { usePiThermal } from '../../hooks/usePiThermal';
 import {
-  LogoMark,
+  BrandWordmark,
   Badge,
   ListGroup,
   ListRow,
@@ -337,11 +337,9 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <View style={{ flex: 1 }}>
           <View style={styles.brandRow}>
-            <LogoMark />
-            <Text style={[typography.h1, { marginLeft: 9, color: colors.textPrimary }]}>
-              <Text style={{ color: colors.textPrimary }}>Pig</Text>
-              <Text style={{ color: colors.accent }}>pulse</Text>
-            </Text>
+            {/* The official wordmark from the brand PDFs — the light and dark
+                artwork are swapped by the app's own theme. */}
+            <BrandWordmark height={28} />
           </View>
           <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 4 }]}>
             {subtitle}

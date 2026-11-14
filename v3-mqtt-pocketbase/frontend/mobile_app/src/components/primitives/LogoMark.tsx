@@ -1,24 +1,32 @@
 import React from 'react';
 import { Image } from 'react-native';
 import { useTheme } from '../../theme';
-import iconAsset from '../../../assets/icon.png';
+import glyphLight from '../../../assets/glyph-light.png';
+import glyphDark from '../../../assets/glyph-dark.png';
 
 /**
- * Official PigPulse mark (pig/pulse heartbeat glyph) from the brand artwork.
+ * The official PigPulse glyph (the green tile with the pulse trace), taken
+ * from the delivered brand PDFs.
  *
- * Replaces the old inline pulse zigzag: that was the pre-brand placeholder and
- * did not match the shipped app icon. This renders the same artwork the app
- * icon uses, so the header mark, the launcher icon and the favicon are one
- * identity. The asset is a full-bleed square, so it is clipped to the theme
- * radius instead of being letterboxed.
+ * Two variants exist and they are NOT interchangeable:
+ *   light -> green tile, BLACK pulse trace
+ *   dark  -> green tile, WHITE pulse trace
+ * The tile is a rounded rectangle about 1.39:1 (512x368), so the size
+ * argument is the HEIGHT and the width follows the artwork's own ratio.
+ *
+ * The variant follows the app theme, so the mark is never a black trace on a
+ * dark screen (invisible) or a white trace on a light one.
  */
-export function LogoMark({ size = 32 }: { size?: number }) {
-  const { radius } = useTheme();
+export function LogoMark({ size = 28 }: { size?: number }) {
+  const { scheme } = useTheme();
+  const source = scheme === 'dark' ? glyphDark : glyphLight;
+  const width = Math.round(size * (512 / 368));
+
   return (
     <Image
-      source={iconAsset}
-      style={{ width: size, height: size, borderRadius: radius.sm, flexShrink: 0 }}
-      resizeMode="cover"
+      source={source}
+      style={{ width, height: size }}
+      resizeMode="contain"
       accessibilityIgnoresInvertColors
       accessibilityLabel="PigPulse"
     />

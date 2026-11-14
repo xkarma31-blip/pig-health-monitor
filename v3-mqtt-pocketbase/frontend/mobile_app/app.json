@@ -17,7 +17,8 @@
       "package": "com.solrahk.pighealthmonitor",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FFFFFF"
+        "backgroundColor": "#0D9A3A",
+        "monochromeImage": "./assets/monochrome-icon.png"
       }
     },
     "splash": {
@@ -40,7 +41,8 @@
       "expo-status-bar",
       "expo-audio",
       "expo-asset",
-      "expo-notifications"
+      "expo-notifications",
+      "./plugins/withCleartextTraffic"
     ],
     "scheme": "pighealth",
     "extra": {
