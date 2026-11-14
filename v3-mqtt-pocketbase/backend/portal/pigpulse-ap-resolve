@@ -1,0 +1,18 @@
+#!/bin/sh
+# Point the WHOLE AP stack at the dongle radio, resolved by MAC.
+#
+# The dongle (2.4 GHz, the radio the ESP32-S3 mic and the Tapo camera need)
+# and the built-in (5 GHz, used as the WAN client) SWAP their kernel names
+# across reboots. Every AP component used to hardcode wlan1, so after a
+# reboot the address, dnsmasq and hostapd could land on different radios:
+# the AP advertised on one while the gateway IP lived on the other, and the
+# WAN client (on the dongle) associated with our own AP.
+DONGLE_MAC=dc:a6:32:87:63:a1
+IFACE=$(/usr/local/sbin/pigpulse-wlan-iface "$DONGLE_MAC") || exit 0
+[ -n "$IFACE" ] || exit 0
+sed -i "s/^interface=.*/interface=$IFACE/" /etc/hostapd/hostapd.conf 2>/dev/null || true
+sed -i "s/^interface=.*/interface=$IFACE/" /etc/dnsmasq.conf 2>/dev/null || true
+mkdir -p /etc/pigpulse
+printf 'PIGPULSE_AP_IFACE=%s\n' "$IFACE" > /etc/pigpulse/ap-radio.env
+echo "AP radio -> $IFACE"
+exit 0

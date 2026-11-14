@@ -47,6 +47,64 @@ ENABLED = "/etc/pigpulse/wan-sta.enabled"
 SKIPPED = "/etc/pigpulse/wan-sta.skipped"
 FIRST_RUN = "/etc/pigpulse/portal-seen"
 ALLOW5G = "/etc/pigpulse/wan-sta-allow-5g"
+
+# --- radio identity -------------------------------------------------------
+# The USB dongle and the built-in radio SWAP their kernel names across
+# reboots, so "wlan0"/"wlan1" are NOT stable identities. Resolve by MAC.
+#   BUILTIN  -> 5 GHz capable -> used as the WAN client
+#   DONGLE   -> 2.4 GHz only  -> hosts the PigPulse AP (ESP32-S3 + Tapo)
+BUILTIN_MAC = "00:1f:05:6c:51:bc"
+DONGLE_MAC = "dc:a6:32:87:63:a1"
+
+
+def _iface_for_mac(mac: str) -> str | None:
+    """Primary netdev of the radio with this MAC (None if not present)."""
+    base = "/sys/class/net"
+    try:
+        names = sorted(os.listdir(base))
+    except OSError:
+        return None
+    for name in names:
+        # A virtual station inherits its parent's MAC; skip those so we return
+        # the radio's OWN interface, not the vif we attach to it.
+        if name.endswith("sta"):
+            continue
+        try:
+            with open(os.path.join(base, name, "address"), "r") as fh:
+                if fh.read().strip().lower() == mac.lower():
+                    return name
+        except OSError:
+            continue
+    return None
+
+
+def wan_iface() -> str | None:
+    """Interface of the built-in radio (the WAN/STA side)."""
+    return _iface_for_mac(BUILTIN_MAC)
+
+
+def ap_iface() -> str | None:
+    """Interface of the dongle radio (the PigPulse AP side)."""
+    return _iface_for_mac(DONGLE_MAC)
+
+
+def _own_radio_bssids() -> set[str]:
+    """MACs of every local radio, so our own AP is never offered upstream."""
+    out: set[str] = set()
+    base = "/sys/class/net"
+    try:
+        names = os.listdir(base)
+    except OSError:
+        return out
+    for name in names:
+        if not os.path.isdir(os.path.join(base, name, "wireless")):
+            continue
+        try:
+            with open(os.path.join(base, name, "address"), "r") as fh:
+                out.add(fh.read().strip().lower())
+        except OSError:
+            continue
+    return out
 CONNECT = "/usr/local/sbin/pigpulse-portal-connect"
 HOSTED = "https://pig-health-monitor.vercel.app"
 
@@ -109,15 +167,17 @@ def internet_up(max_age: float = 20.0) -> bool:
 
 
 def ensure_station() -> bool:
-    """The scan needs a managed vif. Create it if the uplink is not running."""
-    if os.path.exists("/sys/class/net/wlan0sta"):
-        return True
-    if not os.path.exists("/sys/class/net/wlan0"):
+    """Bring the WAN radio up so it can scan.
+
+    brcmfmac (the built-in radio) does not support adding a virtual managed
+    interface, so the radio's OWN interface is used for the client and for
+    scanning. The name is resolved from the radio's MAC, not hardcoded.
+    """
+    iface = wan_iface()
+    if not iface:
         return False
-    run(["ip", "link", "set", "wlan0", "up"], 8)
-    run(["iw", "dev", "wlan0", "interface", "add", "wlan0sta", "type", "managed"], 8)
-    run(["ip", "link", "set", "wlan0sta", "up"], 8)
-    return os.path.exists("/sys/class/net/wlan0sta")
+    run(["ip", "link", "set", iface, "up"], 8)
+    return True
 
 
 def scan_networks(force: bool = False) -> list[dict]:
@@ -133,13 +193,15 @@ def scan_networks(force: bool = False) -> list[dict]:
             return _scan_cache[1]
         if not ensure_station():
             return []
-        bands = [("24", SCAN24)]
-        if os.path.exists(ALLOW5G):
-            bands.append(("5G", SCAN5))
+        # Always offer both bands for the UPSTREAM. The 2.4 GHz-only limit
+        # applies to our AP (the dongle), not to the WAN client, which runs
+        # on the separate 5 GHz-capable built-in radio.
+        bands = [("24", SCAN24), ("5G", SCAN5)]
+        scan_if = wan_iface() or ""
         seen: dict[str, dict] = {}
         for band, freqs in bands:
             out = run(
-                ["iw", "dev", "wlan0sta", "scan", "freq"] + [str(f) for f in freqs],
+                ["iw", "dev", scan_if, "scan", "freq"] + [str(f) for f in freqs],
                 timeout=30,
             )
             cur: dict | None = None
@@ -166,9 +228,13 @@ def scan_networks(force: bool = False) -> list[dict]:
                     if prev is None or cur.get("signal", -999) > prev.get("signal", -999):
                         seen[key] = dict(cur)
                     cur = None
+        own = _own_radio_bssids()
         nets = [
             n for n in seen.values()
             if n.get("ssid") and n.get("freq") and n["ssid"] != "\x00" * 32
+            # Never offer OUR OWN AP as an upstream: picking it makes the WAN
+            # client target this Pi itself ("connected", no internet, no error).
+            and str(n.get("bssid", "")).lower() not in own
         ]
         nets.sort(key=lambda n: n.get("signal", -999), reverse=True)
         _scan_cache = (time.time(), nets)
@@ -177,11 +243,11 @@ def scan_networks(force: bool = False) -> list[dict]:
 
 def ap_info() -> dict:
     info = {"channel": None, "freq": None, "clients": 0, "ssid": None}
-    out = run(["iw", "dev", "wlan0", "info"], 6)
+    out = run(["iw", "dev", ap_iface() or "wlan0", "info"], 6)
     m = re.search(r"channel (\d+) \((\d+) MHz\)", out)
     if m:
         info["channel"], info["freq"] = int(m.group(1)), int(m.group(2))
-    out = run(["hostapd_cli", "-p", "/var/run/hostapd", "-i", "wlan0", "status"], 6)
+    out = run(["hostapd_cli", "-p", "/var/run/hostapd", "-i", ap_iface() or "wlan0", "status"], 6)
     for line in out.splitlines():
         # `status` reports ssid[0]=..., `get_config` reports ssid=...
         if line.startswith("ssid[0]=") or line.startswith("ssid="):
@@ -193,7 +259,7 @@ def ap_info() -> dict:
     except OSError:
         pass
     if not info["clients"]:
-        out = run(["hostapd_cli", "-p", "/var/run/hostapd", "-i", "wlan0", "all_sta"], 6)
+        out = run(["hostapd_cli", "-p", "/var/run/hostapd", "-i", ap_iface() or "wlan0", "all_sta"], 6)
         info["clients"] = sum(1 for ln in out.splitlines() if re.match(r"^[0-9a-f]{2}:", ln))
     return info
 
@@ -207,7 +273,7 @@ def associated() -> bool:
     `UP ip=192.168.254.194` while `iw dev wlan0sta link` said
     `Not connected` and the interface held a 169.254 address.
     """
-    return "Connected to" in run(["iw", "dev", "wlan0sta", "link"], 5)
+    return "Connected to" in run(["iw", "dev", wan_iface() or "wlan0", "link"], 5)
 
 
 def status() -> dict:
@@ -224,7 +290,7 @@ def status() -> dict:
     if venue["freq"].isdigit():
         venue["freq"] = int(venue["freq"])
     ip = read_addr = ""
-    out = run(["ip", "-4", "-o", "addr", "show", "wlan0sta"], 5)
+    out = run(["ip", "-4", "-o", "addr", "show", wan_iface() or "wlan0"], 5)
     m = re.search(r"inet (\d+\.\d+\.\d+\.\d+)", out)
     # A 169.254 address is not an uplink: it means DHCP failed. Reporting it as
     # the uplink IP is how the page came to show "UP · 169.254.134.112".
@@ -245,7 +311,7 @@ def status() -> dict:
         "internet": internet_up(),
         "ap": ap_info(),
         "hosted": HOSTED,
-        "allow_5g": os.path.exists(ALLOW5G),
+        "allow_5g": True,
     }
 
 

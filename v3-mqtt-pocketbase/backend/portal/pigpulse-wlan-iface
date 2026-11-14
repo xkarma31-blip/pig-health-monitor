@@ -1,0 +1,25 @@
+#!/bin/sh
+# Print the PRIMARY network interface of the radio whose MAC matches $1.
+#
+# WHY: the USB dongle and the built-in radio SWAP their kernel names across
+# reboots, so name-addressing put the WAN client on the 2.4 GHz-only dongle
+# where it associated with our OWN "PigPulse" AP ("connected, no internet",
+# no error anywhere).
+#
+# Virtual interfaces inherit their parent's MAC, so a MAC match alone can hit
+# a virtual station instead of the radio's own netdev. Skip the station
+# interfaces we create ("*sta") and return the radio's own interface.
+target=$(printf '%s' "$1" | tr 'A-Z' 'a-z')
+[ -n "$target" ] || exit 1
+best=""
+for f in /sys/class/net/*/address; do
+  mac=$(cat "$f" 2>/dev/null | tr 'A-Z' 'a-z')
+  [ "$mac" = "$target" ] || continue
+  name=$(basename "$(dirname "$f")")
+  case "$name" in
+    *sta) continue ;;
+  esac
+  [ -z "$best" ] && best="$name"
+done
+[ -n "$best" ] && { echo "$best"; exit 0; }
+exit 1
