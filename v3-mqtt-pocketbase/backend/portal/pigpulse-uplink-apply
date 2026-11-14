@@ -1,23 +1,21 @@
 #!/bin/bash
-# Split-radio uplink: built-in radio -> venue; AP stays on the dongle.
+# Split-radio uplink: the WAN radio -> venue; the AP radio stays on the other one.
 #
-# MAC-addressed, never name-addressed. The USB dongle and the built-in radio
-# swap their kernel names (wlan0/wlan1) across reboots, so name-addressing
-# silently put the WAN client on the 2.4 GHz-only dongle, where it associated
-# with our OWN "PigPulse" AP: wpa_supplicant reported COMPLETED while no DHCP
-# lease was ever obtained ("connected, no internet", no error anywhere).
+# MAC-addressed, never name-addressed: the dongle and the built-in radio swap
+# their kernel names across reboots, and name-addressing silently put the WAN
+# client on the wrong radio (and once pointed it at our OWN AP, which reports
+# "connected" with no internet and no error).
 #
-# The built-in radio is used DIRECTLY as the client interface: brcmfmac does
-# not support adding a virtual managed interface, so `iw dev wlanX interface
-# add ... type managed` fails there. The dongle is a different phy and stays
-# free for the AP.
+# The radio's OWN interface is used for the client: brcmfmac does not support
+# adding a virtual managed interface, and the rtl8192cu dongle wedges on scan
+# often enough to need a reset.
 set -u
 CONF=/etc/wpa_supplicant/wpa-split.conf
-BUILTIN_MAC=dc:a6:32:87:63:a1
-DONGLE_MAC=00:1f:05:6c:51:bc
+AP_RADIO_MAC=dc:a6:32:87:63:a1     # built-in (brcmfmac) -> hosts the PigPulse AP
+WAN_RADIO_MAC=00:1f:05:6c:51:bc    # dongle (rtl8192cu) -> WAN client
 
-WAN_IF=$(/usr/local/sbin/pigpulse-wlan-iface "$BUILTIN_MAC") || { echo "no built-in radio"; exit 1; }
-AP_IF=$(/usr/local/sbin/pigpulse-wlan-iface "$DONGLE_MAC") || AP_IF=""
+AP_IF=$(/usr/local/sbin/pigpulse-wlan-iface "$AP_RADIO_MAC") || AP_IF=""
+WAN_IF=$(/usr/local/sbin/pigpulse-wlan-iface "$WAN_RADIO_MAC") || { echo "no WAN radio"; exit 1; }
 PID="/run/wpa_supplicant-$WAN_IF.pid"
 
 # Never point the uplink at our own AP.
@@ -29,19 +27,33 @@ if [ -n "$AP_IF" ]; then
   fi
 fi
 
-ip link set "$WAN_IF" up
-if wpa_cli -i "$WAN_IF" status >/dev/null 2>&1; then
-  wpa_cli -i "$WAN_IF" reconfigure >/dev/null 2>&1 || true
-  wpa_cli -i "$WAN_IF" reassociate >/dev/null 2>&1 || true
-else
+# The rtl8192cu dongle wedges: it stays in SCANNING and a plain `iw scan`
+# returns nothing. A down/up of the interface resets the driver, so the uplink
+# retries from a clean interface state instead of staying dead.
+reset_iface() {
   pkill -f "wpa_supplicant.*-i $WAN_IF" 2>/dev/null || true
-  sleep 1
+  ip link set "$WAN_IF" down 2>/dev/null || true
+  sleep 2
+  ip link set "$WAN_IF" up 2>/dev/null || true
+  sleep 2
+}
+
+connect_once() {
+  ip link set "$WAN_IF" up
   wpa_supplicant -B -i "$WAN_IF" -c "$CONF" -D nl80211 -P "$PID" || true
+  for i in $(seq 1 30); do
+    iw dev "$WAN_IF" link 2>/dev/null | grep -q "Connected to" && return 0
+    sleep 1
+  done
+  return 1
+}
+
+if ! connect_once; then
+  echo "uplink: no association on first try - resetting the dongle and retrying" >&2
+  reset_iface
+  connect_once || true
 fi
-for i in $(seq 1 40); do
-  iw dev "$WAN_IF" link 2>/dev/null | grep -q "Connected to" && break
-  sleep 1
-done
+
 dhcpcd -4 -m 50 -t 15 -q --noipv4ll --nohook resolv.conf "$WAN_IF" >/dev/null 2>&1 || true
 GW=""
 for i in $(seq 1 20); do

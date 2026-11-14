@@ -53,8 +53,8 @@ ALLOW5G = "/etc/pigpulse/wan-sta-allow-5g"
 # reboots, so "wlan0"/"wlan1" are NOT stable identities. Resolve by MAC.
 #   BUILTIN  -> 5 GHz capable -> used as the WAN client
 #   DONGLE   -> 2.4 GHz only  -> hosts the PigPulse AP (ESP32-S3 + Tapo)
-BUILTIN_MAC = "dc:a6:32:87:63:a1"
-DONGLE_MAC = "00:1f:05:6c:51:bc"
+WAN_RADIO_MAC = "00:1f:05:6c:51:bc"
+AP_RADIO_MAC = "dc:a6:32:87:63:a1"
 
 
 def _iface_for_mac(mac: str) -> str | None:
@@ -80,12 +80,12 @@ def _iface_for_mac(mac: str) -> str | None:
 
 def wan_iface() -> str | None:
     """Interface of the built-in radio (the WAN/STA side)."""
-    return _iface_for_mac(BUILTIN_MAC)
+    return _iface_for_mac(WAN_RADIO_MAC)
 
 
 def ap_iface() -> str | None:
     """Interface of the dongle radio (the PigPulse AP side)."""
-    return _iface_for_mac(DONGLE_MAC)
+    return _iface_for_mac(AP_RADIO_MAC)
 
 
 def _own_radio_bssids() -> set[str]:
@@ -166,18 +166,26 @@ def internet_up(max_age: float = 20.0) -> bool:
     return up
 
 
-def ensure_station() -> bool:
-    """Bring the WAN radio up so it can scan.
+def ensure_station() -> tuple[str | None, bool]:
+    """Pick the radio to scan with, and whether the AP must come down for it.
 
-    brcmfmac (the built-in radio) does not support adding a virtual managed
-    interface, so the radio's OWN interface is used for the client and for
-    scanning. The name is resolved from the radio's MAC, not hardcoded.
+    Preference order:
+      1. the WAN radio (its own interface) — the AP keeps beaconing, so the
+         sensors never drop;
+      2. the AP radio — only when the WAN radio is unusable (e.g. the USB
+         dongle has failed). A radio cannot scan while it hosts the AP, so the
+         AP is briefly stopped and restored afterwards.
+
+    Returns (interface, stop_ap_first).
     """
     iface = wan_iface()
-    if not iface:
-        return False
-    run(["ip", "link", "set", iface, "up"], 8)
-    return True
+    if iface:
+        run(["ip", "link", "set", iface, "up"], 8)
+        return iface, False
+    ap = ap_iface()
+    if ap:
+        return ap, True
+    return None, False
 
 
 def scan_networks(force: bool = False) -> list[dict]:
@@ -191,43 +199,58 @@ def scan_networks(force: bool = False) -> list[dict]:
         age = time.time() - _scan_cache[0]
         if not force and age < 12 and _scan_cache[1]:
             return _scan_cache[1]
-        if not ensure_station():
+        scan_if, stop_ap = ensure_station()
+        if not scan_if:
             return []
-        # Always offer both bands for the UPSTREAM. The 2.4 GHz-only limit
-        # applies to our AP (the dongle), not to the WAN client, which runs
-        # on the separate 5 GHz-capable built-in radio.
-        bands = [("24", SCAN24), ("5G", SCAN5)]
-        scan_if = wan_iface() or ""
+        # A radio cannot scan while it hosts the AP, so the AP is briefly
+        # stopped when we have to scan on the AP radio (the WAN radio being
+        # unusable, e.g. a failed USB dongle). It is restored immediately after.
+        ap_stopped = False
+        if stop_ap:
+            run(["systemctl", "stop", "hostapd"], 15)
+            ap_stopped = True
+            time.sleep(2)
+        try:
+            # Plain scan: `iw dev X scan freq <list>` returns EINVAL on these
+            # drivers, so let the driver scan every band it supports.
+            out = run(["iw", "dev", scan_if, "scan"], timeout=45)
+        finally:
+            if ap_stopped:
+                run(["systemctl", "start", "hostapd"], 20)
+                time.sleep(2)
         seen: dict[str, dict] = {}
-        for band, freqs in bands:
-            out = run(
-                ["iw", "dev", scan_if, "scan", "freq"] + [str(f) for f in freqs],
-                timeout=30,
-            )
-            cur: dict | None = None
-            for line in out.splitlines():
-                if line.startswith("BSS "):
-                    mac = line.split()[1].split("(")[0]
-                    cur = {"bssid": mac, "band": band}
-                elif cur is None:
-                    continue
-                elif line.strip().startswith("freq:"):
-                    try:
-                        cur["freq"] = int(float(line.split(":")[1]))
-                    except (ValueError, IndexError):
-                        pass
-                elif line.strip().startswith("signal:"):
-                    try:
-                        cur["signal"] = float(line.split(":")[1].split()[0])
-                    except (ValueError, IndexError):
-                        pass
-                elif line.strip().startswith("SSID:"):
-                    cur["ssid"] = line.split(":", 1)[1].strip()
-                    key = f"{cur.get('ssid')}|{cur.get('freq')}"
-                    prev = seen.get(key)
-                    if prev is None or cur.get("signal", -999) > prev.get("signal", -999):
-                        seen[key] = dict(cur)
-                    cur = None
+        cur: dict | None = None
+        for line in out.splitlines():
+            if line.startswith("BSS "):
+                mac = line.split()[1].split("(")[0]
+                freq = 0
+                try:
+                    if "freq:" in line:
+                        freq = int(float(line.split("freq:", 1)[1].split()[0]))
+                except (ValueError, IndexError):
+                    freq = 0
+                band = "5G" if freq >= 4900 else "24"
+                cur = {"bssid": mac, "band": band, "freq": freq}
+            elif cur is None:
+                continue
+            elif line.strip().startswith("freq:"):
+                try:
+                    cur["freq"] = int(float(line.split(":")[1]))
+                    cur["band"] = "5G" if cur["freq"] >= 4900 else "24"
+                except (ValueError, IndexError):
+                    pass
+            elif line.strip().startswith("signal:"):
+                try:
+                    cur["signal"] = float(line.split(":")[1].split()[0])
+                except (ValueError, IndexError):
+                    pass
+            elif line.strip().startswith("SSID:"):
+                cur["ssid"] = line.split(":", 1)[1].strip()
+                key = f"{cur.get('ssid')}|{cur.get('freq')}"
+                prev = seen.get(key)
+                if prev is None or cur.get("signal", -999) > prev.get("signal", -999):
+                    seen[key] = dict(cur)
+                cur = None
         own = _own_radio_bssids()
         nets = [
             n for n in seen.values()
