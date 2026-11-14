@@ -27,7 +27,13 @@ const sync = () => {
   }
 };
 setInterval(sync, 700);
-if (typeof window !== 'undefined') window.addEventListener('storage', sync);
+// React Native polyfills `window` (so `typeof window !== 'undefined'` is true)
+// but does NOT implement the web `addEventListener` API — calling it throws
+// "undefined is not a function" at module load, which crashed the whole app on
+// native. Check the method, not just the object.
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('storage', sync);
+}
 
 export const setAuthUser = async (user: PBAuthUser) => {
   const { setAuthUser: pbSet } = await import('./pocketbase-auth');
