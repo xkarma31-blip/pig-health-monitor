@@ -153,6 +153,31 @@ class ThermalPublisher:
             self._last_error = str(e)[:200]
             return False
 
+    def _capture_frame(self) -> str:
+        """Best-effort CCTV snapshot as a data URL for the alert record.
+
+        A missing camera never blocks an alert: returns '' when the snapshot
+        cannot be fetched. The frame is what the camera saw at the moment the
+        alert fired, so the app can show it next to the alert.
+        """
+        try:
+            import base64
+            import ssl
+            import urllib.request
+
+            ctx = ssl._create_unverified_context()
+            url = getattr(
+                config, "CCTV_SNAPSHOT_URL",
+                "https://127.0.0.1:8080/cctv?snapshot=1",
+            )
+            with urllib.request.urlopen(url, timeout=3, context=ctx) as resp:
+                data = resp.read()
+            if not data:
+                return ""
+            return "data:image/jpeg;base64," + base64.b64encode(data).decode("ascii")
+        except Exception:
+            return ""
+
     def _publish_status(self, online: bool) -> None:
         self._publish("status", {
             "deviceId": DEVICE_ID,
@@ -198,6 +223,9 @@ class ThermalPublisher:
             self._alerted = True
             pig = getattr(config, "PUBLISH_PIG_ID", "unassigned")
             body = round(float(st.get("center", 0.0)), 2)
+            # Capture frame at the alert: the CCTV snapshot from the Pi's own
+            # web server. Best-effort — a missing camera never blocks an alert.
+            frame = self._capture_frame()
             self._publish("alerts", {
                 "deviceId": DEVICE_ID,
                 "timestamp": int(time.time() * 1000),
@@ -211,6 +239,7 @@ class ThermalPublisher:
                     f"{st.get('hotspotY', '?')})"
                 ),
                 "bodyTemp": body,
+                "frame": frame,
             })
             self._published += 1
 

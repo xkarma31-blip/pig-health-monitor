@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { FlatList, Platform, Text, TextInput, View, StyleSheet } from 'react-native';
+import { FlatList, Image, Platform, Text, TextInput, View, StyleSheet } from 'react-native';
 import { useTheme, statusColor, type Status } from '../../theme';
 import { subscribeAlerts } from '../../utils/pocketbase-data';
 import { ensureNotificationPermission, notifyAlert } from '../../utils/notifications';
@@ -224,6 +224,14 @@ export default function AlertsScreen() {
                 <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 6, fontSize: 16 }]}>
                   {typeDisplay(item)}
                 </Text>
+                {item.frame ? (
+                  <Image
+                    source={{ uri: item.frame }}
+                    style={[styles.frame, { marginTop: spacing.sm, backgroundColor: colors.surfaceAlt }]}
+                    resizeMode="cover"
+                    accessibilityLabel="Alert capture frame"
+                  />
+                ) : null}
               </View>
             )}
           />
@@ -238,4 +246,5 @@ const styles = StyleSheet.create({
   searchBar: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 14 },
   eventCard: {},
   eventTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  frame: { width: '100%', height: 180, borderRadius: 10 },
 });

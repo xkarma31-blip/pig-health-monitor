@@ -40,6 +40,8 @@ export type AlertItem = {
   severityToken: string;
   severityRecognized: boolean;
   message: string;
+  /** Optional capture frame (data URL or URL) captured when the alert fired. */
+  frame?: string;
 };
 
 const SEVERITY_MAP: Record<string, AlertStatus> = {
@@ -133,5 +135,6 @@ export function mapAlert(id: string, record: Record<string, unknown>): AlertItem
     severityToken: severity.token,
     severityRecognized: severity.recognized,
     message: alertMessage(record),
+    frame: typeof record.frame === 'string' && record.frame.trim() ? record.frame : undefined,
   };
 }
