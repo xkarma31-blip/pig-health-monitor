@@ -15,7 +15,19 @@ AP_RADIO_MAC=dc:a6:32:87:63:a1     # built-in (brcmfmac) -> hosts the PigPulse A
 WAN_RADIO_MAC=00:1f:05:6c:51:bc    # dongle (rtl8192cu) -> WAN client
 
 AP_IF=$(/usr/local/sbin/pigpulse-wlan-iface "$AP_RADIO_MAC") || AP_IF=""
-WAN_IF=$(/usr/local/sbin/pigpulse-wlan-iface "$WAN_RADIO_MAC") || { echo "no WAN radio"; exit 1; }
+WAN_IF=$(/usr/local/sbin/pigpulse-wlan-iface "$WAN_RADIO_MAC" || true)
+if [ -z "$WAN_IF" ]; then
+  # No WAN radio present (the USB dongle has failed). Report the truth instead
+  # of leaving a stale status file claiming a connection that is not there.
+  mkdir -p /run/pigpulse
+  printf 'STATE=DOWN band=none ip=none gw=none freq=0 want_freq=%s ch=0 want_bssid=%s assoc=none wan=none\n' \
+    "$(head -1 /etc/pigpulse/wan-sta.freq 2>/dev/null || echo 0)" \
+    "$(head -1 /etc/pigpulse/wan-sta.bssid 2>/dev/null || echo none)" \
+    > /run/pigpulse/wan-sta.status
+  chmod 644 /run/pigpulse/wan-sta.status 2>/dev/null || true
+  echo "no WAN radio present (USB dongle missing) - internet must come from eth1"
+  exit 0
+fi
 PID="/run/wpa_supplicant-$WAN_IF.pid"
 
 # Never point the uplink at our own AP.
@@ -64,15 +76,28 @@ done
 [ -n "$GW" ] && ip route replace default via "$GW" dev "$WAN_IF" metric 50
 SSID=$(head -1 /etc/pigpulse/wan-sta.ssid 2>/dev/null || true)
 BSSID=$(head -1 /etc/pigpulse/wan-sta.bssid 2>/dev/null || true)
-FREQ=$(head -1 /etc/pigpulse/wan-sta.freq 2>/dev/null || true)
+WANT_FREQ=$(head -1 /etc/pigpulse/wan-sta.freq 2>/dev/null || true)
 IP=$(ip -4 -o addr show "$WAN_IF" 2>/dev/null | sed -n 's/.*inet \([0-9.]*\).*/\1/p' | head -1)
 GW=$(ip route show default 2>/dev/null | awk -v d="$WAN_IF" '$0 ~ "dev "d {print $3; exit}')
 CH=$(iw dev "$AP_IF" info 2>/dev/null | sed -n 's/.*channel \([0-9]*\).*/\1/p')
 ASSOC=$(iw dev "$WAN_IF" link 2>/dev/null | sed -n 's/.*Connected to //p' | head -1)
+# The ACTUAL band/frequency of the link we hold, read from the driver.
+# The configured FREQ is only a TARGET: reporting it made the status file
+# claim "band=5G" while ip=none and the radio was not connected at all.
+ACTFREQ=$(iw dev "$WAN_IF" link 2>/dev/null | sed -n 's/.*freq: \([0-9]*\).*/\1/p' | head -1)
+if [ -n "$ASSOC" ] && [ -n "$ACTFREQ" ]; then
+  BAND=$([ "$ACTFREQ" -ge 4900 ] && echo 5G || echo 24)
+  FREQ="$ACTFREQ"
+else
+  BAND=none
+  FREQ=0
+fi
 mkdir -p /run/pigpulse
-printf 'UP band=%s ip=%s gw=%s freq=%s ch=%s bssid=%s metric=50 assoc=%s wan=%s\n' \
-  "$([ -n "$FREQ" ] && [ "$FREQ" -ge 4900 ] 2>/dev/null && echo 5G || echo 24)" \
-  "${IP:-none}" "${GW:-none}" "${FREQ:-0}" "${CH:-0}" "${BSSID:-none}" \
+printf 'STATE=%s band=%s ip=%s gw=%s freq=%s want_freq=%s ch=%s want_bssid=%s assoc=%s wan=%s\n' \
+  "$([ -n "$ASSOC" ] && [ -n "$IP" ] && echo UP || echo DOWN)" \
+  "$BAND" \
+  "${IP:-none}" "${GW:-none}" "${FREQ:-0}" "$WANT_FREQ" \
+  "${CH:-0}" "${BSSID:-none}" \
   "${ASSOC:-none}" "$WAN_IF" > /run/pigpulse/wan-sta.status
 chmod 644 /run/pigpulse/wan-sta.status 2>/dev/null || true
 exit 0
