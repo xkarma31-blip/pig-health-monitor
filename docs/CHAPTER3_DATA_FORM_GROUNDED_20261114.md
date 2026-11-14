@@ -187,7 +187,7 @@ From `head_results.json` + `operating_points_5s.json` `[CODE chapter3_attachment
 - Cooldown: `NONE` — no refractory / cooldown logic anywhere in thermal-pi. `[CODE]`
 
 **C5 — Emissivity**
-- Coded value: `EPS_EAR_BASE .978`. `[CODE radiometry.py:66]`
+- Coded value: `EPS_EAR_BASE .978`. `[CODE radiometry.py:67]`
 - `eps_here` MUST be `1.0` (double-correction guard). `[CODE radiometry.py:526]`
 - Coded vs Kirchhoff divergence on record: coded `38.72 / Δ+0.21` vs K `40.24 / Δ+1.74` — "understated ≈8.1×". `[DOC docs/CALCULATION_REFERENCE_20261102.md:110-150, :174-182]`
 - References on record: Soerensen `doi:10.1016/j.compag.2014.09.003`; Sensors `doi:10.3390/s140712305`. `[DOC CALCULATION_REFERENCE_20261102.md]`
