@@ -52,6 +52,42 @@ STATUS_INTERVAL_S = 60.0
 # this, values are placeholder noise from a cold sensor.
 MIN_CONFIDENCE_FRAMES = 3
 
+# Absolute physical plausibility band for a frame, in degrees Celsius. A
+# marginal I2C link hands back a complete 832-word buffer of identical garbage
+# words, so every pixel computes to the same absurd value (the deck once drew
+# center=2257 C / max=2440 C). A real pig-surface reading lives well inside this
+# band; anything past it is not a measurement and must never become the live
+# frame or go on the MQTT wire.
+PLAUSIBLE_MIN_C = -40.0
+PLAUSIBLE_MAX_C = 80.0
+
+
+def frame_is_plausible(st: dict) -> bool:
+    """True only when every reported temperature is a physically possible C.
+
+    Shared by the web loop and the publisher so the screen and the wire can
+    never disagree: a frame rejected here is dropped on both sides. ``center``
+    is required (a frame without it is not a frame); ``max``/``min``/``avg``/
+    ``hotspot``/``ambient`` are checked whenever present.
+    """
+    if not isinstance(st, dict):
+        return False
+    if st.get("center") is None:
+        return False
+    for key in ("center", "max", "min", "avg", "hotspot", "ambient"):
+        val = st.get(key)
+        if val is None:
+            continue
+        try:
+            f = float(val)
+        except (TypeError, ValueError):
+            return False
+        if f != f:  # NaN is never a measurement
+            return False
+        if f < PLAUSIBLE_MIN_C or f > PLAUSIBLE_MAX_C:
+            return False
+    return True
+
 
 class ThermalPublisher:
     """Fire-and-forget MQTT publisher with its own reconnecting thread.
@@ -203,6 +239,11 @@ class ThermalPublisher:
         if now - self._last_status >= STATUS_INTERVAL_S:
             self._last_status = now
             self._publish_status(True)
+
+        # Same guard the web loop uses: never put an implausible frame on the
+        # wire, even if a future caller forgets to gate first.
+        if not frame_is_plausible(st):
+            return
 
         if frames_seen < MIN_CONFIDENCE_FRAMES:
             return
