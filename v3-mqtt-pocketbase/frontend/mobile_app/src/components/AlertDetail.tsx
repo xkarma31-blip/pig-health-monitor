@@ -86,8 +86,10 @@ export function AlertDetail({ alert, visible, onClose }: AlertDetailProps) {
   useEffect(() => {
     if (!visible || !alert) return;
     let cancelled = false;
-    setContextState('loading');
     (async () => {
+      // Inside the async body (not synchronously in the effect) so this does
+      // not trigger a cascading render.
+      setContextState('loading');
       try {
         const { items } = await pbList('telemetry', { sort: '-timestamp', perPage: 200 });
         if (cancelled) return;

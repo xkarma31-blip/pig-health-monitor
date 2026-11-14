@@ -64,25 +64,29 @@ export function EnvironmentalHistoryPanel() {
   const sourceOptions = spec.sources;
   const [source, setSource] = useState<string>(sourceOptions[0]?.source ?? '');
 
-  // Keep the source valid when the field changes.
-  useEffect(() => {
-    if (!sourceOptions.some((s) => s.source === source)) {
-      setSource(sourceOptions[0]?.source ?? '');
-    }
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  }, [field, sourceOptions, source]);
+  // The source in force is DERIVED, not synchronised: when the field changes
+  // and the chosen source is not valid for it, fall back to that field's first
+  // source. Deriving avoids a setState inside an effect (and a render pass
+  // that would briefly show the wrong source's data).
+  const activeSource = sourceOptions.some((s) => s.source === source)
+    ? source
+    : (sourceOptions[0]?.source ?? '');
 
+  /**
+   * Fetch and compute. PURE: it returns the computed series/buckets and never
+   * calls setState, so the effect can apply the result in a callback without a
+   * cascading render.
+   */
   const load = useCallback(async () => {
     const end = Date.now();
     const start = end - (PERIODS.find((p) => p.key === period)?.ms ?? PERIODS[0].ms);
-    setNow(end);
 
-    const apply = (rows: Record<string, unknown>[]) => {
+    const compute = (rows: Record<string, unknown>[]) => {
       const detected = detectTimestampUnit(rows[0]?.timestamp);
       const unit = detected === 'seconds' ? 'seconds' : 'milliseconds';
       const normalized = normalizeSeries(rows, {
         field,
-        source,
+        source: activeSource,
         unit,
         now: end,
         measurementProvenance: 'unknown',
@@ -92,37 +96,45 @@ export function EnvironmentalHistoryPanel() {
         end,
         buckets: 24,
         field,
-        source,
+        source: activeSource,
       });
-      setSeries(normalized);
-      setBuckets(aggregated);
-      setState('ready');
+      return { normalized, aggregated, at: end };
     };
 
     // Show the on-phone cache immediately, then replace it with live data.
     const hit = await cacheGet<Record<string, unknown>[]>('telemetry-history');
-    if (hit && Array.isArray(hit.v)) apply(hit.v);
-
+    const cached = hit && Array.isArray(hit.v) ? compute(hit.v) : null;
     try {
       const { items } = await pbList('telemetry', { sort: 'timestamp', perPage: 5000 });
-      apply(items);
       void cacheSet('telemetry-history', items);
+      return { live: compute(items), cached };
     } catch {
-      if (hit && Array.isArray(hit.v)) {
-        setState('ready');
-      } else {
-        setState('error');
-      }
+      return { live: null, cached };
     }
-  }, [field, period, source]);
+  }, [field, period, activeSource]);
 
   useEffect(() => {
-    let mounted = true;
-    if (mounted) {
-      setState('loading');
-    }
-    void load();
-    return () => { mounted = false; };
+    let cancelled = false;
+    // The result is applied in a callback, so no setState runs synchronously
+    // in the effect body.
+    void load().then((r) => {
+      if (cancelled || !r) return;
+      if (r.cached) {
+        setSeries(r.cached.normalized);
+        setBuckets(r.cached.aggregated);
+        setNow(r.cached.at);
+        setState('ready');
+      }
+      if (r.live) {
+        setSeries(r.live.normalized);
+        setBuckets(r.live.aggregated);
+        setNow(r.live.at);
+        setState('ready');
+      } else if (!r.cached) {
+        setState('error');
+      }
+    });
+    return () => { cancelled = true; };
   }, [load, reloadKey]);
 
   const readiness = useMemo(() => {
@@ -189,7 +201,7 @@ export function EnvironmentalHistoryPanel() {
       </Text>
 
       <View style={styles.row}>
-        {sourceOptions.map((s) => chip(s.source, s.source === source, () => setSource(s.source), `src-${s.source}`))}
+        {sourceOptions.map((s) => chip(s.source, s.source === activeSource, () => setSource(s.source), `src-${s.source}`))}
       </View>
       <View style={[styles.row, { marginTop: spacing.xs }]}>
         {chip('Ambient', field === 'ambient', () => setField('ambient'), 'f-ambient')}

@@ -113,12 +113,15 @@ export default function AlertsScreen() {
 
   useEffect(() => {
     let mounted = true;
-    setState('loading');
     // Hydrate from the on-phone cache first so alerts stay visible offline.
+    // The state flip happens inside the async callback (not synchronously in
+    // the effect body), which avoids a cascading render.
     void cacheGet<Record<string, unknown>[]>('alerts').then((hit) => {
-      if (!mounted || !hit || !Array.isArray(hit.v)) return;
+      if (!mounted) return;
+      setState('loading');
+      if (!hit || !Array.isArray(hit.v)) return;
       setEvents(hit.v.map((r, i) => toEvent(String(r.id ?? i), r)));
-      setState((s) => (s === 'loading' ? 'ready' : s));
+      setState('ready');
     });
     // Honest states: a read failure shows an error + retry instead of an empty
     // list, and an empty result is a real "no alerts" rather than demo data.

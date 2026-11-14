@@ -4,6 +4,12 @@ import { useFocusEffect, useRouter } from 'expo-router';
 
 import { useTheme, type Status, type ThemeColors } from '../../theme';
 import { useAuth } from '../../hooks/useAuth';
+import { resolveSelectedSource } from '../../utils/pocketbase';
+import {
+  MaintenanceNotice,
+  describeFaults,
+  diagnosticsLine,
+} from '../../components/MaintenanceNotice';
 import {
   usePocketbaseRealtime,
   type ConnectionStatus,
@@ -191,6 +197,7 @@ export default function HomeScreen() {
     lastError,
     freshness,
     reconnect,
+    now,
   } = usePocketbaseRealtime();
 
   const [loading, setLoading] = useState(true);
@@ -247,7 +254,9 @@ export default function HomeScreen() {
   }, [deviceIds, telemetry, deviceNames]);
 
   // Device monitoring counts only — never a herd-health verdict.
-  const summary = useMemo(() => summarizeDevices(telemetry, Date.now()), [telemetry]);
+  // `now` is the hook's ticking clock (it advances every 5 s), so the summary
+  // ages against a stable instant instead of calling Date.now() during render.
+  const summary = useMemo(() => summarizeDevices(telemetry, now), [telemetry, now]);
   const hasDevices = devices.length > 0;
   const needsReview = summary.status.watch + summary.status.alert;
   const reportedCount = summary.status.normal + summary.status.watch + summary.status.alert;
@@ -290,6 +299,17 @@ export default function HomeScreen() {
     setTimeout(() => setRefreshing(false), 1200);
   };
 
+  // Plain-language notice when something is genuinely not working, so the app
+  // never looks healthy while the box is silent. Derived from measured state
+  // only — it never invents a diagnosis.
+  const maintenanceFault = describeFaults({
+    connectionStatus,
+    thermalLive: piLive,
+    hasStoredThermal: !!pi.pbStats,
+    deviceCount: devices.length,
+  });
+  const pbUrlForDiagnostics = resolveSelectedSource().base || undefined;
+
   const contentMax = tier === 'expanded' ? 1100 : tier === 'medium' ? 720 : undefined;
   const penColumns = tier === 'expanded' ? 3 : tier === 'medium' ? 2 : 1;
 
@@ -326,6 +346,17 @@ export default function HomeScreen() {
           <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 4 }]}>
             {subtitle}
           </Text>
+          {maintenanceFault ? (
+            <MaintenanceNotice
+              fault={maintenanceFault}
+              diagnostics={diagnosticsLine({
+                pbUrl: pbUrlForDiagnostics,
+                connectionStatus,
+                thermalLive: piLive,
+                deviceCount: devices.length,
+              })}
+            />
+          ) : null}
           {hasDevices ? (
             <View style={{ marginTop: spacing.sm }}>
               <FreshnessBadge band={freshness.band} />

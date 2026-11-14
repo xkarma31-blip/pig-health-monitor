@@ -87,10 +87,8 @@ export default function SettingsScreen() {
   }, []);
 
   useEffect(() => {
-    let mounted = true;
-    if (mounted) {
-      setState('loading');
-    }
+    // The initial state is already 'loading'; a manual refresh flips to it
+    // from the button handler, so there is no setState in the effect body.
     // Honest states: a read failure shows an error + retry instead of an empty
     // or demo list; an empty result is a real "no nodes paired".
     const unsub = subscribeSensors(
@@ -146,7 +144,7 @@ export default function SettingsScreen() {
             <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.lg }}>
               <ActionButton
                 variant="secondary"
-                onPress={() => setReloadKey((k) => k + 1)}
+                onPress={() => { setState('loading'); setReloadKey((k) => k + 1); }}
                 accessibilityLabel="Retry loading nodes"
                 accessibilityHint="Reloads the hardware nodes list"
               >

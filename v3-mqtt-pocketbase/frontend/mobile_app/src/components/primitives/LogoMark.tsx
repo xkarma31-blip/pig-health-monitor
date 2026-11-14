@@ -1,6 +1,7 @@
 import React from 'react';
 import { Image } from 'react-native';
 import { useTheme } from '../../theme';
+import iconAsset from '../../../assets/icon.png';
 
 /**
  * Official PigPulse mark (pig/pulse heartbeat glyph) from the brand artwork.
@@ -15,7 +16,7 @@ export function LogoMark({ size = 32 }: { size?: number }) {
   const { radius } = useTheme();
   return (
     <Image
-      source={require('../../../assets/icon.png')}
+      source={iconAsset}
       style={{ width: size, height: size, borderRadius: radius.sm, flexShrink: 0 }}
       resizeMode="cover"
       accessibilityIgnoresInvertColors
