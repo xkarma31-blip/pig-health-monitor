@@ -35,8 +35,10 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import queue
+import select
 import struct
 import subprocess
 import threading
@@ -47,12 +49,32 @@ from urllib.parse import parse_qs, quote, urlparse
 
 import ambient_ingest
 import config
+import diag_state
 import esp_audio_ingest
 import i2c_scanDiag
 import pcm_downmix
 import pigpulse_stats
+
+from array import array as _array
+
+
+def _mono_to_stereo(mono: bytes) -> bytes:
+    """S16LE mono -> S16LE stereo (both channels identical).
+
+    The browser's AudioWorklet consumes interleaved stereo and advances two
+    samples per frame; feeding it mono makes it run at half speed and underrun
+    constantly, which is heard as stuttering.
+    """
+    if not mono:
+        return b""
+    a = _array("h")
+    a.frombytes(mono)
+    out = _array("h", bytes(4 * len(a)))
+    out[0::2] = a
+    out[1::2] = a
+    return out.tobytes()
 import thermal_publish
-from mlx_reader import MlxReader, averaged_reading
+from mlx_reader import MlxReader, averaged_reading, i2c_ack
 
 ROOT = Path(__file__).resolve().parent
 STATIC = ROOT / config.STATIC_DIR
@@ -96,6 +118,8 @@ ESP_STREAM_FIRST_CHUNK_S = 2.0
 ESP_RECORD_GRACE_S = 20
 
 CAMERA_AUDIO_MAX_S = 8
+CAMERA_AUDIO_LIVE_GAIN_DEFAULT = 20   # dB; the Tapo mic is very quiet
+CAMERA_AUDIO_LIVE_GAIN_MAX = 36
 CAMERA_AUDIO_MIN_S = 2
 CAMERA_AUDIO_DEFAULT_S = 4
 
@@ -104,6 +128,153 @@ CAMERA_AUDIO_DEFAULT_S = 4
 # evict the MJPEG feed (or the capture itself) instead of adding capacity.
 _camera_audio_lock = threading.Lock()
 
+# ---------------------------------------------------------------- talkback
+# The deck's microphone plays out of the Pi's own speaker. The Tapo's built-in
+# speaker cannot be driven from here: its ONVIF media service reports zero
+# audio outputs (GetAudioOutputs is empty even though the device capabilities
+# claim one), Media2 - the only standard carrying talkback - returns 500, and
+# the RTSP session advertises no backchannel track. The local TP-Link API on
+# :443 does exist but rejects the RTSP account.
+ANNOUNCE_DEVICE = os.environ.get("ANNOUNCE_ALSA_DEVICE", "plughw:2,0")
+ANNOUNCE_MAX_BYTES = 4 * 1024 * 1024   # one POST, ~2 min at 16 kHz mono
+
+_announce_lock = threading.Lock()
+_announce_proc = None
+_announce_rate = 0
+
+
+def _announce_proc_for(rate: int):
+    """Long-lived `aplay` reading raw PCM from stdin.
+
+    Keeping one process alive (instead of spawning per chunk) is what makes
+    speech continuous: every respawn would insert a gap between words.
+    The process is restarted only if it died or the sample rate changed.
+    """
+    global _announce_proc, _announce_rate
+    if (_announce_proc is not None and _announce_proc.poll() is None
+            and _announce_rate == rate):
+        return _announce_proc
+    if _announce_proc is not None:
+        try:
+            if _announce_proc.poll() is None:
+                _announce_proc.kill()
+            _announce_proc.wait(timeout=2)
+        except Exception:  # noqa: BLE001
+            pass
+    _announce_proc = subprocess.Popen(
+        ["aplay", "-q", "-D", ANNOUNCE_DEVICE, "-f", "S16_LE",
+         "-r", str(rate), "-c", "1", "-t", "raw"],
+        stdin=subprocess.PIPE, stderr=subprocess.DEVNULL, bufsize=0)
+    _announce_rate = rate
+    return _announce_proc
+
+
+class _CctvSnapshotter:
+    """Keeps the newest COMPLETE JPEG from the camera, in the background.
+
+    2026-11-11 - ARCHITECTURE. `/cctv?snapshot=1` used to open a NEW MJPEG
+    session to the proxy on EVERY request and read frames in the REQUEST
+    THREAD until it found a complete JPEG - up to 5 s, with the GIL held for
+    the buffer scan. Two consequences:
+
+      * the dashboard's CCTV panel intermittently went blank (the proxy could
+        not deliver a complete frame inside the deadline - the browser saw a
+        stream of 503s);
+      * a snapshot request could stall other work in the same process,
+        including the audio stream.
+
+    One background thread now owns the camera connection and keeps the last
+    complete frame. The HTTP handler returns that cached frame instantly, so
+    a snapshot costs one dict lookup and one socket write.
+    """
+
+    def __init__(self, host: str, port: int) -> None:
+        self._host = host
+        self._port = port
+        self._lock = threading.Lock()
+        self._frame: bytes | None = None
+        self._ts: float = 0.0
+        self._stop = threading.Event()
+        self._thread: threading.Thread | None = None
+
+    def start(self) -> None:
+        with self._lock:
+            if self._thread and self._thread.is_alive():
+                return
+            self._stop.clear()
+            self._thread = threading.Thread(target=self._run, name="cctv-snap",
+                                            daemon=True)
+            self._thread.start()
+
+    def get(self) -> tuple[bytes | None, float]:
+        with self._lock:
+            return self._frame, self._ts
+
+    def _run(self) -> None:
+        while not self._stop.is_set():
+            try:
+                self._session()
+            except OSError:
+                pass
+            self._stop.wait(1.0)
+
+    def _session(self) -> None:
+        import socket as _socket
+        up = _socket.create_connection((self._host, self._port), timeout=4)
+        try:
+            up.settimeout(10)
+            up.sendall(b"GET / HTTP/1.0\r\nHost: localhost\r\n"
+                       b"Connection: close\r\n\r\n")
+            hdr = b""
+            while b"\r\n\r\n" not in hdr:
+                c = up.recv(4096)
+                if not c:
+                    raise OSError("camera closed before sending a header")
+                hdr += c
+            body = hdr.split(b"\r\n\r\n", 1)[1]
+            # 2026-11-11 - INCREMENTAL frame extraction.
+            #
+            # The first version did `body += chunk` and then rescanned the
+            # WHOLE buffer with _last_jpeg() on every packet. That is O(n) per
+            # packet on a buffer that was only truncated when a frame happened
+            # to be found - so it could grow without bound, and the scan is
+            # pure Python, which holds the GIL. A GIL-holding scan in a
+            # background thread is enough to stall the audio stream's socket
+            # writes: measured as 0.33 s gaps in the browser, roughly every
+            # 40-60 s.
+            #
+            # Now the buffer only ever holds ONE incomplete frame: each
+            # complete JPEG is cut out and the remainder is kept. The work is
+            # O(frame) per packet and the GIL is held for microseconds.
+            while not self._stop.is_set():
+                c = up.recv(65536)
+                if not c:
+                    break
+                body += c
+                while True:
+                    i = body.find(b"\xff\xd8")
+                    if i < 0:
+                        # no start marker: keep just enough to catch a split
+                        body = body[-2:]
+                        break
+                    j = body.find(b"\xff\xd9", i + 2)
+                    if j < 0:
+                        # incomplete frame: keep it and wait for the rest
+                        body = body[i:]
+                        break
+                    frame = body[i:j + 2]
+                    body = body[j + 2:]
+                    with self._lock:
+                        self._frame = frame
+                        self._ts = time.time()
+        finally:
+            try:
+                up.close()
+            except OSError:
+                pass
+
+
+_cctv_snapshot = _CctvSnapshotter(_CCTV_HOST, _CCTV_PORT)
 
 def _last_jpeg(buf: bytes) -> bytes | None:
     """Newest complete JPEG in `buf` (SOI … EOI), or None if still partial.
@@ -201,6 +372,18 @@ _last_error = "starting"
 admin_console = None
 _console_error: str | None = None
 _cached: dict | None = None
+# Frames the driver called a success but that were physically
+# impossible (corrupt buffer). Used only to log the recovery.
+_corrupt_frames_skipped = 0
+# Plain-English diagnosis of the CURRENT thermal fault. It is what the
+# deck shows instead of a bare errno, refreshed at most every
+# DIAG_INTERVAL_S while the sensor is sick, and cleared the moment a
+# plausible frame arrives. Without it the operator sees
+# "read failed: [Errno 5]" and has no idea which of three faults it is.
+_thermal_diag: dict | None = None
+_diag_at = 0.0
+_last_corrupt_c: float | None = None
+DIAG_INTERVAL_S = 10.0
 _publisher = thermal_publish.ThermalPublisher()
 
 # The I2C bus scan walks 112 addresses with an ioctl+write each. On a healthy
@@ -281,6 +464,7 @@ def _log(level: str, msg: str, every_s: float = 60.0) -> None:
 
 def _loop() -> None:
     global _frame_seq, _last_ok, _read_ms, _fps_ema, _last_t, _last_error, _cached
+    global _corrupt_frames_skipped, _thermal_diag, _diag_at, _last_corrupt_c
     # Boot: try init, retry every 10s like the ESP loop.
     #
     # 2026-09-30: this loop used to fail in COMPLETE SILENCE. A dead sensor left
@@ -383,25 +567,72 @@ def _loop() -> None:
                 inst = (1.0 / dt) if dt > 0 else 0.0
                 _fps_ema = inst if _fps_ema <= 0.01 else 0.75 * _fps_ema + 0.25 * inst
                 st["fps"] = round(_fps_ema, 2)
-                st["ok"] = True
-                _cached = st
-                _frame_seq += 1
-                _last_ok = True
-                # 2026-09-30: log the transition back to life once, so a
-                # recovered sensor is visible in the journal rather than just
-                # silently becoming normal again.
-                if not _first_frame_logged:
-                    _first_frame_logged = True
-                    print(f"[web] thermal: first frame OK "
-                          f"(center={st.get('center', 0):.2f} C, "
-                          f"ambient={st.get('ambient', 0):.2f} C) — feed live",
-                          flush=True)
-                _last_error = "OK"
-                _last_t = t1
+                # 2026-11-09: "the read succeeded" is NOT "the numbers are
+                # real". A marginal I2C link still hands back a complete
+                # 832-word buffer - just full of identical garbage words - so
+                # every pixel computes to the same absurd value. The old code
+                # cached that buffer and served it with ok:true, which is how
+                # the deck ended up drawing center=2257.62 C / max=2440.22 C
+                # with verdict HYPERTHERMIA. Only a physically possible frame
+                # may become the live frame. Same test the publisher uses, so
+                # the screen and the MQTT wire can never disagree.
+                if thermal_publish.frame_is_plausible(st):
+                    st["ok"] = True
+                    _cached = st
+                    _frame_seq += 1
+                    _last_ok = True
+                    # 2026-09-30: log the transition back to life once, so a
+                    # recovered sensor is visible in the journal rather than
+                    # just silently becoming normal again.
+                    if not _first_frame_logged:
+                        _first_frame_logged = True
+                        print(f"[web] thermal: first frame OK "
+                              f"(center={st.get('center', 0):.2f} C, "
+                              f"ambient={st.get('ambient', 0):.2f} C) — feed live",
+                              flush=True)
+                    if _corrupt_frames_skipped:
+                        print(f"[web] thermal: frames plausible again after "
+                              f"{_corrupt_frames_skipped} corrupt frame(s) "
+                              f"rejected — feed live", flush=True)
+                        _corrupt_frames_skipped = 0
+                    _last_error = "OK"
+                    _last_t = t1
+                    _thermal_diag = None
+                    _last_corrupt_c = None
+                else:
+                    # Deliberately drop the cached frame instead of keeping
+                    # the last good one: a stale-but-believable number would
+                    # be silently presented as live, which is the same lie in
+                    # a nicer costume. The deck shows "Sensor error" instead.
+                    _corrupt_frames_skipped += 1
+                    _last_ok = False
+                    _cached = None
+                    try:
+                        _last_corrupt_c = float(st.get("center"))
+                    except (TypeError, ValueError):
+                        _last_corrupt_c = None
+                    _last_error = (
+                        f"implausible frame rejected "
+                        f"(center={st.get('center')!r} C, "
+                        f"max={st.get('max')!r} C) — corrupt I2C read, "
+                        f"not a real temperature")
+                    _now = time.monotonic()
+                    if _now - _diag_at >= DIAG_INTERVAL_S:
+                        _diag_at = _now
+                        _thermal_diag = diagnose_thermal(
+                            _reader, _last_error, _corrupt_frames_skipped,
+                            _last_corrupt_c)
+                    if _corrupt_frames_skipped == 1:
+                        _log("error",
+                             f"thermal: {_last_error}; refusing to draw, cache "
+                             f"or alert on it until the bus recovers "
+                             f"[{_thermal_diag and _thermal_diag['code']}]")
                 # Publish to MQTT so the thermal data joins the normal
                 # pipeline. Rate-limited inside the publisher, and it never
                 # raises into this loop — a broker outage must not stop the
-                # dashboard from drawing.
+                # dashboard from drawing. Corrupt frames still go in: the
+                # publisher has its own gate and answers with status=offline,
+                # which is exactly the heartbeat an operator needs.
                 try:
                     _publisher.publish_frame(st, _frame_seq)
                 except Exception as e:  # noqa: BLE001
@@ -409,16 +640,201 @@ def _loop() -> None:
             else:
                 _last_ok = False
                 _last_error = _reader.last_error
+                _now = time.monotonic()
+                if _now - _diag_at >= DIAG_INTERVAL_S:
+                    _diag_at = _now
+                    _thermal_diag = diagnose_thermal(
+                        _reader, _last_error, _corrupt_frames_skipped,
+                        _last_corrupt_c)
                 # 2026-09-30: this branch was silent. A sensor that initialised
                 # and then stopped answering produced no log at all, which is
                 # indistinguishable from "working" in journalctl.
                 _log("error",
                      f"thermal: frame read failed: {_last_error or 'unknown'} "
                      f"(is the I2C cable still seated?)")
+                if _corrupt_frames_skipped == 0 and _thermal_diag:
+                    _log("warn",
+                         f"thermal: diagnosis [{_thermal_diag['code']}] "
+                         f"{_thermal_diag['headline']} -- "
+                         f"{_thermal_diag['action']}")
                 if not _reader.ready:
                     _log("warn", "thermal: reader not ready, re-initialising")
                     _reader.init()
         time.sleep(max(0.0, live_every - (time.monotonic() - t0)))
+
+
+def _sensor_converting(bus: str, addr: int) -> tuple:
+    """Is the chip's measurement engine still producing new frames?
+
+    The MLX90640 sets bit 3 of the status register (0x8000) when a frame is
+    ready, and holds it until the host clears it. At any refresh rate of 0.5 Hz
+    or faster that bit is therefore set almost all the time on a healthy part.
+
+    Independently, the frame buffer itself is sampled twice. A converting
+    sensor must change it.
+
+    Returns (state, detail) where state is True / False / None ("cannot tell").
+    Never raises: a diagnosis that throws would turn a sensor fault into an
+    outage.
+    """
+    try:
+        from smbus2 import SMBus, i2c_msg
+    except Exception as e:  # noqa: BLE001
+        return None, f"smbus2 unavailable: {e}"
+
+    def read_reg(b, reg):
+        w = i2c_msg.write(addr, [(reg >> 8) & 0xFF, reg & 0xFF])
+        r = i2c_msg.read(addr, 2)
+        b.i2c_rdwr(w, r)
+        d = list(r)
+        return (d[0] << 8) | d[1]
+
+    try:
+        with SMBus(bus) as b:
+            ready = 0
+            statuses = set()
+            errors = 0
+            for _ in range(10):
+                try:
+                    st = read_reg(b, 0x8000)
+                    statuses.add(st)
+                    if st & 0x0008:
+                        ready += 1
+                except Exception:
+                    errors += 1
+                time.sleep(0.02)
+
+            try:
+                frame_a = read_reg(b, 0x0400)
+                time.sleep(0.12)
+                frame_b = read_reg(b, 0x0400)
+                frame_moved = frame_a != frame_b
+            except Exception:
+                frame_moved = None
+
+            detail = (
+                f"status polls: 10, data-ready seen {ready}, "
+                f"distinct status values {sorted(statuses)}, read errors {errors}"
+            )
+            if frame_moved is not None:
+                detail += f", frame buffer changed: {'yes' if frame_moved else 'no'}"
+
+            if ready:
+                return True, detail
+            if frame_moved:
+                return True, detail
+            if errors >= 8:
+                return None, detail
+            return False, detail
+    except Exception as e:  # noqa: BLE001
+        return None, f"liveness probe failed: {e}"
+
+
+def diagnose_thermal(reader, err: str, corrupt_seen: int,
+                     last_corrupt_c: float | None) -> dict:
+    """Explain a thermal fault in terms an operator can act on.
+
+    Three genuinely different failures hide behind the same EIO/EREMOTEIO the
+    deck used to print, and they need different hands. i2c_ack() is the
+    discriminator and costs one ioctl, so re-checking it every DIAG_INTERVAL_S
+    is affordable.
+
+    Never raises: a diagnosis that crashes the read loop would turn a sensor
+    fault into a service outage.
+    """
+    bus = getattr(reader, "bus", config.I2C_BUS)
+    addr = getattr(reader, "addr", 0x33)
+    try:
+        acked, why = i2c_ack(bus, addr)
+    except Exception as e:  # noqa: BLE001
+        acked, why = False, f"address probe failed: {e}"
+
+    errno_txt = (err or "no error recorded").strip()
+    addr_s = f"0x{addr:02X}"
+    wires = ("Check the four wires (VDD, SDA pin 3, SCL pin 5, GND pin 6) and "
+             "power-cycle the sensor.")
+
+    # The reader itself names this fault after waiting on the data-ready bit.
+    # Trust it ahead of the probe: during a device rebuild the probe can only
+    # return "cannot tell", and falling through would blame the wiring for a
+    # fault that has been measured to be internal to the sensor.
+    if "not producing frames" in (err or ""):
+        return {
+            "code": "not_converting",
+            "headline": "Thermal sensor has stopped measuring",
+            "action": ("The chip answers on I2C and accepts commands, but it is "
+                       "no longer producing new frames: the data-ready bit never "
+                       "rises and the frame buffer does not change. Nothing is "
+                       "wrong with the wiring or with the code. Power-cycle the "
+                       "sensor itself - unplug its power wire (VDD) for 10 "
+                       "seconds. Rebooting the Pi does NOT reset the supply rail, "
+                       "so a reboot will not clear this. If it does not come back "
+                       "after a real power cycle, the module has failed and needs "
+                       "replacing."),
+            "detail": errno_txt,
+        }
+
+    if not acked:
+        return {
+            "code": "no_ack",
+            "headline": f"Thermal sensor is not answering at {addr_s}",
+            "action": wires,
+            "detail": f"{why}. Last driver error: {errno_txt}",
+        }
+
+    # 2026-11-09: a chip that answers I2C but never produces a new frame is a
+    # completely different fault from a chip that sends bad frames, and it
+    # needs a different action. Checked before the corruption branch because a
+    # frozen frame buffer also "reads" as steady nonsense.
+    converting, live_detail = _sensor_converting(bus, addr)
+    if converting is False:
+        return {
+            "code": "not_converting",
+            "headline": "Thermal sensor has stopped measuring",
+            "action": ("The chip answers on I2C and accepts commands, but it is "
+                       "no longer producing new frames: the data-ready bit never "
+                       "rises and the frame buffer does not change. Nothing is "
+                       "wrong with the wiring or with the code. Power-cycle the "
+                       "sensor itself - unplug its power wire (VDD) for 10 seconds. "
+                       "Rebooting the Pi does NOT reset the 3V3 rail, so a reboot "
+                       "will not clear this. If it does not come back after a real "
+                       "power cycle, the module has failed and needs replacing."),
+            "detail": live_detail + f". Last driver error: {errno_txt}",
+        }
+
+    if corrupt_seen:
+        shown = (f"{last_corrupt_c:.1f} C" if last_corrupt_c is not None
+                 else "an impossible value")
+        return {
+            "code": "corrupt_frames",
+            "headline": "Thermal sensor answers, but its readings are corrupt",
+            "action": (f"It acknowledges at {addr_s}, and it is still producing "
+                       f"frames, but they compute to {shown}. The chip and the "
+                       f"wiring are both alive, so the calibration it returned on "
+                       f"start-up could not be trusted. {wires}"),
+            "detail": (f"{corrupt_seen} corrupt frame(s) rejected. "
+                       f"{live_detail}. Last error: {errno_txt}"),
+        }
+
+    if not getattr(reader, "ready", False):
+        return {
+            "code": "not_ready",
+            "headline": "Thermal sensor is present, but the driver cannot use it",
+            "action": ("The chip acknowledges, so power and wiring are fine. The "
+                       "driver is failing to initialise: check that no other "
+                       "process holds the I2C bus, then restart the service."),
+            "detail": errno_txt,
+        }
+
+    return {
+        "code": "bus_errors",
+        "headline": "Thermal sensor link is failing intermittently",
+        "action": (f"The chip acknowledges at {addr_s} and accepts commands, so "
+                   f"it is not dead and the code is running. Reads are failing "
+                   f"intermittently, which points at the I2C link rather than "
+                   f"the sensor. {wires}"),
+        "detail": errno_txt,
+    }
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -448,10 +864,20 @@ class Handler(BaseHTTPRequestHandler):
             else:
                 self._send(500, "text/plain", b"missing static/index.html")
             return
+        if path == "/diag":
+            self._send(200, "text/html; charset=utf-8", diag_state.HTML.encode())
+            return
+        if path == "/diag.json":
+            self._send(200, "application/json", json.dumps(diag_state.collect()).encode())
+            return
         if path == "/data":
             with _lock:
                 if not _last_ok or _cached is None:
                     payload = {"ok": False, "error": _last_error}
+                    # The raw errno stays: the debug trail must survive.
+                    # `diag` is the part an operator can act on.
+                    if _thermal_diag:
+                        payload["diag"] = dict(_thermal_diag)
                 else:
                     payload = dict(_cached)
                     payload["ok"] = True
@@ -466,6 +892,12 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/camera-audio":
             self._camera_audio(query)
+            return
+        if path == "/camera-audio/live":
+            self._camera_audio_live(query)
+            return
+        if path == "/announce/test":
+            self._announce_test(query)
             return
         if path == "/esp/status":
             body = json.dumps(esp_audio_ingest.get().status(),
@@ -586,7 +1018,70 @@ class Handler(BaseHTTPRequestHandler):
         if path.startswith("/static/"):
             self._serve_static(path[len("/static/"):])
             return
+        # --- Cough classifier (pigpulse-cough.service, 127.0.0.1:8096) ------
+        # Additive: "/cough" and "/cough/..." match no branch above, so no
+        # existing route can be shadowed. Proxied over THIS origin for the same
+        # reason as /cctv: the page is HTTPS and the classifier is plain HTTP
+        # on loopback, so a browser can never fetch it directly (mixed content,
+        # plus a second self-signed certificate to accept).
+        if path == "/cough" or path.startswith("/cough/"):
+            self._proxy_cough(url, "GET")
+            return
         self._send(404, "text/plain", b"Not found")
+
+    def do_POST(self) -> None:  # noqa: N802
+        """Only the cough toggle accepts a POST; every other path is 405.
+
+        Added for /cough so the enable/disable switch can be a real POST
+        instead of a state-changing GET. No existing endpoint used POST, so
+        nothing else changes behaviour.
+        """
+        url = urlparse(self.path)
+        if url.path == "/announce":
+            self._announce(url)
+            return
+        if url.path == "/cough" or url.path.startswith("/cough/"):
+            self._proxy_cough(url, "POST")
+            return
+        self._send(405, "text/plain", b"Method not allowed")
+
+    def _proxy_cough(self, url, method: str) -> None:
+        """Forward /cough* to the on-device classifier (127.0.0.1:8096).
+
+        Strips the /cough prefix, so /cough -> /, /cough/api/status ->
+        /api/status. A classifier crash or a restart must never take the
+        thermal dashboard down, so every failure becomes a 503 with the real
+        reason in the body.
+        """
+        import http.client as _http
+
+        target = url.path[len("/cough"):] or "/"
+        if url.query:
+            target += "?" + url.query
+        length = int(self.headers.get("Content-Length") or 0)
+        body = self.rfile.read(length) if length else None
+        headers = {}
+        if body is not None:
+            headers["Content-Type"] = self.headers.get(
+                "Content-Type", "application/json")
+        try:
+            conn = _http.HTTPConnection("127.0.0.1", 8096, timeout=30)
+            conn.request(method, target, body=body, headers=headers)
+            r = conn.getresponse()
+            payload = r.read()
+            self._send(r.status,
+                       r.getheader("Content-Type", "application/octet-stream"),
+                       payload)
+            conn.close()
+        except Exception as e:  # noqa: BLE001
+            self._send(
+                503,
+                "application/json",
+                json.dumps({"ok": False,
+                            "error": f"cough classifier unreachable: "
+                                     f"{type(e).__name__}: {e}",
+                            "hint": "systemctl status pigpulse-cough"}).encode(),
+            )
 
     def _admin(self, path: str, query: dict) -> None:
         # 2026-09-30: this import was OUTSIDE the try block below, so a
@@ -663,6 +1158,23 @@ class Handler(BaseHTTPRequestHandler):
 
         snapshot = str(query.get("snapshot", ["0"])[0]).strip().lower() \
             not in ("", "0", "false", "no")
+        if snapshot:
+            # 2026-11-11: served from the BACKGROUND CACHE. Nothing is opened,
+            # nothing is read and nothing is parsed in this thread.
+            _cctv_snapshot.start()
+            frame, ts = _cctv_snapshot.get()
+            if frame is None:
+                self._send(503, "text/plain",
+                           b"the camera has not produced a complete frame yet")
+                return
+            self._send(200, "image/jpeg", frame, extra={
+                # Pi-clock epoch ms at which this frame finished arriving at
+                # the Pi. The camera exposes no capture timestamp, so its own
+                # encode/delivery lag is NOT included: the picture is at
+                # least this old. Say so rather than implying exactness.
+                "X-Frame-Ts": str(int(ts * 1000)),
+            })
+            return
         try:
             up = _socket.create_connection((_CCTV_HOST, _CCTV_PORT), timeout=4)
             up.settimeout(60)
@@ -715,22 +1227,6 @@ class Handler(BaseHTTPRequestHandler):
                     break
                 body += chunk
 
-            if snapshot:
-                frame = _last_jpeg(body)
-                if frame is None:
-                    self._send(503, "text/plain",
-                               b"no complete frame from the camera - it is not "
-                               b"sending video")
-                    return
-                self._send(200, "image/jpeg", frame, extra={
-                    # Pi-clock epoch ms at which this frame finished arriving at
-                    # the Pi. The camera exposes no capture timestamp, so its own
-                    # encode/delivery lag is NOT included: the picture is at
-                    # least this old. Say so rather than implying exactness.
-                    "X-Frame-Ts": str(int(time.time() * 1000)),
-                })
-                return
-
             if b"\xff\xd8" not in body:
                 self._send(503, "text/plain",
                            b"no frame from the camera - it is not sending video")
@@ -766,16 +1262,30 @@ class Handler(BaseHTTPRequestHandler):
                 pass
 
     def _stream_esp(self, query: dict) -> None:
-        """Raw ESP32-S3 mic over the browser, read-until-close.
+        """The ESP32-S3 barn mic over HTTP, read-until-close.
 
-        Source is TCP :9090 (esp_audio_ingest) — the firmware pushes S16LE
-        stereo at 48 kHz. Two output shapes are offered:
+        2026-11-11 - ARCHITECTURE. This handler used to do all the audio
+        work: decode the ESP's mono into stereo (pure Python, under the GIL),
+        apply the level stage and resample to 16 kHz - once per SUBSCRIBER,
+        in the REQUEST THREAD. That is how a CCTV snapshot request could end
+        up pausing the audio, and how the browser and the cough classifier
+        each rebuilt the same signal.
 
-          ?rate=native (default) → S16LE stereo 48 kHz, exactly what the ESP
-              sent (the technician console's mic.js resamples in-browser).
-          ?rate=16000            → S16LE mono 16 kHz, 32 KB/s rather than
-              192 KB/s. The deployed app asks for this: the barn→cloud leg
-              measures ~100 KB/s, so 48 kHz can never play in real time.
+        The ingest now owns the formats. It decodes, levels and resamples ONCE
+        per chunk, in numpy, and hands out finished buffers. This handler
+        only pops bytes and writes them to the socket - no decode, no numpy,
+        no Python loops, no GIL pressure.
+
+          ?format=48     leveled S16LE stereo 48 kHz (default)
+          ?format=16     leveled S16LE stereo 16 kHz - 64 KB/s instead of
+                         192 KB/s, for a phone on an access point that is also
+                         carrying 1080p CCTV. The browser's AudioWorklet
+                         consumes interleaved STEREO, so the 16 kHz form is
+                         stereo too.
+          ?format=raw48  the RAW signal (no level stage) - the cough
+                         classifier's threshold (0.2061) was calibrated on
+                         it, and with +32 dB it produced false positives.
+          ?rate=...      kept for compatibility: native -> 48, 16000 -> 16.
 
         `X-Stream-Ts` carries the Pi's epoch ms for the first sample emitted.
         A client maps sample N to capture time `ts + N/rate`, which is what puts
@@ -783,26 +1293,29 @@ class Handler(BaseHTTPRequestHandler):
         snapshot instead of guessing from arrival times.
         """
         esp = esp_audio_ingest.get()
-        rate_raw = (query.get("rate", ["native"])[0] or "native").strip().lower()
-        if rate_raw in ("", "native"):
-            out_rate = esp_audio_ingest.ESP_RATE
-        else:
-            try:
-                out_rate = int(rate_raw)
-            except (TypeError, ValueError):
-                self._send(400, "text/plain",
-                           b"rate must be an integer or 'native'")
-                return
-        if out_rate not in (esp_audio_ingest.ESP_RATE, 16000):
-            self._send(400, "text/plain",
-                       b"rate must be native (48000) or 16000")
+        fmt = str(query.get("format", [""])[0] or "").strip().lower()
+        raw = str(query.get("raw", ["0"])[0] or "0").strip().lower() \
+            not in ("", "0", "false", "no")
+        if not fmt:
+            rate_raw = str(query.get("rate", ["native"])[0] or "native").strip().lower()
+            if rate_raw in ("", "native"):
+                fmt = "raw48" if raw else "48"
+            else:
+                try:
+                    fmt = "16" if int(rate_raw) == 16000 else "48"
+                except (TypeError, ValueError):
+                    self._send(400, "text/plain",
+                               b"rate must be an integer or 'native'")
+                    return
+        elif raw:
+            fmt = "raw48"
+        if fmt not in ("48", "16", "raw48"):
+            self._send(400, "text/plain", b"format must be 48, 16 or raw48")
             return
-        downmix = out_rate != esp_audio_ingest.ESP_RATE
-        mixer = (pcm_downmix.Downmixer(esp_audio_ingest.ESP_RATE, out_rate)
-                 if downmix else None)
-        channels = 1 if downmix else 2
+        out_rate = 16000 if fmt == "16" else esp_audio_ingest.ESP_RATE
+        channels = 2                     # every format is interleaved stereo
 
-        q = esp.subscribe()
+        q = esp.subscribe(fmt)
         try:
             # Wait for the first chunk BEFORE promising a stream. Without this an
             # idle ESP got "200 OK" with a body that never carried audio, and the
@@ -821,8 +1334,9 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("X-Audio-Channels", str(channels))
             # Same clock as /data `ts` and /cctv `X-Frame-Ts`. Back-date by the
             # first chunk's own duration: its earliest sample was captured that
-            # long before this header is written (one 8 KiB chunk = 43 ms).
-            lead_ms = (len(chunk) // 4) * 1000.0 / esp_audio_ingest.ESP_RATE
+            # long before this header is written. The chunk is interleaved
+            # stereo s16le, so a frame is 4 bytes.
+            lead_ms = (len(chunk) // 4) * 1000.0 / out_rate
             self.send_header("X-Stream-Ts",
                              str(int(round((time.time() - lead_ms / 1000.0) * 1000))))
             self.send_header("Cache-Control", "no-store")
@@ -832,14 +1346,18 @@ class Handler(BaseHTTPRequestHandler):
             while True:
                 if chunk is None:
                     try:
+                        _t = time.monotonic()
                         chunk = q.get(timeout=1.0)
+                        _gap = time.monotonic() - _t
+                        if _gap > 0.05:
+                            esp.note_out_gap(_gap)
                     except queue.Empty:
                         idle += 1
                         # End the stream after a short idle, unconditionally.
                         #
                         # Why unconditional: the stream frame carries no marker
                         # for a gap, so `X-Stream-Ts` would keep mapping sample N
-                        # as ts + N/rate *through* the silence — a gap mid-stream
+                        # as ts + N/rate *through* the silence - a gap mid-stream
                         # silently drifts the client's clock by the gap length.
                         # Ending the stream makes every connection exactly one
                         # continuous audio run; each reconnect gets a fresh,
@@ -856,13 +1374,10 @@ class Handler(BaseHTTPRequestHandler):
                             break
                         continue
                 idle = 0
-                pcm = esp_audio_ingest.to_pcm(chunk)
-                chunk = None
-                if pcm and mixer is not None:
-                    pcm = mixer.process(pcm, channels=2)
-                if pcm:
-                    self.wfile.write(pcm)
+                if chunk:
+                    self.wfile.write(chunk)
                     self.wfile.flush()
+                chunk = None
         except (BrokenPipeError, ConnectionResetError, OSError):
             pass  # browser navigated away
         finally:
@@ -891,7 +1406,10 @@ class Handler(BaseHTTPRequestHandler):
         rate = esp_audio_ingest.ESP_RATE
         want = seconds * rate * 4          # s16le stereo = 4 bytes per frame
         buf = bytearray()
-        q = esp.subscribe()
+        # 2026-11-11: the "48" format is PREBUILT by the ingest - leveled
+        # stereo 48 kHz, decoded and levelled once in numpy. The recorder no
+        # longer does its own to_pcm()/AGC work.
+        q = esp.subscribe("48")
         # Wall-clock cap: the link may deliver chunks slowly forever, so the
         # idle counter alone is not a bound. This one is.
         deadline = time.monotonic() + seconds + ESP_RECORD_GRACE_S
@@ -908,9 +1426,9 @@ class Handler(BaseHTTPRequestHandler):
                         break
                     continue
                 idle = 0
-                pcm = esp_audio_ingest.to_pcm(chunk)
-                if pcm:
-                    buf += pcm
+                if chunk:
+                    # Already leveled stereo 48 kHz (see above).
+                    buf += chunk
         finally:
             esp.unsubscribe(q)
 
@@ -932,6 +1450,171 @@ class Handler(BaseHTTPRequestHandler):
         name = f"esp-{time.strftime('%Y%m%d-%H%M%S')}-{actual_s:.1f}s.wav"
         self._send(200, "audio/wav", bytes(hdr) + payload,
                    {"Content-Disposition": f'attachment; filename="{name}"'})
+
+    def _announce(self, url) -> None:
+        """Play raw PCM from the deck microphone on the Pi speaker.
+
+        Body: signed 16-bit little-endian mono PCM, nothing else.
+        Query: rate = that PCM's sample rate (the browser reports its own
+        AudioContext rate, so no resampling is guessed at here).
+        """
+        try:
+            rate = int(parse_qs(url.query).get("rate", ["16000"])[0])
+        except (ValueError, IndexError, TypeError):
+            rate = 16000
+        rate = max(8000, min(rate, 48000))
+        try:
+            length = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            length = 0
+        if length <= 0 or length > ANNOUNCE_MAX_BYTES:
+            self._send(400, "text/plain", b"missing or oversized audio body")
+            return
+        data = self.rfile.read(length)
+        if len(data) < length:
+            self._send(400, "text/plain", b"truncated audio body")
+            return
+        with _announce_lock:
+            try:
+                proc = _announce_proc_for(rate)
+                proc.stdin.write(data)
+            except (BrokenPipeError, OSError) as exc:
+                self._send(503, "text/plain",
+                           f"speaker unavailable: {exc}".encode())
+                return
+        self._send(200, "application/json", b'{"ok":true}')
+
+    def _announce_test(self, query: dict) -> None:
+        """1.2 s 440 Hz tone - proves the speaker is wired up without a mic."""
+        try:
+            rate = int(query.get("rate", ["48000"])[0])
+        except (ValueError, IndexError, TypeError):
+            rate = 48000
+        rate = max(8000, min(rate, 48000))
+        n = int(rate * 1.2)
+        edge = max(1, int(rate * 0.02))     # 20 ms fade stops the click
+        frames = bytearray()
+        for i in range(n):
+            env = min(1.0, i / edge, (n - i) / edge)
+            v = int(0.25 * env * 32767 * math.sin(2 * math.pi * 440 * i / rate))
+            frames += struct.pack("<h", v)
+        with _announce_lock:
+            try:
+                proc = _announce_proc_for(rate)
+                proc.stdin.write(bytes(frames))
+            except (BrokenPipeError, OSError) as exc:
+                self._send(503, "text/plain",
+                           f"speaker unavailable: {exc}".encode())
+                return
+        self._send(200, "application/json", b'{"ok":true,"seconds":1.2}')
+
+    def _camera_audio_live(self, query: dict) -> None:
+        """Stream the Tapo microphone as continuous MP3 (live monitoring).
+
+        Same RTSP stream2 the WAV capture uses, so the camera's client-slot
+        budget is unchanged: the shared _camera_audio_lock already guarantees a
+        live listener and a WAV capture can never run at the same time.
+
+        Timestamps: the camera's RTP audio timestamps jump backwards, which the
+        mp3 muxer rejects as non-monotonic dts and renders as stutter.
+        `aresample=async=1` rebuilds a continuous timeline. Verified: 15 s in,
+        15.08 s out, zero muxer warnings.
+
+        Gain: the mic is quiet (measured mean -58 dB, peak -42 dB in the room),
+        so the signal is boosted and then limited, rather than left inaudible.
+        """
+        if not (TAPO_RTSP_USER and TAPO_RTSP_PASS and TAPO_RTSP_HOST):
+            self._send(503, "text/plain",
+                       b"camera RTSP credentials are not configured")
+            return
+        try:
+            gain = int(query.get("gain", [str(CAMERA_AUDIO_LIVE_GAIN_DEFAULT)])[0])
+        except (ValueError, IndexError, TypeError):
+            gain = CAMERA_AUDIO_LIVE_GAIN_DEFAULT
+        gain = max(0, min(gain, CAMERA_AUDIO_LIVE_GAIN_MAX))
+        user = quote(TAPO_RTSP_USER, safe="")
+        password = quote(TAPO_RTSP_PASS, safe="")
+        url = (f"rtsp://{user}:{password}@"
+               f"{TAPO_RTSP_HOST}:{TAPO_RTSP_PORT}/stream2")
+        af = (f"aresample=async=1:first_pts=0,"
+              f"volume={gain}dB,alimiter=limit=0.95")
+        cmd = [
+            "ffmpeg", "-nostdin", "-loglevel", "error",
+            "-fflags", "nobuffer+genpts",
+            # UDP, not TCP. Measured on this camera: the audio track is
+            # interleaved with video over one RTSP connection, so on TCP a
+            # video stall blocks audio behind it (51% of 100 ms windows empty,
+            # holes up to 800 ms -> audible stutter). A separate UDP socket
+            # decouples them: 16% empty, holes to 600 ms.
+            "-rtsp_transport", "udp",
+            # Measured on this camera: the default probe window cost 2.8 s
+            # before the first byte of audio existed. Bounding it cut that to
+            # 0.83 s with no change in output quality (RTSP SDP already
+            # announces the streams, so probing has almost nothing to do).
+            "-probesize", "32768",
+            "-analyzeduration", "0",
+            "-i", url,
+            "-vn", "-ac", "1", "-ar", "16000",
+            "-af", af,
+            "-c:a", "libmp3lame", "-b:a", "32k",
+            "-flush_packets", "1",
+            "-f", "mp3", "pipe:1",
+        ]
+        if not _camera_audio_lock.acquire(blocking=False):
+            self._send(503, "text/plain",
+                       b"camera audio busy - a capture or another listener is active")
+            return
+        proc = None
+        try:
+            proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                                    stderr=subprocess.DEVNULL, bufsize=0)
+            # HTTP/1.1 + chunked on purpose. Measured: a close-delimited
+            # HTTP/1.0 body made Chrome sit on ~6.4 s of audio past the first
+            # byte before it started playing, because without a length or a
+            # chunked marker it cannot tell a live stream from a file it must
+            # finish downloading. Chunking says "this keeps coming", so
+            # playback starts as soon as a couple of MP3 frames decode.
+            self.protocol_version = "HTTP/1.1"
+            self.send_response(200)
+            self.send_header("Content-Type", "audio/mpeg")
+            self.send_header("Cache-Control",
+                             "no-store, no-cache, must-revalidate, max-age=0")
+            self.send_header("Pragma", "no-cache")
+            # Declare a long length instead of chunking. Measured: with no
+            # length and no chunked marker Chrome would not resolve MP3
+            # metadata until ~20 KB had arrived (8.2 s of silence at 32 kbps),
+            # then start instantly. A declared length makes it behave like a
+            # normal progressive MP3, which starts as soon as it has frames.
+            # 100 MB is ~7 hours at 32 kbps; the stream simply never reaches it.
+            self.send_header("Content-Length", "104857600")
+            self.send_header("X-Accel-Buffering", "no")
+            self.end_headers()
+            # A client that stops reading (paused element, half-open socket)
+            # used to wedge this loop: the write blocked, so we never noticed
+            # the tab was gone and ffmpeg kept an RTSP slot open forever, which
+            # then made every later request 503 "busy". Bound both the write and
+            # the wait for audio so the finally block always runs.
+            self.connection.settimeout(15)
+            while True:
+                ready, _, _ = select.select([proc.stdout], [], [], 30)
+                if not ready:
+                    break              # camera silent; stop instead of hanging
+                data = proc.stdout.read(4096)
+                if not data:
+                    break
+                self.wfile.write(data)
+                self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError, TimeoutError):
+            pass  # listener gone; the finally block stops ffmpeg
+        finally:
+            if proc is not None and proc.poll() is None:
+                proc.kill()
+            if proc is not None:
+                try:
+                    proc.wait(timeout=5)
+                except Exception:  # noqa: BLE001
+                    pass
+            _camera_audio_lock.release()
 
     def _camera_audio(self, query: dict) -> None:
         """Grab N seconds of the Tapo camera's own audio track (WAV).
@@ -1084,6 +1767,7 @@ def main() -> None:
         ambient_ingest.ensure_started()
         # Publish thermal readings over MQTT so the Pi is a pipeline node
         _publisher.start()
+        diag_state.start()
         # Brief wait for first frame so / isn't empty on first hit
         for _ in range(40):
             if _cached:

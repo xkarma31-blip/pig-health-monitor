@@ -70,7 +70,7 @@ NETWORK_MODE = _os.environ.get("NETWORK_MODE", "ap").strip().lower()  # ap | cli
 # Keep in sync if the AP is ever re-addressed.
 AP_SSID = _os.environ.get("AP_SSID", "PigPulse")
 AP_IP = _os.environ.get("AP_IP", "192.168.69.1")
-WIFI_IFACE = _os.environ.get("WIFI_IFACE", "wlan0")
+WIFI_IFACE = _os.environ.get("WIFI_IFACE", "wlan1")
 
 # --- HTTPS (self-signed; unlocks AudioWorklet on the AP origin) ---------
 # Enabled via systemd drop-in (pigpulse-thermal.service.d/tls.conf).
@@ -95,12 +95,41 @@ PUBLISH_PIG_ID = _os.environ.get("PUBLISH_PIG_ID", "unassigned")
 # on dtoverlay=googlevoicehat-soundcard, which needs a physical codec chip
 # that this board does not have, so every capture returned bit-exact zeros.
 # The firmware pushes raw PCM over TCP :9090; esp_audio_ingest.py receives it.
-# CONTRACT, re-verified 2026-09-28 10:30 against the source FLASHED to the board
+#
+# CONTRACT, re-verified 2026-11-11 against the source FLASHED to the board
 #   firmware/esp32s3-mic-ambient/arduino/esp32s3_telemetry/esp32s3_telemetry.ino
-#     #define SAMPLE_RATE 48000                       (line 46)
-#     stereoBuf[i*2] = stereoBuf[i*2+1] = rawBuf[i]   (lines 239-240)  L/R dup
-#     tcp_send(stereoBuf, samplesRead * 4)            (line 242)
-# If the firmware moves, flip these two keys — ingest/status/UI all follow.
+#     #define SAMPLE_RATE 48000                       (line 35)
+#     monoBuf[i] = (int16_t)(rawBuffer[i] >> 16)     L/R duplication REMOVED
+#     tcp_enqueue((uint8_t *)monoBuf, samplesRead * 2)   <- lands here
+#
+# 2026-11-11: the firmware now sends TRUE MONO. It used to send S16LE stereo
+# with the same sample in both channels — twice the radio airtime for exactly
+# zero extra information. This ESP's lwIP is built with a 5760-byte TCP window
+# (CONFIG_LWIP_TCP_WND_DEFAULT), so the throughput ceiling is window/RTT:
+# ~120 KB/s at the measured 47.7 ms RTT. Stereo needs 192,000 B/s and simply
+# does not fit; mono needs 96,000 B/s and does.
+#
+# The Pi duplicates mono back to stereo in esp_audio_ingest.to_pcm(), so the
+# browser worklet, the cough classifier and the WAV recorder are all unchanged.
 ESP_AUDIO_ENABLED = True
 ESP_AUDIO_RATE = 48000             # firmware SAMPLE_RATE
 ESP_AUDIO_FORMAT = "s16le"         # "s16le" (current) | "s32le" (raw I2S words)
+ESP_AUDIO_CHANNELS = 1             # 2026-11-11: firmware sends MONO on the wire
+
+# --- Audio LEVEL (2026-11-11) — applied ON THE PI --------------------------
+# The level stage moved off the ESP and onto the Pi, because levelling is
+# post-processing and post-processing belongs where the CPU is free, not on
+# the radio link. The ESP sends the signal exactly as captured.
+#
+# Measured at the ingest before this stage existed: -46 dBFS RMS, -30 dBFS
+# peak. Far too quiet to listen to or to classify.
+#
+# ESP_AUDIO_TARGET_DBFS  the peak the AGC aims for. -1 dBFS is as loud as the
+#                        16-bit stream can go without hard-clipping on the
+#                        wire; the browser's own volume control then adds the
+#                        rest (with a limiter so it stays clean).
+# ESP_AUDIO_MAX_GAIN     the ceiling on the digital gain (64 = 36 dB). This
+#                        stops a silent barn from turning the microphone's own
+#                        noise floor into full-scale hiss.
+ESP_AUDIO_TARGET_DBFS = -1.0
+ESP_AUDIO_MAX_GAIN = 64.0
