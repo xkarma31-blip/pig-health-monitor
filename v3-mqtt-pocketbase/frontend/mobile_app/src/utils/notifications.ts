@@ -12,14 +12,18 @@ import * as Notifications from 'expo-notifications';
 const CHANNEL_ID = 'alerts';
 
 if (Platform.OS !== 'web') {
-  Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowBanner: true,
-      shouldShowList: true,
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-    }),
-  });
+  try {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      }),
+    });
+  } catch {
+    // A missing/broken notification runtime must never crash the app.
+  }
 }
 
 /** Ask once for notification permission. Returns true when granted. */
