@@ -1,0 +1,10 @@
+[Unit]
+Description=PigPulse CCTV storage manager (index + alert pinning + retention)
+After=pigpulse-rtsp-recorder.service
+
+[Service]
+Type=oneshot
+User=pigpulse
+Environment=REC_DIR=/home/pigpulse/cctv/recs
+Environment=POCKETBASE_URL=http://192.168.69.1:8090
+ExecStart=/usr/bin/python3 /home/pigpulse/cctv/storage_manager.py
