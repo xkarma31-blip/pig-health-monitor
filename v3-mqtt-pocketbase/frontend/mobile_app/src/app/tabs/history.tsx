@@ -4,6 +4,7 @@ import { useIsFocused, useLocalSearchParams, useRouter } from 'expo-router';
 import { useTheme } from '../../theme';
 import { SegmentedControl } from '../../components/primitives/SegmentedControl';
 import { HistoryLiveView } from '../../components/HistoryLiveView';
+import { EnvironmentalHistoryPanel } from '../../components/EnvironmentalHistoryPanel';
 import {
   HISTORY_SEGMENT_OPTIONS,
   parseHistorySection,
@@ -95,18 +96,7 @@ export default function HistoryScreen() {
           showsVerticalScrollIndicator={false}
         >
           {section === 'history' ? (
-            <PendingPanel
-              title="Recorded history"
-              intro="Environmental and acoustic history with period, source, units and coverage will appear here once the offline history/query contract is wired."
-              items={[
-                'Period / timezone / source selection',
-                'Normalized epoch seconds-vs-ms query bounds',
-                'Environment trends for temperature and humidity',
-                'Coverage plus valid / missing / excluded sample counts',
-                'Chart gaps stay gaps — no zero imputation',
-              ]}
-              footer="No readings or charts are fabricated on this screen."
-            />
+            <EnvironmentalHistoryPanel />
           ) : (
             <PendingPanel
               title="Environmental prediction"

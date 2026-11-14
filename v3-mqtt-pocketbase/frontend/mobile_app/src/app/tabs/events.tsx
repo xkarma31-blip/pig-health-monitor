@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { FlatList, Text, TextInput, View, StyleSheet } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { FlatList, Platform, Text, TextInput, View, StyleSheet } from 'react-native';
 import { useTheme, statusColor, type Status } from '../../theme';
 import { subscribeAlerts } from '../../utils/pocketbase-data';
+import { ensureNotificationPermission, notifyAlert } from '../../utils/notifications';
 import { telemetryTime } from '../../utils/telemetry-time';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { mapAlert, typeDisplay, type AlertItem, type AlertKind } from '../../utils/alert-record';
@@ -64,6 +65,41 @@ export default function AlertsScreen() {
   const [state, setState] = useState<LoadState>('loading');
   const [events, setEvents] = useState<EventItem[]>([]);
   const [reloadKey, setReloadKey] = useState(0);
+  const [notifPermission, setNotifPermission] = useState<'unknown' | 'granted' | 'denied'>('unknown');
+  const lastAlertId = useRef<string | null>(null);
+
+  // Ask once for notification permission; never block the list on it.
+  useEffect(() => {
+    let alive = true;
+    ensureNotificationPermission().then((granted) => {
+      if (alive) setNotifPermission(granted ? 'granted' : 'denied');
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+
+  // Notify on NEW alerts only: the first list is the baseline, and each later
+  // change of the newest id fires one local notification. Web is a no-op.
+  useEffect(() => {
+    if (state !== 'ready' || events.length === 0) return;
+    const newest = events[0];
+    const id = newest?.id ? String(newest.id) : null;
+    if (!id) return;
+    if (lastAlertId.current === null) {
+      lastAlertId.current = id;
+      return;
+    }
+    if (id !== lastAlertId.current) {
+      lastAlertId.current = id;
+      void notifyAlert({
+        id,
+        type: newest.typeToken || undefined,
+        message: newest.message,
+        severity: newest.severityToken || undefined,
+      });
+    }
+  }, [events, state]);
 
   useEffect(() => {
     setState('loading');
@@ -95,6 +131,22 @@ export default function AlertsScreen() {
         <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 4, fontSize: 16 }]}>
           Alerts recorded by your devices, newest first
         </Text>
+        {notifPermission === 'denied' && Platform.OS !== 'web' ? (
+          <View style={{ marginTop: spacing.sm, alignSelf: 'flex-start' }}>
+            <ActionButton
+              variant="secondary"
+              onPress={() => {
+                ensureNotificationPermission().then((granted) =>
+                  setNotifPermission(granted ? 'granted' : 'denied')
+                );
+              }}
+              accessibilityLabel="Enable alert notifications"
+              accessibilityHint="Allows PigPulse to notify you when a new alert arrives"
+            >
+              Enable notifications
+            </ActionButton>
+          </View>
+        ) : null}
 
         {state === 'ready' ? (
           <View
