@@ -1,0 +1,41 @@
+# EAS Build archive exclusions (repository root).
+#
+# EAS uploads the whole git repository, so anything not listed here is packed
+# into the build archive. The repository carries a lot that the Android/iOS
+# app build has no use for - the mechanical enclosure CAD, the PocketBase
+# binaries, the ESP32 firmware build output and the legacy trees - which made
+# the archive ~3 GB and the build slow and fragile.
+#
+# The app build only needs the Expo project itself (frontend/mobile_app), the
+# landing page, and the shared config at the root. The `**/` prefix matters:
+# the heavy trees live under v3-mqtt-pocketbase/, not at the root.
+
+.git/
+**/node_modules/
+**/dist/
+**/.expo/
+**/android/
+**/ios/
+**/*.log
+**/*.tgz
+**/*.tar.gz
+
+# Transient deploy staging (the deploy script now stages outside the repo).
+.deploy-stage/
+
+# Not needed to build the app.
+**/enclosure/
+**/builds/
+**/deploy/
+**/firmware/
+**/legacy/
+**/youtube/
+**/downloads/
+**/training_data/
+**/tools/
+
+.DS_Store
+*.swp
+*.swo
+*~
+Thumbs.db

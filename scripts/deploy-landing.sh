@@ -14,7 +14,10 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 REPO="$ROOT/v3-mqtt-pocketbase/frontend/landing_page"
 APP="$ROOT/v3-mqtt-pocketbase/frontend/mobile_app"
-STAGE="$ROOT/.deploy-stage"
+# Stage OUTSIDE the repository. Inside it, the stage directory was picked up by
+# EAS Build's git archive, and deleting it mid-upload failed the build with
+# "ENOENT: no such file or directory, lstat '.deploy-stage'".
+STAGE="$(mktemp -d "${TMPDIR:-/tmp}/pigpulse-deploy-stage.XXXXXX")"
 
 if [ ! -f "$APP/dist/index.html" ]; then
   echo "ERROR: no Expo build found at $APP/dist." >&2
