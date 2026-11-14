@@ -1,0 +1,94 @@
+{
+  "balanced": {
+    "model": "logreg C=1.0 class_weight=balanced",
+    "threshold_from_aswine_eval": 0.7405,
+    "results": [
+      {
+        "set": "aswine_holdout_same_farm",
+        "n": 2268,
+        "pos": 203,
+        "macro_f1": 0.6777,
+        "f1_cough": 0.4208,
+        "pr_auc": 0.3579,
+        "roc_auc": 0.7886,
+        "confusion": [
+          [
+            1904,
+            161
+          ],
+          [
+            106,
+            97
+          ]
+        ],
+        "thr": 0.7405061721801758
+      },
+      {
+        "set": "mapda_heldout_cross_species",
+        "n": 3140,
+        "pos": 266,
+        "macro_f1": 0.4778,
+        "f1_cough": 0.0,
+        "pr_auc": 0.1397,
+        "roc_auc": 0.6727,
+        "confusion": [
+          [
+            2873,
+            1
+          ],
+          [
+            266,
+            0
+          ]
+        ],
+        "thr": 0.7405061721801758
+      }
+    ]
+  },
+  "unweighted": {
+    "model": "logreg C=1.0 class_weight=None",
+    "threshold_from_aswine_eval": 0.2061,
+    "results": [
+      {
+        "set": "aswine_holdout_same_farm",
+        "n": 2268,
+        "pos": 203,
+        "macro_f1": 0.6966,
+        "f1_cough": 0.4533,
+        "pr_auc": 0.4037,
+        "roc_auc": 0.8079,
+        "confusion": [
+          [
+            1920,
+            145
+          ],
+          [
+            101,
+            102
+          ]
+        ],
+        "thr": 0.20607727766036987
+      },
+      {
+        "set": "mapda_heldout_cross_species",
+        "n": 3140,
+        "pos": 266,
+        "macro_f1": 0.4779,
+        "f1_cough": 0.0,
+        "pr_auc": 0.3811,
+        "roc_auc": 0.8504,
+        "confusion": [
+          [
+            2874,
+            0
+          ],
+          [
+            266,
+            0
+          ]
+        ],
+        "thr": 0.20607727766036987
+      }
+    ]
+  }
+}
