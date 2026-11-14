@@ -4,8 +4,19 @@ import { useRouter } from 'expo-router';
 import { useTheme } from '../../theme';
 import { useAuth } from '../../hooks/useAuth';
 import { subscribeSensors } from '../../utils/pocketbase-data';
+import { telemetryTime } from '../../utils/telemetry-time';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
 import {
+  toDeviceFields,
+  formatFirmware,
+  formatRssi,
+  formatPower,
+  deviceFreshness,
+  freshnessLabel,
+} from '../../utils/device-record';
+import {
+  ActionButton,
+  AlertIcon,
   ChevronRightIcon,
   EmptyState,
   IconChip,
@@ -18,34 +29,43 @@ import {
 import { playSound } from '../../utils/sounds';
 import { haptic } from '../../utils/haptics';
 
-type Node = { id: string; name: string; version: string; battery: string; rssi: string; online: boolean };
+type Node = {
+  id: string;
+  name: string;
+  /** Formatted firmware, 'unknown' when the device did not report it. */
+  firmware: string;
+  /** Formatted RSSI, '—' when the device did not report it. */
+  rssi: string;
+  /** Device-reported power, '—' when the device did not report it. */
+  power: string;
+  /** Device-reported acquisition time in ms, null when unknown/invalid. */
+  lastSeenMs: number | null;
+};
 
-// Demo nodes shown while signed out — replaced by the live /sensors stream on sign-in.
-// Battery display is DEFERRED — no battery hardware is fitted today; the Pi and
-// the ESP32-S3 are both port-powered, so nodes read "Plugged". The battery
-// formatting (a real value renders as N%) is kept for when hardware ships.
-const DEMO_NODES: Node[] = [
-  { id: 'pi-4b', name: 'Pi 4B — thermal · CCTV · compute', version: 'v2.1.0-2026041312', battery: 'Plugged', rssi: '—', online: true },
-  { id: 'esp32-s3', name: 'ESP32-S3 — mic · ambient', version: 'v2.1.0-2026041312', battery: 'Plugged', rssi: '—', online: true },
-];
+type LoadState = 'loading' | 'ready' | 'error';
 
-function mapSensor(id: string, s: Record<string, unknown>): Node {
-  // `label` is the PocketBase `devices.name` — show it as-is, no inferred suffixes.
-  const name = String(s.label || id);
-  // Battery feature deferred (see DEMO_NODES note): nodes are port-powered, so
-  // they read "Plugged" until real battery hardware/reporting ships.
-  const battery = 'Plugged';
-  const rssi = s.rssi != null && Number.isFinite(Number(s.rssi)) ? `${Number(s.rssi)} dBm` : '—';
-  const lastUpdated = Date.parse(String(s.lastUpdated ?? ''));
-  // Unknown time must read offline, not silently "online".
-  const online = Number.isFinite(lastUpdated) ? Date.now() - lastUpdated < 5 * 60 * 1000 : false;
+// Disclosed legacy display policy — NOT a new acceptance threshold: a node reads
+// Active while its last report is under five minutes old; older reads read
+// "Not recently seen" (never a definitive "Offline"). The timestamp itself is
+// always the real device value; nothing here invents a time.
+const STALE_MS = 5 * 60 * 1000;
+// Age ticks locally so the freshness label stays truthful as time passes.
+const AGE_TICK_MS = 30_000;
+// The app's own version, taken from app.json. Kept as a literal because the
+// screen fixture cannot resolve a build-time version import; it is the real
+// shipped value, not a firmware-version-looking string.
+const APP_VERSION = '1.0.0';
+
+function toNode(raw: Record<string, unknown>, index: number): Node {
+  const fields = toDeviceFields(raw, `node-${index}`);
+  const ts = telemetryTime(fields.lastSeenRaw);
   return {
-    id,
-    name,
-    version: typeof s.firmware === 'string' ? s.firmware : 'unknown',
-    battery,
-    rssi,
-    online,
+    id: fields.id,
+    name: fields.name,
+    firmware: formatFirmware(fields.firmware),
+    rssi: formatRssi(fields.rssiDbm),
+    power: formatPower(fields.power),
+    lastSeenMs: Number.isFinite(ts) ? ts : null,
   };
 }
 
@@ -55,27 +75,31 @@ export default function SettingsScreen() {
   const { user, loading: authLoading, logout } = useAuth();
   const { showToast } = useToast();
   const tier = useBreakpoint();
-  const [loading, setLoading] = useState(true);
-  const [liveNodes, setLiveNodes] = useState<Node[] | null>(null);
+  const [state, setState] = useState<LoadState>('loading');
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [reloadKey, setReloadKey] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
 
+  // Bounded cleanup timer: recompute node age locally without re-reading data.
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 1050);
-    return () => clearTimeout(t);
+    const t = setInterval(() => setNow(Date.now()), AGE_TICK_MS);
+    return () => clearInterval(t);
   }, []);
 
   useEffect(() => {
-    // ACTUAL data first: nodes come from the PocketBase devices list in every
-    // state (open reads). Demo nodes are only a fallback when PB lists none.
-    const unsub = subscribeSensors((sensors) => {
-      setLiveNodes(sensors.map((s, i) => mapSensor(String(s.id ?? i), s as unknown as Record<string, unknown>)));
-    });
+    setState('loading');
+    // Honest states: a read failure shows an error + retry instead of an empty
+    // or demo list; an empty result is a real "no nodes paired".
+    const unsub = subscribeSensors(
+      (sensors) => {
+        setNodes(sensors.map((s, i) => toNode(s as unknown as Record<string, unknown>, i)));
+        setState('ready');
+      },
+      () => setState('error'),
+    );
     return unsub;
-  }, []);
+  }, [reloadKey]);
 
-  // Prefer the actual devices; fall back to the labeled demo only when empty.
-  const demoNodes = !(liveNodes && liveNodes.length > 0);
-  const showDemoPill = demoNodes;
-  const nodes = liveNodes && liveNodes.length > 0 ? liveNodes : DEMO_NODES;
   const nodeColumns = tier === 'expanded' ? 2 : 1;
 
   const nodeRows = useMemo(() => {
@@ -103,74 +127,96 @@ export default function SettingsScreen() {
       <View style={{ marginTop: spacing.xl }}>
         <View style={styles.sectionHead}>
           <Text style={[typography.caption, { color: colors.textMuted }]}>Hardware nodes</Text>
-          <View style={styles.sectionHeadRight}>
-            {showDemoPill ? (
-              <View style={[styles.demoPill, { backgroundColor: colors.badgeBg }]}>
-                <Text style={[typography.label, { color: colors.badgeText, fontSize: 10 }]}>DEMO DATA</Text>
-              </View>
-            ) : null}
-            <Text style={[typography.bodySmall, { color: colors.textMuted, fontSize: 12.5, marginLeft: showDemoPill ? 8 : 0 }]}>
-              {nodes.length} {showDemoPill ? 'demo' : 'paired'}
-            </Text>
-          </View>
+          <Text style={[typography.bodySmall, { color: colors.textMuted, fontSize: 16 }]}>
+            {state === 'ready' ? `${nodes.length} ${nodes.length === 1 ? 'node' : 'nodes'}` : '—'}
+          </Text>
         </View>
-        {loading ? (
+        {state === 'loading' ? (
           <Skeleton rows={2} />
+        ) : state === 'error' ? (
+          <ListGroup>
+            <EmptyState
+              icon={<AlertIcon size={18} color={colors.alert} />}
+              title="Couldn't load nodes"
+              message="Something went wrong reaching the data source. Check the connection and try again."
+            />
+            <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.lg }}>
+              <ActionButton
+                variant="secondary"
+                onPress={() => setReloadKey((k) => k + 1)}
+                accessibilityLabel="Retry loading nodes"
+                accessibilityHint="Reloads the hardware nodes list"
+              >
+                Retry
+              </ActionButton>
+            </View>
+          </ListGroup>
         ) : nodes.length === 0 ? (
           <ListGroup>
             <EmptyState
               icon={<SensorGridIcon size={16} color={colors.accent} />}
-              title="No hardware connected"
-              message="Pair a thermal or acoustic sensor node to start collecting data."
+              title="No nodes reported"
+              message="The data source returned no sensor nodes. They will appear here when a device next reports."
             />
           </ListGroup>
         ) : (
           <View>
             {nodeRows.map((row, rowIdx) => (
               <View key={`node-row-${rowIdx}`} style={nodeColumns > 1 ? styles.gridRow : null}>
-                {row.map((node) => (
-                  <View
-                    key={node.id}
-                    style={nodeColumns > 1 ? { flex: 1, paddingHorizontal: spacing.sm / 2 } : null}
-                  >
-                    <ListGroup>
-                      <View style={{ padding: spacing.md }}>
-                        <View style={styles.nodeTop}>
-                          <IconChip background={node.online ? colors.healthySoft : colors.alertSoft}>
-                            <SensorGridIcon size={16} color={node.online ? colors.healthy : colors.alert} />
-                          </IconChip>
-                          <Text style={[typography.h2, { color: colors.textPrimary, marginLeft: spacing.md, flex: 1 }]} numberOfLines={1}>
-                            {node.name}
-                          </Text>
-                        </View>
-                        <Text style={[typography.bodySmall, { color: colors.textMuted, marginTop: 4, marginLeft: 46, fontSize: 12.5 }]}>
-                          {node.version}
-                        </Text>
-                        <View style={[styles.nodeStats, { marginTop: spacing.md }]}>
-                          <View>
-                            <Text style={[typography.label, { color: colors.textMuted, fontSize: 11 }]}>Power</Text>
-                            <Text style={[typography.body, { color: colors.textPrimary, marginTop: 3, fontWeight: '600' }]}>{node.battery}</Text>
-                          </View>
-                          <View>
-                            <Text style={[typography.label, { color: colors.textMuted, fontSize: 11 }]}>Signal</Text>
-                            <Text style={[typography.body, { color: colors.textPrimary, marginTop: 3, fontWeight: '600' }]}>{node.rssi}</Text>
-                          </View>
-                          <View>
-                            <Text style={[typography.label, { color: colors.textMuted, fontSize: 11 }]}>Status</Text>
-                            <Text
-                              style={[
-                                typography.body,
-                                { color: node.online ? colors.healthy : colors.alert, marginTop: 3, fontWeight: '600' },
-                              ]}
-                            >
-                              {node.online ? 'Active' : 'Offline'}
+                {row.map((node) => {
+                  const freshness = deviceFreshness(node.lastSeenMs, now, STALE_MS);
+                  // Unknown time is neutral, not a red alarm: absence of a reading
+                  // is not proof the hardware is down. 'stale' is a softer amber.
+                  const freshnessTone =
+                    freshness === 'recent'
+                      ? { fg: colors.healthy, soft: colors.healthySoft }
+                      : freshness === 'stale'
+                        ? { fg: colors.watch, soft: colors.watchSoft }
+                        : { fg: colors.textMuted, soft: colors.surfaceAlt };
+                  return (
+                    <View
+                      key={node.id}
+                      style={nodeColumns > 1 ? { flex: 1, paddingHorizontal: spacing.sm / 2 } : null}
+                    >
+                      <ListGroup>
+                        <View style={{ padding: spacing.md }}>
+                          <View style={styles.nodeTop}>
+                            <IconChip background={freshnessTone.soft}>
+                              <SensorGridIcon size={16} color={freshnessTone.fg} />
+                            </IconChip>
+                            <Text style={[typography.h2, { color: colors.textPrimary, marginLeft: spacing.md, flex: 1 }]} numberOfLines={1}>
+                              {node.name}
                             </Text>
                           </View>
+                          <Text style={[typography.bodySmall, { color: colors.textMuted, marginTop: 4, marginLeft: 46, fontSize: 16 }]}>
+                            {node.firmware}
+                          </Text>
+                          <View style={[styles.nodeStats, { marginTop: spacing.md }]}>
+                            <View>
+                              <Text style={[typography.label, { color: colors.textMuted, fontSize: 16 }]}>Power</Text>
+                              <Text style={[typography.body, { color: colors.textPrimary, marginTop: 3, fontWeight: '600' }]}>{node.power}</Text>
+                            </View>
+                            <View>
+                              <Text style={[typography.label, { color: colors.textMuted, fontSize: 16 }]}>Signal</Text>
+                              <Text style={[typography.body, { color: colors.textPrimary, marginTop: 3, fontWeight: '600' }]}>{node.rssi}</Text>
+                            </View>
+                            <View>
+                              <Text style={[typography.label, { color: colors.textMuted, fontSize: 16 }]}>Status</Text>
+                              <Text
+                                style={[
+                                  typography.body,
+                                  { color: freshnessTone.fg, marginTop: 3, fontWeight: '600' },
+                                ]}
+                              >
+                                {freshnessLabel(freshness)}
+                              </Text>
+                            </View>
+                          </View>
                         </View>
-                      </View>
-                    </ListGroup>
-                  </View>
-                ))}
+                      </ListGroup>
+                    </View>
+                  );
+                })}
                 {nodeColumns > 1 && row.length < nodeColumns ? (
                   <View style={{ flex: 1, paddingHorizontal: spacing.sm / 2 }} />
                 ) : null}
@@ -192,7 +238,7 @@ export default function SettingsScreen() {
           value={schemeOverride}
           onChange={setSchemeOverride}
         />
-        <Text style={[typography.bodySmall, { color: colors.textMuted, fontSize: 12, marginTop: spacing.sm }]}>
+        <Text style={[typography.bodySmall, { color: colors.textMuted, fontSize: 16, marginTop: spacing.sm }]}>
           Saved on this device — currently following {schemeOverride === 'system' ? `system (${mode})` : `${mode} mode`}
         </Text>
       </View>
@@ -209,11 +255,11 @@ export default function SettingsScreen() {
             <>
               <View style={[styles.row, { padding: spacing.md }]}>
                 <View style={{ flex: 1 }}>
-                  <Text style={[typography.h2, { color: colors.textPrimary, fontSize: 15 }]} numberOfLines={1}>
+                  <Text style={[typography.h2, { color: colors.textPrimary, fontSize: 16 }]} numberOfLines={1}>
                     {user.email ?? user.displayName ?? 'Signed in'}
                   </Text>
-                  <Text style={[typography.bodySmall, { color: colors.textMuted, marginTop: 2, fontSize: 12.5 }]}>
-                    Live data streaming from your farm
+                  <Text style={[typography.bodySmall, { color: colors.textMuted, marginTop: 2, fontSize: 16 }]}>
+                    Signed in on this device
                   </Text>
                 </View>
               </View>
@@ -231,7 +277,7 @@ export default function SettingsScreen() {
                 accessibilityLabel="Sign out"
                 accessibilityHint="Ends your session on this device"
               >
-                <Text style={[typography.h2, { color: colors.alert, flex: 1, fontSize: 15 }]}>Sign out</Text>
+                <Text style={[typography.h2, { color: colors.alert, flex: 1, fontSize: 16 }]}>Sign out</Text>
                 <ChevronRightIcon size={16} color={colors.textMuted} />
               </TouchableOpacity>
             </>
@@ -249,9 +295,9 @@ export default function SettingsScreen() {
               accessibilityHint="Opens the sign-in screen"
             >
               <View style={{ flex: 1 }}>
-                <Text style={[typography.h2, { color: colors.textPrimary, flex: 0, fontSize: 15 }]}>Log in</Text>
-                <Text style={[typography.bodySmall, { color: colors.textMuted, marginTop: 2, fontSize: 12.5 }]}>
-                  Switch from demo data to live events, roster, and sensor readings
+                <Text style={[typography.h2, { color: colors.textPrimary, flex: 0, fontSize: 16 }]}>Log in</Text>
+                <Text style={[typography.bodySmall, { color: colors.textMuted, marginTop: 2, fontSize: 16 }]}>
+                  Sign in to view your events, roster, and sensor readings
                 </Text>
               </View>
               <ChevronRightIcon size={16} color={colors.textMuted} />
@@ -263,7 +309,7 @@ export default function SettingsScreen() {
       {/* About */}
       <View style={{ marginTop: spacing.xl }}>
         <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.sm }]}>About</Text>
-        <Text style={[typography.bodySmall, { color: colors.textMuted }]}>Pigpulse · v2.1.0</Text>
+        <Text style={[typography.bodySmall, { color: colors.textMuted, fontSize: 16 }]}>Pigpulse · v{APP_VERSION}</Text>
       </View>
     </ScrollView>
   );
@@ -272,8 +318,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 8 },
-  sectionHeadRight: { flexDirection: 'row', alignItems: 'center' },
-  demoPill: { paddingVertical: 3, paddingHorizontal: 8, borderRadius: 999 },
   nodeTop: { flexDirection: 'row', alignItems: 'center' },
   nodeStats: { flexDirection: 'row', justifyContent: 'space-between' },
   row: { flexDirection: 'row', alignItems: 'center' },

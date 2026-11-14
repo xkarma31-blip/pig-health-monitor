@@ -40,6 +40,7 @@
  */
 import { Platform } from 'react-native';
 import { MAX_LAG_MS, piClock } from './pi-clock';
+import { createPcmFrameDecoder } from './pcm-frames';
 
 export type PcmStreamState = 'connecting' | 'live' | 'reconnecting' | 'stopped';
 
@@ -122,23 +123,6 @@ function intHeader(res: Response, name: string): number | null {
   if (!raw) return null;
   const n = Number(raw);
   return Number.isFinite(n) && n > 0 ? n : null;
-}
-
-/**
- * Copy a fetched chunk into whole frames of interleaved Int16.
- *
- * A fetch chunk can start mid-frame and end mid-frame; the renderer needs
- * whole frames, so the partial edges are dropped here rather than becoming a
- * click.
- */
-function toInt16(bytes: Uint8Array, channels: number): Int16Array {
-  const bytesPerFrame = 2 * channels;
-  const frames = Math.floor(bytes.length / bytesPerFrame);
-  const out = new Int16Array(frames * channels);
-  if (frames <= 0) return out;
-  const src = new DataView(bytes.buffer, bytes.byteOffset, frames * bytesPerFrame);
-  for (let i = 0; i < out.length; i++) out[i] = src.getInt16(i * 2, true);
-  return out;
 }
 
 /** A block waiting for its turn, shared by both renderers. */
@@ -422,7 +406,10 @@ export function startPcmStream(opts: PcmStreamOptions): PcmStreamHandle {
         if (timer !== undefined) clearTimeout(timer);
       });
     };
-    let bytes = 0; // audio bytes consumed from this stream (chunk-start clock)
+    // One decoder per connection: a new stream/session (or a fresh format)
+    // starts with no carried bytes, so the old stream's tail can never be
+    // spliced onto the new stream's head.
+    const decoder = createPcmFrameDecoder(channels);
     let nextFree = 0; // ctx time (s) at which the last scheduled block ends
     let strikeCount = 0;
     let settleSamples = 0;
@@ -453,12 +440,18 @@ export function startPcmStream(opts: PcmStreamOptions): PcmStreamHandle {
       if (!value || value.length === 0) continue;
 
       const arrival = Date.now();
-      const chunkStart = bytes;
-      bytes += value.length;
+      // Whole frames only: the decoder carries the partial edges of one chunk
+      // into the next, so an arbitrary chunk split never loses a byte or
+      // shifts a sample. The clock below advances by COMPLETED samples only —
+      // never by a fractional frame the renderer never receives.
+      const blockStartBytes = decoder.emittedBytes;
+      const samples = decoder.push(value);
+      const frames = samples.length / channels;
+      if (frames <= 0) continue;
 
       let captureMs: number | null = null;
       if (headerTs !== null) {
-        captureMs = headerTs + chunkStart / bytesPerMs;
+        captureMs = headerTs + blockStartBytes / bytesPerMs;
         // Chunk arrivals are clock observations too: the first sample of this
         // block was captured at `captureMs` and it just reached us.
         piClock.observe(captureMs, arrival);
@@ -477,9 +470,6 @@ export function startPcmStream(opts: PcmStreamOptions): PcmStreamHandle {
           if (nowPi !== null) piClock.ensureForAge(nowPi - captureMs, 600);
         }
       }
-
-      const frames = Math.floor(value.length / (2 * channels));
-      if (frames <= 0) continue;
 
       let targetMs: number;
       if (align && captureMs !== null && runOffset !== null) {
@@ -558,7 +548,7 @@ export function startPcmStream(opts: PcmStreamOptions): PcmStreamHandle {
       } else {
         startAt = ctx.currentTime + leadMs / 1000;
       }
-      active.push(toInt16(value, channels), startAt);
+      active.push(samples, startAt);
       nextFree = startAt + frames / rate;
 
       // How far behind live the sound is: the wall time at which this block

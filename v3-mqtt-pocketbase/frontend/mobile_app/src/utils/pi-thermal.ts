@@ -6,15 +6,19 @@
  *   /ambient     → SHT45 barn temp/humidity + ingest state
  *   /esp/status  → ESP32-S3 barn-mic socket state
  *
- * Base-URL resolution order:
- *   1. EXPO_PUBLIC_PI_THERMAL_URL — explicit override (web harness / power users)
- *   2. derived from the farmer-saved PocketBase address → https://<host>:8080
+ * Base-URL resolution order (native):
+ *   1. EXPO_PUBLIC_PI_THERMAL_URL — explicit override (bench / power users)
+ *   2. derived from the SAME selected PocketBase source → https://<host>:8080
  *      (a phone on the PigPulse WiFi has the Pi's LAN IP saved as its PB URL)
  *   3. null → no live fetch; callers keep the clearly-labeled simulation.
+ * There is NO implicit hosted bridge: native never calls the Vercel deployment.
+ * Web is always same-origin (`/api/pi`) — a stale saved native host is ignored.
  */
 
 import { Platform } from 'react-native';
 import { loadFarmerSetup } from './setupStore';
+import { chooseNativeSource, chooseThermalSource, type SourceDecision } from './source-policy';
+import { PB_HOTSPOT_URL, resolveSelectedSource } from './pocketbase';
 
 export interface PiFrameData {
   ok?: boolean;
@@ -73,54 +77,42 @@ export function piBaseFromEnv(): string | null {
 }
 
 /**
- * Resolve the Pi console base URL. Host-parsing is done with a regex (not
- * `new URL`) — Hermes on Android has historically shipped a partial URL shim.
+ * Resolve the Pi console base URL. Parsing/derivation lives in source-policy.ts
+ * (hand-rolled, bracket-aware — not `new URL`, which Hermes has shipped as a
+ * partial shim). The console is derived from the SAME selected PocketBase
+ * source, so data and thermal can never point at different boxes.
  *
- * Order: env override → farmer-saved PB host :8080 → (web only) the deployment's
- * own /api/pi bridge, which api/pi.js serves through the read-only tunnel.
+ * The persisted farmer setup is preferred (and validated) over the in-memory
+ * configuredServer because the realtime hook calls setConfiguredServer only
+ * after an async dynamic import — at cold start the persisted value is the one
+ * that has actually been read.
+ *
+ * Web is always same-origin (`/api/pi`): a stale saved native host or a
+ * cross-origin override is refused. Native returns null when nothing is
+ * usable — never the hosted bridge.
  */
 export async function resolvePiBase(): Promise<string | null> {
-  const fromEnv = piBaseFromEnv();
-  if (fromEnv) return fromEnv;
+  let pbDecision: SourceDecision | null = null;
   try {
     const setup = await loadFarmerSetup();
     if (setup.pbUrl) {
-      const host = setup.pbUrl
-        .replace(/^[a-z]+:\/\//i, '')
-        .split('/')[0]
-        .split(':')[0];
-      if (host) return `https://${host}:8080`;
+      pbDecision = chooseNativeSource({ saved: setup.pbUrl, build: '', piDefault: PB_HOTSPOT_URL });
     }
   } catch {
-    /* fall through to the web fallback */
+    /* fall through to the in-memory selected source */
   }
-  // Deployed web builds ship api/pi.js (same-origin bridge). A NATIVE build has
-  // no same-origin: the Pi console is only reachable on the barn LAN, over a
-  // self-signed certificate, so a phone on mobile data can only reach the
-  // deployed bridge. Fall back to it instead of returning null, which used to
-  // leave every live block (and both sound buttons) dead in the APK.
-  if (Platform.OS === 'web') return '/api/pi';
-  return piBridgeBase();
+  return chooseThermalSource({
+    isWeb: Platform.OS === 'web',
+    explicitOverride: piBaseFromEnv(),
+    pbDecision: pbDecision ?? resolveSelectedSource(),
+  }).base;
 }
 
 /**
- * Absolute origin of the deployed read-only bridge, used by native builds.
- * Public, holds no secret — the bridge forwards through the operator's tunnel.
- */
-export const PI_BRIDGE_ORIGIN = (
-  process.env.EXPO_PUBLIC_PI_BRIDGE_URL || 'https://pig-health-monitor.vercel.app'
-).replace(/\/+$/, '');
-
-/** The deployed bridge base (an absolute …/api/pi URL on native). */
-export function piBridgeBase(): string {
-  return `${PI_BRIDGE_ORIGIN}/api/pi`;
-}
-
-/**
- * True when `base` addresses the single-path bridge rather than a LAN console.
- * The bridge is one platform function: /api/pi?ep=<endpoint>, while a LAN
- * console serves plain subpaths (/data, /cctv, …). Both the same-origin web
- * base ('/api/pi') and the native absolute base must be recognised.
+ * True when `base` addresses the single-path same-origin bridge rather than a
+ * LAN console. The bridge is one platform function: /api/pi?ep=<endpoint>,
+ * while a LAN console serves plain subpaths (/data, /cctv, …). Only the web
+ * base ('/api/pi') resolves here now — native derives a LAN console host.
  */
 function isBridgeBase(base: string): boolean {
   return base === '/api/pi' || base.endsWith('/api/pi');

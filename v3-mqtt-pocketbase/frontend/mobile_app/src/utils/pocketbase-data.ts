@@ -16,42 +16,52 @@ import {
   PB_URL,
 } from './pocketbase';
 import type { SensorReading as LiveSensorReading, SensorStatus } from '../data/mockSensors';
+import { toDeviceFields, hasReading, UNKNOWN_READING } from './device-record';
 
 export type SensorReading = Record<string, unknown> & { id?: string; name?: string; temp?: number };
 
-/** Maps a PB `devices` row to the v2 LiveSensor shape callers were built against. */
-function toLiveSensor(device: Record<string, unknown>): LiveSensorReading {
-  const id = String(device.id || device.deviceId || 'sensor');
-  const name = String(device.name || device.deviceId || id);
+/**
+ * Maps a PB `devices` row to the v2 LiveSensor shape callers were built against.
+ *
+ * The returned object is a `LiveSensorReading` (no central type change) with two
+ * optional metadata fields added by intersection so the Settings screen can show
+ * real firmware/RSSI without a second read or a fabricated value.
+ */
+function toLiveSensor(device: Record<string, unknown>): LiveSensorReading & { firmware?: string; rssi?: number } {
+  const fields = toDeviceFields(device, 'sensor');
   const type = String(device.type || '').toLowerCase().includes('mic')
-    || /mic|s3-mic|acoustic/i.test(name)
+    || /mic|s3-mic|acoustic/i.test(fields.name)
     ? 'acoustic'
     : 'thermal';
+  // Unknown reading is explicit (NaN), never a normal-looking 0.
   const value =
     typeof device.lastValue === 'number' ? device.lastValue
     : typeof device.temperature === 'number' ? device.temperature
     : typeof device.temp === 'number' ? device.temp
-    : 0;
-  const lastUpdated = String(device.lastUpdated || device.lastSeen || new Date().toISOString());
+    : UNKNOWN_READING;
+  // No fabricated "now": an unknown acquisition time stays empty, and the
+  // Settings screen treats it as offline rather than freshly online.
+  const lastUpdated = fields.lastSeenRaw == null ? '' : String(fields.lastSeenRaw);
+  // Status comes only from an explicit device status. The old
+  // `thermal && value > maxRange → danger` heuristic was removed because a
+  // thermal *scene* surface reading above range is not a fever; any danger
+  // must come from the device/classifier status to avoid inventing illness.
   let status: SensorStatus = 'normal';
   const rawStatus = String(device.status || '');
   if (rawStatus === 'warning' || rawStatus === 'danger') status = rawStatus;
-  else if (type === 'thermal' && value > Number(device.maxRange ?? 40)) {
-    // Only thermal readings use the temperature danger heuristic — an
-    // acoustic level above 40 (dB or any unit) is not a fever.
-    status = 'danger';
-  }
   return {
-    id,
+    id: fields.id,
     type,
-    label: name,
+    label: fields.name,
     icon: String(device.icon || (type === 'acoustic' ? '🎤' : '📡')),
-    value,
+    value: hasReading(value) ? value : UNKNOWN_READING,
     unit: String(device.unit || (type === 'acoustic' ? '' : '°C')),
     status,
     lastUpdated,
     minRange: Number(device.minRange ?? 37.5),
     maxRange: Number(device.maxRange ?? 40),
+    ...(fields.firmware !== null ? { firmware: fields.firmware } : {}),
+    ...(fields.rssiDbm !== null ? { rssi: fields.rssiDbm } : {}),
   };
 }
 
@@ -90,17 +100,34 @@ export async function enrollPig(name: string): Promise<Record<string, unknown>> 
   });
 }
 
-/** subscribeAlerts — live alerts from the `alerts` collection. */
-export function subscribeAlerts(callback: (alerts: Record<string, unknown>[]) => void) {
+/**
+ * subscribeAlerts — live alerts from the `alerts` collection.
+ *
+ * Optional `onError`: screens that can show an honest error state pass it and
+ * receive the failure instead of an empty list. Existing callers pass only the
+ * first argument, so they keep the legacy `callback([])` behavior unchanged.
+ */
+export function subscribeAlerts(
+  callback: (alerts: Record<string, unknown>[]) => void,
+  onError?: (error: unknown) => void
+) {
   let cancelled = false;
+  // Monotonic per-subscription request generation. Realtime events can start a
+  // new read while an older one is still in flight; if the older read settles
+  // last it must NOT overwrite the newer result — on success OR on failure.
+  let generation = 0;
 
   const emit = () => {
+    const request = ++generation;
     pbList('alerts', { sort: '-timestamp', perPage: 50 })
       .then(({ items }) => {
-        if (!cancelled) callback(items);
+        if (cancelled || request !== generation) return;
+        callback(items);
       })
-      .catch(() => {
-        if (!cancelled) callback([]);
+      .catch((error) => {
+        if (cancelled || request !== generation) return;
+        if (onError) onError(error);
+        else callback([]);
       });
   };
 
@@ -112,17 +139,33 @@ export function subscribeAlerts(callback: (alerts: Record<string, unknown>[]) =>
   };
 }
 
-/** subscribeSensors — live devices/sensor nodes from the `devices` collection. */
-export function subscribeSensors(callback: (sensors: LiveSensorReading[]) => void) {
+/**
+ * subscribeSensors — live devices/sensor nodes from the `devices` collection.
+ *
+ * Optional `onError`: consistency with `subscribeAlerts`, so the Settings
+ * screen can show an honest error state. Callers that omit it keep the legacy
+ * `callback([])` behavior.
+ */
+export function subscribeSensors(
+  callback: (sensors: LiveSensorReading[]) => void,
+  onError?: (error: unknown) => void
+) {
   let cancelled = false;
+  // Same monotonic generation guard as subscribeAlerts: a superseded read must
+  // never overwrite a newer result, whether it succeeds or fails.
+  let generation = 0;
 
   const emit = () => {
+    const request = ++generation;
     pbList('devices', { sort: '-created', perPage: 200 })
       .then(({ items }) => {
-        if (!cancelled) callback(items.map(toLiveSensor));
+        if (cancelled || request !== generation) return;
+        callback(items.map(toLiveSensor));
       })
-      .catch(() => {
-        if (!cancelled) callback([]);
+      .catch((error) => {
+        if (cancelled || request !== generation) return;
+        if (onError) onError(error);
+        else callback([]);
       });
   };
 

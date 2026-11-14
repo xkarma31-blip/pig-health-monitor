@@ -6,7 +6,7 @@ import { LogoMark } from './LogoMark';
 import {
   HomeIcon,
   BellIcon,
-  WaveformIcon,
+  AnalyticsIcon,
   SettingsIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -165,8 +165,8 @@ export function SidebarNav({ collapsed, onToggle, unreadEvents = 0 }: SidebarNav
       </View>
 
       <SidebarItem name="home" label="Home" icon={(c) => <HomeIcon color={c} />} collapsed={collapsed} />
-      <SidebarItem name="events" label="Events" icon={(c) => <BellIcon color={c} />} badge={unreadEvents} collapsed={collapsed} />
-      <SidebarItem name="live" label="Live" icon={(c) => <WaveformIcon size={20} color={c} />} collapsed={collapsed} />
+      <SidebarItem name="events" label="Alerts" icon={(c) => <BellIcon color={c} />} badge={unreadEvents} collapsed={collapsed} />
+      <SidebarItem name="history" label="History" icon={(c) => <AnalyticsIcon size={20} color={c} />} collapsed={collapsed} />
       <SidebarItem name="settings" label="Settings" icon={(c) => <SettingsIcon color={c} />} collapsed={collapsed} />
 
       <View style={{ flex: 1 }} />

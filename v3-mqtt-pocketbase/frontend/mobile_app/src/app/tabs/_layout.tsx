@@ -69,10 +69,14 @@ export default function TabLayout() {
           </View>
         </>
       )}
-      {/* Defines the tab routes; the visible bars live above. */}
+      {/* Defines the tab routes; the visible bars live above. A route only
+          exists if it has a trigger, so the retired `live` route keeps a
+          (hidden) trigger even though its only job now is to redirect into
+          the History tab's Live section. */}
       <TabList style={styles.hiddenTabList}>
         <TabTrigger name="home" href="/tabs" />
         <TabTrigger name="events" href="/tabs/events" />
+        <TabTrigger name="history" href="/tabs/history" />
         <TabTrigger name="live" href="/tabs/live" />
         <TabTrigger name="roster" href="/tabs/roster" />
         <TabTrigger name="settings" href="/tabs/settings" />

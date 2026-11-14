@@ -1,9 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, Text, TouchableOpacity, View, StyleSheet } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useTheme, type Status } from '../../theme';
+import { useTheme, type Status, type ThemeColors } from '../../theme';
 import { useAuth } from '../../hooks/useAuth';
-import { usePocketbaseRealtime, type TelemetryFrame } from '../../hooks/usePocketbaseRealtime';
+import {
+  usePocketbaseRealtime,
+  type ConnectionStatus,
+  type TelemetryFrame,
+} from '../../hooks/usePocketbaseRealtime';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
 import { usePiThermal } from '../../hooks/usePiThermal';
 import {
@@ -11,7 +15,6 @@ import {
   Badge,
   ListGroup,
   ListRow,
-  StatRow,
   Skeleton,
   EmptyState,
   ThermalThumbnail,
@@ -22,21 +25,79 @@ import { haptic } from '../../utils/haptics';
 import { telemetryTime } from '../../utils/telemetry-time';
 import { subscribeDeviceNames } from '../../utils/pocketbase-data';
 import { loadFarmerSetup } from '../../utils/setupStore';
+import {
+  LEGACY_ALERT_C,
+  LEGACY_WATCH_C,
+  legacyDisplayBand,
+  readDeviceValue,
+  reportedStatus,
+  summarizeDevices,
+  usableNumber,
+  type ReportedStatus,
+} from '../../utils/home-telemetry';
 
-const DEMO_STATS = { healthy: 3, watch: 1, alert: 1 };
+/**
+ * Home (lane B6).
+ *
+ * HONESTY CONTRACT — this screen reports DEVICE MONITORING, never a herd-health
+ * verdict:
+ *   - Every summary number is a count of DEVICES keyed by the device's OWN
+ *     reported status. There is no "healthy pigs" figure and no demo data.
+ *   - A device with no explicit reported status is `unknown` — it is never
+ *     promoted to healthy by a temperature heuristic.
+ *   - A barn SCENE centre is shown as a scene reading; it is never compared to a
+ *     clinical temperature threshold and never sets a device status.
+ *   - Legacy temperature thresholds survive only as a muted, labelled DISPLAY
+ *     note on a device-REPORTED temperature.
+ */
 
-function inferStatus(frame: TelemetryFrame): Status {
-  const hs = String(frame.healthStatus || '').toUpperCase();
-  if (hs === 'NORMAL' || hs === 'HEALTHY') return 'healthy';
-  if (hs === 'ELEVATED' || hs === 'WATCH') return 'watch';
-  if (hs === 'CRITICAL' || hs === 'ALERT' || hs === 'HIGH') return 'alert';
-  // Fall back to temperature heuristic
-  const temp = frame.temperature;
-  if (typeof temp === 'number') {
-    if (temp > 39.5) return 'alert';
-    if (temp > 39.0) return 'watch';
+// ── Presentation helpers ───────────────────────────────────────────
+
+/** Map an explicit device-reported status onto a theme Status token. */
+function statusFor(reported: ReportedStatus): Status {
+  switch (reported) {
+    case 'normal':
+      return 'healthy';
+    case 'watch':
+      return 'watch';
+    case 'alert':
+      return 'alert';
+    default:
+      return 'neutral';
   }
-  return 'healthy';
+}
+
+type Tone = 'good' | 'warn' | 'bad' | 'idle';
+
+/** Transport/polling label + tone — deliberately separate from sensor freshness. */
+function transportView(status: ConnectionStatus): { label: string; tone: Tone } {
+  switch (status) {
+    case 'connected':
+      return { label: 'Live', tone: 'good' };
+    case 'connecting':
+      return { label: 'Connecting', tone: 'idle' };
+    case 'empty':
+      return { label: 'No records', tone: 'idle' };
+    case 'stale':
+      return { label: 'Stored data', tone: 'warn' };
+    case 'error':
+      return { label: 'Error', tone: 'bad' };
+    default:
+      return { label: 'Offline', tone: 'bad' };
+  }
+}
+
+function toneColors(colors: ThemeColors, tone: Tone): { fg: string; bg: string } {
+  switch (tone) {
+    case 'good':
+      return { fg: colors.healthy, bg: colors.healthySoft };
+    case 'warn':
+      return { fg: colors.watch, bg: colors.watchSoft };
+    case 'bad':
+      return { fg: colors.alert, bg: colors.alertSoft };
+    default:
+      return { fg: colors.info, bg: colors.infoSoft };
+  }
 }
 
 function formatTimestamp(value: string | undefined): string {
@@ -53,42 +114,58 @@ function formatTimestamp(value: string | undefined): string {
 }
 
 /**
- * A usable numeric reading.
+ * The device-row reading.
  *
- * PocketBase stores an absent numeric field as 0, and the thermal guard
- * strips `temperature` / `bodyTemp` from thermal rows on purpose (the
- * MLX90640 frames a barn scene, not a pig). So zero is "no reading", never a
- * measurement — and it must never be rendered as 0.0°.
+ * A device-REPORTED `temperature` is shown plain. A thermal row shows its scene
+ * centre labelled "scene temp" (the MLX90640 frames a barn scene, not a pig).
+ * Anything absent/zero renders "—": PocketBase stores an absent field as 0, so
+ * zero is "no reading", never a measurement.
  */
-function reading(v: unknown): number | null {
-  return typeof v === 'number' && Number.isFinite(v) && v !== 0 ? v : null;
+function deviceReading(frame: TelemetryFrame | undefined): { value: string; qualifier?: string } {
+  const { kind, value } = readDeviceValue(frame ?? {});
+  if (kind === null || value === null) return { value: '—' };
+  const text = `${value.toFixed(1)}°C`;
+  if (kind === 'scene') return { value: text, qualifier: 'scene temp' };
+  if (kind === 'ambient') return { value: text, qualifier: 'ambient' };
+  return { value: text };
 }
 
 /**
- * The device-row reading.
- *
- * The Pi's thermal guard (backend/bridge/thermal_guard.py) strips
- * `temperature` / `bodyTemp` from thermal telemetry rows on purpose: the
- * MLX90640 frames a barn scene, not a pig, so those fields would be a
- * pig-temperature claim the backend refuses to publish. What survives is
- * the raw instrument values — `center` (scene centre) and `ambient`.
- *
- * So a genuine `temperature` is shown as-is; a thermal row shows its
- * scene centre labelled "scene temp"; a row with no reading shows "—".
- * It must NEVER render 0.0° — PocketBase stores an absent field as 0,
- * so zero is "no reading", not a measurement.
+ * A muted, labelled note for a device-REPORTED temperature that the legacy
+ * thresholds would have flagged. DISPLAY ONLY — it never sets a device status
+ * and never feeds a count.
  */
-function deviceReading(frame: TelemetryFrame | undefined): { value: string; qualifier?: string } {
-  const temp = reading(frame?.temperature);
-  if (temp !== null) return { value: `${temp.toFixed(1)}°C` };
+function legacyNote(frame: TelemetryFrame | undefined): string | null {
+  const { kind, value } = readDeviceValue(frame ?? {});
+  if (kind !== 'temperature' || value === null) return null;
+  const band = legacyDisplayBand(value);
+  if (!band || band === 'normal') return null;
+  return `legacy ${band}`;
+}
 
-  const center = reading(frame?.center);
-  if (center !== null) return { value: `${center.toFixed(1)}°C`, qualifier: 'scene temp' };
+function FreshnessBadge({ band }: { band: 'fresh' | 'aging' | 'stale' | 'unknown' }) {
+  const label =
+    band === 'fresh' ? 'Sensors fresh'
+      : band === 'aging' ? 'Sensors aging'
+        : band === 'stale' ? 'Sensors stale'
+          : 'Freshness unknown';
+  const status: Status =
+    band === 'fresh' ? 'healthy' : band === 'aging' ? 'watch' : band === 'stale' ? 'alert' : 'neutral';
+  return <Badge label={label} status={status} />;
+}
 
-  const ambient = reading(frame?.ambient);
-  if (ambient !== null) return { value: `${ambient.toFixed(1)}°C`, qualifier: 'ambient' };
-
-  return { value: '—' };
+function SummaryCell({ label, value, color }: { label: string; value: number; color: string }) {
+  const { colors, typography } = useTheme();
+  return (
+    <View
+      style={{ flex: 1 }}
+      accessible
+      accessibilityLabel={`${label}: ${value}`}
+    >
+      <Text style={[typography.bodySmall, { color: colors.textSecondary }]}>{label}</Text>
+      <Text style={[typography.stat, { color }]}>{value}</Text>
+    </View>
+  );
 }
 
 type DeviceRow = {
@@ -111,12 +188,12 @@ export default function HomeScreen() {
     deviceIds,
     connectionStatus,
     lastError,
+    freshness,
     reconnect,
   } = usePocketbaseRealtime();
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [statsKey, setStatsKey] = useState(0);
   const [farmName, setFarmName] = useState('');
   const [penName, setPenName] = useState('');
   const [deviceNames, setDeviceNames] = useState<Record<string, string>>({});
@@ -148,58 +225,68 @@ export default function HomeScreen() {
     return unsub;
   }, []);
 
-  // Derive device rows from realtime telemetry
+  // Derive device rows from realtime telemetry.
   const devices: DeviceRow[] = useMemo(() => {
     return deviceIds.map((id) => {
       const frame = telemetry[id];
       const name = deviceNames[id] ?? String(frame?.deviceId || id);
       const reading = deviceReading(frame);
       const stamp = formatTimestamp(frame?.timestamp);
-      const note = reading.qualifier ? `${reading.qualifier} · ${stamp}` : stamp;
+      const legacy = legacyNote(frame);
+      const note = [reading.qualifier, stamp, legacy].filter(Boolean).join(' · ');
       return {
         id,
         name,
         temp: reading.value,
         note,
-        status: inferStatus(frame || {}),
+        status: statusFor(reportedStatus(frame ?? {})),
         trend: [], // Sparkline needs historical frames; empty for now
       };
     });
   }, [deviceIds, telemetry, deviceNames]);
 
-  const stats = useMemo(() => {
-    let healthy = 0, watch = 0, alert = 0;
-    for (const d of devices) {
-      if (d.status === 'healthy') healthy++;
-      else if (d.status === 'watch') watch++;
-      else if (d.status === 'alert') alert++;
-    }
-    return devices.length > 0 ? { healthy, watch, alert } : DEMO_STATS;
-  }, [devices]);
+  // Device monitoring counts only — never a herd-health verdict.
+  const summary = useMemo(() => summarizeDevices(telemetry, Date.now()), [telemetry]);
+  const hasDevices = devices.length > 0;
+  const needsReview = summary.status.watch + summary.status.alert;
+  const reportedCount = summary.status.normal + summary.status.watch + summary.status.alert;
 
-  const hasLiveData = devices.length > 0;
-  const isOnline = connectionStatus === 'connected' || connectionStatus === 'connecting';
+  const transport = transportView(connectionStatus);
+  const tone = toneColors(colors, transport.tone);
   const topAlert = devices.find((d) => d.status === 'alert');
   const farmPrefix = farmName ? `${farmName} · ` : '';
 
-  // Live barn status via the shared hook (console frames or fresh PB rows);
-  // "Stale"/"Offline" when nothing recent — never a fake demo label.
+  const subtitle =
+    connectionStatus === 'error'
+      ? 'Connection unavailable · showing last known readings'
+      : connectionStatus === 'stale'
+        ? 'Stored readings · waiting for fresh sensor data'
+        : connectionStatus === 'empty'
+          ? 'Connected · no telemetry records yet'
+          : connectionStatus === 'connecting'
+            ? farmName
+              ? `${farmName} · connecting to PocketBase…`
+              : 'Connecting to PocketBase…'
+            : hasDevices
+              ? `${farmPrefix}${devices.length} device${devices.length !== 1 ? 's' : ''} reporting`
+              : farmName
+                ? `${farmName} · no devices reporting`
+                : 'No devices reporting';
+
+  // Live barn status via the shared hook (console frames or fresh PB rows).
   const pi = usePiThermal();
   const piLive = pi.live || pi.pbFresh;
   const piStale = !piLive && !!pi.pbStats;
-  // The thermal card's headline number uses the SAME zero-guard as the
-  // device rows: the live console frame's scene centre, else the stored PB
-  // value — and if both are absent/zero, "—" rather than a fabricated 0.0°C.
-  const piTemp = reading(pi.live && pi.frame ? pi.frame.center : undefined) ??
-    reading(pi.pbStats?.bodyTemp);
+  // The thermal tile headline uses the SAME zero-guard as the device rows: the
+  // live console frame's scene centre, else the stored PB `center` (the guard
+  // strips `bodyTemp`, so `center` is the only usable value) — never a fake 0.0°.
+  const piTemp =
+    usableNumber(pi.live && pi.frame ? pi.frame.center : undefined) ?? usableNumber(pi.pbStats?.center);
 
   const onRefresh = () => {
     setRefreshing(true);
     reconnect();
-    setTimeout(() => {
-      setRefreshing(false);
-      setStatsKey((k) => k + 1);
-    }, 1200);
+    setTimeout(() => setRefreshing(false), 1200);
   };
 
   const contentMax = tier === 'expanded' ? 1100 : tier === 'medium' ? 720 : undefined;
@@ -236,54 +323,21 @@ export default function HomeScreen() {
             </Text>
           </View>
           <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 4 }]}>
-            {connectionStatus === 'stale'
-              ? 'Stored readings · waiting for fresh sensor data'
-              : connectionStatus === 'error'
-                ? 'Connection unavailable · showing last known readings'
-                : hasLiveData
-                  ? `${farmPrefix}${devices.length} device${devices.length !== 1 ? 's' : ''} streaming`
-                  : farmName
-                    ? `${farmName} · connecting to PocketBase…`
-                    : 'Connecting to PocketBase…'}
+            {subtitle}
           </Text>
+          {hasDevices ? (
+            <View style={{ marginTop: spacing.sm }}>
+              <FreshnessBadge band={freshness.band} />
+            </View>
+          ) : null}
         </View>
         <View
           style={[
             styles.pill,
-            {
-              backgroundColor:
-                connectionStatus === 'stale'
-                  ? colors.watchSoft
-                  : isOnline
-                    ? colors.healthySoft
-                    : colors.alertSoft,
-              borderRadius: radius.pill,
-            },
+            { backgroundColor: tone.bg, borderRadius: radius.pill },
           ]}
         >
-          <Text
-            style={[
-              typography.label,
-              {
-                color:
-                  connectionStatus === 'stale'
-                    ? colors.watch
-                    : isOnline
-                      ? colors.healthy
-                      : colors.alert,
-              },
-            ]}
-          >
-            {connectionStatus === 'connected'
-              ? 'Live'
-              : connectionStatus === 'connecting'
-                ? 'Connecting'
-                : connectionStatus === 'stale'
-                  ? 'Stored data'
-                  : connectionStatus === 'error'
-                    ? 'Error'
-                    : 'Offline'}
-          </Text>
+          <Text style={[typography.label, { color: tone.fg }]}>{transport.label}</Text>
         </View>
       </View>
 
@@ -302,30 +356,60 @@ export default function HomeScreen() {
         </TouchableOpacity>
       ) : null}
 
-      {/* Farm-wide status */}
-      <View>
-        <StatRow key={`${statsKey}-${stats.healthy}-${stats.watch}-${stats.alert}`} {...stats} />
-        {!hasLiveData && connectionStatus !== 'error' ? (
-          <TouchableOpacity
-            activeOpacity={0.6}
-            hitSlop={{ top: 12, bottom: 12, left: 24, right: 24 }}
-            onPress={() => {
-              playSound('tap');
-              haptic('light');
-              router.push('/login');
-            }}
-            accessibilityRole="button"
-            accessibilityLabel="Waiting for first telemetry frame"
-            accessibilityHint="Shows demo data until a device reports"
-          >
-            <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.sm }]}>
-              {connectionStatus === 'connected'
-                ? 'No telemetry frames yet — demo figures shown until a device reports'
-                : 'Demo figures — connect to PocketBase to stream live herd status'}
-            </Text>
-          </TouchableOpacity>
-        ) : null}
+      {/* Device monitoring summary — device counts, not a herd-health verdict */}
+      <View
+        style={[
+          styles.summaryCard,
+          { backgroundColor: colors.surface, borderRadius: radius.lg, marginTop: spacing.lg },
+        ]}
+      >
+        <Text style={[typography.caption, { color: colors.textMuted }]}>Device monitoring</Text>
+        <View style={styles.summaryRow}>
+          <SummaryCell label="Devices" value={summary.total} color={colors.textPrimary} />
+          <SummaryCell label="Reported status" value={reportedCount} color={colors.info} />
+          <SummaryCell
+            label="Needs review"
+            value={needsReview}
+            color={needsReview > 0 ? colors.alert : colors.textMuted}
+          />
+        </View>
+        <Text style={[typography.body, { color: colors.textSecondary, marginTop: spacing.sm }]}>
+          Reported: {summary.status.normal} normal · {summary.status.watch} watch ·{' '}
+          {summary.status.alert} alert · {summary.status.unknown} no status
+        </Text>
+        <Text style={[typography.body, { color: colors.textSecondary, marginTop: 2 }]}>
+          Freshness: {summary.freshness.fresh} fresh · {summary.freshness.aging} aging ·{' '}
+          {summary.freshness.stale} stale · {summary.freshness.unknown} untimed
+        </Text>
+        <Text style={[typography.body, { color: colors.textMuted, marginTop: spacing.sm }]}>
+          Counts come from devices and their own reported status — not a herd-health score.
+        </Text>
+        <Text style={[typography.body, { color: colors.textMuted, marginTop: 4 }]}>
+          Freshness compares the newest recorded timestamp only; the schema carries no
+          producer-age or clock-quality field, so a skewed device clock cannot be detected here.
+        </Text>
       </View>
+
+      {!hasDevices && connectionStatus !== 'error' ? (
+        <TouchableOpacity
+          activeOpacity={0.6}
+          style={[styles.waitBar, { marginTop: spacing.sm }]}
+          onPress={() => {
+            playSound('tap');
+            haptic('light');
+            router.push('/login');
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Waiting for the first telemetry record"
+          accessibilityHint="Opens the PocketBase connection settings"
+        >
+          <Text style={[typography.body, { color: colors.textMuted }]}>
+            {connectionStatus === 'empty'
+              ? 'No telemetry records yet — devices have not reported'
+              : 'Connect to PocketBase to receive device telemetry'}
+          </Text>
+        </TouchableOpacity>
+      ) : null}
 
       {/* Thermal view */}
       <TouchableOpacity
@@ -344,9 +428,9 @@ export default function HomeScreen() {
           <ThermalThumbnail />
           <View style={{ marginLeft: spacing.md, flex: 1 }}>
             <Text style={[typography.h2, { color: colors.textPrimary }]}>Thermal view</Text>
-            <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 2, fontSize: 12.5 }]}>
+            <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 2 }]}>
               {piLive
-                ? `pi-thermal-01 · ${typeof piTemp === 'number' ? piTemp.toFixed(1) : '—'}°C · live`
+                ? `pi-thermal-01 · scene ${typeof piTemp === 'number' ? piTemp.toFixed(1) : '—'}°C · live`
                 : piStale
                   ? 'pi-thermal-01 · stale — check the barn'
                   : 'No live thermal data — barn offline'}
@@ -375,8 +459,8 @@ export default function HomeScreen() {
             {devices.length > 0 ? 'Devices' : penName || 'Pens'}
           </Text>
           {devices.length > 0 ? (
-            <Text style={[typography.bodySmall, { color: colors.textMuted, fontSize: 12.5 }]}>
-              {devices.length} connected
+            <Text style={[typography.body, { color: colors.textMuted }]}>
+              {devices.length} monitored
             </Text>
           ) : null}
         </View>
@@ -386,11 +470,11 @@ export default function HomeScreen() {
           <ListGroup>
             <EmptyState
               icon={<ThermometerIcon size={18} color={colors.accent} />}
-              title="No devices streaming"
+              title="No devices reporting"
               message={
-                hasLiveData
-                  ? 'Connected but no telemetry frames yet.'
-                  : 'Connect to PocketBase to see live device telemetry. Demo figures are shown until the first frame arrives.'
+                connectionStatus === 'empty'
+                  ? 'Connected, but no telemetry records exist yet.'
+                  : 'Connect to PocketBase to receive device telemetry.'
               }
             />
           </ListGroup>
@@ -422,6 +506,11 @@ export default function HomeScreen() {
                   : null}
               </View>
             ))}
+            <Text style={[typography.body, { color: colors.textMuted, marginTop: spacing.sm }]}>
+              Legacy display thresholds ({LEGACY_WATCH_C.toFixed(1)}/{LEGACY_ALERT_C.toFixed(1)}°C)
+              label a device-REPORTED temperature only — never a device status or a count, and never
+              applied to a scene or ambient reading.
+            </Text>
           </View>
         )}
       </View>
@@ -433,8 +522,11 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row' as any, justifyContent: 'space-between', alignItems: 'flex-start' },
   brandRow: { flexDirection: 'row' as any, alignItems: 'center' },
   pill: { paddingVertical: 5, paddingHorizontal: 11 },
-  errorBar: { paddingVertical: 10, paddingHorizontal: 14 },
-  feedCard: { flexDirection: 'row' as any, alignItems: 'center', justifyContent: 'space-between', padding: 14 },
+  errorBar: { paddingVertical: 10, paddingHorizontal: 14, minHeight: 44, justifyContent: 'center' as any },
+  waitBar: { minHeight: 44, justifyContent: 'center' as any },
+  summaryCard: { padding: 14 },
+  summaryRow: { flexDirection: 'row' as any, marginTop: 6, gap: 10 },
+  feedCard: { flexDirection: 'row' as any, alignItems: 'center', justifyContent: 'space-between', padding: 14, minHeight: 44 },
   sectionHead: { flexDirection: 'row' as any, justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 8 },
   gridRow: { flexDirection: 'row' as any, marginHorizontal: -6, marginBottom: 12 },
 });

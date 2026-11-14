@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Animated, Text, TouchableOpacity, View, StyleSheet } from 'react-native';
 import { useTabTrigger } from 'expo-router/ui';
 import { useTheme } from '../../theme';
-import { HomeIcon, BellIcon, WaveformIcon, SettingsIcon } from './Icons';
+import { HomeIcon, BellIcon, AnalyticsIcon, SettingsIcon } from './Icons';
 import { playSound } from '../../utils/sounds';
 import { haptic } from '../../utils/haptics';
 
-export type TabKey = 'home' | 'events' | 'live' | 'roster' | 'settings';
+// `live` and `roster` remain valid route keys (the retired Live route still
+// exists as a redirect alias) even though the bar no longer shows them.
+export type TabKey = 'home' | 'events' | 'history' | 'live' | 'roster' | 'settings';
 
 type NavButtonProps = {
   name: TabKey;
@@ -92,8 +94,8 @@ export function BottomNav({ unreadEvents = 0 }: BottomNavProps) {
       ]}
     >
       <NavButton name="home" label="Home" icon={(c) => <HomeIcon color={c} />} />
-      <NavButton name="events" label="Events" icon={(c) => <BellIcon color={c} />} badge={unreadEvents} />
-      <NavButton name="live" label="Live" icon={(c) => <WaveformIcon size={20} color={c} />} />
+      <NavButton name="events" label="Alerts" icon={(c) => <BellIcon color={c} />} badge={unreadEvents} />
+      <NavButton name="history" label="History" icon={(c) => <AnalyticsIcon size={20} color={c} />} />
       <NavButton name="settings" label="Settings" icon={(c) => <SettingsIcon color={c} />} />
     </View>
   );

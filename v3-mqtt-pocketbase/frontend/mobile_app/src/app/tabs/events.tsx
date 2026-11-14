@@ -4,9 +4,13 @@ import { useTheme, statusColor, type Status } from '../../theme';
 import { subscribeAlerts } from '../../utils/pocketbase-data';
 import { telemetryTime } from '../../utils/telemetry-time';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
+import { mapAlert, typeDisplay, type AlertItem, type AlertKind } from '../../utils/alert-record';
 import {
+  ActionButton,
+  AlertIcon,
   Badge,
   EmptyState,
+  InfoIcon,
   ListGroup,
   SearchIcon,
   Skeleton,
@@ -14,28 +18,17 @@ import {
   WaveformIcon,
 } from '../../components/primitives';
 
-type EventItem = {
-  id: string;
-  timestamp: string;
-  message: string;
-  status: Status;
-  label: string;
-  type: 'thermal' | 'sound';
-};
+/** Alert item plus its display timestamp, parsed once at the data boundary. */
+type EventItem = AlertItem & { timestamp: string };
 
-// Demo log shown while signed out — replaced by the live /alerts stream on sign-in.
-const DEMO_EVENTS: EventItem[] = [
-  { id: '1', timestamp: 'Apr 7, 9:15 AM', message: 'Body temperature elevated to 39.5°C — monitoring closely.', status: 'watch', label: 'Warning', type: 'thermal' },
-  { id: '2', timestamp: 'Apr 7, 8:45 AM', message: 'Acoustic sensor calibrated successfully.', status: 'info', label: 'Info', type: 'sound' },
-  { id: '3', timestamp: 'Apr 6, 3:22 AM', message: 'Temperature spike detected: 41.2°C at 03:22, auto-resolved.', status: 'alert', label: 'Critical', type: 'thermal' },
-  { id: '4', timestamp: 'Apr 5, 4:10 PM', message: 'Possible cough pattern detected — 2 events in 30 minutes.', status: 'watch', label: 'Warning', type: 'sound' },
-];
+type LoadState = 'loading' | 'ready' | 'error';
 
 function formatTimestamp(value: unknown): string {
   // Mixed writers: seeds write epoch seconds, the bridge writes ms — normalize
-  // with the same helper the rest of the app uses.
+  // with the same helper the rest of the app uses. An unparsable value stays
+  // blank rather than being rendered as a fabricated time.
   const ts = telemetryTime(value);
-  if (!Number.isFinite(ts)) return String(value ?? '');
+  if (!Number.isFinite(ts)) return '';
   return new Date(ts).toLocaleString(undefined, {
     month: 'short',
     day: 'numeric',
@@ -44,56 +37,47 @@ function formatTimestamp(value: unknown): string {
   });
 }
 
-function mapAlert(id: string, record: Record<string, unknown>): EventItem {
-  const severity = String(record.severity || record.level || record.status || 'info').toUpperCase();
-  const status: Status =
-    severity === 'CRITICAL' || severity === 'HIGH' || severity === 'ALERT'
-      ? 'alert'
-      : severity === 'WARNING' || severity === 'ELEVATED' || severity === 'WATCH'
-        ? 'watch'
-        : 'info';
-  const label =
-    status === 'alert' ? 'Critical' : status === 'watch' ? 'Warning' : 'Info';
-  const rawType = String(record.type || record.source || 'thermal').toLowerCase();
-  const message =
-    (typeof record.message === 'string' && record.message) ||
-    (typeof record.description === 'string' && record.description) ||
-    (typeof record.title === 'string' && record.title) ||
-    `${String(record.type || 'Sensor')} event recorded`;
+function toEvent(id: string, record: Record<string, unknown>): EventItem {
   return {
-    id,
+    ...mapAlert(id, record),
     timestamp: formatTimestamp(record.timestamp ?? record.ts ?? record.createdAt),
-    message,
-    status,
-    label,
-    type: rawType.includes('sound') || rawType.includes('audio') ? 'sound' : 'thermal',
   };
 }
 
-export default function EventsScreen() {
+function kindGlyph(kind: AlertKind, color: string) {
+  switch (kind) {
+    case 'sound':
+      return <WaveformIcon size={13} color={color} />;
+    case 'system':
+      return <AlertIcon size={13} color={color} />;
+    case 'unknown':
+      return <InfoIcon size={13} color={color} />;
+    default:
+      return <ThermometerIcon size={11} color={color} />;
+  }
+}
+
+export default function AlertsScreen() {
   const { colors, spacing, radius, typography } = useTheme();
   const tier = useBreakpoint();
   const [query, setQuery] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [liveEvents, setLiveEvents] = useState<EventItem[] | null>(null);
+  const [state, setState] = useState<LoadState>('loading');
+  const [events, setEvents] = useState<EventItem[]>([]);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 750);
-    return () => clearTimeout(t);
-  }, []);
-
-  useEffect(() => {
-    // ACTUAL data first: alerts stream from PocketBase in every state (open
-    // reads). The demo log below is only a fallback when PB has none.
-    const unsub = subscribeAlerts((records) => {
-      setLiveEvents(records.length ? records.map((r, i) => mapAlert(String(r.id ?? i), r)) : []);
-    });
+    setState('loading');
+    // Honest states: a read failure shows an error + retry instead of an empty
+    // list, and an empty result is a real "no alerts" rather than demo data.
+    const unsub = subscribeAlerts(
+      (records) => {
+        setEvents(records.map((r, i) => toEvent(String(r.id ?? i), r)));
+        setState('ready');
+      },
+      () => setState('error'),
+    );
     return unsub;
-  }, []);
-
-  // Prefer the actual alerts; fall back to the labeled demo log only when empty.
-  const events = liveEvents && liveEvents.length > 0 ? liveEvents : DEMO_EVENTS;
-  const demoEvents = !(liveEvents && liveEvents.length > 0);
+  }, [reloadKey]);
 
   const filtered = useMemo(() => {
     if (!query.trim()) return events;
@@ -107,40 +91,59 @@ export default function EventsScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: colors.bg, paddingHorizontal: spacing.lg, paddingTop: spacing.lg }]}>
       <View style={contentMax ? { width: '100%', maxWidth: contentMax, alignSelf: 'center', flex: 1 } : { flex: 1 }}>
-        <Text style={[typography.h1, { color: colors.textPrimary }]}>Events</Text>
-        <View style={styles.subtitleRow}>
-          <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 4, flex: 1 }]}>
-            Searchable log of sound and temperature triggers
-          </Text>
-          {demoEvents ? (
-            <View style={[styles.demoPill, { backgroundColor: colors.badgeBg }]}>
-              <Text style={[typography.label, { color: colors.badgeText, fontSize: 10 }]}>DEMO DATA</Text>
-            </View>
-          ) : null}
-        </View>
+        <Text style={[typography.h1, { color: colors.textPrimary }]}>Alerts</Text>
+        <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 4, fontSize: 16 }]}>
+          Alerts recorded by your devices, newest first
+        </Text>
 
-        <View
-          style={[styles.searchBar, { backgroundColor: colors.surface, borderRadius: radius.md, marginTop: spacing.xl, marginBottom: spacing.lg }]}
-        >
-          <SearchIcon size={16} color={colors.textMuted} />
-          <TextInput
-            value={query}
-            onChangeText={setQuery}
-            placeholder="Search events, e.g. fever, cough"
-            placeholderTextColor={colors.textMuted}
-            style={[typography.body, { color: colors.textPrimary, flex: 1, marginLeft: 9, fontSize: 15 }]}
-            accessibilityLabel="Search events"
-          />
-        </View>
+        {state === 'ready' ? (
+          <View
+            style={[styles.searchBar, { backgroundColor: colors.surface, borderRadius: radius.md, marginTop: spacing.xl, marginBottom: spacing.lg }]}
+          >
+            <SearchIcon size={16} color={colors.textMuted} />
+            <TextInput
+              value={query}
+              onChangeText={setQuery}
+              placeholder="Search alerts, e.g. fever, cough"
+              placeholderTextColor={colors.textMuted}
+              style={[typography.body, { color: colors.textPrimary, flex: 1, marginLeft: 9, fontSize: 16 }]}
+              accessibilityLabel="Search alerts"
+            />
+          </View>
+        ) : (
+          <View style={{ marginTop: spacing.xl }} />
+        )}
 
-        {loading ? (
+        {state === 'loading' ? (
           <Skeleton rows={4} />
+        ) : state === 'error' ? (
+          <ListGroup>
+            <EmptyState
+              icon={<AlertIcon size={18} color={colors.alert} />}
+              title="Couldn't load alerts"
+              message="Something went wrong reaching the data source. Check the connection and try again."
+            />
+            <View style={{ paddingHorizontal: spacing.lg, paddingBottom: spacing.lg }}>
+              <ActionButton
+                variant="secondary"
+                onPress={() => setReloadKey((k) => k + 1)}
+                accessibilityLabel="Retry loading alerts"
+                accessibilityHint="Reloads the alerts list"
+              >
+                Retry
+              </ActionButton>
+            </View>
+          </ListGroup>
         ) : filtered.length === 0 ? (
           <ListGroup>
             <EmptyState
               icon={<ThermometerIcon size={18} color={colors.accent} />}
-              title={query ? 'No matching events' : 'No events yet'}
-              message={query ? 'Try a different search term.' : 'Fever and cough alerts will show up here as they happen.'}
+              title={query ? 'No matching alerts' : 'No alerts yet'}
+              message={
+                query
+                  ? 'Try a different search term.'
+                  : 'Alerts recorded by your devices will appear here.'
+              }
             />
           </ListGroup>
         ) : (
@@ -155,18 +158,19 @@ export default function EventsScreen() {
                   <Badge
                     label={item.label}
                     status={item.status}
-                    icon={
-                      item.type === 'sound' ? (
-                        <WaveformIcon size={13} color={glyphColor(item.status)} />
-                      ) : (
-                        <ThermometerIcon size={11} color={glyphColor(item.status)} />
-                      )
-                    }
+                    icon={kindGlyph(item.kind, glyphColor(item.status))}
                   />
-                  <Text style={[typography.bodySmall, { color: colors.textMuted, fontSize: 12.5 }]}>{item.timestamp}</Text>
+                  {item.timestamp ? (
+                    <Text style={[typography.bodySmall, { color: colors.textMuted, fontSize: 16 }]}>{item.timestamp}</Text>
+                  ) : null}
                 </View>
-                <Text style={[typography.body, { color: colors.textPrimary, marginTop: spacing.sm, lineHeight: 20 }]}>
+                <Text style={[typography.body, { color: colors.textPrimary, marginTop: spacing.sm, fontSize: 16, lineHeight: 23 }]}>
                   {item.message}
+                </Text>
+                {/* The event type is always rendered, including the raw token for
+                    rows the classifier did not recognise. */}
+                <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: 6, fontSize: 16 }]}>
+                  {typeDisplay(item)}
                 </Text>
               </View>
             )}
@@ -179,15 +183,6 @@ export default function EventsScreen() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  subtitleRow: { flexDirection: 'row', alignItems: 'center' },
-  demoPill: {
-    alignSelf: 'flex-start',
-    marginLeft: 10,
-    marginTop: 4,
-    paddingVertical: 3,
-    paddingHorizontal: 8,
-    borderRadius: 999,
-  },
   searchBar: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, paddingHorizontal: 14 },
   eventCard: {},
   eventTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },

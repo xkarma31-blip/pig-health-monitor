@@ -16,31 +16,28 @@
  */
 
 import { Platform } from 'react-native';
+import { chooseNativeSource, type SourceDecision } from './source-policy';
 
 // Resolve base URL.
 // Web: empty string => same-origin requests (`/api/...`). A public browser can
 // never reach a dev machine's loopback, and cross-origin hosts would be blocked
 // by the deployed CSP `connect-src 'self'`.
-// Native: the farmer-saved setup address is the source of truth when present,
-// then the Pi's own hotspot gateway, then ADB reverse and direct loopback for
-// bench work on the laptop.
-// The hotspot address is FIRST because it is the only address that needs no
-// setup at all: a phone joined to the PigPulse AP reaches PocketBase on the Pi
-// (pocketbase serve --http=0.0.0.0:8090) with no adb tunnel and no laptop.
-// It was previously 127.0.0.1:18090, which only worked while `adb reverse` was
-// alive — i.e. only while the phone was tethered to the dev machine.
+// Native: exactly ONE source is selected (see source-policy.ts) — never a
+// failover list. Order: farmer-saved setup address → build-time env → the Pi's
+// own hotspot gateway. There is no implicit hosted (Vercel) or laptop-loopback
+// fallback, and a malformed explicit config fails closed instead of being
+// silently replaced by a lower tier.
+// The hotspot default needs no setup at all: a phone joined to the PigPulse AP
+// reaches PocketBase on the Pi (pocketbase serve --http=0.0.0.0:8090) with no
+// adb tunnel and no laptop. The old 127.0.0.1:18090 only worked while
+// `adb reverse` was alive — i.e. only while the phone was tethered to the dev
+// machine — which is exactly the implicit-fallback defect this policy removes.
 // A tiny async indirection keeps this module import-synchronous; the setup
 // screen calls setConfiguredServer() before the wizard finishes.
 export const PB_HOTSPOT_URL = 'http://192.168.69.1:8090';
-const PB_FALLBACKS: string[] = (
-  Platform.OS === 'web'
-    ? ['']
-    : [
-        PB_HOTSPOT_URL, // the Pi's own AP gateway — no tether required
-        'http://127.0.0.1:18090', // adb reverse tcp:18090 tcp:8090 (bench only)
-        'http://127.0.0.1:8090',
-      ]
-).filter((url): url is string => typeof url === 'string');
+// Kept exported for interface stability. It no longer drives failover: the
+// resolver below selects a single source, and this is only the default tier.
+const PB_FALLBACKS: string[] = Platform.OS === 'web' ? [''] : [PB_HOTSPOT_URL];
 
 let configuredServer = '';
 
@@ -61,23 +58,49 @@ export const PB_URL: string =
 export const PB_FALLBACK_URLS = PB_FALLBACKS;
 
 /**
- * Native base resolution order:
- *   1. configuredServer — the farmer-saved setup address (runtime state,
- *      the source of truth once the wizard completes)
- *   2. EXPO_PUBLIC_POCKETBASE_URL — build-time default (e.g. EAS profiles)
- *   3. the Pi's hotspot gateway, then ADB reverse / loopback (bench)
- * The saved address must outrank the build-time env var: a device build
- * carrying a baked-in URL must still follow the farmer's saved box.
- * Web always resolves to same-origin ('') — public CSP forbids cross-origin.
+ * The single selected PocketBase source (see source-policy.ts). Web is always
+ * same-origin; native prefers the saved setup address, then the build-time env
+ * var, then the Pi hotspot. The saved address MUST outrank the build-time env
+ * var: a device build carrying a baked-in URL must still follow the farmer's
+ * saved box. A malformed explicit source fails closed (base null) and is
+ * surfaced rather than silently replaced by a lower tier.
+ */
+export function resolveSelectedSource(): SourceDecision {
+  if (Platform.OS === 'web') {
+    return { base: '', kind: 'web-same-origin', malformed: false, explicit: false };
+  }
+  return chooseNativeSource({
+    saved: configuredServer,
+    build: process.env.EXPO_PUBLIC_POCKETBASE_URL ?? '',
+    piDefault: PB_HOTSPOT_URL,
+  });
+}
+
+/**
+ * Base URLs to try. Exactly zero or one native source: an empty array means the
+ * explicit configuration is malformed and callers must fail closed — there is
+ * no cross-origin retry. Web always resolves to same-origin ('') because the
+ * public CSP forbids cross-origin.
  */
 export function resolveBaseUrls(): string[] {
   if (Platform.OS === 'web') return [''];
-  const urls = [
-    configuredServer,
-    process.env.EXPO_PUBLIC_POCKETBASE_URL,
-    ...PB_FALLBACKS,
-  ].filter((u): u is string => typeof u === 'string' && u.length > 0);
-  return Array.from(new Set(urls));
+  const decision = resolveSelectedSource();
+  return decision.base ? [decision.base] : [];
+}
+
+/**
+ * The one selected base, or a thrown error. Shared by every network caller so
+ * a malformed explicit native config fails closed identically everywhere: no
+ * request, no relative fetch, no cross-origin retry. On web the selected base
+ * is the valid same-origin empty string, which is preserved (never treated as
+ * "missing").
+ */
+function requireSelectedBase(context: string): string {
+  const base = resolveBaseUrls()[0];
+  if (base === undefined) {
+    throw new Error(`${context} failed: no selected PocketBase source`);
+  }
+  return base;
 }
 
 let adminToken: string | null = null;
@@ -120,7 +143,7 @@ const PB_ADMIN_PASS = '';
 export async function pbAuthAdmin(): Promise<string> {
   const now = Date.now() / 1000;
   if (adminToken && now < adminTokenExpiry - 60) return adminToken;
-  const base = resolveBaseUrls()[0] ?? '';
+  const base = requireSelectedBase('pbAuthAdmin');
   const res = await fetch(`${base}/api/admins/auth-with-password`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -157,34 +180,25 @@ export async function pbList<T = Record<string, unknown>>(
   if (opts.fields) params.set('fields', opts.fields);
   const headers: Record<string,string> = {};
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  // Try every resolved base (setup-saved address first, then fallbacks)
-  const urls = resolveBaseUrls();
+  // Exactly one selected source. An empty list means the explicit config is
+  // malformed: fail closed — no request, no cross-origin retry, and therefore
+  // no chance of a bearer token crossing to another origin.
+  const base = requireSelectedBase(`pbList ${collection}`);
+  // Web: a public browser cannot reach the laptop-bound PocketBase, and the
+  // deployed app has no `/api/collections/...` serverless function — that
+  // path answers HTTP 404 in production. The only public read path is the
+  // `/api/telemetry` bridge, which forwards the same allowlisted GET to the
+  // read-only proxy and returns PocketBase's own list payload shape
+  // (page/perPage/totalItems/totalPages/items), so the response contract is
+  // identical to a direct PB read.
+  // Native: direct PocketBase, unchanged.
   const query = params.toString();
-  let lastErr: string = '';
-  for (const base of urls) {
-    // Web: a public browser cannot reach the laptop-bound PocketBase, and the
-    // deployed app has no `/api/collections/...` serverless function — that
-    // path answers HTTP 404 in production. The only public read path is the
-    // `/api/telemetry` bridge, which forwards the same allowlisted GET to the
-    // read-only proxy and returns PocketBase's own list payload shape
-    // (page/perPage/totalItems/totalPages/items), so the response contract is
-    // identical to a direct PB read.
-    // Native: direct PocketBase, unchanged.
-    const url = Platform.OS === 'web'
-      ? `${base}/api/telemetry?collection=${encodeURIComponent(collection)}${query ? `&${query}` : ''}`
-      : `${base}/api/collections/${collection}/records${query ? `?${query}` : ''}`;
-    try {
-      const res = await fetch(url, { headers });
-      if (!res.ok) throw new Error(`pbList ${collection} ${res.status}: ${await res.text()}`);
-      return (await res.json()) as PBListResult<T>;
-    } catch (e:any) {
-      lastErr = String(e.message || e);
-      // try next fallback on network failure
-      if (lastErr.includes('Failed to fetch') || lastErr.includes('Network') || lastErr.includes('Load failed')) continue;
-      throw e;
-    }
-  }
-  throw new Error(lastErr || `pbList ${collection} failed all PB URLs`);
+  const url = Platform.OS === 'web'
+    ? `${base}/api/telemetry?collection=${encodeURIComponent(collection)}${query ? `&${query}` : ''}`
+    : `${base}/api/collections/${collection}/records${query ? `?${query}` : ''}`;
+  const res = await fetch(url, { headers });
+  if (!res.ok) throw new Error(`pbList ${collection} ${res.status}: ${await res.text()}`);
+  return (await res.json()) as PBListResult<T>;
 }
 
 export async function pbCreate<T = Record<string, unknown>>(
@@ -192,12 +206,16 @@ export async function pbCreate<T = Record<string, unknown>>(
   data: Record<string, unknown>,
   token?: string | null
 ): Promise<T> {
+  // Resolve the one selected source FIRST: a malformed explicit native config
+  // must fail closed before any request — including before the admin-auth
+  // attempt, which would otherwise fire its own relative fetch. Web's valid
+  // same-origin '' is preserved.
+  const base = requireSelectedBase(`pbCreate ${collection}`);
   // For v3 open collections no token needed, but we try admin token as fallback
   let t = token;
   if (!t) {
     try { t = await pbAuthAdmin(); } catch { /* open collection */ }
   }
-  const base = resolveBaseUrls()[0] ?? '';
   const res = await fetch(`${base}/api/collections/${collection}/records`, {
     method: 'POST',
     headers: t ? authHeaders(t) : { 'Content-Type': 'application/json' },
