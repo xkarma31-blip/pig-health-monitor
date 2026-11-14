@@ -1,0 +1,66 @@
+#!/bin/bash
+# Split-radio uplink: built-in radio -> venue; AP stays on the dongle.
+#
+# MAC-addressed, never name-addressed. The USB dongle and the built-in radio
+# swap their kernel names (wlan0/wlan1) across reboots, so name-addressing
+# silently put the WAN client on the 2.4 GHz-only dongle, where it associated
+# with our OWN "PigPulse" AP: wpa_supplicant reported COMPLETED while no DHCP
+# lease was ever obtained ("connected, no internet", no error anywhere).
+#
+# The built-in radio is used DIRECTLY as the client interface: brcmfmac does
+# not support adding a virtual managed interface, so `iw dev wlanX interface
+# add ... type managed` fails there. The dongle is a different phy and stays
+# free for the AP.
+set -u
+CONF=/etc/wpa_supplicant/wpa-split.conf
+BUILTIN_MAC=dc:a6:32:87:63:a1
+DONGLE_MAC=00:1f:05:6c:51:bc
+
+WAN_IF=$(/usr/local/sbin/pigpulse-wlan-iface "$BUILTIN_MAC") || { echo "no built-in radio"; exit 1; }
+AP_IF=$(/usr/local/sbin/pigpulse-wlan-iface "$DONGLE_MAC") || AP_IF=""
+PID="/run/wpa_supplicant-$WAN_IF.pid"
+
+# Never point the uplink at our own AP.
+if [ -n "$AP_IF" ]; then
+  AP_MAC=$(cat "/sys/class/net/$AP_IF/address" 2>/dev/null | tr 'A-Z' 'a-z')
+  if [ -n "$AP_MAC" ] && grep -qi "bssid=$AP_MAC" "$CONF" 2>/dev/null; then
+    echo "refusing: upstream BSSID is our own AP ($AP_MAC)"
+    exit 1
+  fi
+fi
+
+ip link set "$WAN_IF" up
+if wpa_cli -i "$WAN_IF" status >/dev/null 2>&1; then
+  wpa_cli -i "$WAN_IF" reconfigure >/dev/null 2>&1 || true
+  wpa_cli -i "$WAN_IF" reassociate >/dev/null 2>&1 || true
+else
+  pkill -f "wpa_supplicant.*-i $WAN_IF" 2>/dev/null || true
+  sleep 1
+  wpa_supplicant -B -i "$WAN_IF" -c "$CONF" -D nl80211 -P "$PID" || true
+fi
+for i in $(seq 1 40); do
+  iw dev "$WAN_IF" link 2>/dev/null | grep -q "Connected to" && break
+  sleep 1
+done
+dhcpcd -4 -m 50 -t 15 -q --noipv4ll --nohook resolv.conf "$WAN_IF" >/dev/null 2>&1 || true
+GW=""
+for i in $(seq 1 20); do
+  GW=$(ip route show default 2>/dev/null | awk -v d="$WAN_IF" '$0 ~ "dev "d {print $3; exit}')
+  [ -n "$GW" ] && break
+  sleep 1
+done
+[ -n "$GW" ] && ip route replace default via "$GW" dev "$WAN_IF" metric 50
+SSID=$(head -1 /etc/pigpulse/wan-sta.ssid 2>/dev/null || true)
+BSSID=$(head -1 /etc/pigpulse/wan-sta.bssid 2>/dev/null || true)
+FREQ=$(head -1 /etc/pigpulse/wan-sta.freq 2>/dev/null || true)
+IP=$(ip -4 -o addr show "$WAN_IF" 2>/dev/null | sed -n 's/.*inet \([0-9.]*\).*/\1/p' | head -1)
+GW=$(ip route show default 2>/dev/null | awk -v d="$WAN_IF" '$0 ~ "dev "d {print $3; exit}')
+CH=$(iw dev "$AP_IF" info 2>/dev/null | sed -n 's/.*channel \([0-9]*\).*/\1/p')
+ASSOC=$(iw dev "$WAN_IF" link 2>/dev/null | sed -n 's/.*Connected to //p' | head -1)
+mkdir -p /run/pigpulse
+printf 'UP band=%s ip=%s gw=%s freq=%s ch=%s bssid=%s metric=50 assoc=%s wan=%s\n' \
+  "$([ -n "$FREQ" ] && [ "$FREQ" -ge 4900 ] 2>/dev/null && echo 5G || echo 24)" \
+  "${IP:-none}" "${GW:-none}" "${FREQ:-0}" "${CH:-0}" "${BSSID:-none}" \
+  "${ASSOC:-none}" "$WAN_IF" > /run/pigpulse/wan-sta.status
+chmod 644 /run/pigpulse/wan-sta.status 2>/dev/null || true
+exit 0

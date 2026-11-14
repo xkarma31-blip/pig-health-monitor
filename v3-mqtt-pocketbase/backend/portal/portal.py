@@ -53,8 +53,8 @@ ALLOW5G = "/etc/pigpulse/wan-sta-allow-5g"
 # reboots, so "wlan0"/"wlan1" are NOT stable identities. Resolve by MAC.
 #   BUILTIN  -> 5 GHz capable -> used as the WAN client
 #   DONGLE   -> 2.4 GHz only  -> hosts the PigPulse AP (ESP32-S3 + Tapo)
-BUILTIN_MAC = "00:1f:05:6c:51:bc"
-DONGLE_MAC = "dc:a6:32:87:63:a1"
+BUILTIN_MAC = "dc:a6:32:87:63:a1"
+DONGLE_MAC = "00:1f:05:6c:51:bc"
 
 
 def _iface_for_mac(mac: str) -> str | None:

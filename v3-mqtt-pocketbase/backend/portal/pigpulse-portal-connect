@@ -176,12 +176,17 @@ update_config=0
 ap_scan=1
 disable_scan_offload=1
 country=PH
-freq_list=@FREQ@
+# No freq_list pin: the upstream's channel changes (a phone hotspot moves
+# between 2.4/5 GHz and channels), and pinning one channel means a scan
+# that cannot find anything, silently.
 
 network={
+	# The BSSID is recorded but NOT pinned. A phone hotspot randomises its
+	# BSSID and changes channel between sessions, so a stale bssid= pin makes
+	# the join fail with NO error: wpa_supplicant just keeps scanning for a
+	# BSSID that no longer exists. The observed BSSID is kept as a comment.
+	# observed bssid=@BSSID@
 	ssid=$SSID_HEX
-	bssid=@BSSID@
-	scan_freq=@FREQ@
 	key_mgmt=WPA-PSK
 	ieee80211w=0
 	psk=$PSK_HEX
