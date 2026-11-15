@@ -223,6 +223,8 @@ if newest_age >= 0:
     print("newest Pi clip age: %d min" % (newest_age // 60))
     if newest_age > 2700:
         print("WARNING no new Pi clip for %d min — camera may be offline or not recording" % (newest_age // 60))
+else:
+    print("WARNING no clips on the Pi at all — camera offline, or nothing recorded yet")
 if len(drive) == 0:
     print("WARNING drive listing empty — drive-side pruning disabled this run")
 PYEOF
