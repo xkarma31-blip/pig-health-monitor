@@ -15,6 +15,30 @@ PB_URL="http://127.0.0.1:8090"
 # or let the PB checks report "skipped: no credentials".
 PB_ADMIN_EMAIL=os.environ.get("PB_EMAIL","")
 PB_ADMIN_PASS=os.environ.get("PB_PASSWORD","")
+
+def _load_env_file(path):
+    """Read KEY=VALUE pairs from a plain env file. No shell evaluation."""
+    vals={}
+    try:
+        with open(path) as fh:
+            for ln in fh:
+                ln=ln.strip()
+                if not ln or ln.startswith("#") or "=" not in ln:
+                    continue
+                k,v=ln.split("=",1)
+                vals[k.strip()]=v.strip().strip('"').strip("'")
+    except OSError:
+        return {}
+    return vals
+
+if not (PB_ADMIN_EMAIL and PB_ADMIN_PASS):
+    # Fall back to the local credential file so this check works without a
+    # manual export. SYNC_DEST_* are the credentials for THIS PocketBase
+    # (127.0.0.1:8090); SYNC_SOURCE_* belong to the Pi's PocketBase.
+    _creds=_load_env_file(os.environ.get("PB_CREDS_FILE",
+                                          "/home/solrahk/.config/pigpulse/sync.env"))
+    PB_ADMIN_EMAIL = PB_ADMIN_EMAIL or _creds.get("SYNC_DEST_EMAIL","")
+    PB_ADMIN_PASS = PB_ADMIN_PASS or _creds.get("SYNC_DEST_PASSWORD","")
 HAVE_PB_CREDS=bool(PB_ADMIN_EMAIL and PB_ADMIN_PASS)
 
 def _is_pi():
@@ -118,22 +142,29 @@ def check_pb_tables():
         return False, str(e)[:180]
 
 def check_unit_journal(unit, markers, ok_msg, user_journal=False):
-    try:
-        # -b + --grep: look since boot (server-side filter keeps output tiny).
-        # The old "-n 5" window showed only recent inserts, so any traffic
-        # hid the startup markers → false warn.
-        cmd=["journalctl","-u",unit,"-b","--no-pager","--grep","|".join(markers)]
-        if user_journal:
-            # User-manager units (e.g. laptop pigpulse-cloud-sync) log to the
-            # user journal; plain `journalctl -u` reads only the system one.
-            cmd.insert(1,"--user")
-        out=subprocess.check_output(cmd,
-            stderr=subprocess.DEVNULL, timeout=5).decode()
+    def _run(cmd):
+        try:
+            return subprocess.check_output(cmd,
+                stderr=subprocess.DEVNULL, timeout=5).decode()
+        except Exception:
+            return None
+    # Try the scope the unit actually lives in. pigpulse-cloud-sync was a
+    # user unit and is now a system unit, so a fixed scope silently checked
+    # an empty journal and reported a false warning.
+    cmds=[]
+    if user_journal:
+        cmds.append(["journalctl","--user","-u",unit,"-b","--no-pager","--grep","|".join(markers)])
+    cmds.append(["journalctl","-u",unit,"-b","--no-pager","--grep","|".join(markers)])
+    detail=None
+    for cmd in cmds:
+        out=_run(cmd)
+        if out is None:
+            detail=detail or "journalctl failed for %s" % unit
+            continue
         if all(m in out for m in markers):
             return True, ok_msg
-        return None, out.strip()[-180:] or f"no {'|'.join(markers)} since boot"
-    except Exception as e:
-        return None, str(e)[:120]
+        detail=out.strip()[-180:] or f"no {'|'.join(markers)} since boot"
+    return None, detail or f"no {'|'.join(markers)} since boot"
 
 checks=[]
 
@@ -142,7 +173,7 @@ def add(name, ok, detail):
 
 # Core
 ok, d=check_pb(); add("PocketBase :8090", ok, d)
-ok2, d2=check_pb_auth(); add("PocketBase auth admin@pigpulse.local", ok2, d2)
+ok2, d2=check_pb_auth(); add("PocketBase auth %s" % (PB_ADMIN_EMAIL or "admin@pigpulse.local"), ok2, d2)
 ok3, d3=check_pb_tables(); add("PB tables telemetry/alerts/devices/pigs/audio_events", ok3, d3)
 
 ok, d=tcp_ping("127.0.0.1",1883); add("Mosquitto MQTT :1883 loopback", ok, d)
