@@ -54,6 +54,7 @@ _BRIDGE_DIR = Path(__file__).resolve().parents[1] / "bridge"
 if str(_BRIDGE_DIR) not in sys.path:
     sys.path.insert(0, str(_BRIDGE_DIR))
 from thermal_guard import apply_telemetry_guard, is_thermal_alert  # noqa: E402
+from concurrent.futures import ThreadPoolExecutor
 
 # ---------------------------------------------------------------- config ---
 # Source = the Pi. Reached over the PigPulse AP, so this is the AP address.
@@ -74,6 +75,12 @@ DST_PASSWORD = os.environ.get("SYNC_DEST_PASSWORD", "")
 SYNCED_COLLECTIONS = ("telemetry", "alerts", "audio_events")
 
 BATCH = int(os.environ.get("SYNC_BATCH", "200"))
+# Concurrent workers for the per-row delivery (insert + mark-synced). The work
+# is I/O bound, so threads overlap the round trips; see sync_once(). Measured
+# on the Pi's PocketBase: a single-row round trip costs ~28 ms, so the
+# sequential version capped the whole pipeline at ~33 rows/s. Set
+# SYNC_WORKERS=1 to restore the old strictly-ordered behaviour.
+WORKERS = max(1, int(os.environ.get("SYNC_WORKERS", "4")))
 # Which end of the backlog to drain. "+timestamp" (default) is a strict
 # backfill: oldest first, so history is ordered. "-timestamp" pushes the
 # freshest rows first, which is what a recovery run wants — the app shows live
@@ -241,6 +248,65 @@ QUARANTINE_AFTER = int(os.environ.get("SYNC_QUARANTINE_AFTER", "5"))
 _quarantine: dict[tuple[str, str], int] = {}
 
 
+def _process_record(src: PocketBase, dst: PocketBase, coll: str, rec: dict,
+                    dry_run: bool) -> str:
+    """Deliver one source record. Returns one of:
+    sent | failed | quarantined | suppressed | abort
+    """
+    key = (coll, str(rec.get("id")))
+    attempts = _quarantine.get(key, 0)
+    # Back off after persistent rejection, but probe again once per
+    # cap window so a fixed destination recovers without a restart.
+    if attempts >= QUARANTINE_AFTER and attempts % QUARANTINE_AFTER != 0:
+        return "quarantined"
+    # Thermal alert rows are scene-camera claims with impossible
+    # values (T2 decision 2026-11-02): suppress instead of deliver.
+    # The source row stays intact; marking it handled keeps it out of
+    # every future batch instead of retrying a row that must never
+    # arrive. (Going forward the Pi bridge suppresses these at
+    # ingest; this path drains the historical backlog.)
+    if coll == "alerts" and is_thermal_alert(rec):
+        if dry_run:
+            log.info("[dry-run] would suppress thermal alert %s", rec.get("id"))
+            return "suppressed"
+        if src.mark_synced(coll, rec["id"]):
+            log.info("suppressed thermal alert %s (marked handled)", rec.get("id"))
+            return "suppressed"
+        return "failed"
+    payload = strip_server_fields(rec)
+    if coll == "telemetry":
+        payload, dropped = apply_telemetry_guard(payload)
+        if dropped:
+            log.info("telemetry/%s: dropped semantic fields %s",
+                     rec.get("id"), ", ".join(sorted(dropped)))
+    if "timestamp" in payload:
+        payload["timestamp"] = to_dest_timestamp(payload["timestamp"])
+    payload["synced"] = True
+    if dry_run:
+        log.info("[dry-run] would send %s/%s: %s",
+                 coll, rec["id"], json.dumps(payload)[:160])
+        return "sent"
+    if not dst.ensure():
+        log.error("destination unreachable — aborting this pass")
+        return "abort"
+    if dst.insert(coll, payload):
+        # Only now mark the source. Marking first would lose rows on
+        # any failure between the two calls.
+        _quarantine.pop(key, None)
+        if src.mark_synced(coll, rec["id"]):
+            return "sent"
+        return "failed"
+    _quarantine[key] = _quarantine.get(key, 0) + 1
+    if _quarantine[key] >= QUARANTINE_AFTER and _quarantine[key] % QUARANTINE_AFTER == 0:
+        log.critical(
+            "QUARANTINED %s/%s after %d failed deliveries — "
+            "destination persistently rejects it (schema drift?). "
+            "Fix the destination schema; the source record is "
+            "kept unsynced and never deleted. Payload: %s",
+            coll, rec.get("id"), QUARANTINE_AFTER, json.dumps(payload)[:300])
+    return "failed"
+
+
 def sync_once(src: PocketBase, dst: PocketBase, dry_run: bool = False) -> dict:
     stats = {"sent": 0, "failed": 0, "quarantined": 0, "suppressed": 0,
              "per_collection": {}}
@@ -253,72 +319,32 @@ def sync_once(src: PocketBase, dst: PocketBase, dry_run: bool = False) -> dict:
         if records is None:
             stats["failed"] += 1
             continue
+        # The per-record work is I/O bound: two HTTP round trips per row
+        # (insert into the destination, then mark the source). The source is
+        # the Pi's PocketBase on an SD card, where a single-row round trip
+        # measures ~28 ms - so the sequential version was LATENCY bound, not
+        # CPU bound. Threads overlap those waits; they do not parallelise the
+        # row payloads themselves.
+        if WORKERS > 1 and len(records) > 1:
+            with ThreadPoolExecutor(max_workers=WORKERS) as pool:
+                results = list(pool.map(
+                    lambda r: _process_record(src, dst, coll, r, dry_run),
+                    records))
+        else:
+            results = [_process_record(src, dst, coll, r, dry_run) for r in records]
         n = 0
-        for rec in records:
-            key = (coll, str(rec.get("id")))
-            attempts = _quarantine.get(key, 0)
-            # Back off after persistent rejection, but probe again once per
-            # cap window so a fixed destination recovers without a restart.
-            if attempts >= QUARANTINE_AFTER and attempts % QUARANTINE_AFTER != 0:
-                stats["quarantined"] += 1
-                continue
-            # Thermal alert rows are scene-camera claims with impossible
-            # values (T2 decision 2026-11-02): suppress instead of deliver.
-            # The source row stays intact; marking it handled keeps it out of
-            # every future batch instead of retrying a row that must never
-            # arrive. (Going forward the Pi bridge suppresses these at
-            # ingest; this path drains the historical backlog.)
-            if coll == "alerts" and is_thermal_alert(rec):
-                if dry_run:
-                    log.info("[dry-run] would suppress thermal alert %s",
-                             rec.get("id"))
-                    stats["suppressed"] += 1
-                    continue
-                if src.mark_synced(coll, rec["id"]):
-                    stats["suppressed"] += 1
-                    log.info("suppressed thermal alert %s (marked handled)",
-                             rec.get("id"))
-                else:
-                    stats["failed"] += 1
-                continue
-            payload = strip_server_fields(rec)
-            if coll == "telemetry":
-                payload, dropped = apply_telemetry_guard(payload)
-                if dropped:
-                    log.info("telemetry/%s: dropped semantic fields %s",
-                             rec.get("id"), ", ".join(sorted(dropped)))
-            if "timestamp" in payload:
-                payload["timestamp"] = to_dest_timestamp(payload["timestamp"])
-            payload["synced"] = True
-            if dry_run:
-                log.info("[dry-run] would send %s/%s: %s",
-                         coll, rec["id"], json.dumps(payload)[:160])
+        for res in results:
+            if res == "sent":
                 n += 1
-                continue
-            if not dst.ensure():
-                log.error("destination unreachable — aborting this pass")
+            elif res == "failed":
+                stats["failed"] += 1
+            elif res == "quarantined":
+                stats["quarantined"] += 1
+            elif res == "suppressed":
+                stats["suppressed"] += 1
+            elif res == "abort":
                 stats["failed"] += 1
                 return stats
-            if dst.insert(coll, payload):
-                # Only now mark the source. Marking first would lose rows on
-                # any failure between the two calls.
-                _quarantine.pop(key, None)
-                if src.mark_synced(coll, rec["id"]):
-                    n += 1
-                else:
-                    stats["failed"] += 1
-            else:
-                _quarantine[key] = _quarantine.get(key, 0) + 1
-                stats["failed"] += 1
-                if _quarantine[key] >= QUARANTINE_AFTER and _quarantine[key] % QUARANTINE_AFTER == 0:
-                    stats["quarantined"] += 1
-                    log.critical(
-                        "QUARANTINED %s/%s after %d failed deliveries — "
-                        "destination persistently rejects it (schema drift?). "
-                        "Fix the destination schema; the source record is "
-                        "kept unsynced and never deleted. Payload: %s",
-                        coll, rec.get("id"), QUARANTINE_AFTER,
-                        json.dumps(payload)[:300])
         stats["per_collection"][coll] = n
         stats["sent"] += n
         if n:
