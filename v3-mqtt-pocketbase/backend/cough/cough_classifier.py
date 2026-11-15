@@ -78,7 +78,15 @@ UPSTREAM_PATH = ("/esp/stream?rate=native&raw=1" if pcm_downmix is not None
                  else "/esp/stream?rate=16000&raw=1")
 LISTEN_HOST = "127.0.0.1"
 LISTEN_PORT = 8096
-ORT_THREADS = 2                        # the 4 Hz thermal loop keeps the other cores
+ORT_THREADS = int(os.environ.get("REC_ORT_THREADS", "2"))
+# Measured on the Pi (2026-11-16, real 304 MB Cnn14_16k model, 4 cores):
+#   intra_op 1 -> 2552.9 ms/window   2 -> 1346.1 ms   3 -> 958.2 ms   4 -> 890.2 ms
+# Scaling is near-linear to 3 threads and then flattens (memory-bandwidth
+# bound). The default stays at 2 because the 4 Hz thermal loop runs on the
+# same 4 cores; raise it with REC_ORT_THREADS when the mic is the only load.
+# Do NOT try to scale this with multiple processes: 2 processes x 2 threads
+# measured 0.82 windows/s against 0.94 for one process x 3 threads - worse,
+# and each process would load another 304 MB of weights.
 # The ESP is a real-time 48 kHz source, so 80 000 samples must arrive in ~5 s
 # of wall time. When the mic collapses it sends FEWER samples, not silence,
 # so a slow-filling window is a window full of gaps and must be thrown away.
