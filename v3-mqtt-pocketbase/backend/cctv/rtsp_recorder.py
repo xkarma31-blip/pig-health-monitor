@@ -39,6 +39,10 @@ OUTDIR = os.environ.get("REC_DIR", "/home/pigpulse/cctv/recs")
 SEG_SECONDS = int(os.environ.get("REC_SEG_SECONDS", "900"))
 MAX_STALE_S = int(os.environ.get("REC_MAX_STALE_S", "120"))
 FLOOR_MB = int(os.environ.get("REC_FLOOR_MB", "5000"))
+# A crash is only ever detected on the 15 s poll tick, so the "fast exit"
+# threshold must sit ABOVE the loop cadence. At 10 s it was unreachable and
+# a dead camera was hammered with a respawn every 15 s forever.
+FAST_EXIT_S = int(os.environ.get("REC_FAST_EXIT_S", "60"))
 
 URL = "rtsp://%s:%s@%s:554/stream1" % (USER, PASS, HOST)
 
@@ -100,7 +104,7 @@ def main():
     spawned_at = time.time()
     last_data = time.time()
     wrote = False
-    fast_exits = 0  # consecutive <10 s exits = camera likely unreachable
+    fast_exits = 0  # consecutive exits faster than FAST_EXIT_S = camera likely unreachable
     while True:
         time.sleep(15)
         free = rotate()
@@ -108,7 +112,7 @@ def main():
             log("WARNING: below disk floor even after rotation")
         if p.poll() is not None:
             runtime = time.time() - spawned_at
-            if runtime < 10:
+            if runtime < FAST_EXIT_S:
                 fast_exits += 1
                 backoff = min(15 * (2 ** fast_exits), 300)
                 log("ffmpeg exited fast (%.0fs) — backing off %ds"
