@@ -139,7 +139,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self._proxy_api()
 
     def log_message(self, fmt, *args):  # quieter journal
-        if not self.path.startswith("/api/"):
+        # self.path is only set once parse_request() succeeds. A malformed
+        # request line makes parse_request() call send_error() -> log_error()
+        # -> log_message() BEFORE any path exists, so self.path raised
+        # AttributeError and the request died with a traceback in the journal
+        # (seen 2026-11-16 01:03, from a client on 10.42.0.1).
+        if not getattr(self, "path", "").startswith("/api/"):
             return
         print("APP [%s] %s" % (self.log_date_time_string(), fmt % args), flush=True)
 
