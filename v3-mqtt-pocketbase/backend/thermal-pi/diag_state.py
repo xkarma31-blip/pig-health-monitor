@@ -272,8 +272,19 @@ function drawTrend(points, unit, w, h) {
       + `<text x="${padL - 8}" y="${y + 5}" fill="#a6a9a6" font-size="13" text-anchor="end">${val.toFixed(1)}${esc(unit)}</text>`;
   });
   const gaps = [];
+  // A gap is "nothing was published for a while", which depends on how often
+  // this device normally publishes. A fixed threshold breaks the line for a
+  // device that publishes every second and hides a real outage for a device
+  // that publishes every 10 s, so the threshold follows the median interval.
+  const deltas = [];
+  for (let i = 1; i < points.length; i++) deltas.push(points[i].t - points[i - 1].t);
+  deltas.sort((a, b) => a - b);
+  const median = deltas.length ? deltas[Math.floor(deltas.length / 2)] : 10;
+  // Break on more than one missed reading (median * 2), with a floor so a
+  // fast publisher's ordinary jitter is not mistaken for an outage.
+  const gapLimit = Math.max(15, median * 2);
   for (let i = 1; i < points.length; i++) {
-    if (points[i].t - points[i - 1].t > 60) gaps.push(i);
+    if (points[i].t - points[i - 1].t > gapLimit) gaps.push(i);
   }
   let paths = '', dots = '';
   let seg = [points[0]];
