@@ -150,6 +150,84 @@ Related: the healthy-green / alert-red pair keeps only ~17% of its separation
 for deuteranopes. That is carried deliberately by a text label and an icon
 shape on the badges (`Badge.tsx`), not by colour alone.
 
+### 0.8 PERFORMANCE — the bottleneck was missing INDEXES, not threads (2026-11-16)
+
+**The single biggest latency source in this system was that both PocketBase
+instances had ZERO indexes.** Every read was a full table scan. Measured on
+live data, same queries before and after:
+
+| Query | Pi (726k rows, SD card) before → after | Laptop (737k rows, NVMe) before → after |
+|---|---|---|
+| `filter=(synced=false)&sort=-timestamp` (the sync) | 507.7 ms → **27.7 ms** | 86.3 ms → **0.8 ms** |
+| `sort=-timestamp&perPage=5` (the app's realtime hook) | 4099.5 ms → **246.0 ms** | 352.6 ms → **32.3 ms** |
+| `deviceId='..'&&timestamp>=..` (the app's analytics) | 582.4 ms → **15.9 ms** | 87.5 ms → **0.9 ms** |
+
+Query plan now reads `SEARCH telemetry USING INDEX idx_telemetry_synced_ts
+(synced=?)`. The index set is exactly the repo's own query shapes, not a
+guess — see `backend/scripts/ensure_indexes.py` (idempotent, no restart) and
+the migration `deploy/pocketbase/bin/pb_migrations/1799600000_add_query_indexes.js`.
+
+> **Rule: a full table scan cannot be fixed with threads.** Threads multiply
+> the *pipeline*; they do not remove a scan that costs 500 ms. Index first,
+> then parallelise what is left.
+
+**Where parallelism actually helped** — the Pi→cloud sync (`backend/workers/cloud_sync.py`):
+
+- The per-record work is two HTTP round trips: insert into the destination,
+  then mark the source row synced. The source is the Pi's PocketBase on an SD
+  card, where a single-row round trip measures **~28 ms** → the sequential
+  pipeline was *latency* bound at ~30 rows/s (a 726k backlog ≈ 8 hours).
+- The Pi's PocketBase absorbs concurrency nearly linearly (read-only GET by
+  id, 24 requests per client): 1 client 38.5 req/s → 2: 74.7 → 4: 123.0 →
+  8: 241.4 req/s, with latency steady at 27–35 ms. It is not serialising.
+- With `SYNC_WORKERS` (default 4): measured 283 → 432 rows/s on a scratch
+  source/dest pair, and far more against the Pi, because that latency is what
+  dominates. `SYNC_WORKERS=1` restores the old strictly sequential behaviour.
+
+**Where parallelism did NOT help — the cough classifier** (CPU-bound, and the
+obvious fix is a regression). Measured on the Pi with the real 304 MB
+Cnn14_16k body:
+
+| intra_op threads | 1 | 2 (default) | 3 | 4 |
+|---|---|---|---|---|
+| ms / 5 s window | 2552.9 | 1346.1 | 958.2 | 890.2 |
+
+- The numpy log-mel front-end is **not** the bottleneck: 29.6 ms of the
+  ~1376 ms, and float32 is *slower* (38.6 ms).
+- **Multiple processes are a regression**: 2 processes × 2 threads measured
+  0.82 windows/s against **0.94** for one process × 3 threads; 3 processes ×
+  1 thread managed 0.69. Each extra process would also load another 304 MB of
+  weights on an 8 GB Pi.
+- The knob is now `REC_ORT_THREADS` (default 2, because the 4 Hz thermal loop
+  shares the same 4 cores). Scaling is near-linear to 3 threads and then
+  flattens — memory-bandwidth bound.
+
+> **Rule: I/O-bound work → threads. CPU-bound numeric work → more threads
+> INSIDE one native runtime, never more processes.**
+
+**PocketBase 0.22.20 API facts (each verified in a scratch instance before
+being used on production):**
+- The index list is an **array of SQL strings**
+  (`PATCH /api/collections/{id}` with `{"indexes":[...]}`), not the 0.23+
+  `{"name":..., "columns":[...]}` shape.
+- **No batch create/update.** An array body returns
+  `400 Failed to load the submitted data due to invalid formatting`. Batch
+  create landed in PB v0.23+.
+- A JS migration must return `dao.saveCollection(collection)` — returning the
+  `Dao` or a raw collection makes the runner fail with
+  `could not convert [object Object] to error`, and `IF NOT EXISTS` is
+  rejected by the collection validator.
+- The laptop's PocketBase was started **without** a migrations dir
+  (`WorkingDirectory=deploy/pocketbase`, but the migrations live in
+  `deploy/pocketbase/bin/pb_migrations`) — the unit now passes
+  `--migrationsDir=bin/pb_migrations`.
+
+**Also fixed while measuring:** the thermal app server raised
+`AttributeError: 'Handler' object has no attribute 'path'` on any malformed
+HTTP request (`self.path` does not exist yet when `parse_request()` calls
+`send_error()` → `log_error()` → `log_message()`). It now reads the path with
+`getattr(self, "path", "")`.
+
 ---
 
 ## 1. HARD RULES
