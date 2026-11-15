@@ -29,10 +29,15 @@ Usage:
 """
 import argparse
 import json
+import re
 import sys
 import time
 import urllib.error
 import urllib.request
+
+# PocketBase 0.22 returns the index list as an array of SQL STATEMENTS, so the
+# name has to be pulled out of the SQL rather than read from a field.
+NAME_RE = re.compile(r"INDEX\s+`([^`]+)`")
 
 INDEXES = {
     "telemetry": [
@@ -89,12 +94,19 @@ def main():
     missing = {}
     for coll, wanted in INDEXES.items():
         cur = call("GET", f"{base}/api/collections/{coll}", token=tok)
-        have = {i.get("name", "?") if isinstance(i, dict) else i for i in cur.get("indexes", [])}
-        want_names = {w.split("`")[1] for w in wanted}
+        have = set()
+        for item in cur.get("indexes", []):
+            text = item if isinstance(item, str) else (item.get("name") or "")
+            m = NAME_RE.search(text)
+            if m:
+                have.add(m.group(1))
+            elif text:
+                have.add(text)
+        want_names = {NAME_RE.search(w).group(1) for w in wanted}
         absent = want_names - have
         print("  %-14s %d index(es), missing: %s" % (coll, len(have), sorted(absent) or "none"))
         if absent:
-            missing[coll] = [w for w in wanted if w.split("`")[1] in absent]
+            missing[coll] = [w for w in wanted if NAME_RE.search(w).group(1) in absent]
 
     if missing and not args.check:
         for coll, sqls in missing.items():
