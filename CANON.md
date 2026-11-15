@@ -383,6 +383,55 @@ private access path layered on top of an uplink, never a substitute for one.
 > (e.g. RTL8812AU/rtl88x2bu) for the AP role, with the built-in radio on
 > 5 GHz for WAN. Until then the Pi's only WAN is the laptop tether.
 
+> **PROVEN END-TO-END 2026-11-16 — the built-in radio does 5 GHz in BOTH
+> directions. Read this before repeating any "2.4 GHz only" claim.**
+>
+> Measured on the Pi (not inferred, not spec-sheet):
+>
+> - **RX** — `systemctl mask hostapd`, `wlan0` → managed, free scan:
+>   `solrahK` at **5180 MHz, -52 dBm** (full 5 GHz beacon: RSN, HT caps,
+>   primary channel 36).
+> - **TX** — `hostapd` with `hw_mode=a channel=36` on `wlan0`:
+>   `AP-ENABLED`, **channel 36 (5180 MHz), 20 MHz, txpower 31 dBm**; the
+>   laptop (a separate 5 GHz radio) saw the beacon `PigPulse5GProbe` at
+>   **5180 MHz, -49 dBm**. The Pi's 5 GHz antenna path is connected and
+>   working — the earlier "5 GHz antenna not connected" claim was wrong.
+>
+> **`iw dev wlan0 set freq 5745` → `-95` (EOPNOTSUPP) says NOTHING about
+> band capability.** Measured: the same call returns `-95` for **2437 MHz**
+> (2.4 GHz) as well. brcmfmac refuses `set freq` on a managed interface with
+> no associated BSS. In **AP** mode the same call returns **rc=0** for 5180
+> and 5745. The `-95` is a driver artifact, not a hardware limit.
+>
+> **Two traps that manufacture a false "2.4 GHz only" reading:**
+> 1. `nmcli dev wifi list` scans **wlan1** (the USB dongle), not `wlan0`,
+>    because hostapd owns `wlan0`. Read the radio with `iw`.
+> 2. `hostapd.service` has `Restart=on-failure` and **resurrects within
+>    ~3 s** of being stopped, re-asserting AP mode on channel 6. A scan
+>    taken in that window is **channel-locked to channel 6** and can never
+>    see 5 GHz — this is almost certainly what produced the original
+>    false reading. For a free scan: `systemctl mask hostapd` → scan →
+>    `unmask` → `restart`. **The management path must not depend on the
+>    AP**: use the USB-Ethernet link, where the **Pi is 10.42.0.28** and the
+>    laptop is 10.42.0.1 (shared mode) — `192.168.69.1` is the AP address
+>    and dies with the AP.
+>
+> **Dongle `wlan1` (RTL8188CUS, USB `0bda:8176`) — why it finds no networks:**
+> `iw phy phy1 info` lists **Band 1 only** (2412 MHz) → a **2.4 GHz-only**
+> radio, so it can never be a 5 GHz WAN client. Its scans return **0 BSS**,
+> but that is the known `rtl8192cu` USB failure (`Urb has error status
+> 0xFFFFFFB9`, every scan `EBUSY`), **not** a dead receiver: this same dongle
+> completed a full WPA2 handshake when used as an **AP**. So: usable as the
+> 2.4 GHz AP role, unusable as a client. It is also not 5 GHz-capable.
+>
+> **Gap restated precisely (the paragraph above is ambiguous):** the AP role
+> must be **2.4 GHz** (CCTV + ESP32-S3 are 2.4 GHz-only), so the *adapter*
+> needed is a **reliable 2.4 GHz AP-capable** radio; the *WAN* role needs
+> **5 GHz**, which the built-in radio now proves it can do. A **dual-band**
+> adapter (RTL8812AU / rtl88x2bu class) covers both and keeps the roles
+> swappable, because the two roles cannot share one radio
+> (`#channels <= 1`).
+
 A single radio cannot be a WiFi client and an AP at the same time on the
 *same band*, so an adapter that becomes the **WAN client would take over the
 radio and drop the CCTV and the ESP32-S3** *unless the two roles are split
