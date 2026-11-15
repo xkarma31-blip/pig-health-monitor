@@ -8,7 +8,7 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "test:bridge": "node --test api/__tests__/pi.bridge.test.mjs",
-    "test:unit": "tsx src/utils/__tests__/pi-clock.test.ts && tsx src/utils/__tests__/telemetry-time.test.ts"
+    "test:unit": "tsx src/utils/__tests__/pi-clock.test.ts && tsx src/utils/__tests__/telemetry-time.test.ts && tsx src/utils/__tests__/chart-math.test.ts"
   },
   "dependencies": {
     "@eslint/js": "^10.0.1",

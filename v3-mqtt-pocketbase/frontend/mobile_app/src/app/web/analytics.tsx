@@ -26,6 +26,7 @@ import { useAuth } from '../../utils/auth';
 import { router } from 'expo-router';
 
 import { ListGroup, Skeleton } from '../../components/primitives';
+import { TimeSeriesChart } from '../../components/primitives/TimeSeriesChart';
 import { AuthBanner } from '../../components/shared/AuthBanner';
 import { pbList } from '../../utils/pocketbase';
 
@@ -76,6 +77,11 @@ interface AlertSummary {
   warning: number;
   other: number;
   latest: number | null;
+  /**
+   * When the fetched alerts happened - used to mark the events on the trend
+   * graph, so a spike and the alert that fired with it are visible together.
+   */
+  events: { t: number; critical: boolean }[];
   /** True when the alerts read failed — the window is unknown, not empty. */
   failed: boolean;
 }
@@ -202,11 +208,14 @@ async function loadWindow(range: TimeRange): Promise<Loaded> {
         let critical = 0;
         let warning = 0;
         let other = 0;
+        const events: { t: number; critical: boolean }[] = [];
         for (const alert of items) {
           const severity = String(alert.severity || '').toLowerCase();
           if (severity === 'critical') critical += 1;
           else if (severity === 'warning') warning += 1;
           else other += 1;
+          const t = num(alert, 'timestamp');
+          if (t) events.push({ t, critical: severity === 'critical' });
         }
         return {
           rows: items.length,
@@ -215,6 +224,7 @@ async function loadWindow(range: TimeRange): Promise<Loaded> {
           warning,
           other,
           latest: items[0] ? num(items[0], 'timestamp') || null : null,
+          events,
           failed: false,
         };
       })
@@ -227,6 +237,7 @@ async function loadWindow(range: TimeRange): Promise<Loaded> {
           warning: 0,
           other: 0,
           latest: null,
+          events: [] as { t: number; critical: boolean }[],
           failed: true,
         };
       }),
@@ -506,6 +517,21 @@ export default function AnalyticsScreen() {
                 Mean `center` per time bucket from the {THERMAL_DEVICE} thermal rig. Scene
                 temperature, not pig body temperature.
               </Text>
+              <TrendChart
+                buckets={data.thermal}
+                color={colors.accent}
+                label="scene temp"
+                unit="°C"
+                colors={colors}
+                typography={typography}
+                emptyLabel={chartEmpty(thermalFailed, 'thermal readings')}
+                markers={data.alerts.events.map((e) => ({
+                  t: e.t,
+                  label: e.critical ? 'critical alert' : 'alert',
+                  color: e.critical ? colors.error : colors.warning,
+                }))}
+                note="Scene temperature across the window. A broken line is a bucket whose read failed; a dashed marker is an alert that fired in that time."
+              />
               <MetricChart
                 buckets={data.thermal}
                 color={colors.accent}
@@ -541,6 +567,16 @@ export default function AnalyticsScreen() {
                 stored by the mic bridge — not decibels, and not a 16-bit ceiling. Buckets without
                 signal are shown empty, never as zero.
               </Text>
+              <TrendChart
+                buckets={data.sound}
+                color={colors.info}
+                label="mic rms"
+                unit=""
+                colors={colors}
+                typography={typography}
+                emptyLabel={chartEmpty(soundFailed, 'sound readings')}
+                note="Mic signal across the window. A broken line is a bucket whose read failed."
+              />
               <MetricChart
                 buckets={data.sound}
                 color={colors.info}
@@ -632,6 +668,60 @@ export default function AnalyticsScreen() {
  * real time — and the axis range is printed because the bars are scaled to the
  * data, not to zero.
  */
+/**
+ * The SHAPE of the readings over time, as a line.
+ *
+ * The bar chart below shows each bucket's exact value; this shows how the
+ * values move, which is what a fluctuation looks like. A failed read is a
+ * BROKEN LINE, never a zero and never a straight segment across the gap -
+ * the line is only drawn through readings that were actually read.
+ */
+function TrendChart({
+  buckets,
+  color,
+  label,
+  unit,
+  colors,
+  typography,
+  emptyLabel,
+  markers = [],
+  note,
+}: {
+  buckets: Bucket[];
+  color: string;
+  label: string;
+  unit: string;
+  colors: ThemeColors;
+  typography: ThemeTypography;
+  emptyLabel: string;
+  markers?: { t: number; label: string; color: string }[];
+  note?: string;
+}) {
+  const values = buckets.map((b) => (b.failed ? null : b.mean));
+  const labels = buckets.map((b) => fmtClock(b.start));
+  const xTimes = buckets.map((b) => b.start);
+  return (
+    <View style={{ marginBottom: 14 }}>
+      <Text
+        style={[
+          typography.bodySmall,
+          { color: colors.textSecondary, fontSize: 15, lineHeight: 21, marginBottom: 6 },
+        ]}
+      >
+        {note ?? 'Shape of the readings over the selected window.'}
+      </Text>
+      <TimeSeriesChart
+        series={[{ label, color, values }]}
+        labels={labels}
+        xTimes={xTimes}
+        markers={markers}
+        unit={unit}
+        emptyMessage={emptyLabel}
+      />
+    </View>
+  );
+}
+
 function MetricChart({
   buckets,
   color,
