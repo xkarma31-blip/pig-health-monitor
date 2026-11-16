@@ -173,8 +173,52 @@
     }).join('');
   }
 
+  /**
+   * Turn the vitals log records into chart series.
+   *
+   * Shared by the dashboard and /diag so the field list, units and decimals
+   * live in one place. Samples come from /vitals.json.
+   */
+  function vitalsSeries(samples) {
+    samples = samples || [];
+    var out = {};
+    var add = function (label, unit, field, fn, decimals) {
+      var pts = [];
+      samples.forEach(function (r) {
+        var v = fn ? fn(r) : r[field];
+        if (v === undefined || v === null || !isFinite(v)) return;
+        pts.push({ t: r.t, v: v });
+      });
+      if (!pts.length) return;
+      out[label] = {
+        points: pts,
+        unit: unit,
+        n: pts.length,
+        last_age_s: Math.round(Date.now() / 1000 - pts[pts.length - 1].t),
+        decimals: decimals,
+      };
+    };
+    add('core voltage', 'V', 'v', null, 3);
+    add('cpu temp', '\u00b0C', 'tc', null, 2);
+    add('load (1 min)', '', 'l1', null, 3);
+    add('memory used', '%', 'mp', null, 2);
+    add('disk used', '%', 'dp', null, 2);
+    add('uptime', 'h', 'up', function (r) {
+      return r.up === undefined ? undefined : r.up / 3600;
+    }, 2);
+    return out;
+  }
+
+  /** Amber reboot markers, labelled with how long the Pi was down. */
+  function rebootMarkers(reboots) {
+    return (reboots || []).map(function (r) {
+      return { t: r.t, label: 'reboot (' + Math.round((r.down_s || 0) / 60) + ' min down)' };
+    });
+  }
+
   global.PigTrend = {
     esc: esc, hhmm: hhmm, hhmmSec: hhmmSec,
-    drawTrend: drawTrend, renderAll: renderAll
+    drawTrend: drawTrend, renderAll: renderAll,
+    vitalsSeries: vitalsSeries, rebootMarkers: rebootMarkers
   };
 })(typeof window !== 'undefined' ? window : this);

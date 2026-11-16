@@ -244,99 +244,30 @@ a.back{position:fixed;right:14px;bottom:14px;background:var(--panel);color:var(-
 <p class="sub">Read-only device state · refreshes every 5 s · <span id="at"></span></p>
 <div id="root">loading…</div>
 <a class="back" href="/">← Dashboard</a>
+<script src="/static/trend.js"></script>
 <script>
 const cls = (v) => (v === true || v === 'active') ? 'ok' : (v === false || v === 'inactive' || v === 'failed') ? 'bad' : '';
 const row = (k, v) => `<tr><td>${k}</td><td class="${cls(v)}">${v}</td></tr>`;
-const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const hhmm = (t) => { const d = new Date(t * 1000); return d.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}); };
-// A line chart drawn as inline SVG: no dependency, no build step. A gap in
-// the record (nothing published) breaks the line instead of being drawn as a
-// straight segment between two readings that are not adjacent in time.
-function drawTrend(points, unit, w, h) {
-  const padL = 56, padR = 14, padT = 12, padB = 30;
-  const iw = w - padL - padR, ih = h - padT - padB;
-  if (!points.length) return '<p class="note">No readings yet.</p>';
-  const vs = points.map((p) => p.v);
-  let lo = Math.min.apply(null, vs), hi = Math.max.apply(null, vs);
-  if (hi - lo < 0.5) { const mid = (hi + lo) / 2; lo = mid - 0.5; hi = mid + 0.5; }
-  const pad = (hi - lo) * 0.1; lo -= pad; hi += pad;
-  const t0 = points[0].t, t1 = points[points.length - 1].t;
-  const span = Math.max(1e-6, t1 - t0);
-  const X = (t) => padL + ((t - t0) / span) * iw;
-  const Y = (v) => padT + ih - ((v - lo) / (hi - lo)) * ih;
-  let grid = '';
-  [0, 0.5, 1].forEach((f) => {
-    const y = padT + ih * f;
-    const val = hi - (hi - lo) * f;
-    grid += `<line x1="${padL}" y1="${y}" x2="${w - padR}" y2="${y}" stroke="#2b2d2f" stroke-width="1"/>`
-      + `<text x="${padL - 8}" y="${y + 5}" fill="#a6a9a6" font-size="13" text-anchor="end">${val.toFixed(1)}${esc(unit)}</text>`;
-  });
-  const gaps = [];
-  // A gap is "nothing was published for a while", which depends on how often
-  // this device normally publishes. A fixed threshold breaks the line for a
-  // device that publishes every second and hides a real outage for a device
-  // that publishes every 10 s, so the threshold follows the median interval.
-  const deltas = [];
-  for (let i = 1; i < points.length; i++) deltas.push(points[i].t - points[i - 1].t);
-  deltas.sort((a, b) => a - b);
-  const median = deltas.length ? deltas[Math.floor(deltas.length / 2)] : 10;
-  // Break on more than one missed reading (median * 2), with a floor so a
-  // fast publisher's ordinary jitter is not mistaken for an outage.
-  const gapLimit = Math.max(15, median * 2);
-  for (let i = 1; i < points.length; i++) {
-    if (points[i].t - points[i - 1].t > gapLimit) gaps.push(i);
-  }
-  let paths = '', dots = '';
-  let seg = [points[0]];
-  for (let i = 1; i < points.length; i++) {
-    if (gaps.indexOf(i) >= 0) { seg.push(points[i - 1]); paths += segPath(seg, X, Y); seg = [points[i]]; }
-    else { seg.push(points[i]); }
-  }
-  seg.push(points[points.length - 1]);
-  paths += segPath(seg, X, Y);
-  points.forEach((p) => { dots += `<circle cx="${X(p.t).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="2.6" fill="#3ddc84"/>`; });
-  const xlabels = `<text x="${padL}" y="${h - 10}" fill="#a6a9a6" font-size="13">${hhmm(t0)}</text>`
-    + `<text x="${w - padR}" y="${h - 10}" fill="#a6a9a6" font-size="13" text-anchor="end">${hhmm(t1)}</text>`;
-  const gapNote = gaps.length ? `<p class="note">${gaps.length} gap(s) in the record (nothing published) - drawn as breaks, not interpolated.</p>` : '';
-  return `<svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" role="img" aria-label="Trend chart">`
-    + grid + paths + dots + xlabels + `</svg>` + gapNote;
-}
-function segPath(seg, X, Y) {
-  if (!seg.length) return '';
-  const d = seg.map((p, i) => `${i ? 'L' : 'M'}${X(p.t).toFixed(1)},${Y(p.v).toFixed(1)}`).join(' ');
-  return `<path d="${d}" fill="none" stroke="#3ddc84" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`;
-}
-let trendKey = null;
-function renderTrend(series) {
-  const keys = Object.keys(series || {});
-  if (!keys.length) return '<div class="card"><h2>Trend</h2><p class="note">No telemetry history yet - the page starts collecting as soon as a device publishes.</p></div>';
-  if (!trendKey || !series[trendKey]) {
-    trendKey = keys.find((k) => k.indexOf('.center') > 0) || keys.find((k) => k.indexOf('.rms') > 0) || keys[0];
-  }
-  const s = series[trendKey];
-  const chips = keys.map((k) => {
-    const label = k.replace('.center', ' · scene temp').replace('.ambient', ' · ambient')
-                   .replace('.rms', ' · mic rms').replace('.peak', ' · mic peak');
-    return `<button aria-pressed="${k === trendKey}" data-key="${esc(k)}">${esc(label)}</button>`;
-  }).join('');
-  const age = s.last_age_s;
-  const stale = age !== undefined && age > 120;
-  const ageText = age === undefined ? 'unknown' : (age < 90 ? `${Math.round(age)} s ago` : `${(age / 60).toFixed(1)} min ago`);
-  const body = s.n < 2
-    ? `<p class="note">Only ${s.n} reading(s) so far - a trend needs at least two.</p>`
-    : drawTrend(s.points, s.unit, 860, 260);
-  return '<div class="card"><h2>Trend</h2>'
-    + `<div class="picker">${chips}</div>` + body
-    + `<p class="note${stale ? ' warn' : ''}">${s.n} reading(s) · last ${esc(ageText)}`
-    + (stale ? ' · STALE: nothing is publishing on this topic' : '') + `</p></div>`;
-}
 async function tick(){
   try{
-    const d = await (await fetch('/diag.json', {cache:'no-store'})).json();
+    const [d, vp] = await Promise.all([
+      fetch('/diag.json', {cache:'no-store'}).then((r) => r.json()),
+      fetch('/vitals.json', {cache:'no-store'}).then((r) => r.json()).catch(() => ({ samples: [] })),
+    ]);
     document.getElementById('at').textContent = new Date().toLocaleTimeString();
     const p = d.pi, e = d.esp.payload || {}, a = d.audio.ingest || {}, n = d.net, s = d.services || {};
     let html = '';
-    html += renderTrend(d.series);
+    html += '<div class="card"><h2>Pi health - where the power drops</h2>'
+      + '<p class="note">Sampled on this Pi every 10 s and appended to its own card, so a power cut is still visible after the reboot it caused. Amber dashed lines are reboots; the gap before one is the downtime.</p>'
+      + PigTrend.renderAll(PigTrend.vitalsSeries((vp || {}).samples || []), {
+          width: 860, height: 200, reboots: PigTrend.rebootMarkers((vp || {}).reboots || []),
+          emptyMessage: 'No vitals sampled yet.',
+        }) + '</div>';
+    html += '<div class="card"><h2>Trend</h2>'
+      + PigTrend.renderAll(d.series || {}, {
+          width: 860, height: 220,
+          emptyMessage: 'No telemetry history yet - the page starts collecting as soon as a device reports.',
+        }) + '</div>';
     html += '<div class="card"><h2>ESP32-S3 barn mic</h2><table>';
     html += row('mic reading', e.mic === undefined ? 'no telemetry' : e.mic);
     html += row('level (rms / peak)', e.rms === undefined ? '—' : `${e.rms} / ${e.peak}`);
