@@ -54,6 +54,7 @@ import esp_audio_ingest
 import i2c_scanDiag
 import pcm_downmix
 import pigpulse_stats
+import vitals_log
 
 from array import array as _array
 
@@ -869,6 +870,18 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/diag.json":
             self._send(200, "application/json", json.dumps(diag_state.collect()).encode())
+            return
+        if path == "/vitals.json":
+            # The Pi's own vitals history (voltage, throttle, load, uptime).
+            # It lives on the Pi's card, so it still shows the power cut that
+            # caused the reboot it is drawn around.
+            self._send(200, "application/json", json.dumps(vitals_log.payload()).encode())
+            return
+        if path == "/series.json":
+            # The live sensor series (MQTT-fed), without the heavier /diag
+            # payload - so a dashboard can poll it cheaply.
+            self._send(200, "application/json",
+                       json.dumps(diag_state.series_snapshot()).encode())
             return
         if path == "/data":
             with _lock:
@@ -1768,6 +1781,9 @@ def main() -> None:
         # Publish thermal readings over MQTT so the Pi is a pipeline node
         _publisher.start()
         diag_state.start()
+        # The vitals log runs ON THE PI and is appended to the Pi's own card,
+        # so a power event is still visible after the reboot it caused.
+        vitals_log.start()
         # Brief wait for first frame so / isn't empty on first hit
         for _ in range(40):
             if _cached:

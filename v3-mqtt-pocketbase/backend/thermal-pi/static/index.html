@@ -3,69 +3,78 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PigPulse MLX90640 — Raspberry Pi 4B</title>
+  <link rel="icon" href="data:,">
+  <title>PigPulse — Barn Command Deck (Pi 4B)</title>
   <style>
     :root {
       color-scheme: dark;
-      --bg0: #05070d;
-      --bg1: #0b1220;
-      --card: rgba(255,255,255,0.075);
-      --card2: rgba(0,0,0,0.30);
-      --line: rgba(255,255,255,0.14);
-      --text: #f5f7fb;
-      --muted: #aeb9ca;
-      --good: #7bf5c6;
-      --warn: #ffd166;
-      --bad: #ff6b6b;
+      --bg: #1a1a2e;
+      --card: #252545;
+      --card2: #2e2e55;
+      --text: #f2f6ff;
+      --dim: #b9c6e6;
+      --line: #3a3a66;
+      --cyan: #5eead4;
+      --teal: #2dd4bf;
+      --amber: #fbbf24;
+      --red: #f87171;
+      --green: #4ade80;
     }
     * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      padding: 18px;
+      background: var(--bg);
       color: var(--text);
-      background:
-        radial-gradient(circle at top left, rgba(55, 91, 158, 0.42), transparent 38%),
-        radial-gradient(circle at top right, rgba(187, 72, 121, 0.22), transparent 32%),
-        linear-gradient(135deg, var(--bg1), var(--bg0));
+      font: 17px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       min-height: 100vh;
     }
-    .wrap { width: min(1180px, 100%); margin: 0 auto; padding: 18px; }
-    .top {
-      display: flex; align-items: flex-end; justify-content: space-between;
-      gap: 16px; flex-wrap: wrap; margin-bottom: 14px;
-    }
-    h1 { font-size: clamp(24px, 4vw, 42px); line-height: 1.05; margin: 8px 0 5px; letter-spacing: -0.045em; }
-    .sub { color: var(--muted); font-size: 14px; }
+    .wrap { width: min(1500px, 100%); margin: 0 auto; }
+
+    /* ---------- header ---------- */
+    .top { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+    h1 { font-size: clamp(24px, 3.6vw, 40px); line-height: 1.05; margin: 0 0 6px; letter-spacing: -0.03em; }
+    .sub { color: var(--dim); font-size: 15px; }
+    .navRow { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
     .pill {
       display: inline-flex; align-items: center; gap: 8px;
-      border: 1px solid var(--line); background: rgba(255,255,255,0.08);
-      border-radius: 999px; padding: 9px 12px; color: #dce6f7; font-size: 13px;
+      border: 1px solid var(--line); background: var(--card2);
+      border-radius: 999px; padding: 9px 14px; color: #dce6f7; font-size: 14px; font-weight: 600;
     }
     a.pill { text-decoration: none; cursor: pointer; }
-    a.pill:hover { background: rgba(255,255,255,0.16); }
-    .dot { width: 9px; height: 9px; border-radius: 999px; background: var(--warn); box-shadow: 0 0 16px var(--warn); }
-    .dot.ok { background: var(--good); box-shadow: 0 0 16px var(--good); }
-    .dot.bad { background: var(--bad); box-shadow: 0 0 16px var(--bad); }
-    .grid { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 16px; align-items: start; }
+    a.pill:hover { background: #3a3a6e; border-color: var(--cyan); }
+    .dot { width: 10px; height: 10px; border-radius: 999px; background: var(--amber); box-shadow: 0 0 14px var(--amber); flex: 0 0 auto; }
+    .dot.ok { background: var(--green); box-shadow: 0 0 14px var(--green); }
+    .dot.bad { background: var(--red); box-shadow: 0 0 14px var(--red); }
+
+    /* ---------- deck layout ---------- */
+    .trends { margin: 22px 0 0; }
+    .trends h2 { margin: 0 0 6px; font-size: 20px; }
+    .trendBox { background: var(--card2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-top: 12px; }
+    .trendBox h3 { margin: 0 0 4px; font-size: 15px; color: var(--muted); letter-spacing: 0.4px; }
+    .trendBox .note { margin: 6px 0 0; }
+    .deck { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 16px; align-items: start; }
     .panel {
-      background: var(--card); border: 1px solid var(--line); border-radius: 24px;
-      padding: 14px; box-shadow: 0 24px 80px rgba(0,0,0,0.38); backdrop-filter: blur(14px);
+      background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+      padding: 16px; box-shadow: 0 18px 60px rgba(0,0,0,0.35);
     }
+    .rail { display: grid; gap: 14px; }
+
+    /* ---------- thermal ---------- */
     .cameraShell {
-      position: relative; width: 100%; max-width: 900px; margin: 0 auto;
-      border-radius: 20px; overflow: hidden; background: #000;
+      position: relative; width: 100%; margin: 0 auto;
+      border-radius: 14px; overflow: hidden; background: #000;
       border: 1px solid rgba(255,255,255,0.18);
     }
     canvas { width: 100%; aspect-ratio: 4/3; display: block; background: #000; }
     .hud { position: absolute; left: 12px; top: 12px; display: flex; flex-wrap: wrap; gap: 8px; pointer-events: none; }
     .hud span {
-      background: rgba(0,0,0,0.48); border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 999px; padding: 6px 9px; font-size: 12px; color: #edf3ff;
+      background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.20);
+      border-radius: 999px; padding: 6px 10px; font-size: 13px; color: #edf3ff;
     }
     .legend {
       display: grid; grid-template-columns: auto 1fr auto; gap: 10px;
-      align-items: center; margin: 12px auto 0; max-width: 900px;
-      color: var(--muted); font-size: 12px;
+      align-items: center; margin: 12px auto 0; color: var(--dim); font-size: 13px;
     }
     .bar {
       height: 16px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.22);
@@ -73,78 +82,130 @@
     }
     .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
     .box {
-      background: var(--card2); border-radius: 16px; padding: 11px 10px;
-      border: 1px solid rgba(255,255,255,0.10); min-height: 76px;
+      background: var(--card2); border-radius: 12px; padding: 11px 12px;
+      border: 1px solid rgba(255,255,255,0.09); min-height: 74px;
     }
-    .label { display: block; color: var(--muted); font-size: 12px; margin-bottom: 5px; }
-    .value { display: block; font-size: clamp(18px, 3vw, 25px); font-weight: 800; letter-spacing: -0.03em; }
-    .small { color: #9eabba; font-size: 12px; margin-top: 4px; }
-    .verdict-NORMAL { color: var(--good); }
-    .verdict-FEVER, .verdict-OUT_OF_BAND { color: var(--warn); }
-    .verdict-HYPERTHERMIA { color: var(--bad); }
-    .controls { display: grid; gap: 12px; }
-    .controlTitle { font-weight: 800; font-size: 16px; margin: 2px 0 0; }
-    .control {
-      background: var(--card2); border: 1px solid rgba(255,255,255,0.10);
-      border-radius: 16px; padding: 12px; text-align: left;
+    .label { display: block; color: var(--dim); font-size: 13px; margin-bottom: 4px; }
+    .value { display: block; font-size: clamp(18px, 2.4vw, 24px); font-weight: 800; letter-spacing: -0.02em; }
+    .small { color: var(--dim); font-size: 13px; margin-top: 4px; }
+    .verdict-NORMAL { color: var(--green); }
+    .verdict-FEVER, .verdict-OUT_OF_BAND { color: var(--amber); }
+    .verdict-HYPERTHERMIA { color: var(--red); }
+    .status { margin-top: 12px; color: var(--dim); font-size: 16px; min-height: 22px; line-height: 1.5; }
+    /* A fault must be impossible to miss. The old line was 15px dim grey under
+       six stat boxes, which is a large part of why the operator never saw it. */
+    .status.err {
+      color: #ffd9d9; font-size: 17px; font-weight: 600;
+      background: rgba(248, 113, 113, 0.14);
+      border-left: 5px solid var(--red);
+      border-radius: 0 8px 8px 0;
+      padding: 12px 14px;
+      line-height: 1.55;
     }
-    .control label {
-      display: flex; justify-content: space-between; gap: 12px;
-      color: #dce5f3; font-size: 13px; margin-bottom: 8px;
+    .status.err b { color: var(--red); font-size: 18px; }
+
+    .toolGrid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; margin-top: 14px; }
+    .tool {
+      background: var(--card2); border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 12px; padding: 11px 12px;
     }
-    .control label strong { color: #fff; }
+    .tool.wide { grid-column: 1 / -1; }
+    .tool label { display: flex; justify-content: space-between; gap: 12px; color: #dce5f3; font-size: 14px; margin-bottom: 8px; }
+    .tool label strong { color: #fff; }
+    .toggleLine { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #dce5f3; font-size: 15px; }
+    .toggleLine input { transform: scale(1.35); accent-color: var(--teal); }
     select, button, input[type="range"] { width: 100%; }
     select, button {
-      background: rgba(255,255,255,0.10); color: #fff;
-      border: 1px solid rgba(255,255,255,0.16); border-radius: 12px;
-      padding: 10px 11px; font-weight: 700; outline: none;
+      background: #3a3a6e; color: #fff; border: 1px solid rgba(255,255,255,0.16);
+      border-radius: 10px; padding: 10px 12px; font-weight: 700; font-size: 15px;
+      font-family: inherit; outline: none;
     }
     option { background: #101827; }
     button { cursor: pointer; transition: 0.15s ease; }
-    button:hover { background: rgba(255,255,255,0.18); }
+    button:hover { background: #47478a; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
     .buttonRow { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .toggleLine {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 12px; color: #dce5f3; font-size: 13px;
-    }
-    .toggleLine input { transform: scale(1.15); }
-    .status { margin-top: 12px; color: var(--muted); font-size: 13px; min-height: 20px; text-align: center; }
-    .micHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
-    .micStatus { font-size: 16px; font-weight: 800; }
-    .micSub2 { color: var(--muted); font-size: 13px; margin-top: 3px; line-height: 1.35; word-break: break-word; }
-    .vu {
-      height: 15px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.22);
-      background: rgba(0,0,0,0.45); overflow: hidden;
-    }
-    .vuf {
-      height: 100%; width: 0%;
-      background: linear-gradient(90deg, var(--good), var(--warn) 70%, var(--bad));
-      transition: width 0.25s linear;
-    }
-    .vuRow {
-      display: grid; grid-template-columns: 16px minmax(0,1fr) 44px;
-      gap: 8px; align-items: center; margin-top: 8px;
-      font-size: 14px; font-weight: 700; color: #dce5f3;
-    }
-    .vuRow span:last-child { text-align: right; }
-    .micMode { color: var(--muted); font-size: 13px; margin-top: 9px; line-height: 1.45; }
+    button.liveOn { background: rgba(248,113,113,0.30); border-color: var(--red); color: #ffd9d9; }
+    button.btnOn { background: var(--teal); color: #062b26; border: 0; }
+    button.btnOff { background: #7f1d1d; color: #ffe4e6; border: 0; }
+
+    /* ---------- rail cards ---------- */
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 15px; }
+    .cardHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .cardTitle { font-weight: 800; font-size: 17px; }
+    .cardState { font-size: 15px; font-weight: 700; margin-top: 3px; }
+    .cardSub { color: var(--dim); font-size: 13px; margin-top: 3px; line-height: 1.4; word-break: break-word; }
+    .cardBody { margin-top: 10px; }
+    .sp { margin-top: 10px; }
+
+    .vu { height: 14px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.22); background: rgba(0,0,0,0.45); overflow: hidden; }
+    .vuf { height: 100%; width: 0%; background: linear-gradient(90deg, var(--green), var(--amber) 70%, var(--red)); transition: width 0.25s linear; }
     .micErr {
-      color: var(--bad); font-weight: 700; font-size: 14px; margin-top: 8px;
-      border: 1px solid rgba(255,107,107,0.5); background: rgba(255,107,107,0.12);
+      color: var(--red); font-weight: 700; font-size: 14px; margin-top: 8px;
+      border: 1px solid rgba(248,113,113,0.5); background: rgba(248,113,113,0.12);
       border-radius: 10px; padding: 8px 10px; display: none; word-break: break-word;
     }
-    button.liveOn {
-      background: rgba(255,107,107,0.28); border-color: var(--bad); color: #ffd9d9;
+
+    .statGrid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+    .statGrid.three { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .stat { background: var(--card2); border: 1px solid rgba(255,255,255,0.09); border-radius: 10px; padding: 8px 10px; min-height: 58px; }
+    .stat .label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+    .stat .value { font-size: 20px; }
+
+    .statePill { display: inline-block; padding: 5px 14px; border-radius: 999px; font-weight: 800; font-size: 14px; letter-spacing: 0.4px; }
+    .statePill.on  { background: #065f46; color: #6ee7b7; border: 1px solid #10b981; }
+    .statePill.off { background: #4c1d24; color: #fca5a5; border: 1px solid #b91c1c; }
+    .bigVerdict { font-size: 38px; font-weight: 800; letter-spacing: 1px; line-height: 1.1; }
+
+    .strip {
+      display: flex; gap: 4px; align-items: flex-end; height: 44px;
+      background: rgba(0,0,0,0.30); border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 10px; padding: 5px; position: relative; margin-top: 10px;
     }
-    @media (max-width: 980px) {
-      .grid { grid-template-columns: 1fr; }
-      .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .strip::after {
+      content: ''; position: absolute; left: 5px; right: 5px; top: 50%;
+      border-top: 1px dashed rgba(255,255,255,0.30); pointer-events: none;
     }
-    @media (max-width: 650px) {
-      .wrap { padding: 10px; }
-      .panel { padding: 10px; border-radius: 20px; }
+    .strip i { flex: 1 1 0; display: block; background: var(--teal); border-radius: 3px 3px 0 0; min-height: 3px; }
+    .strip i.hit { background: var(--amber); }
+    .stripHint { color: var(--dim); font-size: 12px; margin-top: 4px; }
+
+    .q { background: var(--card2); border-left: 4px solid var(--amber); padding: 10px 13px; border-radius: 0 8px 8px 0; color: #e8eefc; font-size: 14px; line-height: 1.5; }
+    a { color: var(--cyan); }
+
+    .cctvShell { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.14); }
+    .cctvShell img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .cctvOff {
+      position: absolute; inset: 0; display: grid; place-content: center; text-align: center;
+      color: var(--dim); font-size: 14px; padding: 10px; background: #05070d;
+    }
+    .lit { color: var(--green); }
+    .warnT { color: var(--amber); }
+    .badT { color: var(--red); }
+
+    /* ---------- experiments ---------- */
+    .links { margin-top: 20px; }
+    .links h2 { font-size: 21px; color: var(--cyan); margin: 0 0 12px; }
+    .linkGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+    a.linkCard {
+      display: block; text-decoration: none; color: var(--text);
+      background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+      padding: 14px 16px; transition: 0.15s ease;
+    }
+    a.linkCard:hover { border-color: var(--cyan); background: var(--card2); }
+    a.linkCard b { font-size: 16px; }
+    a.linkCard span { display: block; color: var(--dim); font-size: 13px; margin-top: 4px; line-height: 1.45; }
+
+    @media (max-width: 1150px) {
+      .deck { grid-template-columns: 1fr; }
+      .rail { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+    @media (max-width: 720px) {
+      body { padding: 10px; }
+      .panel, .card { padding: 12px; }
       .stats { grid-template-columns: repeat(2, 1fr); }
-      .controls { grid-template-columns: 1fr; }
+      .rail { grid-template-columns: 1fr; }
+      .toolGrid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -152,17 +213,20 @@
   <div class="wrap">
     <div class="top">
       <div>
-        <h1>PigPulse Thermal — Pi 4B</h1>
-        <div class="sub">MLX90640 32×24 • I²C pin 3/5 • Melexis driver • live browser enhance</div>
+        <h1>PigPulse — Barn Command Deck</h1>
+        <div class="sub">Pi 4B · thermal 32×24 · barn mic s3-mic-01 · SHT45 ambient · Tapo CCTV · on-device cough classifier</div>
       </div>
-      <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+      <div class="navRow">
+        <a class="pill" href="/cough">🫁 Full cough page →</a>
         <a class="pill" href="/static/fusion.html">🔥 Thermal + CCTV fusion →</a>
-        <a class="pill" href="/static/fusion.html#mic">ESP32-S3 barn mic — listen &amp; record →</a>
+        <a class="pill" href="/admin">🛠 Technician console →</a>
+        <a class="pill" href="/diag">📊 Diagnostics →</a>
         <div class="pill"><span class="dot" id="liveDot"></span><span id="liveText">Connecting…</span></div>
       </div>
     </div>
 
-    <div class="grid">
+    <div class="deck">
+      <!-- ================= THERMAL (left) ================= -->
       <div class="panel">
         <div class="cameraShell">
           <canvas id="thermal" width="512" height="384"></canvas>
@@ -188,118 +252,252 @@
         </div>
 
         <div class="status" id="status">Starting…</div>
+
+        <div class="toolGrid">
+          <div class="tool">
+            <div class="toggleLine">
+              <span><strong>Pause live view</strong><br><span class="small">freezes this page only — the sensor keeps running</span></span>
+              <input id="pauseView" type="checkbox" onchange="setPaused(this.checked)">
+            </div>
+          </div>
+          <div class="tool" style="display:flex; align-items:center;">
+            <button type="button" onclick="downloadCsv()">⬇ Download frame CSV</button>
+          </div>
+
+          <div class="tool">
+            <label><strong>Palette</strong><span id="paletteName">Iron</span></label>
+            <select id="palette" onchange="setPalette(this.value)">
+              <option value="iron" selected>Iron / Thermal</option>
+              <option value="rainbow">Rainbow</option>
+              <option value="arctic">Arctic</option>
+              <option value="gray">Gray</option>
+            </select>
+          </div>
+          <div class="tool">
+            <label><strong>Interpolation</strong><span id="interpName">Smooth</span></label>
+            <div class="buttonRow">
+              <button type="button" onclick="setInterpolation(true)" id="smoothBtn">Smooth</button>
+              <button type="button" onclick="setInterpolation(false)" id="pixelBtn">Pixel</button>
+            </div>
+          </div>
+          <div class="tool">
+            <label><strong>Detail boost</strong><span id="detailVal">0.35</span></label>
+            <input id="detail" type="range" min="0" max="1.2" value="0.35" step="0.05" oninput="setDetail(this.value)">
+          </div>
+          <div class="tool">
+            <label><strong>Frame smoothing</strong><span id="smoothVal">0.35</span></label>
+            <input id="temporal" type="range" min="0" max="0.85" value="0.35" step="0.05" oninput="setTemporal(this.value)">
+          </div>
+          <div class="tool">
+            <div class="toggleLine">
+              <span><strong>Enhanced contrast</strong><br><span class="small">3 %–97 % range</span></span>
+              <input id="contrast" type="checkbox" checked onchange="redrawLast()">
+            </div>
+          </div>
+          <div class="tool">
+            <div class="toggleLine">
+              <span><strong>Hot/cold markers</strong><br><span class="small">max/min crosshairs</span></span>
+              <input id="markers" type="checkbox" checked onchange="redrawLast()">
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div class="panel controls">
-          <div class="controlTitle">Mic — ESP32-S3 barn mic</div>
+      <!-- ================= RAIL (right) ================= -->
+      <div class="rail">
 
-        <div class="control">
-          <div class="micHead">
+        <!-- Cough classifier -->
+        <div class="card">
+          <div class="cardHead">
             <div>
-              <div class="micStatus" id="micText">Checking mic…</div>
-              <div class="micSub2" id="micSub">—</div>
+              <div class="cardTitle">🫁 Cough classifier</div>
+              <div class="cardState" id="coughText">Checking…</div>
+              <div class="cardSub" id="coughSub">on-device · barn mic → this Pi → nothing leaves the device</div>
+            </div>
+            <span class="statePill off" id="coughPill">…</span>
+          </div>
+
+          <div class="cardBody">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+              <div>
+                <div class="label" style="margin-bottom:0;">Verdict — last 60 s</div>
+                <div class="bigVerdict" id="coughVerdict">NO DATA</div>
+                <div class="cardSub" id="coughWhy"></div>
+              </div>
+              <button id="coughBtn" class="btnOn" style="width:auto; padding:13px 18px;" disabled>…</button>
+            </div>
+
+            <div class="statGrid three sp">
+              <div class="stat"><span class="label">Rate</span><span class="value" id="coughRate">-</span></div>
+              <div class="stat"><span class="label">Windows</span><span class="value" id="coughWin">-</span></div>
+              <div class="stat"><span class="label">Mean p</span><span class="value" id="coughMean">-</span></div>
+            </div>
+            <div class="statGrid sp">
+              <div class="stat"><span class="label">Last window</span><span class="value" id="coughLast" style="font-size:16px;">-</span></div>
+              <div class="stat"><span class="label">Gaps dropped · CPU</span><span class="value" id="coughDrops" style="font-size:16px;">-</span></div>
+            </div>
+
+            <div class="strip" id="coughStrip" title="last windows (5 s each, newest right) — dashed line = decision threshold"></div>
+            <div class="stripHint">Newest 12 windows, oldest → newest. Bar over the dashed line = window above threshold.</div>
+
+            <div class="q sp">Ranks, does not detect: ~1 false alarm per true cough on a single window — read the 60 s verdict, never one bar. <a href="/cough">Full table + model card →</a></div>
+          </div>
+        </div>
+
+        <!-- Barn mic -->
+        <div class="card">
+          <div class="cardHead">
+            <div>
+              <div class="cardTitle">🎙 Barn mic — ESP32-S3</div>
+              <div class="cardState" id="micText">Checking mic…</div>
+              <div class="cardSub" id="micSub">—</div>
             </div>
             <span class="dot" id="micDot"></span>
           </div>
-          <div class="vuRow">
-            <span>L</span><div class="vu"><div class="vuf" id="micBarL"></div></div>
-            <span id="micValL">0%</span>
+          <div class="cardBody">
+            <div style="display:grid; grid-template-columns: 16px minmax(0,1fr) 52px; gap:8px; align-items:center; font-size:14px; font-weight:700; color:#dce5f3;">
+              <span>L</span><div class="vu"><div class="vuf" id="micBarL"></div></div><span id="micValL" style="text-align:right;">0%</span>
+            </div>
+            <div style="display:grid; grid-template-columns: 16px minmax(0,1fr) 52px; gap:8px; align-items:center; font-size:14px; font-weight:700; color:#dce5f3; margin-top:6px;">
+              <span>R</span><div class="vu"><div class="vuf" id="micBarR"></div></div><span id="micValR" style="text-align:right;">0%</span>
+            </div>
+            <div class="cardSub" id="micMode">—</div>
+            <div class="cardSub" id="micHint" style="display:none; margin-top:4px; color:#ffd166;"></div>
+            <div class="cardSub" id="micUnder" style="margin-top:2px;">—</div>
+            <div class="micErr" id="micErr"></div>
+            <div class="buttonRow sp">
+              <button type="button" id="micLiveBtn" onclick="micToggleLive()">START LISTENING</button>
+              <button type="button" id="micRecBtn" onclick="micRecord(10)">RECORD 10 s</button>
+            </div>
+            <div class="small" id="micRec" style="margin-top:8px;">Idle</div>
+            <div style="margin-top:12px; display:grid; grid-template-columns: minmax(0,1fr) 78px; gap:12px; align-items:center;">
+              <input type="range" id="micVol" min="0" max="300" step="5" value="100"
+                     oninput="micSetVolume(this.value)" aria-label="Monitor volume"
+                     style="width:100%; height:30px; accent-color:#7dd3fc;">
+              <div id="micVolVal" style="text-align:right; font-weight:800; font-size:16px; color:#dce5f3;">100%</div>
+            </div>
+            <div class="buttonRow sp" style="margin-top:8px;">
+              <button type="button" id="micMuteBtn" onclick="micToggleMute()">🔊 SOUND ON</button>
+              <button type="button" id="micMaxBtn" onclick="micSetMaxVolume()">MAX VOLUME</button>
+            </div>
+            <div class="small" style="margin-top:6px;">Monitor volume — MAX is as loud as the signal goes before the limiter squashes it.</div>
           </div>
-          <div class="vuRow">
-            <span>R</span><div class="vu"><div class="vuf" id="micBarR"></div></div>
-            <span id="micValR">0%</span>
-          </div>
-          <div class="micMode" id="micMode">—</div>
-          <div class="micErr" id="micErr"></div>
-          <div class="buttonRow" style="margin-top:10px;">
-            <button type="button" id="micLiveBtn" onclick="micToggleLive()">START LISTENING</button>
-            <button type="button" id="micRecBtn" onclick="micRecord(10)">RECORD 10 s</button>
-          </div>
-          <div class="small" id="micRec" style="margin-top:8px;">Idle</div>
         </div>
 
-        <div class="controlTitle" style="margin-top:10px;">Barn ambient — SHT45 (ESP32-S3)</div>
-
-        <div class="control">
-          <div class="micHead">
+        <!-- CCTV -->
+        <div class="card">
+          <div class="cardHead">
             <div>
-              <div class="micStatus" id="ambText">Checking ambient…</div>
-              <div class="micSub2" id="ambSub">SHT45 on s3-mic-01, seen live over MQTT</div>
+              <div class="cardTitle">📷 CCTV — Tapo</div>
+              <div class="cardState" id="cctvState">Loading snapshot…</div>
+              <div class="cardSub" id="cctvSub">local MJPEG (:8091) proxied through this origin</div>
+            </div>
+            <span class="dot" id="cctvDot"></span>
+          </div>
+          <div class="cardBody">
+            <div class="cctvShell">
+              <img id="cctvImg" src="/cctv?snapshot=1" alt="Tapo CCTV snapshot">
+              <div class="cctvOff" id="cctvOff" style="display:none;">CCTV unavailable<br><span style="font-size:12px;">check pigpulse-cctv.service and the camera link</span></div>
+            </div>
+            <div class="buttonRow sp">
+              <button type="button" id="cctvLiveBtn" onclick="cctvToggleLive()">GO LIVE</button>
+              <button type="button" id="cctvSnapBtn" onclick="cctvSnapshot()">REFRESH SNAPSHOT</button>
+            </div>
+            <div class="buttonRow sp" style="grid-template-columns:1fr;">
+              <button type="button" id="cctvRecBtn" onclick="cctvRecAudio(4)">🎧 RECORD 4 s CAMERA AUDIO</button>
+            </div>
+            <div class="buttonRow sp" style="grid-template-columns:1fr;">
+              <button type="button" id="cctvAudBtn" onclick="cctvToggleAudio()">🔊 LIVE AUDIO — OFF</button>
+            </div>
+            <div class="buttonRow sp" style="grid-template-columns:1fr; margin-top:8px;">
+              <button type="button" id="talkBtn">🎙 HOLD TO TALK</button>
+            </div>
+            <div style="display:grid; grid-template-columns:auto minmax(0,1fr) 64px; gap:8px; align-items:center; margin-top:8px; font-size:13px; font-weight:700; color:#9fb0c8;">
+              <span>GAIN</span>
+              <input type="range" id="talkGain" min="1" max="8" step="0.5" value="3"
+                     oninput="talkGainLabel()">
+              <span id="talkGainVal" style="text-align:right;">3×</span>
+            </div>
+            <div class="small" id="talkStatus" style="margin-top:6px;">Barn speaker idle — hold the button and speak.</div>
+            <div style="display:grid; grid-template-columns:auto minmax(0,1fr) 64px; gap:8px; align-items:center; margin-top:8px; font-size:13px; font-weight:700; color:#9fb0c8;">
+              <span>BOOST</span>
+              <input type="range" id="cctvAudGain" min="0" max="36" step="2" value="20"
+                     oninput="cctvAudioGainLabel()" onchange="cctvAudioReconnect()">
+              <span id="cctvAudGainVal" style="text-align:right;">+20 dB</span>
+            </div>
+            <audio id="cctvAudio" preload="none" style="display:none;"></audio>
+            <div class="small" id="cctvRec" style="margin-top:8px;">Snapshots auto-refresh every 20 s while not live.</div>
+          </div>
+        </div>
+
+        <!-- Ambient -->
+        <div class="card">
+          <div class="cardHead">
+            <div>
+              <div class="cardTitle">🌡 Barn ambient — SHT45</div>
+              <div class="cardState" id="ambText">Checking ambient…</div>
+              <div class="cardSub" id="ambSub">SHT45 on s3-mic-01, seen live over MQTT</div>
             </div>
             <span class="dot" id="ambDot"></span>
           </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px;">
-            <div class="box" style="min-height:64px;">
-              <span class="label">Barn temp</span>
-              <span class="value" id="ambTemp">--</span>
-              <div class="small">SHT45</div>
+          <div class="cardBody">
+            <div class="statGrid">
+              <div class="stat"><span class="label">Barn temp</span><span class="value" id="ambTemp">--</span></div>
+              <div class="stat"><span class="label">Humidity</span><span class="value" id="ambHum">--</span></div>
+              <div class="stat" style="grid-column:1 / -1;"><span class="label">Heat stress — THI</span><span class="value" id="ambThi">--</span><div class="small" id="ambThiClass">needs temp + humidity</div></div>
             </div>
-            <div class="box" style="min-height:64px;">
-              <span class="label">Humidity</span>
-              <span class="value" id="ambHum">--</span>
-              <div class="small">SHT45</div>
-            </div>
-            <div class="box" style="min-height:64px; grid-column:1 / -1;">
-              <span class="label">Heat stress — THI</span>
-              <span class="value" id="ambThi">--</span>
-              <div class="small" id="ambThiClass">needs temp + humidity</div>
-            </div>
-          </div>
-          <div class="micMode" id="ambMode">—</div>
-        </div>
-
-        <div class="controlTitle" style="margin-top:10px;">Image Controls</div>
-
-        <div class="control">
-          <label><strong>Palette</strong><span id="paletteName">Iron</span></label>
-          <select id="palette" onchange="setPalette(this.value)">
-            <option value="iron" selected>Iron / Thermal</option>
-            <option value="rainbow">Rainbow</option>
-            <option value="arctic">Arctic</option>
-            <option value="gray">Gray</option>
-          </select>
-        </div>
-
-        <div class="control">
-          <label><strong>Interpolation</strong><span id="interpName">Smooth</span></label>
-          <div class="buttonRow">
-            <button type="button" onclick="setInterpolation(true)" id="smoothBtn">Smooth</button>
-            <button type="button" onclick="setInterpolation(false)" id="pixelBtn">Pixel</button>
+            <div class="cardSub" id="ambMode">—</div>
           </div>
         </div>
 
-        <div class="control">
-          <label><strong>Detail boost</strong><span id="detailVal">0.35</span></label>
-          <input id="detail" type="range" min="0" max="1.2" value="0.35" step="0.05" oninput="setDetail(this.value)">
-        </div>
+      </div>
+    </div>
 
-        <div class="control">
-          <label><strong>Frame smoothing</strong><span id="smoothVal">0.35</span></label>
-          <input id="temporal" type="range" min="0" max="0.85" value="0.35" step="0.05" oninput="setTemporal(this.value)">
-        </div>
+    <!-- ================= TRENDS (live, from the Pi's own log) ================= -->
+    <section class="trends">
+      <h2>📈 Trends over time</h2>
+      <p class="sub" id="trendMeta">Live from this Pi — nothing leaves the device.</p>
 
-        <div class="control">
-          <div class="toggleLine">
-            <span><strong>Enhanced contrast</strong><br><span class="small">3%–97% range</span></span>
-            <input id="contrast" type="checkbox" checked onchange="redrawLast()">
+      <div class="card">
+        <div class="cardHead">
+          <div>
+            <div class="cardTitle">🔌 Pi health — where the power drops</div>
+            <div class="cardSub">Core voltage, CPU temperature, load, memory and uptime, sampled every 10 s and appended to this Pi's own card — so a power cut is still visible AFTER the reboot it caused. A reboot is marked in amber; the gap before it is the downtime.</div>
           </div>
+          <div class="cardState" id="vitalsState">—</div>
         </div>
+        <div id="vitalsCharts"></div>
+      </div>
 
-        <div class="control">
-          <div class="toggleLine">
-            <span><strong>Hot/cold markers</strong><br><span class="small">Max/min crosshairs</span></span>
-            <input id="markers" type="checkbox" checked onchange="redrawLast()">
+      <div class="card">
+        <div class="cardHead">
+          <div>
+            <div class="cardTitle">🌡 Sensor trends</div>
+            <div class="cardSub">What the barn devices report over MQTT: scene temperature, ambient and mic level. A gap means nothing was published — it is drawn as a break, never interpolated.</div>
           </div>
+          <div class="cardState" id="seriesState">—</div>
         </div>
+        <div id="seriesCharts"></div>
+      </div>
+    </section>
 
-        <div class="control">
-          <button type="button" onclick="downloadCsv()">Download Current Frame CSV</button>
-        </div>
+    <!-- ================= EXPERIMENTS / FULL PAGES ================= -->
+    <div class="links">
+      <h2>Experiments &amp; full pages</h2>
+      <div class="linkGrid">
+        <a class="linkCard" href="/cough"><b>🫁 Full cough page</b><span>Every 5 s window with p, dBFS and inference time; model card and threshold; toggle lives here too.</span></a>
+        <a class="linkCard" href="/static/fusion.html"><b>🔥📷 Thermal + CCTV fusion</b><span>Side-by-side view with one presentation clock — thermal frame and camera on the same timeline.</span></a>
+        <a class="linkCard" href="/static/fusion.html#mic"><b>🎙 Barn mic studio</b><span>Listen, level detail and longer recordings from s3-mic-01.</span></a>
+        <a class="linkCard" href="/admin"><b>🛠 Technician console</b><span>Operator pages: services, config, diagnostics.</span></a>
+        <a class="linkCard" href="/health"><b>🩺 Health (plain text)</b><span>Sensor, I²C, network, ESP and ambient state in one screenful.</span></a>
+        <a class="linkCard" href="/csv"><b>⬇ Current frame CSV</b><span>The latest 24×32 temperature grid as a file.</span></a>
+        <a class="linkCard" href="/static/wifi-setup.html"><b>📶 Wi-Fi setup + QR</b><span>Join-the-barn-AP instructions and the pairing QR.</span></a>
       </div>
     </div>
   </div>
 
 <script src="/static/mic.js"></script>
+<script src="/static/trend.js"></script>
 <script>
 const SENSOR_W = 32, SENSOR_H = 24, OUT_W = 512, OUT_H = 384, FETCH_DELAY_MS = 85;
 const canvas = document.getElementById('thermal');
@@ -307,11 +505,20 @@ canvas.width = OUT_W; canvas.height = OUT_H;
 const ctx = canvas.getContext('2d', { alpha: false });
 const imageData = ctx.createImageData(OUT_W, OUT_H);
 let palette = 'iron', useSmoothInterpolation = true, detailBoost = 0.35, temporalAmount = 0.35;
-let temporalPixels = null, lastData = null, isFetching = false;
+let temporalPixels = null, lastData = null, isFetching = false, paused = false;
 
 function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 function lerp(a, b, t) { return a + (b - a) * t; }
 function fmtC(v) { return Number(v).toFixed(2) + ' C'; }
+
+function setPaused(v) {
+  paused = !!v;
+  if (paused) {
+    document.getElementById('liveDot').className = 'dot';
+    document.getElementById('liveText').textContent = 'Paused';
+    document.getElementById('status').textContent = 'Live view paused — untick “Pause live view” to resume';
+  }
+}
 
 function setPalette(v) {
   palette = v;
@@ -473,17 +680,32 @@ function updateNumbers(data) {
   document.getElementById('liveText').textContent = 'Live';
 }
 async function updateFrame() {
+  if (paused) { setTimeout(updateFrame, 400); return; }
   if (isFetching) return;
   isFetching = true;
   try {
     const res = await fetch('/data?ts=' + Date.now(), { cache: 'no-store' });
     const data = await res.json();
     if (!data.ok) {
-      document.getElementById('status').textContent = data.error || 'Sensor not ready';
+      // 2026-11-09: show the server's plain-English diagnosis at readable size,
+      // and keep the raw errno underneath so the debug trail survives. Falls
+      // back to the errno alone when no diagnosis has been computed yet.
+      const el = document.getElementById('status');
+      const d = data.diag || null;
+      if (d) {
+        el.innerHTML =
+          '<b>' + d.headline + '</b><br>' +
+          d.action +
+          '<br><span class="small">Technical: ' + (data.error || 'n/a') + '</span>';
+      } else {
+        el.textContent = data.error || 'Sensor not ready';
+      }
+      el.className = 'status err';
       document.getElementById('liveDot').className = 'dot bad';
       document.getElementById('liveText').textContent = 'Sensor error';
       return;
     }
+    document.getElementById('status').className = 'status';
     lastData = data;
     drawThermal(data);
     updateNumbers(data);
@@ -511,6 +733,56 @@ canvas.addEventListener('mouseleave', () => {
 function downloadCsv() { window.location.href = '/csv?ts=' + Date.now(); }
 
 /* ---------- Mic panel — shared client in /static/mic.js ---------- */
+
+/* ---------- Monitor volume (2026-11-11) ----------------------------------
+   The ESP now delivers a properly levelled signal (AGC in the firmware,
+   peak around -2 dBFS), but the phone's speaker is the last link in the
+   chain, so the operator needs a real volume control and a MAX setting.
+   The value is kept in localStorage so it survives a reload, and it is
+   applied to the shared client in /static/mic.js, which puts a limiter
+   after the gain node so MAX is loud rather than clipped. */
+const MIC_VOL_KEY = 'pigpulse.mic.volume';
+function micSetVolume(v) {
+  // v is a PERCENTAGE (0-300) from the slider and the MAX button.
+  // PigPulseMic.setVolume() takes a MULTIPLIER (0 .. VOLUME_MAX).
+  //
+  // 2026-11-11: these were the same number, so setVolume(50) was clamped to
+  // VOLUME_MAX - dragging the slider DOWN made it LOUDER. The percentage is
+  // converted to a multiplier here, in one place.
+  const n = parseFloat(v);
+  let x = isFinite(n) ? Math.max(0, Math.min(3, n / 100)) : 1.0;
+  if (window.PigPulseMic) x = window.PigPulseMic.setVolume(x);
+  const val = document.getElementById('micVolVal');
+  if (val) val.textContent = Math.round(x * 100) + '%';
+  const sl = document.getElementById('micVol');
+  if (sl && parseFloat(sl.value) !== Math.round(x * 100)) sl.value = String(Math.round(x * 100));
+  try { localStorage.setItem(MIC_VOL_KEY, String(x)); } catch (e) {}
+  return x;
+}
+function micSetMaxVolume() {
+  const max = (window.PigPulseMic && window.PigPulseMic.VOLUME_MAX) || 3;
+  return micSetVolume(max * 100);
+}
+function micToggleMute() {
+  if (!window.PigPulseMic) return false;
+  const m = window.PigPulseMic.setMuted(!window.PigPulseMic.muted());
+  const b = document.getElementById('micMuteBtn');
+  if (b) b.textContent = m ? '🔇 MUTED' : '🔊 SOUND ON';
+  return m;
+}
+(function micRestoreVolume() {
+  let v = 1.0;
+  try {
+    const s = localStorage.getItem(MIC_VOL_KEY);
+    if (s !== null && isFinite(parseFloat(s))) v = parseFloat(s);
+  } catch (e) {}
+  const sl = document.getElementById('micVol');
+  if (sl) sl.value = String(Math.round(v * 100));
+  const val = document.getElementById('micVolVal');
+  if (val) val.textContent = Math.round(v * 100) + '%';
+  if (window.PigPulseMic) window.PigPulseMic.setVolume(v);
+})();
+
 function micSetModeText(mode) {
   const el = document.getElementById('micMode');
   if (!window.PigPulseMic) {
@@ -525,6 +797,21 @@ function micSetModeText(mode) {
         : PigPulseMic.secure()
           ? 'Ready — AudioWorklet available (secure context)'
           : 'Plain HTTP origin — will use ScriptProcessor fallback (no HTTPS needed)';
+  // 20261111: the fallback path is the classic cause of "the audio keeps
+  // pausing": a ScriptProcessor is suspended by the OS whenever the phone
+  // locks its screen or you switch apps. Say so, and say how to fix it.
+  const hint = document.getElementById('micHint');
+  if (hint) {
+    if (mode === 'script-processor') {
+      hint.style.display = 'block';
+      hint.innerHTML = '⚠ This browser is using the <b>fallback</b> player, which the phone ' +
+        'pauses whenever the screen locks or you switch apps. Install the PigPulse CA ' +
+        '(http://192.168.69.1:8081/pigpulse-ca.crt) on this device to get the ' +
+        'AudioWorklet instead.';
+    } else {
+      hint.style.display = 'none';
+    }
+  }
 }
 async function micRefresh() {
   if (!window.PigPulseMic) return;
@@ -557,6 +844,23 @@ async function micRefresh() {
     btn.disabled = !live;
     btn.textContent = PigPulseMic.isLive() ? 'STOP LISTENING' : 'START LISTENING';
     btn.classList.toggle('liveOn', PigPulseMic.isLive());
+    // 2026-11-11: show the playback health, so "it sounds like it is
+    // buffering" can be CHECKED instead of guessed. The worklet counts the
+    // times it ran out of buffered audio; if that number grows, the phone or
+    // the link is starving the stream. If it stays flat, the audio is fine.
+    const under = document.getElementById('micUnder');
+    if (under) {
+      if (PigPulseMic.isLive()) {
+        PigPulseMic.stats().then(st => {
+          const vol = Math.round((PigPulseMic.volume ? PigPulseMic.volume() : 1) * 100);
+          under.textContent = 'buffer underruns: ' + (st.underruns === null ? '?' : st.underruns)
+            + ' · volume ' + vol + '%'
+            + (st.mode ? ' · ' + st.mode : '');
+        }).catch(() => { under.textContent = 'playback stats unavailable'; });
+      } else {
+        under.textContent = 'not listening';
+      }
+    }
   } catch (e) {
     dot.className = 'dot bad';
     t.textContent = 'Mic: server unreachable';
@@ -578,7 +882,13 @@ async function micToggleLive() {
       micSetModeText(null);
     } else {
       const s = await fetch('/esp/status', {cache: 'no-store'}).then(r => r.json());
-      const mode = await PigPulseMic.start("/esp/stream", s.rate || 16000);
+      // 20261111: 16 kHz STEREO, not the 48 kHz native stream.
+      //
+      // The native stream is 192 KB/s over the Pi's WiFi - three times what
+      // the monitor needs, on an access point that is also carrying 1080p
+      // CCTV. 16 kHz stereo is 64 KB/s and the resampler runs on the Pi.
+      // The rate passed here MUST be the rate the URL delivers.
+      const mode = await PigPulseMic.start("/esp/stream?rate=16000", 16000);
       btn.textContent = 'STOP LISTENING';
       btn.classList.add('liveOn');
       micSetModeText(mode);
@@ -641,12 +951,12 @@ micSetModeText(null);
 /* ---------- ambient panel (SHT45 on the ESP32-S3, via /ambient) ---------- */
 const AMBIENT_POLL_MS = 4000;
 const AMB_STATES = {
-  'live':         { cls: 'ok',  color: 'var(--good)', text: 'LIVE' },
-  'stale':        { cls: '',    color: 'var(--warn)', text: 'STALE — last SHT45 read is old' },
-  'sht-missing':  { cls: '',    color: 'var(--warn)', text: 'ESP32-S3 online — SHT45 not reporting' },
-  'esp-offline':  { cls: 'bad', color: 'var(--bad)',  text: 'ESP32-S3 offline' },
-  'mqtt-offline': { cls: 'bad', color: 'var(--bad)',  text: 'MQTT broker unreachable' },
-  'no-data':      { cls: '',    color: 'var(--warn)', text: 'Waiting for telemetry…' },
+  'live':         { cls: 'ok',  color: 'var(--green)', text: 'LIVE' },
+  'stale':        { cls: '',    color: 'var(--amber)', text: 'STALE — last SHT45 read is old' },
+  'sht-missing':  { cls: '',    color: 'var(--amber)', text: 'ESP32-S3 online — SHT45 not reporting' },
+  'esp-offline':  { cls: 'bad', color: 'var(--red)',  text: 'ESP32-S3 offline' },
+  'mqtt-offline': { cls: 'bad', color: 'var(--red)',  text: 'MQTT broker unreachable' },
+  'no-data':      { cls: '',    color: 'var(--amber)', text: 'Waiting for telemetry…' },
 };
 function ambFmt(v, unit, digits) {
   return (v === null || v === undefined) ? '--' : Number(v).toFixed(digits) + ' ' + unit;
@@ -663,10 +973,10 @@ async function ambientRefresh() {
     document.getElementById('ambHum').textContent = ambFmt(a.humidity, '%', 1);
     // Heat stress — THI (server-computed from the SHT45 pair; null when absent)
     const THI_CLASSES = {
-      'ok':       { color: 'var(--good)', text: '<74 — ok for swine' },
-      'mild':     { color: 'var(--warn)', text: '74–78 — mild stress' },
-      'moderate': { color: 'var(--bad)',  text: '78–82 — moderate stress' },
-      'severe':   { color: 'var(--bad)',  text: '>=82 — severe stress' },
+      'ok':       { color: 'var(--green)', text: '<74 — ok for swine' },
+      'mild':     { color: 'var(--amber)', text: '74–78 — mild stress' },
+      'moderate': { color: 'var(--red)',  text: '78–82 — moderate stress' },
+      'severe':   { color: 'var(--red)',  text: '>=82 — severe stress' },
     };
     const thiEl = document.getElementById('ambThi');
     const thiClsEl = document.getElementById('ambThiClass');
@@ -694,7 +1004,7 @@ async function ambientRefresh() {
     mode.textContent = bits.length ? bits.join(' • ') : '—';
   } catch (err) {
     text.textContent = 'Ambient endpoint unreachable';
-    text.style.color = 'var(--bad)';
+    text.style.color = 'var(--red)';
     dot.className = 'dot bad';
     mode.textContent = String(err);
   }
@@ -703,9 +1013,474 @@ setInterval(ambientRefresh, AMBIENT_POLL_MS);
 ambientRefresh();
 /* ---------- end ambient panel ---------- */
 
+/* ---------- CCTV card (Tapo via the /cctv proxy) ---------- */
+let cctvLive = false, cctvRecBusy = false;
+const cctvImg = document.getElementById('cctvImg');
+const cctvOff = document.getElementById('cctvOff');
+const CCTV_SNAP_MS = 20000;
+
+function cctvSetState(ok, text, sub) {
+  document.getElementById('cctvDot').className = 'dot' + (ok === null ? '' : ok ? ' ok' : ' bad');
+  document.getElementById('cctvState').textContent = text;
+  document.getElementById('cctvState').className = 'cardState ' + (ok === null ? 'warnT' : ok ? 'lit' : 'badT');
+  if (sub !== undefined) document.getElementById('cctvSub').textContent = sub;
+}
+function cctvSnapshot() {
+  if (cctvLive) return;
+  cctvImg.src = '/cctv?snapshot=1&ts=' + Date.now();
+}
+cctvImg.addEventListener('load', () => {
+  cctvOff.style.display = 'none';
+  cctvImg.style.visibility = 'visible';
+  cctvSetState(true, cctvLive ? 'LIVE MJPEG' : 'Snapshot ok',
+    cctvLive ? 'live feed · proxied through this origin'
+             : 'snapshots auto-refresh every 20 s while not live');
+});
+cctvImg.addEventListener('error', () => {
+  cctvOff.style.display = 'grid';
+  cctvImg.style.visibility = 'hidden';
+  if (cctvLive) { cctvLive = false; document.getElementById('cctvLiveBtn').textContent = 'GO LIVE'; }
+  cctvSetState(false, 'CCTV offline',
+    'last attempt failed — check pigpulse-cctv.service and the camera link');
+});
+function cctvToggleLive() {
+  const btn = document.getElementById('cctvLiveBtn');
+  cctvLive = !cctvLive;
+  btn.textContent = cctvLive ? 'STOP LIVE' : 'GO LIVE';
+  btn.classList.toggle('liveOn', cctvLive);
+  document.getElementById('cctvSnapBtn').disabled = cctvLive;
+  if (cctvLive) {
+    cctvSetState(null, 'Connecting live…', 'waiting for the first MJPEG frame');
+    cctvImg.src = '/cctv?ts=' + Date.now();
+  } else {
+    cctvSnapshot();
+  }
+}
+// ---- live camera audio -------------------------------------------------
+// The Pi streams MP3 from the camera's own mic, endlessly.
+//
+// Why MediaSource and not <audio src="/camera-audio/live">: measured in
+// Chrome, a plain endless src stream did not resolve MP3 metadata until ~20 KB
+// had arrived (8.7 s of silence at 32 kbps) before it would start. The exact
+// same bytes played from a Blob in 263 ms. Through MSE, playback begins as
+// soon as the first frames are appended.
+let cctvAudioOn = false;
+let cctvAudioAbort = null;
+let cctvAudioObjectUrl = null;
+
+function cctvAudioGainLabel() {
+  const v = document.getElementById('cctvAudGain').value;
+  document.getElementById('cctvAudGainVal').textContent = '+' + v + ' dB';
+}
+
+function cctvSbIdle(sb) {
+  // Resolves once the SourceBuffer finishes whatever it is doing. Only ever
+  // awaited while `sb.updating` is true, otherwise updateend never fires.
+  return new Promise((resolve) => {
+    const done = () => { sb.removeEventListener('updateend', done); resolve(); };
+    sb.addEventListener('updateend', done);
+  });
+}
+
+async function cctvAudioStart() {
+  if (cctvAudioOn) return;
+  const a = document.getElementById('cctvAudio');
+  const g = document.getElementById('cctvAudGain').value;
+  const rec = document.getElementById('cctvRec');
+  const url = '/camera-audio/live?gain=' + g + '&ts=' + Date.now();
+
+  cctvAudioOn = true;
+  document.getElementById('cctvAudBtn').textContent = '🔇 LIVE AUDIO — ON';
+  document.getElementById('cctvRecBtn').disabled = true;
+  rec.textContent = 'Live audio connecting…';
+
+  const mseOk = window.MediaSource && MediaSource.isTypeSupported('audio/mpeg');
+  if (!mseOk) {
+    // Older/other browser: fall back to the direct stream. Slower to start.
+    a.src = url;
+    a.play()
+      .then(() => { rec.textContent = 'Live audio on (direct stream) — boost +' + g + ' dB'; })
+      .catch((err) => { rec.textContent = 'Live audio blocked: ' + err.message; });
+    return;
+  }
+
+  const ms = new MediaSource();
+  cctvAudioAbort = new AbortController();
+  cctvAudioObjectUrl = URL.createObjectURL(ms);
+  a.src = cctvAudioObjectUrl;
+
+  ms.addEventListener('sourceopen', async () => {
+    let sb;
+    try {
+      sb = ms.addSourceBuffer('audio/mpeg');
+    } catch (err) {
+      rec.textContent = 'Live audio failed: ' + err.message;
+      cctvAudioStop();
+      return;
+    }
+    try {
+      const res = await fetch(url, { signal: cctvAudioAbort.signal });
+      if (!res.ok) {
+        rec.textContent = 'Live audio failed: ' + (await res.text()).trim();
+        cctvAudioStop();
+        return;
+      }
+      const reader = res.body.getReader();
+      // Jitter buffer. The camera delivers audio in ~185 ms bursts with holes
+      // up to ~800 ms between them (measured), so playing the moment the first
+      // frame lands guarantees a dropout within the first second. Hold back
+      // until ~1.5 s is queued: that rides out every gap observed and costs
+      // only half a second of extra delay.
+      const PREBUFFER_BYTES = 6000;
+      let queued = 0;
+      let playing = false;
+      while (cctvAudioOn) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        while (sb.updating) await cctvSbIdle(sb);
+        try { sb.appendBuffer(value); } catch (e) { break; }
+        queued += value.length;
+        if (!playing && queued >= PREBUFFER_BYTES) {
+          playing = true;
+          rec.textContent = 'Live audio on — boost +' + g + ' dB, about 2 s behind.';
+          a.play().catch(() => {});
+        }
+        // Keep memory bounded: drop audio the listener has already passed.
+        if (sb.buffered.length && sb.buffered.start(0) < a.currentTime - 60) {
+          while (sb.updating) await cctvSbIdle(sb);
+          try { sb.remove(0, a.currentTime - 30); } catch (e) { /* not ready */ }
+        }
+      }
+    } catch (e) {
+      if (e.name !== 'AbortError') {
+        rec.textContent = 'Live audio stopped: ' + e.message;
+      }
+    }
+  }, { once: true });
+}
+
+function cctvAudioStop() {
+  if (!cctvAudioOn) return;
+  cctvAudioOn = false;
+  if (cctvAudioAbort) {
+    try { cctvAudioAbort.abort(); } catch (e) { /* already closed */ }
+    cctvAudioAbort = null;
+  }
+  const a = document.getElementById('cctvAudio');
+  a.pause();
+  a.removeAttribute('src');
+  a.load();
+  if (cctvAudioObjectUrl) {
+    try { URL.revokeObjectURL(cctvAudioObjectUrl); } catch (e) { /* gone */ }
+    cctvAudioObjectUrl = null;
+  }
+  document.getElementById('cctvAudBtn').textContent = '🔊 LIVE AUDIO — OFF';
+  document.getElementById('cctvRecBtn').disabled = false;
+  document.getElementById('cctvRec').textContent = 'Live audio off.';
+}
+
+function cctvToggleAudio() {
+  if (cctvAudioOn) { cctvAudioStop(); } else { cctvAudioStart(); }
+}
+
+function cctvAudioReconnect() {
+  cctvAudioGainLabel();
+  if (!cctvAudioOn) return;
+  cctvAudioStop();
+  setTimeout(cctvAudioStart, 150);
+}
+
+// Stop the stream when the page goes away, so the Pi is not left holding an
+// RTSP slot for a tab nobody is looking at.
+window.addEventListener('pagehide', () => { if (cctvAudioOn) cctvAudioStop(); });
+
+// ---- push-to-talk: deck microphone -> Pi speaker -------------------------
+// The Tapo's own speaker cannot be reached from the Pi, so the barn speaker is
+// the Pi's 3.5 mm jack. Hold the button to stream, release to stop.
+let talkState = { active: false, ctx: null, stream: null, node: null };
+
+function talkGainLabel() {
+  document.getElementById('talkGainVal').textContent =
+    document.getElementById('talkGain').value + '×';
+}
+
+function talkSetStatus(msg) {
+  document.getElementById('talkStatus').textContent = msg;
+}
+
+async function talkStart() {
+  if (talkState.active) return;
+  talkState.active = true;          // reserve at once: releases are async too
+  const btn = document.getElementById('talkBtn');
+  btn.textContent = '… opening mic';
+  let stream = null;
+  let ctx = null;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+    });
+    if (!talkState.active) { stream.getTracks().forEach(t => t.stop()); return; }
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') await ctx.resume();
+    const rate = ctx.sampleRate;
+    const srcNode = ctx.createMediaStreamSource(stream);
+    const proc = ctx.createScriptProcessor(4096, 1, 1);
+    const gain = parseFloat(document.getElementById('talkGain').value) || 3;
+    const mute = ctx.createGain();
+    mute.gain.value = 0;              // run the graph without local feedback
+    let chain = Promise.resolve();
+    let failures = 0;
+
+    proc.onaudioprocess = (e) => {
+      if (!talkState.active) return;
+      const input = e.inputBuffer.getChannelData(0);
+      const pcm = new Int16Array(input.length);
+      for (let i = 0; i < input.length; i++) {
+        let s = input[i] * gain;
+        s = s < -1 ? -1 : (s > 1 ? 1 : s);
+        pcm[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+      }
+      const bytes = new Uint8Array(pcm.buffer);
+      // Serialise sends so chunks arrive in order and audio never reorders.
+      chain = chain.then(() => fetch('/announce?rate=' + rate, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/octet-stream' },
+        body: bytes
+      })).then((r) => {
+        if (!r.ok) {
+          failures++;
+          if (failures === 3) talkSetStatus('Speaker not responding (HTTP ' + r.status + ') — check the jack.');
+        }
+      }).catch(() => {
+        failures++;
+        if (failures === 3) talkSetStatus('Speaker not responding — check the Pi audio jack.');
+      });
+    };
+
+    srcNode.connect(proc);
+    proc.connect(mute);
+    mute.connect(ctx.destination);
+
+    talkState = { active: true, ctx, stream, node: proc };
+    btn.textContent = '🔴 TALKING — release to stop';
+    talkSetStatus('Live to the barn speaker.');
+  } catch (err) {
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    if (ctx) ctx.close();
+    talkState = { active: false, ctx: null, stream: null, node: null };
+    btn.textContent = '🎙 HOLD TO TALK';
+    talkSetStatus('Microphone unavailable: ' + err.message);
+  }
+}
+
+function talkStop() {
+  if (!talkState.active) return;
+  talkState.active = false;
+  try { talkState.node.disconnect(); } catch (e) { /* already gone */ }
+  try { talkState.stream.getTracks().forEach(t => t.stop()); } catch (e) { /* gone */ }
+  try { talkState.ctx.close(); } catch (e) { /* gone */ }
+  talkState = { active: false, ctx: null, stream: null, node: null };
+  document.getElementById('talkBtn').textContent = '🎙 HOLD TO TALK';
+  talkSetStatus('Barn speaker idle — hold the button and speak.');
+}
+
+// Pointer events cover mouse, touch and pen in one path.
+(function () {
+  const btn = document.getElementById('talkBtn');
+  if (!btn) return;
+  btn.addEventListener('pointerdown', (e) => { e.preventDefault(); talkStart(); });
+  ['pointerup', 'pointerleave', 'pointercancel'].forEach((ev) =>
+    btn.addEventListener(ev, () => talkStop()));
+  window.addEventListener('blur', () => talkStop());
+  window.addEventListener('pagehide', () => talkStop());
+})();
+
+async function cctvRecAudio(n) {
+  if (cctvRecBusy) return;
+  cctvRecBusy = true;
+  const btn = document.getElementById('cctvRecBtn');
+  const rec = document.getElementById('cctvRec');
+  btn.disabled = true;
+  rec.textContent = `Recording ${n} s from the camera mic… (one capture at a time)`;
+  try {
+    const res = await fetch('/camera-audio?seconds=' + n + '&ts=' + Date.now());
+    if (!res.ok) throw new Error((await res.text()).trim() || res.statusText);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tapo_audio_${n}s_${Date.now()}.wav`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    rec.textContent = 'Camera audio saved (' + (blob.size / 1024 | 0) + ' KB).';
+  } catch (err) {
+    rec.textContent = 'Camera audio failed: ' + err.message;
+  } finally {
+    cctvRecBusy = false;
+    btn.disabled = false;
+  }
+}
+setInterval(() => { if (!cctvLive) cctvSnapshot(); }, CCTV_SNAP_MS);
+cctvSnapshot();
+/* ---------- end CCTV card ---------- */
+
+/* ---------- cough classifier card (proxied /cough/api/*) ---------- */
+const COUGH_POLL_MS = 3000;
+let coughPoll = null;
+const COUGH_COLORS = { LOW: 'var(--green)', ELEVATED: 'var(--amber)', HIGH: 'var(--red)', 'NO DATA': 'var(--cyan)' };
+
+function coughStrip(rows, threshold) {
+  const strip = document.getElementById('coughStrip');
+  const newest12 = (rows || []).slice(0, 12).reverse(); // API: newest first
+  if (!newest12.length) { strip.innerHTML = ''; return; }
+  const scale = Math.max(1e-9, 2 * threshold);
+  strip.innerHTML = newest12.map(w => {
+    const h = Math.max(3, Math.sqrt(Math.min(1, w.p / scale)) * 100);
+    return '<i class="' + (w.above ? 'hit' : '') + '" style="height:' + h.toFixed(1) +
+           '%" title="' + w.iso + '  p=' + w.p.toFixed(4) + (w.above ? '  ABOVE' : '') + '"></i>';
+  }).join('');
+}
+function coughRender(s) {
+  const enabled = !!s.enabled;
+  const pill = document.getElementById('coughPill');
+  pill.textContent = enabled ? 'LIVE' : 'OFF';
+  pill.className = 'statePill ' + (enabled ? 'on' : 'off');
+  document.getElementById('coughText').textContent = enabled
+    ? 'ENABLED — scoring every 5 s window' : 'DISABLED (fail-safe default)';
+  document.getElementById('coughText').className = 'cardState ' + (enabled ? 'lit' : 'warnT');
+  const btn = document.getElementById('coughBtn');
+  btn.disabled = false;
+  btn.textContent = enabled ? 'Disable classification' : 'Enable classification';
+  btn.className = enabled ? 'btnOff' : 'btnOn';
+
+  const a = s.aggregate || {};
+  const v = document.getElementById('coughVerdict');
+  v.textContent = a.verdict || 'NO DATA';
+  v.style.color = COUGH_COLORS[a.verdict] || 'var(--cyan)';
+  document.getElementById('coughWhy').textContent = a.why || '';
+  document.getElementById('coughRate').textContent =
+    (a.rate_pct === null || a.rate_pct === undefined) ? '-' : a.rate_pct.toFixed(1) + ' %';
+  document.getElementById('coughWin').textContent = a.windows !== undefined ? a.windows : '-';
+  document.getElementById('coughMean').textContent =
+    (a.mean_p === null || a.mean_p === undefined) ? '-' : a.mean_p.toFixed(4);
+
+  const rows = s.windows || [];
+  const last = rows[0];
+  document.getElementById('coughLast').textContent = last
+    ? last.iso + ' · p=' + last.p.toFixed(4) + (last.above ? ' ⚠' : '') : '-';
+  const rt = s.runtime || {};
+  const drops = rt.dropped_gappy || 0;
+  const dropsEl = document.getElementById('coughDrops');
+  dropsEl.textContent = drops + ' · ' + (rt.cpu_pct_now !== undefined ? rt.cpu_pct_now.toFixed(0) : '-') + '%';
+  dropsEl.style.color = drops > 0 ? 'var(--amber)' : 'var(--green)';
+
+  const thr = (s.model && s.model.threshold) || 0.2061;
+  coughStrip(rows, thr);
+}
+async function coughRefresh() {
+  try {
+    const r = await fetch('/cough/api/status?ts=' + Date.now(), { cache: 'no-store' });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    coughRender(await r.json());
+  } catch (e) {
+    const pill = document.getElementById('coughPill');
+    pill.textContent = 'NO LINK';
+    pill.className = 'statePill off';
+    document.getElementById('coughText').textContent = 'Classifier service unreachable';
+    document.getElementById('coughText').className = 'cardState badT';
+    document.getElementById('coughSub').textContent =
+      '/cough proxy failing — thermal and mic are unaffected';
+  }
+}
+async function coughToggle() {
+  const btn = document.getElementById('coughBtn');
+  const want = !btn.classList.contains('btnOff'); // btnOff == currently enabled
+  btn.disabled = true;
+  try {
+    const r = await fetch('/cough/api/toggle', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enabled: want }),
+    });
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'toggle failed');
+  } catch (e) {
+    document.getElementById('coughWhy').textContent = 'Toggle failed: ' + e.message;
+  }
+  await coughRefresh();
+}
+document.getElementById('coughBtn').addEventListener('click', coughToggle);
+coughRefresh();
+setInterval(coughRefresh, COUGH_POLL_MS);
+/* ---------- end cough card ---------- */
+
 setInterpolation(true);
 setPalette('iron');
 updateFrame();
+
+/* ---------- trends: live from this Pi (no laptop involved) ---------- */
+const TREND_POLL_MS = 2000;
+const TREND_COLORS = ['#7bf5c6', '#ffd166', '#ff6b6b', '#8ab4ff', '#c792ea', '#7fdbca'];
+function seriesFrom(samples, field, unit, fn) {
+  const pts = [];
+  for (const r of samples) {
+    const v = fn ? fn(r) : r[field];
+    if (v === undefined || v === null || !Number.isFinite(v)) continue;
+    pts.push({ t: r.t, v });
+  }
+  if (!pts.length) return null;
+  const age = Math.round(Date.now() / 1000 - pts[pts.length - 1].t);
+  return { points: pts, unit: unit, n: pts.length, last_age_s: age };
+}
+async function trendsRefresh() {
+  try {
+    const [vp, sp] = await Promise.all([
+      fetch('/vitals.json', { cache: 'no-store' }).then((r) => r.json()),
+      fetch('/series.json', { cache: 'no-store' }).then((r) => r.json()),
+    ]);
+    const samples = vp.samples || [];
+    const vseries = {};
+    // Decimals are per unit: a voltage needs millivolts, a percentage does
+    // not. Without this the axis labels collapse onto the same rounded text.
+    const add = (label, unit, field, fn, decimals) => {
+      const s = seriesFrom(samples, field, unit, fn);
+      if (s) { s.decimals = decimals; vseries[label] = s; }
+    };
+    add('core voltage', 'V', 'v', null, 3);
+    add('cpu temp', '°C', 'tc', null, 2);
+    add('load (1 min)', '', 'l1', null, 3);
+    add('memory used', '%', 'mp', null, 2);
+    add('disk used', '%', 'dp', null, 2);
+    add('uptime', 'h', 'up', (r) => (r.up === undefined ? undefined : r.up / 3600), 2);
+    const reboots = (vp.reboots || []).map((r) => ({
+      t: r.t,
+      label: 'reboot (' + Math.round((r.down_s || 0) / 60) + ' min down)',
+    }));
+    document.getElementById('vitalsCharts').innerHTML = PigTrend.renderAll(vseries, {
+      width: 1100, height: 190, wrapperClass: 'trendBox', titleTag: 'h3',
+      emptyMessage: 'No vitals sampled yet — the log starts when the Pi does.',
+      reboots: reboots, staleAfter: 60,
+      colorFor: (k) => TREND_COLORS[Object.keys(vseries).indexOf(k) % TREND_COLORS.length],
+    });
+    document.getElementById('vitalsState').textContent = samples.length ? samples.length + ' samples' : 'no samples';
+
+    document.getElementById('seriesCharts').innerHTML = PigTrend.renderAll(sp || {}, {
+      width: 1100, height: 190, wrapperClass: 'trendBox', titleTag: 'h3',
+      emptyMessage: 'No sensor telemetry yet — nothing is reporting from the barn.',
+      staleAfter: 120,
+    });
+    const keys = Object.keys(sp || {});
+    document.getElementById('seriesState').textContent = keys.length ? keys.length + ' series' : 'no data';
+    document.getElementById('trendMeta').textContent =
+      'Live from this Pi · every ' + (vp.intervalS || 10) + ' s · ' + new Date().toLocaleTimeString();
+  } catch (e) {
+    document.getElementById('trendMeta').textContent = 'Trends unavailable: ' + e.message;
+  }
+}
+trendsRefresh();
+setInterval(trendsRefresh, TREND_POLL_MS);
+/* ---------- end trends ---------- */
 </script>
 </body>
 </html>
