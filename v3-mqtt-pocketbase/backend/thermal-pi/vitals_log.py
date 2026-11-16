@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import threading
 import time
@@ -32,6 +33,7 @@ MAX_LINES = 4000              # how many samples a reader returns
 
 _lock = threading.Lock()
 _started = False
+_boots_cache: dict = {"at": 0, "data": []}
 
 
 def _run(cmd: list[str]) -> str:
@@ -175,6 +177,86 @@ def reboots(samples: list[dict]) -> list[dict]:
     return marks
 
 
+def journal_reboots(max_age_s: int = 600) -> list[dict]:
+    """Past reboots reconstructed from the systemd journal.
+
+    The persistent log only starts when this sampler does, but the journal
+    goes back to the first boot. This is what makes the ORIGINAL event
+    visible: on 2026-11-15 the Pi's last journal entry before the power cut
+    is 05:01:20, and the next boot starts at 19:51 - a 14 h hole.
+
+    Caveat, stated because it is real: the Pi has no battery-backed RTC, so
+    the first timestamps after a boot can be skewed until NTP lands. A
+    negative gap is reported as clock skew rather than as a negative outage.
+    """
+    global _boots_cache
+    now = time.time()
+    if _boots_cache["at"] and (now - _boots_cache["at"]) < max_age_s:
+        return _boots_cache["data"]
+
+    out = _run(["journalctl", "--list-boots", "--no-pager", "-o", "short-iso"])
+    boots: list[dict] = []
+    for line in out.splitlines():
+        m = re.match(
+            r"\s*(-?\d+)\s+\S+\s+\w{3}\s+(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\s+\S+\s+"
+            r"\w{3}\s+(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})",
+            line,
+        )
+        if not m:
+            continue
+        try:
+            first = time.mktime(time.strptime(m.group(2), "%Y-%m-%d %H:%M:%S"))
+            last = time.mktime(time.strptime(m.group(3), "%Y-%m-%d %H:%M:%S"))
+        except ValueError:
+            continue
+        boots.append({"idx": int(m.group(1)), "first": first, "last": last})
+
+    # The Pi has no battery-backed RTC, so the FIRST journal entry of a boot
+    # can be skewed by hours (the clock starts from the last known time and
+    # jumps when NTP lands). The current boot's true start is exact, though:
+    # now - /proc/uptime. Using it makes the most recent outage - the one that
+    # matters - come out right (2026-11-15: 05:01:20 -> 19:51:27, 14.8 h).
+    try:
+        with open("/proc/uptime") as fh:
+            uptime_s = float(fh.read().split()[0])
+        now = time.time()
+        for b in boots:
+            if b["idx"] == 0:
+                b["first"] = now - uptime_s
+    except Exception:
+        pass
+
+    marks: list[dict] = []
+    for i in range(1, len(boots)):
+        prev, cur = boots[i - 1], boots[i]
+        down = cur["first"] - prev["last"]
+        if down < 0:
+            # Clock skew at boot, not a real interval. Say so.
+            marks.append({
+                "t": prev["last"],
+                "label": "boot %d -> %d (clock skew at boot)" % (prev["idx"], cur["idx"]),
+                "down_s": 0,
+                "skew": True,
+            })
+            continue
+        marks.append({
+            "t": prev["last"],
+            "label": "power cut? (%s down)" % _hms(down),
+            "down_s": round(down, 1),
+        })
+    _boots_cache = {"at": now, "data": marks}
+    return marks
+
+
+def _hms(seconds: float) -> str:
+    seconds = int(seconds)
+    if seconds < 90:
+        return "%d s" % seconds
+    if seconds < 5400:
+        return "%d min" % round(seconds / 60)
+    return "%.1f h" % (seconds / 3600)
+
+
 def _loop() -> None:
     while True:
         try:
@@ -202,5 +284,7 @@ def payload(limit: int = MAX_LINES) -> dict:
         "path": PATH,
         "count": len(samples),
         "samples": samples,
-        "reboots": marks,
+        # Live reboots (from this log) + past ones (from the journal), so the
+        # graph shows both the current gap and the historic power cuts.
+        "reboots": marks + journal_reboots(),
     }

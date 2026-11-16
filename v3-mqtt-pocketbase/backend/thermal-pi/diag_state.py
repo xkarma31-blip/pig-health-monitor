@@ -262,6 +262,8 @@ async function tick(){
       + PigTrend.renderAll(PigTrend.vitalsSeries((vp || {}).samples || []), {
           width: 860, height: 200, reboots: PigTrend.rebootMarkers((vp || {}).reboots || []),
           emptyMessage: 'No vitals sampled yet.',
+        }) + PigTrend.rebootList((vp || {}).reboots || [], {
+          emptyMessage: 'No reboots recorded yet.',
         }) + '</div>';
     html += '<div class="card"><h2>Trend</h2>'
       + PigTrend.renderAll(d.series || {}, {

@@ -216,9 +216,33 @@
     });
   }
 
+  /**
+   * A compact list of known power events.
+   *
+   * The chart's x-axis only spans the samples that exist, so an event from
+   * before the log started (2026-11-15: down 14.8 h) would fall outside it.
+   * The list is how that history is actually read.
+   */
+  function rebootList(reboots, opts) {
+    opts = opts || {};
+    if (!reboots || !reboots.length) {
+      return '<p class="note">' + esc(opts.emptyMessage || 'No reboots recorded.') + '</p>';
+    }
+    var items = reboots.slice().sort(function (a, b) { return (a.t || 0) - (b.t || 0); })
+      .map(function (r) {
+        var when = new Date((r.t || 0) * 1000).toLocaleString([], {
+          month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit',
+        });
+        return '<li><b>' + esc(when) + '</b> — ' + esc(r.label || 'reboot') +
+          (r.down_s ? ' <span class="muted">(' + esc(String(r.down_s)) + ' s)</span>' : '') + '</li>';
+      }).join('');
+    return '<p class="note">Recorded reboots — the gap before one is the outage:</p><ul class="rebootList">' +
+      items + '</ul>';
+  }
+
   global.PigTrend = {
     esc: esc, hhmm: hhmm, hhmmSec: hhmmSec,
-    drawTrend: drawTrend, renderAll: renderAll,
+    drawTrend: drawTrend, renderAll: renderAll, rebootList: rebootList,
     vitalsSeries: vitalsSeries, rebootMarkers: rebootMarkers
   };
 })(typeof window !== 'undefined' ? window : this);

@@ -50,6 +50,9 @@
     /* ---------- deck layout ---------- */
     .trends { margin: 22px 0 0; }
     .trends h2 { margin: 0 0 6px; font-size: 20px; }
+    .rebootList { margin: 6px 0 0; padding-left: 20px; }
+    .rebootList li { margin: 2px 0; }
+    .muted { color: var(--muted); }
     .trendBox { background: var(--card2); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-top: 12px; }
     .trendBox h3 { margin: 0 0 4px; font-size: 15px; color: var(--muted); letter-spacing: 0.4px; }
     .trendBox .note { margin: 6px 0 0; }
@@ -467,6 +470,7 @@
           <div class="cardState" id="vitalsState">—</div>
         </div>
         <div id="vitalsCharts"></div>
+        <div id="vitalsReboots"></div>
       </div>
 
       <div class="card">
@@ -1464,6 +1468,10 @@ async function trendsRefresh() {
       colorFor: (k) => TREND_COLORS[Object.keys(vseries).indexOf(k) % TREND_COLORS.length],
     });
     document.getElementById('vitalsState').textContent = samples.length ? samples.length + ' samples' : 'no samples';
+    var rebootEl = document.getElementById('vitalsReboots');
+    if (rebootEl) rebootEl.innerHTML = PigTrend.rebootList(vp.reboots || [], {
+      emptyMessage: 'No reboots recorded yet - the log starts when the Pi does.',
+    });
 
     document.getElementById('seriesCharts').innerHTML = PigTrend.renderAll(sp || {}, {
       width: 1100, height: 190, wrapperClass: 'trendBox', titleTag: 'h3',
