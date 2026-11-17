@@ -16,6 +16,7 @@
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { FarmerLang } from './farmerText';
+import type { AccessMode } from './source-policy';
 
 export interface FarmerSetup {
   /** PocketBase base URL the app talks to (see utils/pocketbase.ts PB_URL). */
@@ -24,6 +25,10 @@ export interface FarmerSetup {
   penName: string;
   lang: FarmerLang;
   setupDone: boolean;
+  /** Local-first by default; remote is the same Pi over its encrypted tunnel. */
+  accessMode: AccessMode;
+  /** PocketBase base on the Pi's Tailscale address (measured 2026-11-17). */
+  remotePbUrl: string;
 }
 
 const KEYS = {
@@ -32,6 +37,8 @@ const KEYS = {
   penName: '@pigpulse/penName',
   lang: '@pigpulse/lang',
   setupDone: '@pigpulse/setupDone',
+  accessMode: '@pigpulse/accessMode',
+  remotePbUrl: '@pigpulse/remotePbUrl',
 } as const;
 
 export const SETUP_DEFAULTS: FarmerSetup = {
@@ -40,6 +47,8 @@ export const SETUP_DEFAULTS: FarmerSetup = {
   penName: '',
   lang: 'en',
   setupDone: false,
+  accessMode: 'auto',
+  remotePbUrl: 'http://100.69.139.63:8090',
 };
 
 /** Well-known local candidates the Scan button probes (`/api/health` on each). */
@@ -54,12 +63,14 @@ export const PB_SCAN_CANDIDATES = [
 
 export async function loadFarmerSetup(): Promise<FarmerSetup> {
   try {
-    const [pbUrl, farmName, penName, lang, setupDone] = await Promise.all([
+    const [pbUrl, farmName, penName, lang, setupDone, accessMode, remotePbUrl] = await Promise.all([
       AsyncStorage.getItem(KEYS.pbUrl),
       AsyncStorage.getItem(KEYS.farmName),
       AsyncStorage.getItem(KEYS.penName),
       AsyncStorage.getItem(KEYS.lang),
       AsyncStorage.getItem(KEYS.setupDone),
+      AsyncStorage.getItem(KEYS.accessMode),
+      AsyncStorage.getItem(KEYS.remotePbUrl),
     ]);
     return {
       pbUrl: pbUrl ?? '',
@@ -67,6 +78,8 @@ export async function loadFarmerSetup(): Promise<FarmerSetup> {
       penName: penName ?? '',
       lang: lang === 'tl' ? 'tl' : 'en',
       setupDone: setupDone === '1',
+      accessMode: accessMode === 'local' || accessMode === 'remote' ? accessMode : 'auto',
+      remotePbUrl: remotePbUrl ?? SETUP_DEFAULTS.remotePbUrl,
     };
   } catch {
     return { ...SETUP_DEFAULTS };
@@ -83,6 +96,8 @@ export async function saveFarmerSetup(patch: Partial<FarmerSetup>): Promise<Farm
       AsyncStorage.setItem(KEYS.penName, next.penName),
       AsyncStorage.setItem(KEYS.lang, next.lang),
       AsyncStorage.setItem(KEYS.setupDone, next.setupDone ? '1' : '0'),
+      AsyncStorage.setItem(KEYS.accessMode, next.accessMode),
+      AsyncStorage.setItem(KEYS.remotePbUrl, next.remotePbUrl),
     ]);
   } catch {
     // Storage failure: keep in-memory defaults so this session still works.

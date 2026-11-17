@@ -168,7 +168,15 @@
         <b>Open the hosted site</b>
         <small id="hostedNote">needs internet</small>
       </a>
+      <a class="tile" style="flex:1" id="remoteLink" href="#" target="_blank" rel="noopener">
+        <b>Remote access to this Pi</b>
+        <small id="remoteNote">uses the encrypted tunnel</small>
+      </a>
     </div>
+    <p class="msg" style="margin-top:12px">
+      The PigPulse app uses this same tunnel automatically when it cannot reach
+      the PigPulse hotspot. Keep the hotspot as the first choice.
+    </p>
   </section>
 
   <!-- ================= STATUS ================= -->
@@ -274,6 +282,7 @@
       ["Wi-Fi network", s.has_venue ? s.venue.ssid : "not set"],
       ["Uplink", s.state + (s.uplink_ip ? " · " + s.uplink_ip : "")],
       ["Internet", on ? "reachable" : "not reachable"],
+      ["Remote tunnel", s.remote || "not ready — use the PigPulse hotspot"],
       ["Pi hotspot", (s.ap.ssid || "PigPulse") + " · channel " + (s.ap.channel || "?")],
       ["Hotspot DHCP leases", String(s.ap.clients)],
       ["Portal version", s.version]
@@ -286,6 +295,9 @@
       kv.appendChild(k); kv.appendChild(v);
     });
     $("hostedLink").href = s.hosted;
+    $("remoteLink").href = s.remote || "#";
+    $("remoteLink").setAttribute("aria-disabled", s.remote ? "false" : "true");
+    $("remoteNote").textContent = s.remote ? "open " + s.remote + " from the internet" : "tunnel not ready — use the PigPulse hotspot";
     // Onboarding is the first page, but not once this Pi has a venue or the
     // person already chose Skip on this phone.
     var skipped = s.skipped || localStorage.getItem("pp_skipped") === "1";

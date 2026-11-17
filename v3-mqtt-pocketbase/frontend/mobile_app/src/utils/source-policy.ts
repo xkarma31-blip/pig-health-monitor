@@ -41,6 +41,9 @@ export type SourceKind =
   | 'build'
   | 'bench'
   | 'pi-default'
+  | 'local'
+  | 'remote'
+  | 'offline'
   | 'malformed'
   | 'web-same-origin';
 
@@ -88,6 +91,23 @@ export interface ThermalDecision {
   base: string | null;
   kind: 'web-same-origin' | 'explicit' | 'derived' | 'malformed';
   malformed: boolean;
+}
+
+/** Local-first access policy. Remote is the same Pi over an encrypted tunnel. */
+export type AccessMode = 'local' | 'remote' | 'auto';
+
+export interface AccessSourceInput {
+  mode: AccessMode;
+  localBase: string | null | undefined;
+  remoteBase: string | null | undefined;
+  localReachable: boolean;
+  remoteReachable: boolean;
+}
+
+export interface AccessDecision {
+  base: string | null;
+  kind: 'local' | 'remote' | 'offline' | 'malformed';
+  reason: string;
 }
 
 /**
@@ -283,4 +303,44 @@ export function chooseThermalSource(input: ThermalSourceInput): ThermalDecision 
   const derived = deriveThermalBaseFromPb(input.pbDecision.base, { scheme: 'https', port: 8080 });
   if (!derived.ok) return { base: null, kind: 'malformed', malformed: true };
   return { base: derived.parsed.url, kind: 'derived', malformed: false };
+}
+
+/**
+ * Pick the one PocketBase source for this session.
+ *
+ * Local is preferred. A remote URL is the SAME Pi reached over Tailscale/WireGuard,
+ * never a cloud mirror or a second box. When both paths are down we fail closed
+ * with an explicit recommendation to reconnect to the PigPulse hotspot.
+ */
+export function chooseAccessSource(input: AccessSourceInput): AccessDecision {
+  const localRaw = (input.localBase ?? '').trim();
+  const remoteRaw = (input.remoteBase ?? '').trim();
+
+  if (input.mode === 'remote' && !remoteRaw) {
+    return { base: null, kind: 'offline', reason: 'Remote access is not configured — reconnect to PigPulse hotspot' };
+  }
+
+  if (remoteRaw) {
+    const remote = parseHttpBase(remoteRaw);
+    if (!remote.ok) return { base: null, kind: 'malformed', reason: `Remote URL is invalid (${remote.reason})` };
+    if (input.mode === 'remote') {
+      if (!input.remoteReachable) {
+        return { base: null, kind: 'offline', reason: 'Pi is offline on the tunnel — reconnect to PigPulse hotspot' };
+      }
+      return { base: remote.parsed.url, kind: 'remote', reason: 'Using encrypted tunnel to the same Pi' };
+    }
+  }
+
+  const local = parseHttpBase(localRaw);
+  if (!local.ok) return { base: null, kind: 'malformed', reason: `Local PocketBase URL is invalid (${local.reason})` };
+
+  if (input.mode === 'local' || input.localReachable) {
+    return { base: local.parsed.url, kind: 'local', reason: 'Using the PigPulse hotspot' };
+  }
+
+  if (remoteRaw && input.remoteReachable) {
+    return { base: remoteRaw, kind: 'remote', reason: 'Pi is away — using encrypted tunnel to the same Pi' };
+  }
+
+  return { base: null, kind: 'offline', reason: 'Pi is offline — reconnect to PigPulse hotspot or try the encrypted tunnel' };
 }

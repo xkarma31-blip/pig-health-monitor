@@ -44,6 +44,12 @@ class StatusTests(unittest.TestCase):
         self.assertEqual(result["state"], "UP")
         self.assertEqual(result["uplink_ip"], "192.168.254.194")
 
+    def test_remote_tunnel_url_is_reported(self):
+        with patch.object(portal, "tailscale_ip", return_value="100.69.139.63"):
+            result = self.status_for("Connected to 00:11:22:33:44:55",
+                                     "inet 192.168.254.194/24")
+        self.assertEqual(result["remote"], "http://100.69.139.63:8090")
+
 
 class WorkerTests(unittest.TestCase):
     def test_waits_for_link_lease_and_route_after_ap_restart(self):

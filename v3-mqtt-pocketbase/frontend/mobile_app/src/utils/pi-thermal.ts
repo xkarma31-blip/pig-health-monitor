@@ -18,7 +18,7 @@
 import { Platform } from 'react-native';
 import { loadFarmerSetup } from './setupStore';
 import { chooseNativeSource, chooseThermalSource, type SourceDecision } from './source-policy';
-import { PB_HOTSPOT_URL, resolveSelectedSource } from './pocketbase';
+import { PB_HOTSPOT_URL, resolveSelectedSource, setAccessConfig } from './pocketbase';
 
 export interface PiFrameData {
   ok?: boolean;
@@ -95,6 +95,7 @@ export async function resolvePiBase(): Promise<string | null> {
   let pbDecision: SourceDecision | null = null;
   try {
     const setup = await loadFarmerSetup();
+    setAccessConfig(setup.accessMode, setup.remotePbUrl);
     if (setup.pbUrl) {
       pbDecision = chooseNativeSource({ saved: setup.pbUrl, build: '', piDefault: PB_HOTSPOT_URL });
     }

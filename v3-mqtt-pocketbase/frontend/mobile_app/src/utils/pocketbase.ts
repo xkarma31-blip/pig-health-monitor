@@ -16,7 +16,7 @@
  */
 
 import { Platform } from 'react-native';
-import { chooseNativeSource, type SourceDecision } from './source-policy';
+import { chooseAccessSource, chooseNativeSource, type AccessMode, type SourceDecision } from './source-policy';
 
 // Resolve base URL.
 // Web: empty string => same-origin requests (`/api/...`). A public browser can
@@ -40,6 +40,27 @@ export const PB_HOTSPOT_URL = 'http://192.168.69.1:8090';
 const PB_FALLBACKS: string[] = Platform.OS === 'web' ? [''] : [PB_HOTSPOT_URL];
 
 let configuredServer = '';
+let accessMode: AccessMode = 'auto';
+let remoteServer = '';
+let localReachable = true;
+let remoteReachable = false;
+let accessReason = 'Using the PigPulse hotspot';
+
+/** Configure local-first access. Remote must be the same Pi over a VPN/tunnel. */
+export function setAccessConfig(mode: AccessMode, remoteUrl: string | null | undefined) {
+  accessMode = mode === 'remote' || mode === 'local' ? mode : 'auto';
+  remoteServer = (remoteUrl ?? '').trim().replace(/\/+$/, '');
+}
+
+/** Last reachability probe result; the resolver itself stays synchronous. */
+export function setAccessReachability(local: boolean, remote: boolean) {
+  localReachable = local;
+  remoteReachable = remote;
+}
+
+export function getAccessReason(): string {
+  return accessReason;
+}
 
 export function setConfiguredServer(url: string | null | undefined) {
   const clean = (url || '').trim().replace(/\/+$/, '');
@@ -50,6 +71,8 @@ export function setConfiguredServer(url: string | null | undefined) {
     adminToken = null;
     adminTokenExpiry = 0;
     configuredServer = clean;
+    localReachable = true;
+    remoteReachable = false;
   }
 }
 
@@ -69,11 +92,28 @@ export function resolveSelectedSource(): SourceDecision {
   if (Platform.OS === 'web') {
     return { base: '', kind: 'web-same-origin', malformed: false, explicit: false };
   }
-  return chooseNativeSource({
+  const local = chooseNativeSource({
     saved: configuredServer,
     build: process.env.EXPO_PUBLIC_POCKETBASE_URL ?? '',
     piDefault: PB_HOTSPOT_URL,
   });
+  const decision = chooseAccessSource({
+    mode: accessMode,
+    localBase: local.base,
+    remoteBase: remoteServer,
+    localReachable,
+    remoteReachable,
+  });
+  accessReason = decision.reason;
+  if (decision.kind === 'malformed') {
+    return { base: null, kind: 'malformed', malformed: true, explicit: true };
+  }
+  return {
+    base: decision.base,
+    kind: decision.kind,
+    malformed: false,
+    explicit: decision.kind === 'remote' || local.explicit,
+  };
 }
 
 /**

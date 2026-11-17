@@ -299,6 +299,20 @@ def associated() -> bool:
     return "Connected to" in run(["iw", "dev", wan_iface() or "wlan0", "link"], 5)
 
 
+def tailscale_ip() -> str:
+    """Return the Pi's Tailscale IPv4 address, or '' when the tunnel is down."""
+    try:
+        out = subprocess.check_output(
+            ["ip", "-4", "-o", "addr", "show", "tailscale0"],
+            text=True,
+            timeout=2,
+        )
+        match = re.search(r"inet (\d+\.\d+\.\d+\.\d+)", out)
+        return match.group(1) if match else ""
+    except (OSError, subprocess.SubprocessError):
+        return ""
+
+
 def status() -> dict:
     raw = read(STATUS_FILE)
     state = raw.split(" ", 1)[0] if raw else "UNKNOWN"
@@ -321,6 +335,7 @@ def status() -> dict:
         ip = read_addr = m.group(1)
     if state == "UP" and not ip:
         state = "DOWN no-dhcp"
+    ts_ip = tailscale_ip()
     return {
         "version": VERSION,
         "state": state,
@@ -334,6 +349,7 @@ def status() -> dict:
         "internet": internet_up(),
         "ap": ap_info(),
         "hosted": HOSTED,
+        "remote": f"http://{ts_ip}:8090" if ts_ip else "",
         "allow_5g": True,
     }
 

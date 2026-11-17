@@ -258,6 +258,15 @@ export function usePocketbaseRealtime(): PocketbaseRealtimeResult {
         ]);
         const setup = await setupModule.loadFarmerSetup();
         if (Platform.OS !== 'web' && setup?.pbUrl) pbModule.setConfiguredServer(setup.pbUrl);
+        pbModule.setAccessConfig(setup.accessMode, setup.remotePbUrl);
+        if (Platform.OS !== 'web') {
+          const probeModule = await import('../utils/access-probe');
+          const reach = await probeModule.probeAccess(
+            setup.pbUrl || pbModule.PB_HOTSPOT_URL,
+            setup.remotePbUrl,
+          );
+          pbModule.setAccessReachability(reach.local, reach.remote);
+        }
         modules.current = { resolveBaseUrls: pbModule.resolveBaseUrls };
       } catch {
         /* keep defaults; a setup read failure must not block the first connect */
