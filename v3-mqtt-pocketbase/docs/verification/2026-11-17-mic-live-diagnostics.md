@@ -45,3 +45,23 @@ correctly.
 **Conclusion:** the S3 mic recovered after the AP moved to the 2.4 GHz dongle.
 It is not yet proven reliable long-term; recheck after every reboot per the
 existing KNOWN_GOOD discipline.
+
+---
+
+## 3. SHT45 ambient card added
+
+`diag_state.py` now exposes `sht` alongside `esp`, with the same honest state
+model (`NO READING`, `UNKNOWN AGE`, `STALE`, `LIVE`). The diagnostics page has a
+dedicated **SHT45 barn ambient** card showing sensor state, temperature,
+humidity, and reading age. Tests: `test_diag_state` 6/6 OK.
+
+Deployed after the mic card with a timestamped backup and thermal service
+restart. Verified from `/diag.json`:
+
+```text
+sht = {
+  temperature: 32.14, humidity: 69.71, age_s: 0.1,
+  state: "LIVE", note: "SHT45 live: 32.14 C, 69.71 % RH."
+}
+esp.state = LIVE
+```
