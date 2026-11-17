@@ -65,7 +65,21 @@ The Pi's own PigPulse AP BSSID is filtered from the upstream list.
 
 ---
 
-## 4. Gates
+## 4. Phone-hotspot association test (partial)
+
+With Ethernet default route temporarily removed, the Pi scanned the phone
+hotspot `solrahK` on 5 GHz and two portal connect attempts were made with fresh
+BSSIDs. Both failed to associate. Supplicant logs showed it selecting the
+`solrahK` BSSID but receiving `ASSOC-REJECT status=16` on a different 5 GHz BSS
+(`2c:b6:c2:1e:9b:d5`, GFiber). A manually pinned BSSID config was also tried;
+the hotspot dropped before association completed, so the result is inconclusive.
+
+The AP and Ethernet default route were restored after testing. The 5 GHz scan
+path itself is proven; Pi-to-phone-hotspot association remains **unverified**.
+
+---
+
+## 5. Gates
 
 - `python3 -m unittest test_portal -v` — 15 tests OK
 - `test-pick.sh` — 9/9 pass, including “both bands → 5 GHz wins”

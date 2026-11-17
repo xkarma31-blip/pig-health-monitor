@@ -61,4 +61,14 @@ Build `283ede8b-5e7f-4e6b-944a-3260bab2a9f2` was installed with
 - Later, the phone switched to `GFiber_E9BD4` and the app correctly showed an
   offline/error state; this is expected before venue-LAN fallback was added.
 
-Final LAN-fallback + boot-fix build is pending installation.
+Final LAN-fallback + boot-fix build `96af94b8-4388-45c7-a7c3-ad2ee43934d2`
+was produced from commit `0edc339`. The downloaded artifact is
+`97,264,210` bytes, SHA-256
+`ad09c2b9a4ed8126c774df1b828581674048734071edefefbfb72ce63a504ca6`.
+
+Phone installation of that final artifact is **blocked**: ADB authorization was
+revoked and the device repeatedly reports `unauthorized` even after the user
+accepted the prompt. The previously installed `283ede8b` build remains on the
+phone and was physically verified for icon and top-inset fixes. Venue-LAN
+fallback and boot sequencing are covered by unit tests but not yet by a final
+APK install on the phone.
