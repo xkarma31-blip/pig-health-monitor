@@ -11,6 +11,7 @@ import { telemetryTime } from '../utils/telemetry-time';
 import { fetchPiAudioChunk, fetchPiCameraAudio, piEspStreamUrl } from '../utils/pi-thermal';
 import { piClock, pickAligned } from '../utils/pi-clock';
 import { explainThermalFrameError, screeningLabel, thermalSubtitle } from '../utils/thermal-diagnostics';
+import { cctvStatus, resolveCctvMode, type CctvMode } from '../utils/cctv-control';
 import { isPcmStreamSupported, startPcmStream, type PcmStreamState } from '../utils/pcm-stream';
 import { usePiNow } from '../hooks/usePiNow';
 
@@ -480,7 +481,7 @@ function BarnMicToggle({ base, healthy }: { base: string | null; healthy: boolea
  * ~4 s. When the camera is unreachable the Pi answers 503 and this shows an
  * honest "no camera audio" state instead of a silent Listen button.
  */
-function CameraSoundToggle({ base, cameraLive }: { base: string | null; cameraLive: boolean }) {
+function CameraSoundToggle({ base, cameraLive, audioEnabled }: { base: string | null; cameraLive: boolean; audioEnabled: boolean }) {
   const { colors, spacing, radius, typography } = useTheme();
   const [on, setOn] = useState(false);
   const [status, setStatus] = useState<SoundStatus>('idle');
@@ -656,10 +657,12 @@ function CameraSoundToggle({ base, cameraLive }: { base: string | null; cameraLi
   };
 
   // Keep Mute tappable even if the bridge/base disappears mid-listen.
-  const disabled = !base && !on;
-  const sub = !base && !on
-    ? 'No bridge — camera audio needs the proxy'
-    : on
+  const disabled = !base || (!audioEnabled && !on);
+  const sub = !audioEnabled && !on
+    ? 'Video-only mode — switch to VIDEO + AUDIO to listen'
+    : !base && !on
+      ? 'No bridge — camera audio needs the proxy'
+      : on
         ? status === 'playing'
           ? 'Playing…'
           : status === 'waiting'
@@ -705,6 +708,7 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
   const { colors, spacing, radius, typography } = useTheme();
   const tier = useBreakpoint();
   const isDesktop = tier === 'expanded';
+  const [cctvMode, setCctvMode] = useState<CctvMode>('video');
 
   // Everything on this card is shown at ONE shared delay — `piClock.lagMs` —
   // so the thermal frame, the camera frame and the mic audio all present the
@@ -753,12 +757,13 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
 
   const ambient = pi.ambient;
   const esp = pi.esp;
-  const cctv = usePiCctv(pi.base);
+  const cctv = usePiCctv(cctvMode === 'off' ? null : pi.base);
+  const cctvState = cctvStatus({ mode: cctvMode, live: cctv.live, base: pi.base });
   // The camera frame that belongs to the shared delay, so CCTV shows the same
   // moment as the thermal frame and the audio. Falls back to the newest frame
   // until the clock is ready.
   const cctvAligned = pickAligned(cctv.frames, nowPi, piClock.lagMs);
-  const cctvUrl = cctvAligned?.url ?? cctv.frameUrl;
+  const cctvUrl = cctvState.showFrame ? (cctvAligned?.url ?? cctv.frameUrl) : null;
 
   // ── Stage: real frame, or an honest placeholder. Never a fake image. ──
   const stageBlock = (
@@ -934,6 +939,34 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
       <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.sm }]}>
         CCTV — TAPO CAMERA
       </Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.sm }}>
+        {(['off', 'video', 'video_audio'] as const).map((mode) => {
+          const active = mode === cctvMode;
+          const label = mode === 'off' ? 'OFF' : mode === 'video' ? 'VIDEO' : 'VIDEO + AUDIO';
+          return (
+            <TouchableOpacity
+              key={mode}
+              onPress={() => setCctvMode(resolveCctvMode(mode))}
+              accessibilityRole="button"
+              accessibilityLabel={`CCTV mode ${label}`}
+              accessibilityState={{ selected: active }}
+              style={{
+                minHeight: 44,
+                minWidth: 84,
+                borderRadius: radius.pill,
+                borderWidth: 1,
+                borderColor: active ? colors.healthy : colors.divider,
+                backgroundColor: active ? colors.healthySoft : colors.surface,
+                alignItems: 'center',
+                justifyContent: 'center',
+                paddingHorizontal: spacing.md,
+              }}
+            >
+              <Text style={[typography.label, { color: active ? colors.healthy : colors.textSecondary }]}>{label}</Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
       <View
         style={[
           styles.wideCard,
@@ -966,12 +999,11 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
             </Text>
           </View>
         )}
-        <Text style={[typography.bodySmall, { color: colors.textMuted, marginTop: spacing.sm, fontSize: 12 }]}>
-          {cctv.live && cctv.at
-            ? cctvAligned && alignedFrame
-              ? `Live snapshot — in sync with the other panels · ≈${(piClock.lagMs / 1000).toFixed(1)} s behind live`
-              : `Live snapshot — updated ${Math.max(0, Math.round((cctv.now - cctv.at) / 1000))}s ago`
-            : 'No recent frame from the camera'}
+        <Text style={[typography.bodySmall, { color: colors.textPrimary, marginTop: spacing.sm, fontSize: 12 }]}>
+          {cctvState.label}
+        </Text>
+        <Text style={[typography.bodySmall, { color: colors.textMuted, marginTop: 2, fontSize: 12 }]}>
+          {cctvState.reason}
         </Text>
       </View>
     </View>
@@ -988,7 +1020,7 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
       >
         <BarnMicToggle base={pi.base} healthy={!!esp && esp.socket && !esp.stale} />
         <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.divider, marginVertical: spacing.md }} />
-        <CameraSoundToggle base={pi.base} cameraLive={cctv.live} />
+        <CameraSoundToggle base={pi.base} cameraLive={cctv.live} audioEnabled={cctvState.audioAvailable} />
       </View>
     </View>
   );
