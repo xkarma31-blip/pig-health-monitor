@@ -273,10 +273,31 @@ export function deriveThermalBaseFromPb(
   };
 }
 
+/** Derive the Pi portal's plain-HTTP proxy from the selected PocketBase host. */
+export function derivePortalThermalBaseFromPb(pbBase: string): DeriveThermalResult {
+  const parsed = parseHttpBase(pbBase);
+  if (!parsed.ok) return { ok: false, reason: parsed.reason };
+  const authority = parsed.parsed.isIpv6
+    ? `[${parsed.parsed.host}]`
+    : parsed.parsed.host;
+  return {
+    ok: true,
+    parsed: {
+      url: `http://${authority}/api/pi`,
+      scheme: 'http',
+      host: parsed.parsed.host,
+      port: 80,
+      isIpv6: parsed.parsed.isIpv6,
+    },
+  };
+}
+
 /**
- * Thermal console base. Web is ALWAYS same-origin (`/api/pi`) — a cross-origin
- * override is refused and a stale saved native host is ignored. Native derives
- * from the same selected PB decision unless an explicit override is given.
+ * Thermal console base. Web is ALWAYS same-origin (`/api/pi`) and native uses
+ * the Pi portal's `/api/pi` proxy on the same selected PB host. The proxy trusts
+ * the Pi's self-signed sensor certificate server-side, so a native app never
+ * has to accept a browser security warning to show a real frame. An explicit
+ * operator override is still honoured for bench/direct-console work.
  */
 export function chooseThermalSource(input: ThermalSourceInput): ThermalDecision {
   const override = (input.explicitOverride ?? '').trim();
@@ -300,7 +321,7 @@ export function chooseThermalSource(input: ThermalSourceInput): ThermalDecision 
   if (input.pbDecision.malformed || !input.pbDecision.base) {
     return { base: null, kind: 'malformed', malformed: true };
   }
-  const derived = deriveThermalBaseFromPb(input.pbDecision.base, { scheme: 'https', port: 8080 });
+  const derived = derivePortalThermalBaseFromPb(input.pbDecision.base);
   if (!derived.ok) return { base: null, kind: 'malformed', malformed: true };
   return { base: derived.parsed.url, kind: 'derived', malformed: false };
 }

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Slot } from 'expo-router';
 import { View, TouchableOpacity, Text, Platform } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '../theme';
 import { WebThemeProvider } from '../theme/WebThemeContext';
 import { ToastProvider } from '../components/primitives/Toast';
@@ -13,11 +13,14 @@ import { haptic, initHaptics } from '../utils/haptics';
 import AdvisorModal from '../components/AdvisorModal';
 import { PulseView } from '../components/Animated/PulseView';
 import { useWidgetSync } from '../hooks/useWidgetSync';
+import { rootTopPadding } from '../utils/safe-area';
 
 function RootInner({ children }: { children: React.ReactNode }) {
   const [advisorVisible, setAdvisorVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { colors, mode } = useTheme();
+  const insets = useSafeAreaInsets();
+  const topInset = rootTopPadding(insets);
 
   // Keep the native Android widget cache in sync for the app's lifetime. Must be
   // called unconditionally (before the loading early return) inside ThemeProvider.
@@ -59,7 +62,7 @@ function RootInner({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: colors.background, paddingTop: topInset }}>
       <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
       {/* Full-viewport shell — no desktop phone-card wrapper (matches deployed :8094) */}
       <View style={{ flex: 1, width: '100%' }}>

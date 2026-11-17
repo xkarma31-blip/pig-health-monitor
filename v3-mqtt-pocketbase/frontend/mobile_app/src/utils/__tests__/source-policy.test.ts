@@ -214,14 +214,14 @@ expectEqual(webProtoRel.base, '/api/pi', 'protocol-relative cross-origin overrid
 section('pure source-policy: native thermal');
 
 const natDefault = chooseThermalSource({ isWeb: false, explicitOverride: '', pbDecision: sel3 });
-expectEqual(natDefault.base, 'https://192.168.69.1:8080', 'native thermal derives from Pi default');
+expectEqual(natDefault.base, 'http://192.168.69.1/api/pi', 'native thermal uses the Pi portal proxy');
 expectTrue(
   !/vercel|pig-health-monitor\.vercel/i.test(String(natDefault.base)),
   'native thermal has no hosted bridge',
 );
 
 const natBuild = chooseThermalSource({ isWeb: false, explicitOverride: '', pbDecision: sel2 });
-expectEqual(natBuild.base, 'https://10.0.0.6:8080', 'native thermal derives from build source');
+expectEqual(natBuild.base, 'http://10.0.0.6/api/pi', 'native thermal proxy derives from build source');
 
 const natMalformed = chooseThermalSource({ isWeb: false, explicitOverride: '', pbDecision: bad1 });
 expectEqual(natMalformed.base, null, 'native thermal fails closed when PB source malformed');
