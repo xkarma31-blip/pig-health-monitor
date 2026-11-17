@@ -33,14 +33,20 @@ async function healthOk(base: string | null | undefined, timeoutMs = 2500): Prom
 
 export interface AccessReachability {
   local: boolean;
+  lan: boolean;
   remote: boolean;
 }
 
-/** Probe both paths in parallel; neither failure may throw into the caller. */
-export async function probeAccess(localBase: string | null | undefined, remoteBase: string | null | undefined): Promise<AccessReachability> {
-  const [local, remote] = await Promise.all([
+/** Probe all paths in parallel; any failure simply reports that path down. */
+export async function probeAccess(
+  localBase: string | null | undefined,
+  lanBase: string | null | undefined,
+  remoteBase: string | null | undefined,
+): Promise<AccessReachability> {
+  const [local, lan, remote] = await Promise.all([
     healthOk(localBase),
+    healthOk(lanBase),
     healthOk(remoteBase),
   ]);
-  return { local, remote };
+  return { local, lan, remote };
 }

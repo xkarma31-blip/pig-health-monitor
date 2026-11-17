@@ -34,8 +34,14 @@ expectEq(
   'auto prefers local',
 );
 
-// AUTO uses the encrypted tunnel only when local is truly unreachable.
-const tunneled = chooseAccessSource({ mode: 'auto', localBase: local, remoteBase: remote, localReachable: false, remoteReachable: true });
+// AUTO prefers the same venue LAN before the tunnel when the hotspot is gone.
+const lan = 'http://192.168.254.113:8090';
+const lanFirst = chooseAccessSource({ mode: 'auto', localBase: local, lanBase: lan, remoteBase: remote, localReachable: false, lanReachable: true, remoteReachable: true });
+expectEq(lanFirst.kind, 'lan', 'auto prefers venue LAN');
+expectEq(lanFirst.base, lan, 'venue LAN base used');
+
+// AUTO uses the encrypted tunnel only when neither local path works.
+const tunneled = chooseAccessSource({ mode: 'auto', localBase: local, lanBase: lan, remoteBase: remote, localReachable: false, lanReachable: false, remoteReachable: true });
 expectEq(tunneled.kind, 'remote', 'auto falls back to remote');
 expectEq(tunneled.base, remote, 'remote base used');
 

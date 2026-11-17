@@ -95,7 +95,7 @@ export async function resolvePiBase(): Promise<string | null> {
   let pbDecision: SourceDecision | null = null;
   try {
     const setup = await loadFarmerSetup();
-    setAccessConfig(setup.accessMode, setup.remotePbUrl);
+    setAccessConfig(setup.accessMode, setup.remotePbUrl, setup.lanPbUrl);
     if (setup.pbUrl) {
       pbDecision = chooseNativeSource({ saved: setup.pbUrl, build: '', piDefault: PB_HOTSPOT_URL });
     }

@@ -41,20 +41,28 @@ const PB_FALLBACKS: string[] = Platform.OS === 'web' ? [''] : [PB_HOTSPOT_URL];
 
 let configuredServer = '';
 let accessMode: AccessMode = 'auto';
+let lanServer = '';
 let remoteServer = '';
 let localReachable = true;
+let lanReachable = false;
 let remoteReachable = false;
 let accessReason = 'Using the PigPulse hotspot';
 
 /** Configure local-first access. Remote must be the same Pi over a VPN/tunnel. */
-export function setAccessConfig(mode: AccessMode, remoteUrl: string | null | undefined) {
+export function setAccessConfig(
+  mode: AccessMode,
+  remoteUrl: string | null | undefined,
+  lanUrl?: string | null,
+) {
   accessMode = mode === 'remote' || mode === 'local' ? mode : 'auto';
+  lanServer = (lanUrl ?? '').trim().replace(/\/+$/, '');
   remoteServer = (remoteUrl ?? '').trim().replace(/\/+$/, '');
 }
 
 /** Last reachability probe result; the resolver itself stays synchronous. */
-export function setAccessReachability(local: boolean, remote: boolean) {
+export function setAccessReachability(local: boolean, lan: boolean, remote: boolean) {
   localReachable = local;
+  lanReachable = lan;
   remoteReachable = remote;
 }
 
@@ -72,6 +80,7 @@ export function setConfiguredServer(url: string | null | undefined) {
     adminTokenExpiry = 0;
     configuredServer = clean;
     localReachable = true;
+    lanReachable = false;
     remoteReachable = false;
   }
 }
@@ -100,8 +109,10 @@ export function resolveSelectedSource(): SourceDecision {
   const decision = chooseAccessSource({
     mode: accessMode,
     localBase: local.base,
+    lanBase: lanServer,
     remoteBase: remoteServer,
     localReachable,
+    lanReachable,
     remoteReachable,
   });
   accessReason = decision.reason;

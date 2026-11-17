@@ -42,6 +42,7 @@ export type SourceKind =
   | 'bench'
   | 'pi-default'
   | 'local'
+  | 'lan'
   | 'remote'
   | 'offline'
   | 'malformed'
@@ -99,14 +100,17 @@ export type AccessMode = 'local' | 'remote' | 'auto';
 export interface AccessSourceInput {
   mode: AccessMode;
   localBase: string | null | undefined;
+  /** Pi's address on the venue LAN, learned from the portal while on hotspot. */
+  lanBase?: string | null;
   remoteBase: string | null | undefined;
   localReachable: boolean;
+  lanReachable?: boolean;
   remoteReachable: boolean;
 }
 
 export interface AccessDecision {
   base: string | null;
-  kind: 'local' | 'remote' | 'offline' | 'malformed';
+  kind: 'local' | 'lan' | 'remote' | 'offline' | 'malformed';
   reason: string;
 }
 
@@ -335,6 +339,7 @@ export function chooseThermalSource(input: ThermalSourceInput): ThermalDecision 
  */
 export function chooseAccessSource(input: AccessSourceInput): AccessDecision {
   const localRaw = (input.localBase ?? '').trim();
+  const lanRaw = (input.lanBase ?? '').trim();
   const remoteRaw = (input.remoteBase ?? '').trim();
 
   if (input.mode === 'remote') {
@@ -354,6 +359,14 @@ export function chooseAccessSource(input: AccessSourceInput): AccessDecision {
 
   if (input.mode === 'local' || input.localReachable) {
     return { base: local.parsed.url, kind: 'local', reason: 'Using the PigPulse hotspot' };
+  }
+
+  if (lanRaw && input.lanReachable) {
+    const lan = parseHttpBase(lanRaw);
+    if (lan.ok) {
+      return { base: lan.parsed.url, kind: 'lan', reason: 'Using the Pi on this venue network' };
+    }
+    return { base: null, kind: 'offline', reason: `Venue LAN URL is invalid (${lan.reason}) — reconnect to PigPulse hotspot` };
   }
 
   if (remoteRaw && input.remoteReachable) {

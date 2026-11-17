@@ -27,6 +27,8 @@ export interface FarmerSetup {
   setupDone: boolean;
   /** Local-first by default; remote is the same Pi over its encrypted tunnel. */
   accessMode: AccessMode;
+  /** Pi's address on the venue LAN, learned from the portal while on hotspot. */
+  lanPbUrl: string;
   /** PocketBase base on the Pi's Tailscale address (measured 2026-11-17). */
   remotePbUrl: string;
 }
@@ -38,6 +40,7 @@ const KEYS = {
   lang: '@pigpulse/lang',
   setupDone: '@pigpulse/setupDone',
   accessMode: '@pigpulse/accessMode',
+  lanPbUrl: '@pigpulse/lanPbUrl',
   remotePbUrl: '@pigpulse/remotePbUrl',
 } as const;
 
@@ -48,6 +51,7 @@ export const SETUP_DEFAULTS: FarmerSetup = {
   lang: 'en',
   setupDone: false,
   accessMode: 'auto',
+  lanPbUrl: '',
   remotePbUrl: 'http://100.69.139.63:8090',
 };
 
@@ -63,13 +67,14 @@ export const PB_SCAN_CANDIDATES = [
 
 export async function loadFarmerSetup(): Promise<FarmerSetup> {
   try {
-    const [pbUrl, farmName, penName, lang, setupDone, accessMode, remotePbUrl] = await Promise.all([
+    const [pbUrl, farmName, penName, lang, setupDone, accessMode, lanPbUrl, remotePbUrl] = await Promise.all([
       AsyncStorage.getItem(KEYS.pbUrl),
       AsyncStorage.getItem(KEYS.farmName),
       AsyncStorage.getItem(KEYS.penName),
       AsyncStorage.getItem(KEYS.lang),
       AsyncStorage.getItem(KEYS.setupDone),
       AsyncStorage.getItem(KEYS.accessMode),
+      AsyncStorage.getItem(KEYS.lanPbUrl),
       AsyncStorage.getItem(KEYS.remotePbUrl),
     ]);
     return {
@@ -79,6 +84,7 @@ export async function loadFarmerSetup(): Promise<FarmerSetup> {
       lang: lang === 'tl' ? 'tl' : 'en',
       setupDone: setupDone === '1',
       accessMode: accessMode === 'local' || accessMode === 'remote' ? accessMode : 'auto',
+      lanPbUrl: lanPbUrl ?? '',
       remotePbUrl: remotePbUrl ?? SETUP_DEFAULTS.remotePbUrl,
     };
   } catch {
@@ -97,6 +103,7 @@ export async function saveFarmerSetup(patch: Partial<FarmerSetup>): Promise<Farm
       AsyncStorage.setItem(KEYS.lang, next.lang),
       AsyncStorage.setItem(KEYS.setupDone, next.setupDone ? '1' : '0'),
       AsyncStorage.setItem(KEYS.accessMode, next.accessMode),
+      AsyncStorage.setItem(KEYS.lanPbUrl, next.lanPbUrl),
       AsyncStorage.setItem(KEYS.remotePbUrl, next.remotePbUrl),
     ]);
   } catch {

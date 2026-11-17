@@ -118,7 +118,7 @@ export function usePocketbaseRealtime(): PocketbaseRealtimeResult {
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const deadline = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startRef = useRef<() => void>(() => {});
-  const accessProbe = useRef<{ local: string; remote: string; lastAt: number | null; failures: number } | null>(null);
+  const accessProbe = useRef<{ local: string; lan: string; remote: string; lastAt: number | null; failures: number } | null>(null);
 
   const reconnect = useCallback(() => {
     startRef.current();
@@ -261,16 +261,42 @@ export function usePocketbaseRealtime(): PocketbaseRealtimeResult {
         const setup = await setupModule.loadFarmerSetup();
         if (Platform.OS !== 'web' && setup?.pbUrl) pbModule.setConfiguredServer(setup.pbUrl);
         if (Platform.OS !== 'web') {
-          pbModule.setAccessConfig(setup.accessMode, setup.remotePbUrl);
+          pbModule.setAccessConfig(setup.accessMode, setup.remotePbUrl, setup.lanPbUrl);
           const localBase = setup.pbUrl || pbModule.PB_HOTSPOT_URL;
+          let lanBase = setup.lanPbUrl;
           const remoteBase = setup.remotePbUrl;
-          const reach = await probeAccess(localBase, remoteBase);
-          pbModule.setAccessReachability(reach.local, reach.remote);
+
+          // While on the hotspot, learn the Pi's venue-LAN address from its
+          // own portal status. That makes same-router access work later without
+          // asking the farmer to type an IP or install a VPN.
+          if (localBase === pbModule.PB_HOTSPOT_URL) {
+            try {
+              const res = await fetch('http://192.168.69.1/api/status', {
+                headers: { Accept: 'application/json' },
+              });
+              if (res.ok) {
+                const status = (await res.json()) as { uplink_ip?: string };
+                if (status.uplink_ip) {
+                  lanBase = `http://${status.uplink_ip}:8090`;
+                  if (lanBase !== setup.lanPbUrl) {
+                    await setupModule.saveFarmerSetup({ lanPbUrl: lanBase });
+                  }
+                  pbModule.setAccessConfig(setup.accessMode, remoteBase, lanBase);
+                }
+              }
+            } catch {
+              /* portal status is a convenience; saved config still works */
+            }
+          }
+
+          const reach = await probeAccess(localBase, lanBase, remoteBase);
+          pbModule.setAccessReachability(reach.local, reach.lan, reach.remote);
           accessProbe.current = {
             local: localBase,
+            lan: lanBase,
             remote: remoteBase,
             lastAt: Date.now(),
-            failures: reach.local || reach.remote ? 0 : 1,
+            failures: reach.local || reach.lan || reach.remote ? 0 : 1,
           };
         }
         modules.current = { resolveBaseUrls: pbModule.resolveBaseUrls };
@@ -293,14 +319,14 @@ export function usePocketbaseRealtime(): PocketbaseRealtimeResult {
       const probe = accessProbe.current;
       if (!probe || !isMounted.current || !reprobeDue(probe.lastAt, Date.now(), probe.failures)) return;
       probe.lastAt = Date.now();
-      const reach = await probeAccess(probe.local, probe.remote);
+      const reach = await probeAccess(probe.local, probe.lan, probe.remote);
       if (!isMounted.current) return;
-      probe.failures = reach.local || reach.remote ? 0 : probe.failures + 1;
+      probe.failures = reach.local || reach.lan || reach.remote ? 0 : probe.failures + 1;
       const pbModule = await import('../utils/pocketbase');
-      pbModule.setAccessReachability(reach.local, reach.remote);
-      if (!reach.local && !reach.remote) {
+      pbModule.setAccessReachability(reach.local, reach.lan, reach.remote);
+      if (!reach.local && !reach.lan && !reach.remote) {
         setConnectionStatus('error');
-        setLastError('Pi is offline — reconnect to PigPulse hotspot or try the encrypted tunnel');
+        setLastError('Pi is offline — reconnect to PigPulse hotspot, use the venue Wi-Fi, or connect Tailscale');
         return;
       }
       startRef.current();
