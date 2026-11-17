@@ -295,15 +295,39 @@ recurrence risk.
 > - **ESP32-S3 mic `68:ee:8f:dd:31:3c`**: no DHCP lease, absent from hostapd
 >   logs, `/esp/status` times out, earlier `connected=false accepted=0
 >   nonzeroPct=0.0`. **Needs physical inspection.**
-> - **`pigpulse-cctv.service`**: active and holding a camera lease, but the
->   journal says no camera is answering and HTTP probes time out.
-> - **`pigpulse-ap-powersave.service`**: failed `status=237/KEYRING` on
->   `iw dev wlan1 set power_save off`, although hostapd/AP are active.
+> - **`pigpulse-cctv.service`**: active but the camera has **no DHCP lease and no
+>   AP association**; journal says no camera is answering and HTTP probes time
+>   out. Superseded by §0.10 for the app-side mode work.
+> - **`pigpulse-ap-powersave.service`**: the earlier `237/KEYRING` failure has
+>   **recovered** on this boot — measured `active (exited)`, status 0 on `wlan1`.
 > - **5 GHz WAN**: unmet. The deployed `pigpulse-wan-pick` prefers 2.4 GHz and
 >   `pigpulse-portal-connect` refuses 5 GHz; a working 5 GHz adapter / antenna
 >   reseat is still required. **Scripts were not changed.**
 > - **`health_check.py`**: PocketBase admin auth returns HTTP 400 and the table
 >   token check fails.
+
+### 0.10 P0 remediation shipped 2026-11-17
+
+> Full record:
+> **`v3-mqtt-pocketbase/docs/verification/2026-11-17-p0-remediation.md`**.
+
+Master approved the full P0 batch after the read-only audit. Six narrow commits
+landed on `capstone-remediation-20261113`:
+
+- `3c7512f` — thermal fetch/pixel failures now surface a plain reason, and raw
+  `FEVER`/`ALERT` verdicts render as `ELEVATED SURFACE — SCREENING ONLY`.
+- `40917bc` — app-side CCTV OFF / VIDEO / VIDEO + AUDIO modes, honest offline
+  text, and the grounded Tapo/SD recovery guide.
+- `05ddd24` + `6305526` — pig writes require a signed-in owner; the migration
+  was validated on a sandbox DB copy and applied to **both** live PocketBase
+  instances after timestamped backups. Reads remain open.
+- `030dc73` — local-first access: PigPulse hotspot → encrypted tunnel to the
+  **same Pi** → explicit offline recommendation. No cloud mirror.
+- `96e5b89` — notification channel and alert payload contract pinned and tested.
+
+The Pi's radio roles are **measured opposite** to older §2.4 text on this boot:
+built-in `wlan0` hosts the 2.4 GHz `PigPulse` AP, while the USB dongle `wlan1`
+is the working 2.4 GHz WAN client. The 5 GHz preference remains unmet.
 
 ---
 
