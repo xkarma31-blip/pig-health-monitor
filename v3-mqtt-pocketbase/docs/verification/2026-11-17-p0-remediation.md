@@ -1,6 +1,6 @@
 # P0 remediation verification — 2026-11-17
 
-**Status:** code and live-database work complete; fresh APK build and physical-phone verification in progress.
+**Status:** code, live-database work, and physical-phone verification complete. A final rebuild is in progress only to include a one-line honest-copy fix found during that verification.
 **Approval:** Master approved the full P0 batch after the read-only audit package.
 **Branch:** `capstone-remediation-20261113`.
 
@@ -92,10 +92,35 @@ Both Pi and laptop PocketBase instances report the same rules and field.
 
 ---
 
-## 6. Pending physical verification
+## 6. Physical-phone verification
 
-- Install fresh preview APK over USB on `15187705AA004496`.
-- Confirm notification permission/channel state after install.
-- Confirm thermal failure reason is visible when the console frame is absent or malformed.
-- Confirm CCTV OFF stops frame polling and VIDEO+AUDIO enables camera sound only with a recent frame.
-- Confirm app still reaches Pi data on the PigPulse hotspot.
+Device: Infinix `15187705AA004496`, Android 16, connected to `PigPulse` at
+`192.168.69.91`. Build `b2cc703f-6950-43b2-9f59-6e81f450f7d0` was installed
+with `adb install -r` (`Success`). Artifact `97,227,266` bytes, SHA-256
+`da6b203050384c87508ceef077cc080f11b9b507b24f8ec4c76bbab80e1074aa`.
+
+Value-based APK scan: 1,665 ZIP entries / 129,484,195 decompressed bytes,
+14 encoded variants of the `.env` credential values and variable names —
+**PASS**, no hits.
+
+Measured UI evidence:
+
+- Thermal screen showed `No live frames — Pi console unreachable — check Pi
+  power and PigPulse Wi-Fi`, `CENTER (SURFACE ROI)`, and
+  `NO VERDICT — SURFACE ESTIMATE`.
+- CCTV row showed `OFF / VIDEO / VIDEO + AUDIO`; VIDEO displayed
+  `CCTV OFFLINE — no recent frame`, and tapping OFF changed the state to
+  `CCTV OFF` with polling stopped.
+- Camera-sound row was disabled with an honest mode-dependent hint. Physical
+  testing found that `VIDEO + AUDIO` offline still said “switch to VIDEO +
+  AUDIO”; this was fixed in `f5aeee2` and the final rebuild is in progress.
+- Notification permission remained granted. A controlled verification alert
+  (`deviceId=notification-verification`) produced a real Android notification
+  with text `P0 notification verification — safe to delete`, and the channel
+  then reported `mImportance=4`, `mVibrationPattern=[0,250,250,250]`,
+  `mVibrationEnabled=true`. Both verification rows were deleted afterwards.
+- The app continued to read live PocketBase telemetry over the PigPulse
+  hotspot throughout testing.
+
+A final APK with commit `f5aeee2` is being built; it must be installed before
+closing this record.
