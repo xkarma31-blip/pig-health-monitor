@@ -95,5 +95,22 @@ reset reason) whose output is only visible on serial / MQTT telemetry.
   changed by that attempt).
 - To distinguish brownout loop from dead supply/radio, capture the serial boot lines
   (`[boot] count=N reason=15/16 BROWNOUT` vs `reason=1 POWER-ON`, then `[wifi] scan count=`).
-- If brownout is confirmed: rebuild from the archived known-good source with TX power returned
-  to `WIFI_POWER_8_5dBm`, archive it per `KNOWN_GOOD.md`, and USB-flash once.
+- A firmware rebuild is NOT warranted on current evidence: the firmware worked normally until
+  18:40. Do not rebuild without a serial log showing a fault.
+
+## Radio-role rollback (per operator request, 06:53–06:56 PST)
+
+- Fresh snapshot of the live (swapped) state before changing anything:
+  `/root/pigpulse-backups/radio-roles-pre-revert-20261118-065345` (9 files).
+- Applied `backend/portal/rollback-radio-roles.sh` with the original
+  `radio-roles-20261117-161319` backup — all 9 files restored, AP resolved to `wlan0`.
+- Measured after: hostapd active, AP `ssid=PigPulse` on `wlan0` (brcmfmac,
+  `dc:a6:32:87:63:a1`), channel 6, gateway `192.168.69.1` on wlan0; stale AP address flushed
+  from the dongle `wlan1`.
+- Watchdog calibration drop-in (added for the USB dongle) removed and archived; effective
+  environment restored to `PIGPULSE_AP_MIN_RATE=40` (original brcmfmac calibration).
+- CCTV re-associated at 06:54:27 with a fresh DHCP lease for `192.168.69.2`, proving the
+  reverted AP accepts clients.
+- **Mic still absent 3+ minutes after rollback:** no association, no DHCP, no hostapd event;
+  telemetry age 11.17 h. The AP/connection side is now fully reverted and working, so the
+  remaining fault is at the board (power or radio), unconfirmed without a device readout.
