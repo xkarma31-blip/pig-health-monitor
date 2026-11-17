@@ -7,7 +7,7 @@
 # reboot the address, dnsmasq and hostapd could land on different radios:
 # the AP advertised on one while the gateway IP lived on the other, and the
 # WAN client (on the dongle) associated with our own AP.
-AP_RADIO_MAC=dc:a6:32:87:63:a1
+AP_RADIO_MAC=00:1f:05:6c:51:bc
 IFACE=$(/usr/local/sbin/pigpulse-wlan-iface "$AP_RADIO_MAC") || exit 0
 [ -n "$IFACE" ] || exit 0
 sed -i "s/^interface=.*/interface=$IFACE/" /etc/hostapd/hostapd.conf 2>/dev/null || true

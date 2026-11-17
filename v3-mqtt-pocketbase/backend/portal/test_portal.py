@@ -50,6 +50,24 @@ class StatusTests(unittest.TestCase):
                                      "inet 192.168.254.194/24")
         self.assertEqual(result["remote"], "http://100.69.139.63:8090")
 
+    def test_radio_roles_match_dual_band_wan_and_dongle_ap(self):
+        self.assertEqual(portal.WAN_RADIO_MAC, "dc:a6:32:87:63:a1")
+        self.assertEqual(portal.AP_RADIO_MAC, "00:1f:05:6c:51:bc")
+
+    def test_portal_connect_resolves_wan_interface_by_mac(self):
+        source = Path(__file__).with_name("pigpulse-portal-connect").read_text()
+        self.assertIn("WAN_IF=", source)
+        self.assertNotIn("wlan0sta", source)
+
+    def test_wan_sta_up_resolves_both_radios_by_mac(self):
+        source = Path(__file__).parents[2].joinpath(
+            "deploy/wan-apsta/pigpulse-wan-sta-up").read_text()
+        self.assertIn("WAN_RADIO_MAC=dc:a6:32:87:63:a1", source)
+        self.assertIn("AP_RADIO_MAC=00:1f:05:6c:51:bc", source)
+        self.assertNotIn("STA=wlan0sta", source)
+        self.assertNotIn("AP=wlan0", source)
+        self.assertNotIn("render_ap_conf \"$PCH\"", source)
+
 
 class WorkerTests(unittest.TestCase):
     def test_waits_for_link_lease_and_route_after_ap_restart(self):

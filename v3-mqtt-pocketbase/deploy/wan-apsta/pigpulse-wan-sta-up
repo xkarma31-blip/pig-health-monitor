@@ -44,14 +44,10 @@
 #   venue's 5 GHz BSSID and the association collapsed with "No network
 #   configuration found for the current AP").
 #
-# Band policy:
-#   2.4 GHz anywhere (ch 1..13) -> use it, AP follows that channel. It is the
-#                                  only band the ESP32-S3 mic and the Tapo
-#                                  camera can see, so it always wins.
-#   5 GHz only                  -> refused by default: an AP on 5 GHz is
-#                                  invisible to those 2.4 GHz-only clients.
-#                                  Opt in with /etc/pigpulse/wan-sta-allow-5g
-#                                  (cloud sync works, sensors do not join).
+# Band policy (split radios):
+#   The built-in dual-band radio is the WAN client. Prefer 5 GHz when offered,
+#   fall back to 2.4 GHz. The USB dongle keeps hosting the AP on 2.4 GHz, so
+#   the ESP32-S3 mic and Tapo camera remain visible in either case.
 #
 # FAIL-SAFE RULE: the AP beats the WAN. Every failure in `connect` leaves the
 # AP running exactly where `--plan` put it, terminates only the station side,
@@ -67,8 +63,12 @@ case "${1:-}" in
   *) echo "usage: $0 [--plan|--discover]" >&2; exit 2 ;;
 esac
 
-STA=wlan0sta
-AP=wlan0
+WAN_RADIO_MAC=dc:a6:32:87:63:a1
+AP_RADIO_MAC=00:1f:05:6c:51:bc
+STA=$(/usr/local/sbin/pigpulse-wlan-iface "$WAN_RADIO_MAC" 2>/dev/null || true)
+AP=$(/usr/local/sbin/pigpulse-wlan-iface "$AP_RADIO_MAC" 2>/dev/null || true)
+STA=${STA:-wlan0}
+AP=${AP:-wlan1}
 IW=$(command -v iw || echo /usr/sbin/iw)
 WPACLI=$(command -v wpa_cli || echo /sbin/wpa_cli)
 CONF=/etc/wpa_supplicant/wpa-pigpulse-uplink.conf
@@ -303,7 +303,7 @@ wait_assoc() {
   assoc_ok
 }
 assoc_reason() {
-  grep -E 'CTRL-EVENT-(ASSOC-REJECT|AUTH-REJECT)' /var/log/wpa_supplicant-wlan0sta.log 2>/dev/null \
+  grep -E 'CTRL-EVENT-(ASSOC-REJECT|AUTH-REJECT)' /var/log/wpa_supplicant-${STA}.log 2>/dev/null \
     | tail -1 | sed -n 's/.*CTRL-EVENT-\([A-Z-]*\).*status_code=\([0-9]*\).*/\1 status=\2/p'
 }
 
@@ -345,7 +345,7 @@ connect_sta() { # uses BSSID / FREQ, honours /etc/pigpulse/wan-sta.debug
   render_wpa_conf "$BSSID" "$FREQ" || return 1
   [ -e /etc/pigpulse/wan-sta.debug ] && dbg="-dd"
   wpa_supplicant -B $dbg -i "$STA" -c "$CONF" -D nl80211 \
-      -P "/run/wpa_supplicant-$STA.pid" -f /var/log/wpa_supplicant-wlan0sta.log >>"$LOG" 2>&1 || return 1
+      -P "/run/wpa_supplicant-$STA.pid" -f /var/log/wpa_supplicant-${STA}.log >>"$LOG" 2>&1 || return 1
   wait_assoc "$ASSOC_WAIT"
 }
 
@@ -410,12 +410,8 @@ if [ "$PHASE" = "plan" ]; then
   if [ ! -r "$TMPL" ]; then
     status "OFF uplink-config-missing"; : > "$PLAN"; exit 0
   fi
-  if [ "$PBAND" = "5G" ] && [ ! -e "$ALLOW5G" ]; then
-    status "OFF saved-venue-is-5g-refused bssid=$BSSID freq=$FREQ (2.4 GHz-only sensors)"
-    : > "$PLAN"; exit 0
-  fi
   [ "$PBAND" = "5G" ] && HWMODE=a || HWMODE=g
-  render_ap_conf "$PCH" "$HWMODE"
+  render_ap_conf ""
   printf '%s %s %s %s\n' "$PBAND" "$PCH" "$FREQ" "$BSSID" > "$PLAN"
   status "AP-PLANNED band=$PBAND ch=$PCH freq=$FREQ bssid=$BSSID ssid=$SSID"
   exit 0
@@ -483,14 +479,10 @@ fi
 
 PCH=$(freq_to_channel "$FREQ") || { status "OFF bad-freq freq=$FREQ"; exit 0; }
 [ "$PBAND" = "5G" ] && HWMODE=a || HWMODE=g
-if [ "$PBAND" = "5G" ] && [ ! -e "$ALLOW5G" ]; then
-  status "OFF saved-venue-is-5g-refused bssid=$BSSID freq=$FREQ (2.4 GHz-only ESP32-S3 and CCTV cannot join)"
-  exit 0
-fi
 log "profile: ssid=$SSID bssid=$BSSID freq=$FREQ band=$PBAND ch=$PCH"
 
 # The AP vif must be UP even though hostapd has not started: with every vif down
-# the phy has no channel context (measured: `iw dev wlan0sta info` shows no
+# the phy has no channel context (measured: `iw dev "$STA" info` shows no
 # channel and the association cannot place the chanspec).
 ip link set "$AP" up >/dev/null 2>&1
 create_sta || { status "OFF vif-create-failed"; exit 0; }
@@ -498,7 +490,7 @@ log "vif up: sta_ch=$(STA_CH) ap_ch=$(AP_CH) ap_state=$(ip -br link show "$AP" 2
 
 # Move the AP config BEFORE hostapd starts: #{channels} <= 1 means the AP and the
 # uplink must share a frequency, and hostapd takes whatever is in this file.
-render_ap_conf "$PCH" "$HWMODE"
+render_ap_conf ""
 
 # --------------------------------------------------------- supplicant
 if ! render_wpa_conf "$BSSID" "$FREQ"; then
@@ -508,9 +500,9 @@ fi
 WPADBG=""
 [ -e /etc/pigpulse/wan-sta.debug ] && WPADBG="-dd"
 stop_supplicant
-: > /var/log/wpa_supplicant-wlan0sta.log
+: > /var/log/wpa_supplicant-${STA}.log
 if ! wpa_supplicant -B $WPADBG -i "$STA" -c "$CONF" -D nl80211 \
-       -P "/run/wpa_supplicant-$STA.pid" -f /var/log/wpa_supplicant-wlan0sta.log >>"$LOG" 2>&1; then
+       -P "/run/wpa_supplicant-$STA.pid" -f /var/log/wpa_supplicant-${STA}.log >>"$LOG" 2>&1; then
   status "OFF supplicant-start-failed"
   exit 0
 fi

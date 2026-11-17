@@ -27,7 +27,7 @@ check() { # name expected input...
 check "2.4 only" "24 2c:b6:c2:1e:9b:d4 2437 -54.00" \
   "BSS 2c:b6:c2:1e:9b:d4(on wlan0sta)" "	freq: 2437.0" "	signal: -54.00 dBm" "	SSID: GFiber_E9BD4"
 
-check "both bands -> 2.4 wins" "24 2c:b6:c2:1e:9b:d4 2412 -70.00" \
+check "both bands -> 5 GHz wins" "5G 2c:b6:c2:1e:9b:d5 5580 -40.00" \
   "BSS 2c:b6:c2:1e:9b:d5(on wlan0sta)" "	freq: 5580.0" "	signal: -40.00 dBm" "	SSID: GFiber_E9BD4" \
   "BSS 2c:b6:c2:1e:9b:d4(on wlan0sta)" "	freq: 2412.0" "	signal: -70.00 dBm" "	SSID: GFiber_E9BD4"
 

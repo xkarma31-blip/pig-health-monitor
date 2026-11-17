@@ -8,13 +8,12 @@
 #   5G <bssid> <freq> <signal>   the SSID is visible only on 5 GHz
 #   NONE                         the SSID is not visible at all
 #
-# Why 2.4 wins when both bands are visible: the Pi's single radio forces the AP
-# and the station onto ONE channel (#channels <= 1). An AP on 5 GHz is invisible
-# to the ESP32-S3 mic and the Tapo camera, which are 2.4 GHz-only.
+# With split radios the built-in dual-band radio is the WAN client and the
+# 2.4 GHz dongle keeps hosting the barn AP. Therefore 5 GHz is preferred when
+# both bands are visible; 2.4 GHz remains the fallback.
 #
 # A preferred BSSID gets a large bonus so a known-good access point keeps being
-# chosen over a marginally stronger one, while still losing to a real 2.4 GHz
-# alternative (the bonus only ranks inside the same band).
+# chosen over a marginally stronger one, while still ranking inside its band.
 
 BEGIN {
   target = ARGV[1]
@@ -65,7 +64,7 @@ $1 == "SSID:" {
 
 END {
   finalize()
-  if (best24b != "")      printf "24 %s %d %.2f\n", best24b, best24f, best24s
-  else if (best5b != "")  printf "5G %s %d %.2f\n", best5b, best5f, best5s
+  if (best5b != "")       printf "5G %s %d %.2f\n", best5b, best5f, best5s
+  else if (best24b != "") printf "24 %s %d %.2f\n", best24b, best24f, best24s
   else                    print "NONE"
 }

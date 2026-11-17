@@ -11,8 +11,8 @@
 # often enough to need a reset.
 set -u
 CONF=/etc/wpa_supplicant/wpa-split.conf
-AP_RADIO_MAC=dc:a6:32:87:63:a1     # built-in (brcmfmac) -> hosts the PigPulse AP
-WAN_RADIO_MAC=00:1f:05:6c:51:bc    # dongle (rtl8192cu) -> WAN client
+AP_RADIO_MAC=00:1f:05:6c:51:bc     # dongle (rtl8192cu, 2.4 GHz) -> hosts the PigPulse AP
+WAN_RADIO_MAC=dc:a6:32:87:63:a1    # built-in (brcmfmac, dual-band) -> WAN client
 
 AP_IF=$(/usr/local/sbin/pigpulse-wlan-iface "$AP_RADIO_MAC") || AP_IF=""
 WAN_IF=$(/usr/local/sbin/pigpulse-wlan-iface "$WAN_RADIO_MAC" || true)
@@ -39,7 +39,7 @@ if [ -n "$AP_IF" ]; then
   fi
 fi
 
-# The rtl8192cu dongle wedges: it stays in SCANNING and a plain `iw scan`
+# The WAN radio can wedge in SCANNING and a plain `iw scan`
 # returns nothing. A down/up of the interface resets the driver, so the uplink
 # retries from a clean interface state instead of staying dead.
 reset_iface() {
@@ -61,7 +61,7 @@ connect_once() {
 }
 
 if ! connect_once; then
-  echo "uplink: no association on first try - resetting the dongle and retrying" >&2
+  echo "uplink: no association on first try - resetting the WAN radio and retrying" >&2
   reset_iface
   connect_once || true
 fi
