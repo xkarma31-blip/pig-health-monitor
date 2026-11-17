@@ -6,7 +6,8 @@
  *      Full frame (768 pixels) + stats + SHT45 ambient + mic socket state.
  *      Reachability varies by platform: browsers need the console certificate
  *      accepted + CORS; native may reject the self-signed cert. Failures are
- *      silent — the hook simply reports `live: false`.
+ *      reported through `frameError` so the UI can name the reason; `live`
+ *      remains false until a fresh, valid frame arrives.
  *   2. POCKETBASE — latest pi-thermal-01 telemetry row over the app's normal
  *      channel (works wherever PocketBase does). Stats only — no pixels.
  *
@@ -70,6 +71,8 @@ export interface PiThermalSnapshot {
   now: number;
   /** Resolved console/bridge base for this session (null until resolved). */
   base: string | null;
+  /** Concrete reason the latest console frame was rejected, or null when valid. */
+  frameError: string | null;
 }
 
 const FRAME_POLL_MS = 2000;
@@ -101,6 +104,7 @@ export function usePiThermal(): PiThermalSnapshot {
   const [pbStats, setPbStats] = useState<PiPbStats | null>(null);
   const [now, setNow] = useState<number>(() => Date.now());
   const [base, setBase] = useState<string | null>(null);
+  const [frameError, setFrameError] = useState<string | null>(null);
   const baseRef = useRef<string | null>(null);
   const framesRef = useRef<PiFrameData[]>([]);
 
@@ -150,17 +154,24 @@ export function usePiThermal(): PiThermalSnapshot {
         // arrival timestamp makes the estimate more conservative.
         const arrival = Date.now();
         if (!alive) return;
-        if (data && Array.isArray(data.pixels) && data.pixels.length >= 768) {
-          framesRef.current = framesRef.current.concat(data);
-          while (framesRef.current.length > MAX_FRAMES) framesRef.current.shift();
-          setFrames(framesRef.current);
-          setFrame(data);
-          setFrameAt(arrival);
-          if (typeof data.ts === 'number' && Number.isFinite(data.ts) && data.ts > 0) {
-            piClock.observe(data.ts, arrival);
-            const nowPi = piClock.now();
-            if (nowPi !== null) piClock.ensureForAge(nowPi - data.ts, 600);
-          }
+        if (!data) {
+          setFrameError('fetch-failed');
+          return;
+        }
+        if (!Array.isArray(data.pixels) || data.pixels.length < 768) {
+          setFrameError(`frame-too-small:${Array.isArray(data.pixels) ? data.pixels.length : 0}`);
+          return;
+        }
+        framesRef.current = framesRef.current.concat(data);
+        while (framesRef.current.length > MAX_FRAMES) framesRef.current.shift();
+        setFrames(framesRef.current);
+        setFrame(data);
+        setFrameAt(arrival);
+        setFrameError(null);
+        if (typeof data.ts === 'number' && Number.isFinite(data.ts) && data.ts > 0) {
+          piClock.observe(data.ts, arrival);
+          const nowPi = piClock.now();
+          if (nowPi !== null) piClock.ensureForAge(nowPi - data.ts, 600);
         }
       } finally {
         frameInFlight = false;
@@ -187,7 +198,11 @@ export function usePiThermal(): PiThermalSnapshot {
 
     (async () => {
       const resolved = await resolvePiBase();
-      if (!alive || !resolved) return;
+      if (!alive) return;
+      if (!resolved) {
+        setFrameError('no-base');
+        return;
+      }
       baseRef.current = resolved;
       setBase(resolved);
       void pollFrame();
@@ -209,5 +224,5 @@ export function usePiThermal(): PiThermalSnapshot {
   const live = frameAt !== null && now - frameAt < LIVE_WINDOW_MS;
   const pbFresh = pbStats !== null && telemetryFresh(pbStats.timestamp, now);
 
-  return { frame, frames, frameAt, ambient, esp, live, pbStats, pbFresh, now, base };
+  return { frame, frames, frameAt, ambient, esp, live, pbStats, pbFresh, now, base, frameError };
 }

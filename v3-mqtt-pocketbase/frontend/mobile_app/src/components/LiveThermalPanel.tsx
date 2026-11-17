@@ -10,6 +10,7 @@ import { ironRgb } from '../utils/thermal-palette';
 import { telemetryTime } from '../utils/telemetry-time';
 import { fetchPiAudioChunk, fetchPiCameraAudio, piEspStreamUrl } from '../utils/pi-thermal';
 import { piClock, pickAligned } from '../utils/pi-clock';
+import { explainThermalFrameError, screeningLabel, thermalSubtitle } from '../utils/thermal-diagnostics';
 import { isPcmStreamSupported, startPcmStream, type PcmStreamState } from '../utils/pcm-stream';
 import { usePiNow } from '../hooks/usePiNow';
 
@@ -124,12 +125,15 @@ function reasonLine(reason: string | null, kind: 'mic' | 'camera'): string {
 
 /** Header subtitle for the current data state (shared by both screens). */
 export function piSubtitle(pi: PiThermalSnapshot): string {
-  const liveFrame = pi.live && pi.frame;
-  const pb = pi.pbStats;
-  if (liveFrame) return 'Live barn thermal — pi-thermal-01';
-  if (pi.pbFresh && pb) return 'Live readings — camera frames unavailable';
-  if (pb) return `No live frames — last reading ${agoLabel(pb.timestamp, pi.now)}`;
-  return 'No live data — barn offline';
+  return thermalSubtitle({
+    live: pi.live,
+    frame: pi.frame,
+    pbStats: pi.pbStats,
+    pbFresh: pi.pbFresh,
+    now: pi.now,
+    frameError: pi.frameError,
+    ago: pi.pbStats ? agoLabel(pi.pbStats.timestamp, pi.now) : undefined,
+  });
 }
 
 function StatCard({ label, value, sub, chip }: { label: string; value: string; sub?: string; chip?: Chip }) {
@@ -721,10 +725,11 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
 
   const chipFor = (verdict: string | undefined): Chip => {
     const v = (verdict || '').toUpperCase();
-    if (/ALERT|CRITICAL|HIGH/.test(v)) return { text: verdict || v, fg: colors.alert, bg: colors.alertSoft };
-    if (/OUT_OF_BAND|WATCH|ELEVATED|WARN/.test(v)) return { text: verdict || v, fg: colors.watch, bg: colors.watchSoft };
-    if (/NORMAL|OK|HEALTHY/.test(v)) return { text: verdict || v, fg: colors.healthy, bg: colors.healthySoft };
-    return { text: verdict || 'UNKNOWN', fg: colors.info, bg: colors.infoSoft };
+    const text = screeningLabel(verdict);
+    if (/FEVER|ALERT|CRITICAL|HIGH/.test(v)) return { text, fg: colors.alert, bg: colors.alertSoft };
+    if (/OUT_OF_BAND|WATCH|ELEVATED|WARN/.test(v)) return { text, fg: colors.watch, bg: colors.watchSoft };
+    if (/NORMAL|OK|HEALTHY/.test(v)) return { text, fg: colors.healthy, bg: colors.healthySoft };
+    return { text, fg: colors.info, bg: colors.infoSoft };
   };
 
   const sourceChip: Chip = liveFrame
@@ -795,8 +800,19 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
           ]}
         >
           <Text style={[typography.h2, { color: colors.textPrimary, fontSize: 16, textAlign: 'center' }]}>
-            {pb ? 'Camera frames unavailable' : 'Barn offline — no live data'}
+            {pb
+              ? 'Camera frames unavailable'
+              : pi.frameError
+                ? 'No live thermal frame'
+                : 'Barn offline — no live data'}
           </Text>
+          {pi.frameError ? (
+            <Text
+              style={[typography.bodySmall, { color: colors.watch, textAlign: 'center', marginTop: spacing.sm, lineHeight: 20 }]}
+            >
+              {`Reason: ${explainThermalFrameError(pi.frameError)}.`}
+            </Text>
+          ) : null}
           <Text
             style={[typography.bodySmall, { color: colors.textSecondary, textAlign: 'center', marginTop: spacing.sm, lineHeight: 20 }]}
           >
@@ -824,7 +840,12 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
             : `LAST KNOWN READINGS — ${agoLabel(pb?.timestamp, pi.now)}`}
       </Text>
       <View style={styles.grid}>
-        <StatCard label="Center (pig body)" value={fmtC(center)} chip={chipFor(verdict)} />
+        <StatCard
+          label="Center (surface ROI)"
+          value={fmtC(center)}
+          chip={chipFor(verdict)}
+          sub={verdict ? 'Surface estimate — not a fever diagnosis' : undefined}
+        />
         <StatCard
           label="Minimum"
           value={fmtC(min)}
