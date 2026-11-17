@@ -213,7 +213,7 @@ def scan_networks(force: bool = False) -> list[dict]:
         try:
             # Plain scan: `iw dev X scan freq <list>` returns EINVAL on these
             # drivers, so let the driver scan every band it supports.
-            out = run(["iw", "dev", scan_if, "scan"], timeout=45)
+            out = run(["/sbin/iw", "dev", scan_if, "scan"], timeout=45)
         finally:
             if ap_stopped:
                 run(["systemctl", "start", "hostapd"], 20)
@@ -266,7 +266,7 @@ def scan_networks(force: bool = False) -> list[dict]:
 
 def ap_info() -> dict:
     info = {"channel": None, "freq": None, "clients": 0, "ssid": None}
-    out = run(["iw", "dev", ap_iface() or "wlan0", "info"], 6)
+    out = run(["/sbin/iw", "dev", ap_iface() or "wlan1", "info"], 6)
     m = re.search(r"channel (\d+) \((\d+) MHz\)", out)
     if m:
         info["channel"], info["freq"] = int(m.group(1)), int(m.group(2))
@@ -296,7 +296,7 @@ def associated() -> bool:
     `UP ip=192.168.254.194` while `iw dev wlan0sta link` said
     `Not connected` and the interface held a 169.254 address.
     """
-    return "Connected to" in run(["iw", "dev", wan_iface() or "wlan0", "link"], 5)
+    return "Connected to" in run(["/sbin/iw", "dev", wan_iface() or "wlan0", "link"], 5)
 
 
 def tailscale_ip() -> str:
@@ -500,7 +500,7 @@ class Portal(BaseHTTPRequestHandler):
         if not re.fullmatch(r"([0-9a-f]{2}:){5}[0-9a-f]{2}", bssid):
             self.send_json({"error": "invalid bssid"}, 400)
             return
-        if not (2412 <= freq <= 2472 or (os.path.exists(ALLOW5G) and 4900 <= freq <= 5900)):
+        if not (2412 <= freq <= 2472 or 4900 <= freq <= 5900):
             self.send_json({"error": "invalid frequency"}, 400)
             return
         if os.path.exists(PENDING):

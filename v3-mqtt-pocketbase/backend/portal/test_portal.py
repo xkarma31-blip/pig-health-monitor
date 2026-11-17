@@ -17,7 +17,7 @@ import portal
 class StatusTests(unittest.TestCase):
     def status_for(self, link, address):
         def run(cmd, *_):
-            return link if cmd[0] == "iw" else address
+            return link if cmd[0] in ("iw", "/sbin/iw") else address
 
         with patch.object(portal, "run", side_effect=run), \
              patch.object(portal, "read", return_value="UP ip=192.168.254.194"), \
@@ -53,6 +53,10 @@ class StatusTests(unittest.TestCase):
     def test_radio_roles_match_dual_band_wan_and_dongle_ap(self):
         self.assertEqual(portal.WAN_RADIO_MAC, "dc:a6:32:87:63:a1")
         self.assertEqual(portal.AP_RADIO_MAC, "00:1f:05:6c:51:bc")
+
+    def test_scan_uses_absolute_iw_path(self):
+        source = Path(portal.__file__).read_text()
+        self.assertIn('"/sbin/iw", "dev", scan_if, "scan"', source)
 
     def test_portal_connect_resolves_wan_interface_by_mac(self):
         source = Path(__file__).with_name("pigpulse-portal-connect").read_text()
