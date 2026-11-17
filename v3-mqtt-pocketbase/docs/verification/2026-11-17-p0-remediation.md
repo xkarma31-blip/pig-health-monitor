@@ -1,6 +1,6 @@
 # P0 remediation verification — 2026-11-17
 
-**Status:** code, live-database work, and physical-phone verification complete. A final rebuild is in progress only to include a one-line honest-copy fix found during that verification.
+**Status:** complete. Code, live-database work, physical-phone verification, final rebuild, and final APK install are all done.
 **Approval:** Master approved the full P0 batch after the read-only audit package.
 **Branch:** `capstone-remediation-20261113`.
 
@@ -28,6 +28,8 @@
 | `6305526` | PocketBase migration enforcing owner rules |
 | `030dc73` | Local-first tunnel access to the same Pi |
 | `96e5b89` | Notification channel and alert payload contract |
+| `f5aeee2` | Mode-specific camera audio hint found during device testing |
+| `c868cfe` | Documentation of physical P0 evidence |
 
 Unrelated dirty work (`docs/REPORT_*`, `docs/PROGRESS_UPDATE_20261115.md`, `docs/diagrams/`, `src/app/+not-found.tsx`, `src/app/thermal.tsx`, `scripts/dump_sources.py`, `tools/practice_*`) was not staged or changed.
 
@@ -122,5 +124,22 @@ Measured UI evidence:
 - The app continued to read live PocketBase telemetry over the PigPulse
   hotspot throughout testing.
 
-A final APK with commit `f5aeee2` is being built; it must be installed before
-closing this record.
+### Final APK
+
+Build `a97c1bdf-64ba-445e-a7bc-783e07369092`, commit `c868cfe`, was built and
+installed with `adb install -r` (`Success`). Artifact `97,227,570` bytes,
+SHA-256 `c27c20be21673289bf18c6aab099bc134718427e01e2938ad13bfd783a747bce`.
+Value-based credential scan: 1,665 entries / 129,484,499 decompressed bytes,
+14 encoded variants — **PASS**, no hits.
+
+Final UI check fixed the mode-specific audio hint: with `VIDEO + AUDIO` selected
+and no camera frame, the row now reads
+`No recent camera frame — camera audio unavailable`. The original bug had said
+“switch to VIDEO + AUDIO” even while that mode was selected.
+
+Remote tunnel path was also measured from the laptop:
+`http://100.69.139.63:8090/api/health` → HTTP 200, and
+`https://100.69.139.63:8080/health` → valid frame (1.97 FPS, frame 41,655,
+frame age 0.8 s) at 2026-11-17T14:22:10+08:00. The phone remained on the local
+hotspot, so app-side failover was verified by the pure policy tests and tunnel
+reachability, not by switching the phone to an external network.
