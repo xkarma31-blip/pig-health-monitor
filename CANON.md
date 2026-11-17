@@ -325,9 +325,15 @@ landed on `capstone-remediation-20261113`:
   **same Pi** → explicit offline recommendation. No cloud mirror.
 - `96e5b89` — notification channel and alert payload contract pinned and tested.
 
-The Pi's radio roles are **measured opposite** to older §2.4 text on this boot:
-built-in `wlan0` hosts the 2.4 GHz `PigPulse` AP, while the USB dongle `wlan1`
-is the working 2.4 GHz WAN client. The 5 GHz preference remains unmet.
+The radio roles were later corrected to the intended split: built-in `wlan0`
+is the dual-band WAN client and USB dongle `wlan1` hosts the 2.4 GHz AP.
+5 GHz scan now works. See
+`v3-mqtt-pocketbase/docs/verification/2026-11-17-radio-roles-5ghz.md`.
+
+The S3 mic was measured live after that correction (`mic=true`, RMS 57219,
+`nonzeroPct=99.9`, AP station `68:ee:8f:dd:31:3c` on `wlan1`). Diagnostics now
+labels stale telemetry honestly; see
+`v3-mqtt-pocketbase/docs/verification/2026-11-17-mic-live-diagnostics.md`.
 
 ---
 
