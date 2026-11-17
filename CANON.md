@@ -6,8 +6,9 @@
 > a stale `AGENTS.md`) contradicts this file, **this file wins**.
 > Last verified against the working tree: **2026-11-13** (full end-to-end audit:
 > every claim below was read off the live Pi, the live laptop rig, raw MQTT on
-> the wire, or the databases — not from a spec sheet). The previous
-> verification was 2026-10-29.
+> the wire, or the databases — not from a spec sheet). **Section 0.9's widget
+> and thermal claims were verified 2026-11-17.** The previous verification was
+> 2026-10-29.
 
 ---
 
@@ -227,6 +228,82 @@ being used on production):**
 HTTP request (`self.path` does not exist yet when `parse_request()` calls
 `send_error()` → `log_error()` → `log_message()`). It now reads the path with
 `getattr(self, "path", "")`.
+
+### 0.9 Native Android widget shipped; Pi thermal sample recovered (2026-11-17)
+
+**The PigPulse Expo app now ships a native Android home-screen widget.** It is a
+*glanceable* surface, not a clinical instrument. The JS layer
+(`src/utils/widget-state.ts`, `widget-poll-controller.ts`, `useWidgetSync.ts`)
+writes a versioned JSON cache in the app's documents directory
+(`pigpulse_widget_state.json`); the Kotlin `AppWidgetProvider` reads it from
+`context.filesDir`. **Contract version 1.** The receiver is
+`android:exported="false"` — it is local to the app, not a shared endpoint. The
+widget follows the app's **saved effective** theme (`pigpulse-theme-mode` may
+store `light`, `dark`, or `auto`; the widget receives the resolved light/dark
+choice); it adds no independent switch. While the app process is active, its
+polling controller requests fresh data every 30 s (10 s request deadline); this is most
+reliable while the app is foregrounded because Android may suspend background
+execution. A cache write also triggers the native provider's `FileObserver`, and
+`updatePeriodMillis=1800000` (30 min) is the framework's fallback render window,
+not a guarantee of fresh data. **No OAuth wall and no new authentication surface
+were added — the app still uses email/PocketBase auth.**
+
+Observed on the two launcher instances (widget ids 2671, 2673):
+
+| Check | Observed |
+|---|---|
+| Dark, connected | scene-centre **35.89**, "Updated just now" |
+| Light, connected | scene-centre **35.64**, "Updated just now" |
+| Offline after an update | last reading **35.64** retained, "Updated 4 min ago" |
+| After reconnect | **36.03**, "Updated just now" |
+| Later sample | **37.02**, "Data may be stale" |
+| Normal hierarchy | `widget_logo` / `widget_device` / `widget_status` / `widget_reading` / `widget_reading_label` / `widget_freshness` present; the launcher's own fake host views are absent |
+| Device status | "No reported device status" — **no fever verdict is inferred from a scene centre** |
+
+**Build / install identity:** EAS preview build
+`41fae1dd-7db6-43d3-8b35-34137148af79`; artifact 97,216,846 bytes, SHA-256
+`f12c77bbfac377bd689ee6d1e5e7518b8ebe5c92ab156028b7153fc10db0c8df`; installed
+to the physical phone `15187705AA004496` with `adb install -r` → `Success`
+(MIME `application/vnd.android.package-archive`); the same bytes were copied to
+the Pi at `/home/pigpulse/thermal-pi/app/PigPulse.apk`. Credential hygiene: a
+value-based scan over all **1,665** ZIP entries (129,473,735 decompressed bytes)
+found **none** of the configured credential values or variable names in UTF-8,
+UTF-16LE/BE, Base64 or URL-encoded form; the EAS production/preview env carry no
+credential variables; `.easignore` excludes `.env` and `.env*`.
+
+**Implementation commits:** `06a6ebf` (APK MIME), `175c59a` (native widget),
+and `08d4a52` (release credential hygiene). The final validation recorded
+unit/type/syntax passes, scoped ESLint with 0 errors, a 34-file critic-loop pass
+with 0 failures, and no Critical or Required findings from the independent
+scoped review. CodeRabbit was attempted but its CLI is unavailable (`cr` exit
+127), so it is not represented as a passed review.
+
+> Full widget record:
+> **`v3-mqtt-pocketbase/docs/verification/2026-11-17-android-widget-verification.md`**.
+
+**Pi thermal — a recovered sample, NOT a permanent fix.** A live `/health` read
+at **2026-11-17T07:43:17+08:00** (Pi boot 2026-11-17 04:29:26) reported Sensor
+ready **yes**, Frame valid **yes**, frame count **22655**, **1.98 FPS**, frame
+age **0.6 s**, Last error **OK**, thermal MQTT **connected**, error **None**.
+That is one good readout, not a cure: the journal shows a transient
+`Remote I/O error` on the I²C bus at **05:02:49** that cleared only after two
+corrupt frames were rejected, then recovered. **The MLX90640 remains
+intermittent (§2.5, §6 item 12)** — the recovered sample does not eliminate the
+recurrence risk.
+
+> **Remaining blockers recorded 2026-11-17** (honest list; none fixed here):
+> - **ESP32-S3 mic `68:ee:8f:dd:31:3c`**: no DHCP lease, absent from hostapd
+>   logs, `/esp/status` times out, earlier `connected=false accepted=0
+>   nonzeroPct=0.0`. **Needs physical inspection.**
+> - **`pigpulse-cctv.service`**: active and holding a camera lease, but the
+>   journal says no camera is answering and HTTP probes time out.
+> - **`pigpulse-ap-powersave.service`**: failed `status=237/KEYRING` on
+>   `iw dev wlan1 set power_save off`, although hostapd/AP are active.
+> - **5 GHz WAN**: unmet. The deployed `pigpulse-wan-pick` prefers 2.4 GHz and
+>   `pigpulse-portal-connect` refuses 5 GHz; a working 5 GHz adapter / antenna
+>   reseat is still required. **Scripts were not changed.**
+> - **`health_check.py`**: PocketBase admin auth returns HTTP 400 and the table
+>   token check fails.
 
 ---
 
@@ -670,7 +747,7 @@ joined to the PigPulse hotspot therefore needs no laptop at all.
 
 |---|---|---|
 | **Pi 4B Rev 1.2** | edge: thermal + ingest + AP + PB | ✅ **booted and serving** as of 2026-09-30 |
-| **MLX90640** | thermal camera, I²C on Pi | ⚠️ **intermittent** — working as of 2026-10-13 (~2 FPS, confirmed by Master 2026-10-29). Has died and recovered before (dead 2026-09-28, back by 2026-10-13). Run `thermal_doctor.py --fix` if it drops again |
+| **MLX90640** | thermal camera, I²C on Pi | ⚠️ **intermittent** — working as of 2026-10-13 (~2 FPS, confirmed by Master 2026-10-29). Has died and recovered before (dead 2026-09-28, back by 2026-10-13). Run `thermal_doctor.py --fix` if it drops again. A live sample on **2026-11-17** read ~1.98 FPS with a valid frame over MQTT, **but a transient I²C `Remote I/O error` preceded it the same day (§0.9) — the recovered sample does NOT eliminate the recurrence risk** |
 | **ESP32-S3** (`s3-mic-01`) | the ONLY mic. TCP :9090 audio, MQTT telemetry | ✅ **USB accessible** (2026-10-13, §1). Firmware `pigpulse-mic-pcm16-20261013` deployed; 2026-11-03 wire reports build `pigpulse-mic-sht45-20261019` (SHT45-aware) with ~1 Hz telemetry and nonzero audio (`nonzero=99.9%`). Mic hardware intermittent — produced real audio 2026-10-13, returned all-samples-minus-one 2026-10-14. Master confirms working as of 2026-10-29. See `KNOWN_GOOD.md` for revert |
 | **GY-SHT45** | environmental temp/humidity sensor (I²C on ESP32-S3) | ✅ **WORKING and live as of 2026-11-13** — was never a hardware fault. The sensor had been reporting real values all along (measured 34.2–35.6 °C / 62–66 % RH); the readings were being **thrown away in transport**. The trailing-comma JSON bug below is real but it is **NOT the whole cause** — see **§0.1** for the corrected diagnosis and the fix that actually landed (firmware `pigpulse-mic-sht45-20261113-shtretry`, verified: the ambient fragment now rides on 59 of every 60 messages and the PocketBase zero-rate is **0.0%**). The build (`pigpulse-mic-sht45-20261111-pilevel`) appended a `drops` fragment ending in `"txp":%ld,` — a **trailing comma before `}`** — so a strict `json.loads` rejected 60 of 61 messages (`Illegal trailing comma before end of object`). **The comma was removed** in `pigpulse-mic-sht45-20261113-nowriteblock` (archived, sha256 `db8f1641…`) and `backend/bridge/json_lenient.py` (`loads_lenient`) remains as belt-and-braces. **Two further defects** accounted for the rest: the publish gate discarded the cached reading on any transient failure, and **PubSubClient's 384-byte buffer capped the payload at 353 bytes** (it had crept to 346 — seven bytes of margin), silently dropping whole telemetry messages. The SHT45's **I²C connection still NACKs intermittently** (`sle=2`); the firmware now tolerates it, **the wiring needs attention**. OTA is available (ArduinoOTA UDP 3232, `~/ota/ota-flash.sh`); the ESP32-S3 has no USB serial on the Pi. Measures pen-air context; must NOT replace MLX90640's internal temperature compensation — see §2.7 |
 | **Tapo C200C** | CCTV, RTSP → MJPEG | ⚠️ video reachable on Pi AP only. Management API blocked (needs cloud-owner password). See §8 |
@@ -1076,7 +1153,7 @@ than falling back to a default. `.husky/pre-commit` blocks keys/JWTs/PEMs.
 | 9 | **No `/cctv` route exists in the gateway** | ⚠️ **partly wrong**. The *Pi's* `/cctv` route **does** exist (`web_server.py`, proxies to `127.0.0.1:8091`). The gap is the **laptop's** OpenResty gateway only. The MJPEG server is now loopback-only (2026-09-30), which is safe *because* thermal-pi proxies it |
 | 10 | **`cloud_sync.py` cannot carry live video** | design gap — see §2.4. It syncs PocketBase *records* on an interval, not a stream |
 | 11 | **`PB_PASSWORD` unknown** — bcrypt, unrecoverable | 🔴 **still blocks the bridge** (confirmed 2026-10-29). `/etc/pigpulse/bridge.env` exists with `PB_EMAIL=admin@pigpulse.local` and a blank password. The bridge now *refuses to start* without it, by design. Reset with `~/pocketbase/pocketbase admin create admin@pigpulse.local <new>` (v0.22 uses `admin`, not `superuser`) |
-| 12 | **MLX90640 I²C** | ⚠️ **intermittent** — was dead (EIO) after 2026-09-28, recovered by 2026-10-13 (thermal live at ~2 FPS per §1). Master confirms working as of 2026-10-29. Run `thermal_doctor.py --fix` if it drops again. **Archive working state per R8 after next confirmed session** |
+| 12 | **MLX90640 I²C** | ⚠️ **intermittent** — was dead (EIO) after 2026-09-28, recovered by 2026-10-13 (thermal live at ~2 FPS per §1). Master confirms working as of 2026-10-29. Run `thermal_doctor.py --fix` if it drops again. A 2026-11-17 sample read ~1.98 FPS / valid frame over MQTT **after** a transient I²C `Remote I/O error` the same day — **recovered, not fixed** (§0.9). **Archive working state per R8 after next confirmed session** |
 | 13 | ESP32-S3 USB | ✅ **fixed** 2026-10-13 — USB accessible, firmware flashed and verified. Older "WEDGED" notes are historical (§1). Known-good binary archived in `KNOWN_GOOD.md` |
 | 14 | **Two SD cards in circulation** | 🔴 **still unlabeled** (confirmed 2026-10-29). See §2.5. Always confirm which card is booted before diagnosing |
 | 15 | `pigpulse-cloud-sync.service` is a dead copy in the Pi image | not enabled (correct) but has `User=solrahk` + `/home/solrahk/...` paths and a non-optional `EnvironmentFile=`. It belongs to the laptop only |
