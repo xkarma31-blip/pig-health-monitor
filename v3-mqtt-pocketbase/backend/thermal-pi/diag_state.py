@@ -35,6 +35,8 @@ SERIES_WINDOW_S = 1800
 
 _lock = threading.Lock()
 _esp = {"payload": None, "at": 0.0}
+ESP_TELEMETRY_FRESH_S = 60
+
 # deviceId -> deque of {"t": epoch seconds, "p": payload}
 _series: dict[str, deque] = {}
 _started = False
@@ -46,6 +48,29 @@ def _series_for(device_id: str) -> deque:
         d = deque(maxlen=SERIES_MAX)
         _series[device_id] = d
     return d
+
+
+def _age_text(age_s: float) -> str:
+    if age_s < 60:
+        return f"{age_s:.0f} s"
+    if age_s < 3600:
+        return f"{age_s / 60:.0f} min"
+    return f"{age_s / 3600:.1f} h"
+
+
+def esp_telemetry_state(payload, age_s) -> tuple[str, str]:
+    """Label S3 telemetry honestly; an old row is never a live mic reading."""
+    if not payload:
+        return "NO TELEMETRY", "No telemetry has arrived from S3 on MQTT yet."
+    if age_s is None:
+        return "UNKNOWN AGE", "Telemetry age could not be determined."
+    if age_s > ESP_TELEMETRY_FRESH_S:
+        return (
+            "STALE",
+            f"Last S3 telemetry {_age_text(age_s)} ago — not a live reading. "
+            "Check the mic link and ESP32-S3 association.",
+        )
+    return "LIVE", "Recent S3 telemetry received."
 
 
 def _on_message(_client, _userdata, msg):
@@ -212,7 +237,9 @@ def series_snapshot() -> dict:
 
 def collect():
     with _lock:
-        esp = {"payload": _esp["payload"], "age_s": round(time.time() - _esp["at"], 1) if _esp["at"] else None}
+        age_s = round(time.time() - _esp["at"], 1) if _esp["at"] else None
+        state, note = esp_telemetry_state(_esp["payload"], age_s)
+        esp = {"payload": _esp["payload"], "age_s": age_s, "state": state, "note": note}
     return {
         "at": int(time.time()),
         "pi": pi_vitals(),
@@ -270,8 +297,13 @@ async function tick(){
           width: 860, height: 220,
           emptyMessage: 'No telemetry history yet - the page starts collecting as soon as a device reports.',
         }) + '</div>';
-    html += '<div class="card"><h2>ESP32-S3 barn mic</h2><table>';
-    html += row('mic reading', e.mic === undefined ? 'no telemetry' : e.mic);
+    html += '<div class="card"><h2>ESP32-S3 barn mic</h2>';
+    if (d.esp.state !== 'LIVE') {
+      html += `<p class="note warn">${d.esp.note}</p>`;
+    }
+    html += '<table>';
+    html += row('telemetry state', d.esp.state);
+    html += row('mic reading', d.esp.state === 'LIVE' && e.mic !== undefined ? e.mic : '—');
     html += row('level (rms / peak)', e.rms === undefined ? '—' : `${e.rms} / ${e.peak}`);
     html += row('source min / max', e.smin === undefined ? '—' : `${e.smin} / ${e.smax}`);
     html += row('I2S read fails / retries', `${e.irf ?? '—'} / ${e.irr ?? '—'}`);
@@ -280,7 +312,7 @@ async function tick(){
     html += row('packets tx / rx', `${e.txp ?? '—'} / ${e.txr ?? '—'}`);
     html += row('RSSI · heap', `${e.rssi ?? '—'} dBm · ${e.heap ?? '—'}`);
     html += row('boot count · clip', `${e.boots ?? '—'} · ${e.clip ?? '—'}`);
-    html += row('telemetry age', `${d.esp.age_s ?? '—'} s`);
+    html += row('telemetry age', d.esp.age_s === null || d.esp.age_s === undefined ? '—' : `${d.esp.age_s.toFixed ? d.esp.age_s.toFixed(0) : d.esp.age_s} s`);
     html += '</table></div>';
     html += '<div class="card"><h2>Audio ingest (Pi)</h2><table>';
     html += row('connected', a.connected);
