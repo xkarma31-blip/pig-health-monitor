@@ -30,6 +30,8 @@
 | `96e5b89` | Notification channel and alert payload contract |
 | `f5aeee2` | Mode-specific camera audio hint found during device testing |
 | `c868cfe` | Documentation of physical P0 evidence |
+| `d12d8d2` | Independent-review fixes: strict owner flow, re-probe, remote fallback |
+| `c8026c8` | Strict owner-rule migration (force-added; migrations dir is gitignored) |
 
 Unrelated dirty work (`docs/REPORT_*`, `docs/PROGRESS_UPDATE_20261115.md`, `docs/diagrams/`, `src/app/+not-found.tsx`, `src/app/thermal.tsx`, `scripts/dump_sources.py`, `tools/practice_*`) was not staged or changed.
 
@@ -153,6 +155,18 @@ all closed before final handoff:
    exponential backoff instead of pinning one launch-time result for the session.
 4. **Malformed remote fallback:** a bad remote URL now fails closed only when
    remote is the selected source; it no longer disables a healthy local hotspot.
+
+Live verification after `1794895500`:
+
+```text
+Pi + laptop:
+create/update/delete = '@request.auth.id != "" && ownerId = @request.auth.id'
+owners = {'legacy-admin': 4}
+```
+
+Temporary end-user test on the Pi: spoofed `ownerId` create returned HTTP 400;
+correct-owner create succeeded; both the test pig and test user were deleted
+and follow-up counts were zero.
 
 Minor fixes: normalized remote URL, disabled portal tile no longer opens a dead
 tab, and Mute stays tappable if the base disappears mid-listen.
