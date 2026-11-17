@@ -22,5 +22,24 @@ class EspTelemetryStateTests(unittest.TestCase):
         self.assertIn("not a live reading", note.lower())
 
 
+class ShtTelemetryStateTests(unittest.TestCase):
+    def test_missing_reading_is_explicit(self):
+        state, note = diag_state.sht_telemetry_state({}, 1.0)
+        self.assertEqual(state, "NO READING")
+        self.assertIn("no sht45", note.lower())
+
+    def test_fresh_reading_is_live(self):
+        state, note = diag_state.sht_telemetry_state(
+            {"temperature": 33.45, "humidity": 69.69}, 0.8)
+        self.assertEqual(state, "LIVE")
+        self.assertIn("33.45", note)
+
+    def test_old_reading_is_stale(self):
+        state, note = diag_state.sht_telemetry_state(
+            {"temperature": 33.45, "humidity": 69.69}, 7200.0)
+        self.assertEqual(state, "STALE")
+        self.assertIn("2.0 h", note)
+
+
 if __name__ == "__main__":
     unittest.main()

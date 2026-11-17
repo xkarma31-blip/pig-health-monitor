@@ -73,6 +73,22 @@ def esp_telemetry_state(payload, age_s) -> tuple[str, str]:
     return "LIVE", "Recent S3 telemetry received."
 
 
+def sht_telemetry_state(payload, age_s) -> tuple[str, str]:
+    """Label the SHT45 ambient sensor separately from the mic."""
+    temp = (payload or {}).get("temperature")
+    hum = (payload or {}).get("humidity")
+    if not isinstance(temp, (int, float)) or not isinstance(hum, (int, float)):
+        return "NO READING", "No SHT45 temperature/humidity in S3 telemetry."
+    if age_s is None:
+        return "UNKNOWN AGE", "SHT45 reading age could not be determined."
+    if age_s > ESP_TELEMETRY_FRESH_S:
+        return (
+            "STALE",
+            f"Last SHT45 reading {_age_text(age_s)} ago — not a live ambient reading.",
+        )
+    return "LIVE", f"SHT45 live: {temp:.2f} °C, {hum:.2f} % RH."
+
+
 def _on_message(_client, _userdata, msg):
     try:
         payload = json.loads(msg.payload.decode("utf-8", "replace"))
@@ -239,11 +255,20 @@ def collect():
     with _lock:
         age_s = round(time.time() - _esp["at"], 1) if _esp["at"] else None
         state, note = esp_telemetry_state(_esp["payload"], age_s)
+        sht_state, sht_note = sht_telemetry_state(_esp["payload"], age_s)
         esp = {"payload": _esp["payload"], "age_s": age_s, "state": state, "note": note}
+        sht = {
+            "temperature": (_esp["payload"] or {}).get("temperature"),
+            "humidity": (_esp["payload"] or {}).get("humidity"),
+            "age_s": age_s,
+            "state": sht_state,
+            "note": sht_note,
+        }
     return {
         "at": int(time.time()),
         "pi": pi_vitals(),
         "esp": esp,
+        "sht": sht,
         "audio": audio_state(),
         "net": net_state(),
         "services": services(),
@@ -313,6 +338,17 @@ async function tick(){
     html += row('RSSI · heap', `${e.rssi ?? '—'} dBm · ${e.heap ?? '—'}`);
     html += row('boot count · clip', `${e.boots ?? '—'} · ${e.clip ?? '—'}`);
     html += row('telemetry age', d.esp.age_s === null || d.esp.age_s === undefined ? '—' : `${d.esp.age_s.toFixed ? d.esp.age_s.toFixed(0) : d.esp.age_s} s`);
+    html += '</table></div>';
+    const sh = d.sht || {};
+    html += '<div class="card"><h2>SHT45 barn ambient</h2>';
+    if (sh.state !== 'LIVE') {
+      html += `<p class="note warn">${sh.note || 'No SHT45 reading available.'}</p>`;
+    }
+    html += '<table>';
+    html += row('sensor state', sh.state || 'NO READING');
+    html += row('temperature', sh.temperature === null || sh.temperature === undefined ? '—' : `${Number(sh.temperature).toFixed(2)} °C`);
+    html += row('humidity', sh.humidity === null || sh.humidity === undefined ? '—' : `${Number(sh.humidity).toFixed(2)} % RH`);
+    html += row('reading age', sh.age_s === null || sh.age_s === undefined ? '—' : `${Number(sh.age_s).toFixed(0)} s`);
     html += '</table></div>';
     html += '<div class="card"><h2>Audio ingest (Pi)</h2><table>';
     html += row('connected', a.connected);
