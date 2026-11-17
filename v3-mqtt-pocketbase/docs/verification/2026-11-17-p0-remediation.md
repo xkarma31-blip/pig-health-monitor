@@ -126,13 +126,18 @@ Measured UI evidence:
 - The app continued to read live PocketBase telemetry over the PigPulse
   hotspot throughout testing.
 
-### Final APK
+### APKs
 
-Build `a97c1bdf-64ba-445e-a7bc-783e07369092`, commit `c868cfe`, was built and
-installed with `adb install -r` (`Success`). Artifact `97,227,570` bytes,
-SHA-256 `c27c20be21673289bf18c6aab099bc134718427e01e2938ad13bfd783a747bce`.
-Value-based credential scan: 1,665 entries / 129,484,499 decompressed bytes,
-14 encoded variants — **PASS**, no hits.
+Intermediate build `a97c1bdf-64ba-445e-a7bc-783e07369092` (commit `c868cfe`)
+verified the camera-audio copy fix: `97,227,570` bytes, SHA-256
+`c27c20be21673289bf18c6aab099bc134718427e01e2938ad13bfd783a747bce`.
+
+**Final review-fix build** `137f2c9d-bbca-440c-b332-9d19c41b9956`, commit
+`9b7bfde`, installed with `adb install -r` (`Success`): `97,229,186` bytes,
+SHA-256 `515837af637f93917fa0357329b16adf9900f1d9b6b2eef6f3d160abcf44544a`.
+Value-based credential scan: 1,665 entries / 129,486,115 decompressed bytes,
+14 encoded variants — **PASS**, no hits. The app launched cleanly and showed
+live local PocketBase data after install.
 
 Final UI check fixed the mode-specific audio hint: with `VIDEO + AUDIO` selected
 and no camera frame, the row now reads
