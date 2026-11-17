@@ -51,6 +51,8 @@ CONTENT_TYPES = {
     ".ttf": "font/ttf",
     ".map": "application/json; charset=utf-8",
     ".wasm": "application/wasm",
+    # The offline installer: the farmer downloads the APK straight from the Pi.
+    ".apk": "application/vnd.android.package-archive",
 }
 
 
