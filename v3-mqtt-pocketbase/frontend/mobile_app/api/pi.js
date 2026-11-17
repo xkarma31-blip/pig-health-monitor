@@ -8,11 +8,12 @@
  *
  * Security properties:
  * - GET/HEAD only; no write verb is forwarded under any circumstance.
- * - Endpoint allowlist: /data, /ambient, /esp/status, /health.
+ * - Endpoint allowlist: see ALLOWED_ENDPOINTS — read-only console reads only,
+ *   including the cough classifier status (never its toggle).
  * - The key never reaches the client bundle.
  */
 
-const ALLOWED_ENDPOINTS = new Set(['data', 'ambient', 'esp/status', 'health', 'cctv', 'esp/record', 'camera-audio', 'esp/stream']);
+const ALLOWED_ENDPOINTS = new Set(['data', 'ambient', 'esp/status', 'health', 'cctv', 'esp/record', 'camera-audio', 'esp/stream', 'cough/api/status']);
 
 // Endpoints that start a REAL capture on the Pi (the Pi allows one capture at
 // a time) or hold a live subscription (the barn-mic stream, which blocks

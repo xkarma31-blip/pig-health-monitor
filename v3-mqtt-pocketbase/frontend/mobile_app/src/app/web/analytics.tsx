@@ -28,6 +28,7 @@ import { router } from 'expo-router';
 import { ListGroup, Skeleton } from '../../components/primitives';
 import { TimeSeriesChart } from '../../components/primitives/TimeSeriesChart';
 import { AuthBanner } from '../../components/shared/AuthBanner';
+import CoughClassifierCard from '../../components/CoughClassifierCard';
 import { pbList } from '../../utils/pocketbase';
 
 /** Number of fixed time buckets a window is split into. */
@@ -601,6 +602,9 @@ export default function AnalyticsScreen() {
                 typography={typography}
               />
             </View>
+
+            {/* On-device acoustic classifier — status only, read-only */}
+            <CoughClassifierCard />
 
             {/* Alert Summary */}
             <View style={styles.section}>

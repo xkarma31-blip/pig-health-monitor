@@ -14,6 +14,7 @@ import { explainThermalFrameError, screeningLabel, thermalSubtitle } from '../ut
 import { audioHint, cctvStatus, resolveCctvMode, type CctvMode } from '../utils/cctv-control';
 import { isPcmStreamSupported, startPcmStream, type PcmStreamState } from '../utils/pcm-stream';
 import { usePiNow } from '../hooks/usePiNow';
+import CoughClassifierCard from './CoughClassifierCard';
 
 /**
  * LiveThermalPanel — the shared live barn view (the Pi console's data, in the
@@ -1042,6 +1043,7 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
           {statsBlock}
           {ambientBlock}
           {micBlock}
+          <CoughClassifierCard />
           {cctvBlock}
           {soundBlock}
         </View>
@@ -1055,6 +1057,7 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
       {statsBlock}
       {ambientBlock}
       {micBlock}
+      <CoughClassifierCard />
       {cctvBlock}
       {soundBlock}
     </>

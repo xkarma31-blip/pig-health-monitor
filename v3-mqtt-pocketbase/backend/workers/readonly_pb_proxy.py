@@ -382,7 +382,7 @@ class Handler(BaseHTTPRequestHandler):
 
     # Read-only passthrough to the Pi thermal console (the deployed app's live
     # thermal view rides this). Key gate applies like everything else.
-    PI_ROUTES = {"/data", "/ambient", "/esp/status", "/health"}
+    PI_ROUTES = {"/data", "/ambient", "/esp/status", "/health", "/cough/api/status"}
 
     def _proxy_pi(self, path: str, query: str) -> None:
         target_path = path[3:] or "/"

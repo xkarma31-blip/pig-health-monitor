@@ -10,7 +10,7 @@ COLLECTIONS = {'telemetry', 'alerts', 'pigs', 'devices'}
 QUERY = {'page', 'perPage', 'sort', 'filter', 'expand', 'fields'}
 PI_ENDPOINTS = {'data', 'ambient', 'esp/status', 'health', 'cctv',
                 'esp/record', 'camera-audio', 'esp/stream',
-                'diag.json', 'vitals.json'}
+                'diag.json', 'vitals.json', 'cough/api/status'}
 
 
 def static(handler, path):

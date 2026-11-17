@@ -171,6 +171,22 @@ test('an endpoint outside the allowlist is refused with 400', async () => {
   assert.deepEqual(res.body, { error: 'unsupported pi endpoint' });
 });
 
+test('cough classifier status is a normal read-only bridge fetch', async () => {
+  const { res, calls } = await call('GET', '/api/pi?ep=cough/api/status');
+  assert.equal(res.statusCode, 200);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].target, 'https://proxy.example.test/pi/cough/api/status');
+});
+
+test('the cough classifier TOGGLE is never reachable through this read-only bridge', async () => {
+  const post = await call('POST', '/api/pi?ep=cough/api/toggle');
+  assert.equal(post.res.statusCode, 405);
+  assert.equal(post.calls.length, 0);
+  const get = await call('GET', '/api/pi?ep=cough/api/toggle');
+  assert.equal(get.res.statusCode, 400);
+  assert.equal(get.calls.length, 0);
+});
+
 test('OPTIONS answers 204 with the allowed verbs', async () => {
   const { res, calls } = await call('OPTIONS', '/api/pi?ep=data');
   assert.equal(res.statusCode, 204);
