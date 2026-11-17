@@ -18,6 +18,7 @@ import {
 import type { SensorReading as LiveSensorReading, SensorStatus } from '../data/mockSensors';
 import { toDeviceFields, hasReading, UNKNOWN_READING } from './device-record';
 import { cacheGet, cacheSet } from './storage-cache';
+import { pigWritePayload, requireWriteToken, type WriteIdentity } from './pig-write-policy';
 
 export type SensorReading = Record<string, unknown> & { id?: string; name?: string; temp?: number };
 
@@ -91,14 +92,14 @@ export function subscribeRoster(callback: (roster: Record<string, unknown>[]) =>
   };
 }
 
-/** enrollPig — create a pig record in PocketBase (schema: pigId, name, healthStatus, tags). */
-export async function enrollPig(name: string): Promise<Record<string, unknown>> {
-  return pbCreate('pigs', {
-    pigId: `pig-${Date.now().toString(36)}`,
-    name,
-    healthStatus: 'NORMAL',
-    tags: [],
-  });
+/**
+ * enrollPig — create an owned pig record. A signed-in end user is required;
+ * the owner id is stamped here and enforced by the PocketBase create rule.
+ */
+export async function enrollPig(name: string, user: WriteIdentity | null): Promise<Record<string, unknown>> {
+  const token = requireWriteToken(user);
+  if (!token || !user) throw new Error('Sign in to enroll pigs');
+  return pbCreate('pigs', pigWritePayload(name, user), token);
 }
 
 /**

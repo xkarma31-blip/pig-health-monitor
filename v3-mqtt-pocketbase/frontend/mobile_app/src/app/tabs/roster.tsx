@@ -215,7 +215,7 @@ export default function RosterScreen() {
     }
     setSaving(true);
     try {
-      await enrollPig(name);
+      await enrollPig(name, user);
       playSound('success');
       showToast(`${name} added to the roster`);
       setEnrollOpen(false);
