@@ -18,7 +18,10 @@ Statuses: **ENABLED** (measured), **PARTIAL** (works with limits), **PLANNED** (
 | Venue LAN fallback | PARTIAL | Unit-tested; final APK install blocked by ADB. |
 | Tailscale remote | ENABLED on Pi | Phone install/verification blocked. |
 | Vercel deployment | BLOCKED | HTTP 402. |
-| Expo Hosting | PLANNED | Docs written; API-route limitation noted. |
+| Expo Hosting preview | ENABLED | https://pigpulse--je9n921m7v.expo.app — UI preview; Vercel API bridges not migrated yet. |
+| Remote monitor page | ENABLED | http://<pi>/monitor; works over hotspot, LAN, and Tailscale. |
+| Setup QR | ENABLED | SVG/PNG generated for http://192.168.69.1/?setup=1. |
+| Sound feedback | ENABLED | Off by default; opt-in in Settings. |
 | Synchronized thermal+CCTV | PLANNED | Needs calibration + homography. |
 | Pig ID/tracking | PLANNED | Published systems need depth/ear tags/training. |
 | Cough-to-pig attribution | PLANNED | Single mic cannot support it. |

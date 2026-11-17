@@ -22,6 +22,14 @@ Example from Expo docs: preview `https://my-app--or1170q9ix.expo.app/`, producti
 3. Preview on Expo Hosting only as a UI check, with the API limitation labelled.
 4. To move fully, migrate `/api/telemetry` and `/api/pi` into Expo server routes and verify `/app/tabs`, `/app/thermal`, and deep-route reload.
 
+## Deployed preview
+
+A preview Expo Hosting deployment was created on 2026-11-18:
+
+`https://pigpulse--je9n921m7v.expo.app`
+
+Verified HTTP 200. It is the same exported Expo web app, but the current `/api/telemetry` and `/api/pi` bridges are Vercel serverless functions; until they are migrated to Expo server routes, treat this URL as a UI preview. Vercel remains the data-capable deployment.
+
 ## Commands
 
 ```bash

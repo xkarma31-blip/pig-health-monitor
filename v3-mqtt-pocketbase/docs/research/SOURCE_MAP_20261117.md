@@ -4,6 +4,13 @@ Every externally sourced claim below is tied to a sentence actually read. Facts 
 
 ---
 
+## Android adaptive icon safe zone
+
+| Source | Exact sentence read | Applied to PigPulse |
+|---|---|---|
+| Android Developers, Adaptive icons: https://developer.android.com/develop/ui/compose/system/icon_design_adaptive | “The 66x66 safe zone depicted is the area that is never clipped by a shaped mask defined by an OEM.” | The green waveform is fitted inside 60% of the 1024px canvas so it is never cropped by circular/squircle masks. |
+| Same | “Use a logo that's at least 48x48 dp. It must not exceed 66x66 dp, because the inner 66x66 dp of the icon appears within the masked viewport.” | Foreground/monochrome layers rebuilt with transparent outer area; background stays full bleed. |
+
 ## Thermal radiometry and fever claims
 
 | Source | Exact sentence read | Applied to PigPulse |
