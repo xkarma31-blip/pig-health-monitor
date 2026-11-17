@@ -2,6 +2,8 @@ node_modules/
 .expo/
 dist/
 .git/
+.env
+.env*
 android/
 ios/
 *.log

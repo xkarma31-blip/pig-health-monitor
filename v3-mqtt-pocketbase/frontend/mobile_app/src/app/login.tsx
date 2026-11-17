@@ -139,7 +139,7 @@ export default function LoginScreen() {
                 color: theme.colors.textPrimary,
               },
             ]}
-            placeholder={role === 'admin' ? 'admin@pigpulse.local' : 'farmer@farm.local'}
+            placeholder={role === 'admin' ? 'admin@example.com' : 'farmer@example.com'}
             placeholderTextColor={theme.colors.textDisabled}
             value={email}
             onChangeText={setEmail}
