@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Slot } from 'expo-router';
-import { View, TouchableOpacity, Text } from 'react-native';
+import { View, TouchableOpacity, Text, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ThemeProvider, useTheme } from '../theme';
 import { WebThemeProvider } from '../theme/WebThemeContext';
@@ -12,11 +12,16 @@ import { playSound, initSounds } from '../utils/sounds';
 import { haptic, initHaptics } from '../utils/haptics';
 import AdvisorModal from '../components/AdvisorModal';
 import { PulseView } from '../components/Animated/PulseView';
+import { useWidgetSync } from '../hooks/useWidgetSync';
 
 function RootInner({ children }: { children: React.ReactNode }) {
   const [advisorVisible, setAdvisorVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const { colors, mode } = useTheme();
+
+  // Keep the native Android widget cache in sync for the app's lifetime. Must be
+  // called unconditionally (before the loading early return) inside ThemeProvider.
+  useWidgetSync(mode, Platform.OS);
 
   useEffect(() => {
     const initializeApp = async () => {

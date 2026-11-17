@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AppWidgetProviderInfo for the PigPulse home-screen widget.
+
+  updatePeriodMillis is 1800000 (30 minutes): the shortest period Android
+  guarantees without the app being alive. This is a floor, not the primary
+  refresh path - the provider also re-renders whenever the app writes a fresh
+  state file (FileObserver) and on every APPWIDGET_UPDATE broadcast. A shorter
+  period would be silently clamped to 30 minutes anyway.
+
+  previewImage reuses the official logo drawable copied by the plugin; it is
+  never a separately-authored asset.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:description="@string/widget_description"
+    android:initialLayout="@layout/pigpulse_widget"
+    android:minHeight="150dp"
+    android:minWidth="250dp"
+    android:previewImage="@drawable/logo_light"
+    android:resizeMode="horizontal|vertical"
+    android:targetCellHeight="3"
+    android:targetCellWidth="4"
+    android:updatePeriodMillis="1800000"
+    android:widgetCategory="home_screen" />

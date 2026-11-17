@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Colours and copy for the PigPulse home-screen widget.
+
+  Every name is prefixed `widget_` so nothing here can collide with a colour or
+  string that already ships with the app. Values are high-contrast on purpose
+  (Master has low vision): light surfaces stay near-white with dark ink, dark
+  surfaces stay near-black with pale ink.
+-->
+<resources>
+    <!-- Surfaces -->
+    <color name="widget_background_light">#FFF2F6F1</color>
+    <color name="widget_background_dark">#FF121314</color>
+    <color name="widget_stroke_light">#FFE3EAE1</color>
+    <color name="widget_stroke_dark">#FF2B2D2F</color>
+
+    <!-- Text -->
+    <color name="widget_primary_text_light">#FF1E2A20</color>
+    <color name="widget_primary_text_dark">#FFF2F3F1</color>
+    <color name="widget_secondary_text_light">#FF6B7C6D</color>
+    <color name="widget_secondary_text_dark">#FFA6A9A6</color>
+
+    <!-- Reported device status -->
+    <color name="widget_status_normal">#FF2E7D4F</color>
+    <color name="widget_status_normal_dark">#FF3DDC84</color>
+    <color name="widget_status_watch">#FFA9762E</color>
+    <color name="widget_status_watch_dark">#FFD9A05B</color>
+    <color name="widget_status_alert">#FFA14A3C</color>
+    <color name="widget_status_alert_dark">#FFD06B5A</color>
+    <color name="widget_status_unknown">#FF6B7C6D</color>
+    <color name="widget_status_unknown_dark">#FFA6A9A6</color>
+
+    <!-- Accessibility copy -->
+    <string name="widget_description">PigPulse home-screen widget</string>
+</resources>
