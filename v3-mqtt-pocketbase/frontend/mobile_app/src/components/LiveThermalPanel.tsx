@@ -11,7 +11,7 @@ import { telemetryTime } from '../utils/telemetry-time';
 import { fetchPiAudioChunk, fetchPiCameraAudio, piEspStreamUrl } from '../utils/pi-thermal';
 import { piClock, pickAligned } from '../utils/pi-clock';
 import { explainThermalFrameError, screeningLabel, thermalSubtitle } from '../utils/thermal-diagnostics';
-import { cctvStatus, resolveCctvMode, type CctvMode } from '../utils/cctv-control';
+import { audioHint, cctvStatus, resolveCctvMode, type CctvMode } from '../utils/cctv-control';
 import { isPcmStreamSupported, startPcmStream, type PcmStreamState } from '../utils/pcm-stream';
 import { usePiNow } from '../hooks/usePiNow';
 
@@ -481,7 +481,7 @@ function BarnMicToggle({ base, healthy }: { base: string | null; healthy: boolea
  * ~4 s. When the camera is unreachable the Pi answers 503 and this shows an
  * honest "no camera audio" state instead of a silent Listen button.
  */
-function CameraSoundToggle({ base, cameraLive, audioEnabled }: { base: string | null; cameraLive: boolean; audioEnabled: boolean }) {
+function CameraSoundToggle({ base, cameraLive, audioEnabled, audioHintText }: { base: string | null; cameraLive: boolean; audioEnabled: boolean; audioHintText: string }) {
   const { colors, spacing, radius, typography } = useTheme();
   const [on, setOn] = useState(false);
   const [status, setStatus] = useState<SoundStatus>('idle');
@@ -659,7 +659,7 @@ function CameraSoundToggle({ base, cameraLive, audioEnabled }: { base: string | 
   // Keep Mute tappable even if the bridge/base disappears mid-listen.
   const disabled = !base || (!audioEnabled && !on);
   const sub = !audioEnabled && !on
-    ? 'Video-only mode — switch to VIDEO + AUDIO to listen'
+    ? audioHintText
     : !base && !on
       ? 'No bridge — camera audio needs the proxy'
       : on
@@ -1020,7 +1020,12 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
       >
         <BarnMicToggle base={pi.base} healthy={!!esp && esp.socket && !esp.stale} />
         <View style={{ height: StyleSheet.hairlineWidth, backgroundColor: colors.divider, marginVertical: spacing.md }} />
-        <CameraSoundToggle base={pi.base} cameraLive={cctv.live} audioEnabled={cctvState.audioAvailable} />
+        <CameraSoundToggle
+          base={pi.base}
+          cameraLive={cctv.live}
+          audioEnabled={cctvState.audioAvailable}
+          audioHintText={audioHint(cctvState)}
+        />
       </View>
     </View>
   );

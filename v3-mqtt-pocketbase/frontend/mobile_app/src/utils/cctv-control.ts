@@ -28,6 +28,17 @@ export interface CctvStatus {
   audioAvailable: boolean;
   label: string;
   reason: string;
+
+  /** Explicit camera-audio mode from the caller, for honest disabled copy. */
+  audioMode?: boolean;
+}
+
+/** Short status line for the camera-sound control. */
+export function audioHint(status: CctvStatus): string {
+  if (status.audioAvailable) return 'Tap to listen';
+  if (!status.poll) return 'Video is switched off';
+  if (status.audioMode) return 'No recent camera frame — camera audio unavailable';
+  return 'Video-only mode — switch to VIDEO + AUDIO to listen';
 }
 
 export function cctvStatus({ mode, live, base }: CctvStatusInput): CctvStatus {
@@ -36,6 +47,7 @@ export function cctvStatus({ mode, live, base }: CctvStatusInput): CctvStatus {
       poll: false,
       showFrame: false,
       audioAvailable: false,
+      audioMode: false,
       label: 'CCTV OFF',
       reason: 'Video is switched off. Turn it on to poll the camera.',
     };
@@ -45,6 +57,7 @@ export function cctvStatus({ mode, live, base }: CctvStatusInput): CctvStatus {
       poll: true,
       showFrame: false,
       audioAvailable: false,
+      audioMode: mode === 'video_audio',
       label: 'CCTV UNAVAILABLE — no Pi connection',
       reason: 'No Pi connection. Join PigPulse or use remote access.',
     };
@@ -54,6 +67,7 @@ export function cctvStatus({ mode, live, base }: CctvStatusInput): CctvStatus {
       poll: true,
       showFrame: false,
       audioAvailable: false,
+      audioMode: mode === 'video_audio',
       label: 'CCTV OFFLINE — no recent frame',
       reason: 'No recent camera frame. Check camera power, PigPulse Wi-Fi and RTSP.',
     };
@@ -63,6 +77,7 @@ export function cctvStatus({ mode, live, base }: CctvStatusInput): CctvStatus {
     poll: true,
     showFrame: true,
     audioAvailable: withAudio,
+    audioMode: withAudio,
     label: withAudio ? 'CCTV LIVE · AUDIO READY' : 'CCTV LIVE',
     reason: withAudio
       ? 'Recent camera frame received. Camera audio is available from the Pi.'

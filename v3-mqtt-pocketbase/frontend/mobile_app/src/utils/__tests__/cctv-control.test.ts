@@ -2,7 +2,7 @@
  * Behavioral tests for the CCTV mode contract. Plain import-time assertions,
  * same convention as the other utils tests.
  */
-import { cctvStatus, resolveCctvMode } from '../cctv-control';
+import { audioHint, cctvStatus, resolveCctvMode } from '../cctv-control';
 
 let failures = 0;
 // eslint-disable-next-line no-console
@@ -46,6 +46,13 @@ expectEq(live.audioAvailable, false, 'live video has no audio');
 const av = cctvStatus({ mode: 'video_audio', live: true, base: 'https://192.168.69.1:8080' });
 expectEq(av.showFrame, true, 'live AV shows frame');
 expectEq(av.audioAvailable, true, 'live AV offers camera audio');
+
+// Audio hint must match the actual mode and reachability, not a stale label.
+const avOffline = cctvStatus({ mode: 'video_audio', live: false, base: 'https://192.168.69.1:8080' });
+expectEq(audioHint(off), 'Video is switched off', 'off audio hint');
+expectEq(audioHint(offline), 'Video-only mode — switch to VIDEO + AUDIO to listen', 'video-only hint');
+expectEq(audioHint(avOffline), 'No recent camera frame — camera audio unavailable', 'AV offline hint');
+expectEq(audioHint(av), 'Tap to listen', 'live AV audio hint');
 
 if (failures === 0) {
   // eslint-disable-next-line no-console
