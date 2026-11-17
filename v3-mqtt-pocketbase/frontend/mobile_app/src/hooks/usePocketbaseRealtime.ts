@@ -253,15 +253,25 @@ export function usePocketbaseRealtime(): PocketbaseRealtimeResult {
     startRef.current = startCycle;
 
     const boot = async () => {
+      let started = false;
       try {
         const [pbModule, setupModule] = await Promise.all([
           import('../utils/pocketbase'),
           import('../utils/setupStore'),
         ]);
+        // Publish the resolver BEFORE any probe can hang; a slow reachability
+        // check must never leave the UI permanently "still loading".
+        modules.current = { resolveBaseUrls: pbModule.resolveBaseUrls };
         const setup = await setupModule.loadFarmerSetup();
         if (Platform.OS !== 'web' && setup?.pbUrl) pbModule.setConfiguredServer(setup.pbUrl);
         if (Platform.OS !== 'web') {
           pbModule.setAccessConfig(setup.accessMode, setup.remotePbUrl, setup.lanPbUrl);
+        }
+        if (!isMounted.current) return;
+        startCycle();
+        started = true;
+
+        if (Platform.OS !== 'web') {
           const localBase = setup.pbUrl || pbModule.PB_HOTSPOT_URL;
           let lanBase = setup.lanPbUrl;
           const remoteBase = setup.remotePbUrl;
@@ -298,13 +308,13 @@ export function usePocketbaseRealtime(): PocketbaseRealtimeResult {
             lastAt: Date.now(),
             failures: reach.local || reach.lan || reach.remote ? 0 : 1,
           };
+          startRef.current();
         }
-        modules.current = { resolveBaseUrls: pbModule.resolveBaseUrls };
       } catch {
         /* keep defaults; a setup read failure must not block the first connect */
       }
       if (!isMounted.current) return;
-      startCycle();
+      if (!started) startCycle();
     };
     void boot();
 
