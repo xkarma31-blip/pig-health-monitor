@@ -8,8 +8,10 @@
  */
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
+import { alertNotification, channelSpec, permissionGuidance } from './notification-policy';
 
-const CHANNEL_ID = 'alerts';
+const CHANNEL_SPEC = channelSpec();
+const CHANNEL_ID = CHANNEL_SPEC.id;
 
 if (Platform.OS !== 'web') {
   try {
@@ -40,6 +42,11 @@ export async function ensureNotificationPermission(): Promise<boolean> {
   }
 }
 
+/** Plain-language status text for settings/UI. */
+export function notificationStatus(granted: boolean): string {
+  return permissionGuidance(granted);
+}
+
 export type AlertNotification = {
   id?: string;
   type?: string;
@@ -53,25 +60,19 @@ export type AlertNotification = {
  */
 export async function notifyAlert(alert: AlertNotification): Promise<void> {
   if (Platform.OS === 'web') return;
-  const body = (alert.message || alert.type || '').trim();
-  if (!body) return;
+  const content = alertNotification(alert);
+  if (!content.body) return;
   try {
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
-        name: 'Alerts',
+        name: CHANNEL_SPEC.name,
         importance: Notifications.AndroidImportance.HIGH,
-        vibrationPattern: [0, 250, 250, 250],
-        lightColor: '#3DDC84',
+        vibrationPattern: CHANNEL_SPEC.vibrationPattern,
+        enableVibrate: CHANNEL_SPEC.enableVibrate,
+        lightColor: CHANNEL_SPEC.lightColor,
       });
     }
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: alert.severity ? `PigPulse · ${alert.severity}` : 'PigPulse alert',
-        body,
-        data: { alertId: alert.id ?? null, type: alert.type ?? null },
-      },
-      trigger: null,
-    });
+    await Notifications.scheduleNotificationAsync({ content, trigger: null });
   } catch {
     // Notification failure must never break the alerts list.
   }
