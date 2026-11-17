@@ -140,6 +140,13 @@ class LocalAppTests(unittest.TestCase):
         with self.get('/app/bundle.js') as response:
             self.assertIn('javascript', response.headers['Content-Type'])
 
+    def test_monitor_page_is_served(self):
+        with self.get('/monitor') as response:
+            self.assertEqual(response.status, 200)
+            body = response.read()
+            self.assertIn(b'PigPulse remote monitor', body)
+            self.assertIn(b'/api/status', body)
+
     def test_traversal_secrets_and_missing_assets_are_not_spa(self):
         for path in ('/app/%2e%2e/portal.py', '/app/.env', '/app/missing.js'):
             with self.get(path) as response:

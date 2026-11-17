@@ -38,6 +38,7 @@ VERSION = "1.0.0"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 PAGE = os.path.join(HERE, "portal.html")
+MONITOR = os.path.join(HERE, "monitor.html")
 RUN = "/run/pigpulse"
 PENDING = os.path.join(RUN, "portal-pending.json")
 RESULT = os.path.join(RUN, "portal-result.json")
@@ -440,6 +441,8 @@ class Portal(BaseHTTPRequestHandler):
             return
         if path in ("/", "/index.html", "/portal.html"):
             self.send_page(PAGE)
+        elif path == "/monitor":
+            self.send_page(MONITOR)
         elif path == "/api/status":
             self.send_json(status())
         elif path == "/api/scan":

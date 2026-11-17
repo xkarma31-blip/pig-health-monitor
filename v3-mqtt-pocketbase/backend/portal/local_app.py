@@ -9,7 +9,8 @@ APP_ROOT = Path('/usr/local/lib/pigpulse-portal/app')
 COLLECTIONS = {'telemetry', 'alerts', 'pigs', 'devices'}
 QUERY = {'page', 'perPage', 'sort', 'filter', 'expand', 'fields'}
 PI_ENDPOINTS = {'data', 'ambient', 'esp/status', 'health', 'cctv',
-                'esp/record', 'camera-audio', 'esp/stream'}
+                'esp/record', 'camera-audio', 'esp/stream',
+                'diag.json', 'vitals.json'}
 
 
 def static(handler, path):

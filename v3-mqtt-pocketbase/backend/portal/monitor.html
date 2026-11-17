@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PigPulse remote monitor</title>
+<style>
+:root{color-scheme:dark;--bg:#0b0d0c;--fg:#f2f6f1;--dim:#a6b0a6;--ok:#3ddc84;--warn:#d9a05b;--bad:#d06b5a;--card:#151917}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,sans-serif;padding:24px}
+.wrap{max-width:1080px;margin:auto}h1{font-size:30px;margin:0 0 4px}h1 span{color:var(--ok)}.sub{color:var(--dim);margin:0 0 20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}.card{background:var(--card);border:1px solid #2a312c;border-radius:14px;padding:16px}
+h2{font-size:17px;margin:0 0 10px;color:var(--ok)}table{width:100%;border-collapse:collapse}td{padding:6px 0;border-bottom:1px solid #242b26;vertical-align:top}td:first-child{color:var(--dim);width:45%}
+.ok{color:var(--ok)!important}.warn{color:var(--warn)!important}.bad{color:var(--bad)!important}.note{color:var(--dim);font-size:14px;margin-top:10px}
+pre{white-space:pre-wrap;word-break:break-word;color:var(--dim);font-size:13px;max-height:260px;overflow:auto}
+a{color:var(--ok)}
+</style></head><body><div class="wrap">
+<h1>PigPulse <span>remote monitor</span></h1>
+<p class="sub">Read-only. Polls the Pi every 5 seconds. Works from the hotspot, venue LAN, or the encrypted tunnel.</p>
+<div class="grid">
+  <div class="card"><h2>Pi and network</h2><table id="pi"></table><p class="note" id="stamp"></p></div>
+  <div class="card"><h2>Thermal</h2><table id="thermal"></table></div>
+  <div class="card"><h2>S3 mic and SHT45</h2><table id="sensors"></table></div>
+  <div class="card"><h2>CCTV</h2><table id="cctv"></table></div>
+</div>
+<div class="card" style="margin-top:16px"><h2>Recent telemetry log</h2><pre id="log">loading…</pre></div>
+<script>
+const esc = (v) => String(v ?? '—').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const row = (k,v,cls='') => `<tr><td>${esc(k)}</td><td class="${cls}">${esc(v)}</td></tr>`;
+const cls = (v) => v === true || v === 'LIVE' || v === 'UP' ? 'ok' : v === false || v === 'STALE' || v === 'NO READING' ? 'bad' : '';
+async function j(url){ try { const r=await fetch(url,{cache:'no-store'}); return r.ok ? await r.json() : null; } catch(e){ return null; } }
+async function tick(){
+  const [st,th,diag,log] = await Promise.all([
+    j('/api/status'), j('/api/pi?ep=health'), j('/api/pi?ep=diag.json'),
+    j('/api/telemetry?collection=telemetry&perPage=8&sort=-created')
+  ]);
+  document.getElementById('stamp').textContent = 'Updated ' + new Date().toLocaleTimeString();
+  document.getElementById('pi').innerHTML =
+    row('Pi state', st?.state, cls(st?.state)) +
+    row('Internet', st?.internet, cls(st?.internet)) +
+    row('Uplink IP', st?.uplink_ip) +
+    row('Remote URL', st?.remote) +
+    row('AP', `${st?.ap?.ssid || '—'} ch ${st?.ap?.channel || '—'} · ${st?.ap?.clients ?? '—'} clients`);
+  document.getElementById('thermal').innerHTML =
+    row('Sensor ready', th?.['Sensor ready'], cls(th?.['Sensor ready'] === 'yes')) +
+    row('Frame valid', th?.['Frame valid'], cls(th?.['Frame valid'] === 'yes')) +
+    row('Frame', th?.['Frame count']) +
+    row('FPS', th?.['Measured FPS']) +
+    row('Age', th?.['Frame age s'] ? th['Frame age s'] + ' s' : '—') +
+    row('Last error', th?.['Last error']);
+  const esp = diag?.esp || {}, sht = diag?.sht || {};
+  document.getElementById('sensors').innerHTML =
+    row('S3 mic state', esp.state, cls(esp.state)) +
+    row('Mic reading', esp.state === 'LIVE' ? esp.payload?.mic : '—', cls(esp.payload?.mic)) +
+    row('S3 age', esp.age_s ? esp.age_s + ' s' : '—') +
+    row('SHT45 state', sht.state, cls(sht.state)) +
+    row('Temperature', sht.temperature != null ? Number(sht.temperature).toFixed(2) + ' °C' : '—') +
+    row('Humidity', sht.humidity != null ? Number(sht.humidity).toFixed(2) + ' % RH' : '—');
+  document.getElementById('cctv').innerHTML =
+    row('Camera frame', 'See CCTV panel in app') +
+    row('Note', 'Camera recovery is tracked separately; no stale frame is shown as live.');
+  const items = log?.items || [];
+  document.getElementById('log').textContent = items.length
+    ? items.map(x => `${x.created} ${x.deviceId || '—'} center=${x.center ?? '—'} ambient=${x.ambient ?? '—'} humidity=${x.humidity ?? '—'} rms=${x.rms ?? '—'}`).join('\n')
+    : 'No telemetry rows available.';
+}
+tick(); setInterval(tick, 5000);
+</script>
+</div></body></html>
