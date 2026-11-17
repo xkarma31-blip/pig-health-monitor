@@ -9,6 +9,7 @@
  */
 
 import { Platform } from 'react-native';
+import { getSoundEnabled, setSoundEnabled, soundAllowed } from './sound-preference';
 
 type SoundType = 'tap' | 'success' | 'warning' | 'alert' | 'toggle' | 'navigate';
 
@@ -306,15 +307,25 @@ async function playNativeSound(type: SoundType): Promise<void> {
 // ============================================================
 
 export async function initSounds(): Promise<void> {
+  try {
+    const { loadFarmerSetup } = await import('./setupStore');
+    const setup = await loadFarmerSetup();
+    setSoundEnabled(setup.soundEnabled === true);
+  } catch {
+    setSoundEnabled(false);
+  }
   if (Platform.OS !== 'web') {
     await ensureNativeAudio();
   }
 }
 
 export function playSound(type: SoundType): void {
+  if (!soundAllowed(getSoundEnabled())) return;
   if (Platform.OS === 'web') {
     playWebSound(type);
   } else {
     playNativeSound(type).catch(() => {});
   }
 }
+
+export { getSoundEnabled, setSoundEnabled } from './sound-preference';

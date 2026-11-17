@@ -26,8 +26,9 @@ import {
   Skeleton,
   useToast,
 } from '../../components/primitives';
-import { playSound } from '../../utils/sounds';
+import { playSound, setSoundEnabled as applySoundPreference } from '../../utils/sounds';
 import { haptic } from '../../utils/haptics';
+import { loadFarmerSetup, saveFarmerSetup } from '../../utils/setupStore';
 
 type Node = {
   id: string;
@@ -79,6 +80,22 @@ export default function SettingsScreen() {
   const [nodes, setNodes] = useState<Node[]>([]);
   const [reloadKey, setReloadKey] = useState(0);
   const [now, setNow] = useState(() => Date.now());
+  const [soundEnabled, setSoundEnabled] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const setup = await loadFarmerSetup();
+        if (!alive) return;
+        setSoundEnabled(setup.soundEnabled === true);
+        applySoundPreference(setup.soundEnabled === true);
+      } catch {
+        if (alive) setSoundEnabled(false);
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
 
   // Bounded cleanup timer: recompute node age locally without re-reading data.
   useEffect(() => {
@@ -241,6 +258,30 @@ export default function SettingsScreen() {
         />
         <Text style={[typography.bodySmall, { color: colors.textMuted, fontSize: 16, marginTop: spacing.sm }]}>
           Saved on this device — currently following {schemeOverride === 'system' ? `system (${mode})` : `${mode} mode`}
+        </Text>
+      </View>
+
+      {/* Sound feedback — silent by default, opt-in */}
+      <View style={{ marginTop: spacing.xl }}>
+        <Text style={[typography.caption, { color: colors.textMuted, marginBottom: spacing.sm }]}>Sound feedback</Text>
+        <SegmentedControl
+          options={[
+            { key: 'off', label: 'Off' },
+            { key: 'on', label: 'On' },
+          ]}
+          value={soundEnabled ? 'on' : 'off'}
+          onChange={(key) => {
+            const enabled = key === 'on';
+            setSoundEnabled(enabled);
+            applySoundPreference(enabled);
+            void saveFarmerSetup({ soundEnabled: enabled }).catch(() => {
+              showToast('Could not save sound setting');
+            });
+            if (enabled) playSound('tap');
+          }}
+        />
+        <Text style={[typography.bodySmall, { color: colors.textMuted, fontSize: 16, marginTop: spacing.sm }]}>
+          PigPulse is silent until you turn this on. Vibration and accessibility cues stay available.
         </Text>
       </View>
 

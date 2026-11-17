@@ -25,6 +25,8 @@ export interface FarmerSetup {
   penName: string;
   lang: FarmerLang;
   setupDone: boolean;
+  /** Interface sound feedback is opt-in; silent by default. */
+  soundEnabled: boolean;
   /** Local-first by default; remote is the same Pi over its encrypted tunnel. */
   accessMode: AccessMode;
   /** Pi's address on the venue LAN, learned from the portal while on hotspot. */
@@ -39,6 +41,7 @@ const KEYS = {
   penName: '@pigpulse/penName',
   lang: '@pigpulse/lang',
   setupDone: '@pigpulse/setupDone',
+  soundEnabled: '@pigpulse/soundEnabled',
   accessMode: '@pigpulse/accessMode',
   lanPbUrl: '@pigpulse/lanPbUrl',
   remotePbUrl: '@pigpulse/remotePbUrl',
@@ -50,6 +53,7 @@ export const SETUP_DEFAULTS: FarmerSetup = {
   penName: '',
   lang: 'en',
   setupDone: false,
+  soundEnabled: false,
   accessMode: 'auto',
   lanPbUrl: '',
   remotePbUrl: 'http://100.69.139.63:8090',
@@ -67,12 +71,13 @@ export const PB_SCAN_CANDIDATES = [
 
 export async function loadFarmerSetup(): Promise<FarmerSetup> {
   try {
-    const [pbUrl, farmName, penName, lang, setupDone, accessMode, lanPbUrl, remotePbUrl] = await Promise.all([
+    const [pbUrl, farmName, penName, lang, setupDone, soundEnabled, accessMode, lanPbUrl, remotePbUrl] = await Promise.all([
       AsyncStorage.getItem(KEYS.pbUrl),
       AsyncStorage.getItem(KEYS.farmName),
       AsyncStorage.getItem(KEYS.penName),
       AsyncStorage.getItem(KEYS.lang),
       AsyncStorage.getItem(KEYS.setupDone),
+      AsyncStorage.getItem(KEYS.soundEnabled),
       AsyncStorage.getItem(KEYS.accessMode),
       AsyncStorage.getItem(KEYS.lanPbUrl),
       AsyncStorage.getItem(KEYS.remotePbUrl),
@@ -83,6 +88,7 @@ export async function loadFarmerSetup(): Promise<FarmerSetup> {
       penName: penName ?? '',
       lang: lang === 'tl' ? 'tl' : 'en',
       setupDone: setupDone === '1',
+      soundEnabled: soundEnabled === '1',
       accessMode: accessMode === 'local' || accessMode === 'remote' ? accessMode : 'auto',
       lanPbUrl: lanPbUrl ?? '',
       remotePbUrl: remotePbUrl ?? SETUP_DEFAULTS.remotePbUrl,
@@ -102,6 +108,7 @@ export async function saveFarmerSetup(patch: Partial<FarmerSetup>): Promise<Farm
       AsyncStorage.setItem(KEYS.penName, next.penName),
       AsyncStorage.setItem(KEYS.lang, next.lang),
       AsyncStorage.setItem(KEYS.setupDone, next.setupDone ? '1' : '0'),
+      AsyncStorage.setItem(KEYS.soundEnabled, next.soundEnabled ? '1' : '0'),
       AsyncStorage.setItem(KEYS.accessMode, next.accessMode),
       AsyncStorage.setItem(KEYS.lanPbUrl, next.lanPbUrl),
       AsyncStorage.setItem(KEYS.remotePbUrl, next.remotePbUrl),
