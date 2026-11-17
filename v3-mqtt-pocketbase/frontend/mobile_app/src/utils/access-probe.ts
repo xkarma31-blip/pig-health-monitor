@@ -1,5 +1,16 @@
 /** Bounded reachability probes for the local hotspot and the Pi's tunnel. */
 
+export const REPROBE_BASE_MS = 10_000;
+export const REPROBE_MAX_MS = 60_000;
+
+/** Exponential backoff for re-probes, capped so recovery is never pinned. */
+export function reprobeDue(lastAt: number | null, now: number, failures: number): boolean {
+  if (lastAt === null) return true;
+  const step = Math.max(0, Math.min(failures, 5));
+  const delay = Math.min(REPROBE_BASE_MS * 2 ** step, REPROBE_MAX_MS);
+  return now - lastAt >= delay;
+}
+
 async function healthOk(base: string | null | undefined, timeoutMs = 2500): Promise<boolean> {
   const clean = (base ?? '').trim().replace(/\/+$/, '');
   if (!clean) return false;

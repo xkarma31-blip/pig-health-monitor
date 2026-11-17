@@ -48,10 +48,17 @@ if (!/PigPulse|hotspot|offline/i.test(offline.reason)) {
   report(`FAIL offline reason is not plain language: ${offline.reason}`);
 }
 
-// A malformed remote URL is never substituted silently.
-const badRemote = chooseAccessSource({ mode: 'auto', localBase: local, remoteBase: 'ftp://bad', localReachable: false, remoteReachable: true });
-expectEq(badRemote.kind, 'malformed', 'malformed remote flagged');
-expectEq(badRemote.base, null, 'malformed remote fails closed');
+// A malformed remote URL fails closed only when remote is the selected source.
+// In local/auto it must never disable a healthy local hotspot path.
+const badRemoteSelected = chooseAccessSource({ mode: 'remote', localBase: local, remoteBase: 'ftp://bad', localReachable: false, remoteReachable: true });
+expectEq(badRemoteSelected.kind, 'malformed', 'malformed selected remote flagged');
+expectEq(badRemoteSelected.base, null, 'malformed selected remote fails closed');
+
+const badRemoteFallbackAuto = chooseAccessSource({ mode: 'auto', localBase: local, remoteBase: 'ftp://bad', localReachable: true, remoteReachable: true });
+expectEq(badRemoteFallbackAuto.kind, 'local', 'malformed unused remote does not break local auto');
+
+const badRemoteFallbackLocal = chooseAccessSource({ mode: 'local', localBase: local, remoteBase: 'ftp://bad', localReachable: true, remoteReachable: true });
+expectEq(badRemoteFallbackLocal.base, local, 'malformed unused remote ignored in local mode');
 
 // REMOTE mode uses the tunnel when configured and reachable.
 expectEq(

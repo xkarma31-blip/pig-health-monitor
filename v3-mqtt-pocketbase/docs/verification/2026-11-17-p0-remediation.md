@@ -137,6 +137,26 @@ and no camera frame, the row now reads
 `No recent camera frame — camera audio unavailable`. The original bug had said
 “switch to VIDEO + AUDIO” even while that mode was selected.
 
+### Independent review follow-up
+
+An independent read-only review found no Critical issues but four Required gaps,
+all closed before final handoff:
+
+1. **Create-rule owner binding:** migration `1794895500` now requires
+   `ownerId = @request.auth.id` for create/update/delete. A temporary user test
+   confirmed a spoofed owner create was rejected and a correct-owner create
+   succeeded; both test records were deleted.
+2. **Legacy rows:** the four pre-existing pigs were backfilled to
+   `ownerId = legacy-admin` on both instances; they are explicitly admin-managed
+   rather than silently unowned.
+3. **Reachability re-probe:** `usePocketbaseRealtime` now re-probes with capped
+   exponential backoff instead of pinning one launch-time result for the session.
+4. **Malformed remote fallback:** a bad remote URL now fails closed only when
+   remote is the selected source; it no longer disables a healthy local hotspot.
+
+Minor fixes: normalized remote URL, disabled portal tile no longer opens a dead
+tab, and Mute stays tappable if the base disappears mid-listen.
+
 Remote tunnel path was also measured from the laptop:
 `http://100.69.139.63:8090/api/health` → HTTP 200, and
 `https://100.69.139.63:8080/health` → valid frame (1.97 FPS, frame 41,655,

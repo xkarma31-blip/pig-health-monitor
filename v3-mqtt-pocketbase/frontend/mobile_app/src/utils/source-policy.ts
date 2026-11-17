@@ -316,19 +316,16 @@ export function chooseAccessSource(input: AccessSourceInput): AccessDecision {
   const localRaw = (input.localBase ?? '').trim();
   const remoteRaw = (input.remoteBase ?? '').trim();
 
-  if (input.mode === 'remote' && !remoteRaw) {
-    return { base: null, kind: 'offline', reason: 'Remote access is not configured — reconnect to PigPulse hotspot' };
-  }
-
-  if (remoteRaw) {
+  if (input.mode === 'remote') {
+    if (!remoteRaw) {
+      return { base: null, kind: 'offline', reason: 'Remote access is not configured — reconnect to PigPulse hotspot' };
+    }
     const remote = parseHttpBase(remoteRaw);
     if (!remote.ok) return { base: null, kind: 'malformed', reason: `Remote URL is invalid (${remote.reason})` };
-    if (input.mode === 'remote') {
-      if (!input.remoteReachable) {
-        return { base: null, kind: 'offline', reason: 'Pi is offline on the tunnel — reconnect to PigPulse hotspot' };
-      }
-      return { base: remote.parsed.url, kind: 'remote', reason: 'Using encrypted tunnel to the same Pi' };
+    if (!input.remoteReachable) {
+      return { base: null, kind: 'offline', reason: 'Pi is offline on the tunnel — reconnect to PigPulse hotspot' };
     }
+    return { base: remote.parsed.url, kind: 'remote', reason: 'Using encrypted tunnel to the same Pi' };
   }
 
   const local = parseHttpBase(localRaw);
@@ -339,7 +336,11 @@ export function chooseAccessSource(input: AccessSourceInput): AccessDecision {
   }
 
   if (remoteRaw && input.remoteReachable) {
-    return { base: remoteRaw, kind: 'remote', reason: 'Pi is away — using encrypted tunnel to the same Pi' };
+    const remote = parseHttpBase(remoteRaw);
+    if (remote.ok) {
+      return { base: remote.parsed.url, kind: 'remote', reason: 'Pi is away — using encrypted tunnel to the same Pi' };
+    }
+    return { base: null, kind: 'offline', reason: `Remote URL is invalid (${remote.reason}) — reconnect to PigPulse hotspot` };
   }
 
   return { base: null, kind: 'offline', reason: 'Pi is offline — reconnect to PigPulse hotspot or try the encrypted tunnel' };

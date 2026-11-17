@@ -297,6 +297,7 @@
     $("hostedLink").href = s.hosted;
     $("remoteLink").href = s.remote || "#";
     $("remoteLink").setAttribute("aria-disabled", s.remote ? "false" : "true");
+    $("remoteLink").onclick = s.remote ? null : function (e) { e.preventDefault(); };
     $("remoteNote").textContent = s.remote ? "open " + s.remote + " from the internet" : "tunnel not ready — use the PigPulse hotspot";
     // Onboarding is the first page, but not once this Pi has a venue or the
     // person already chose Skip on this phone.

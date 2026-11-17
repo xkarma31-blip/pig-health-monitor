@@ -29,6 +29,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { probeAccess, reprobeDue } from '../utils/access-probe';
 import {
   acceptIncomingFrame,
   aggregateFreshness,
@@ -117,6 +118,7 @@ export function usePocketbaseRealtime(): PocketbaseRealtimeResult {
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const deadline = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startRef = useRef<() => void>(() => {});
+  const accessProbe = useRef<{ local: string; remote: string; lastAt: number | null; failures: number } | null>(null);
 
   const reconnect = useCallback(() => {
     startRef.current();
@@ -258,14 +260,18 @@ export function usePocketbaseRealtime(): PocketbaseRealtimeResult {
         ]);
         const setup = await setupModule.loadFarmerSetup();
         if (Platform.OS !== 'web' && setup?.pbUrl) pbModule.setConfiguredServer(setup.pbUrl);
-        pbModule.setAccessConfig(setup.accessMode, setup.remotePbUrl);
         if (Platform.OS !== 'web') {
-          const probeModule = await import('../utils/access-probe');
-          const reach = await probeModule.probeAccess(
-            setup.pbUrl || pbModule.PB_HOTSPOT_URL,
-            setup.remotePbUrl,
-          );
+          pbModule.setAccessConfig(setup.accessMode, setup.remotePbUrl);
+          const localBase = setup.pbUrl || pbModule.PB_HOTSPOT_URL;
+          const remoteBase = setup.remotePbUrl;
+          const reach = await probeAccess(localBase, remoteBase);
           pbModule.setAccessReachability(reach.local, reach.remote);
+          accessProbe.current = {
+            local: localBase,
+            remote: remoteBase,
+            lastAt: Date.now(),
+            failures: reach.local || reach.remote ? 0 : 1,
+          };
         }
         modules.current = { resolveBaseUrls: pbModule.resolveBaseUrls };
       } catch {
@@ -280,6 +286,26 @@ export function usePocketbaseRealtime(): PocketbaseRealtimeResult {
       if (isMounted.current) setNow(Date.now());
     }, NOW_TICK_MS);
 
+    // Re-probe until a path recovers. A single launch-time failure must never
+    // pin the whole session offline after the phone joins the hotspot or the
+    // tunnel comes up.
+    const probeTimer = setInterval(async () => {
+      const probe = accessProbe.current;
+      if (!probe || !isMounted.current || !reprobeDue(probe.lastAt, Date.now(), probe.failures)) return;
+      probe.lastAt = Date.now();
+      const reach = await probeAccess(probe.local, probe.remote);
+      if (!isMounted.current) return;
+      probe.failures = reach.local || reach.remote ? 0 : probe.failures + 1;
+      const pbModule = await import('../utils/pocketbase');
+      pbModule.setAccessReachability(reach.local, reach.remote);
+      if (!reach.local && !reach.remote) {
+        setConnectionStatus('error');
+        setLastError('Pi is offline — reconnect to PigPulse hotspot or try the encrypted tunnel');
+        return;
+      }
+      startRef.current();
+    }, 5_000);
+
     return () => {
       isMounted.current = false;
       generation.current += 1;
@@ -287,6 +313,7 @@ export function usePocketbaseRealtime(): PocketbaseRealtimeResult {
       controller.current?.abort();
       controller.current = null;
       clearInterval(nowTimer);
+      clearInterval(probeTimer);
       startRef.current = () => {};
     };
   }, []);

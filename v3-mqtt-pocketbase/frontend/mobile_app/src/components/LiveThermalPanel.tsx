@@ -657,7 +657,7 @@ function CameraSoundToggle({ base, cameraLive, audioEnabled, audioHintText }: { 
   };
 
   // Keep Mute tappable even if the bridge/base disappears mid-listen.
-  const disabled = !base || (!audioEnabled && !on);
+  const disabled = !on && (!base || !audioEnabled);
   const sub = !audioEnabled && !on
     ? audioHintText
     : !base && !on
