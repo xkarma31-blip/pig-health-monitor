@@ -119,6 +119,11 @@ pipeline discarded it.
 5. **AP credentials / config** — ruled out: passphrase matches the flashed constant, full
    WPA handshakes + DHCP on this BSSID at 08:54/09:42/09:44/09:51, no auth-failure lines in
    the entire hostapd journal, and the mic ignored later AP restarts.
+6. **Hotspot fallback / "alive on another network"** — ruled out: the flashed source defines
+   only `WIFI_SSID = "PigPulse"` (line 48) and calls `WiFi.begin(WIFI_SSID, WIFI_PASS)`
+   **explicitly** at lines 436, 540 and 556. No second SSID, no `softAP`, no stored-config
+   path, no NVS BSSID lock. A powered, running board therefore *must* attempt PigPulse with
+   the right credentials — which is why silence implies it is not executing the WiFi path.
 
 ## What is still unproven
 
