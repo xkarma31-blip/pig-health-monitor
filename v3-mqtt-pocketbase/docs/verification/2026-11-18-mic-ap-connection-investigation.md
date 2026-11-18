@@ -1,116 +1,169 @@
-# 2026-11-18 — S3 mic silence: AP/connection investigation
+# 2026-11-18 — S3 mic silence: full step retrace and corrected root-cause analysis
+
+> **This supersedes the first version of this file.** The first version labelled Pi-local
+> wall-clock times as "PST". They are **Asia/Manila (UTC+8)**. That 8-hour error made the
+> Pi reboot look like it happened *while* the mic was still transmitting, and sent the
+> investigation after the wrong causal chain. Everything below is re-derived from **raw
+> journal epochs** and **PocketBase `created` values**, which agree with each other.
 
 ## Provenance
 
-- Pi facts: live device readouts over Tailscale (`iw`, `journalctl`, `dnsmasq`, `curl /api/pi?ep=diag.json`, `ip neigh`, `ss`).
-- Firmware facts: read from the **archived actually-flashed source**
+- **Time base.** Pi `/etc/localtime` → `Asia/Manila`; `/etc/timezone` = `Asia/Manila`
+  (mtime 2026-09-23). `journalctl` renders Manila wall-clock, so every "18:40 / 19:45" in
+  earlier notes is Manila, not PST. All times here are **UTC** with Manila in parentheses.
+- **Clock quality.** Journal boot entries overlap at boot boundaries (boot −2 last entry
+  142 s *after* boot −1 first entry; boot −1 last 171 s after boot 0 first) — the Pi clock
+  steps. Epoch *differences* are therefore used for sequencing, and the incident window is
+  anchored by PocketBase `created`, the mosquitto log and hostapd agreeing to the second.
+- **Pi facts:** live readouts over Tailscale (`iw`, `journalctl`, `dnsmasq`, `soak.db`,
+  PocketBase admin API). **ESP32 facts:** the archived actually-flashed source
   `firmware/esp32s3-mic-ambient/docs/known-good-20261113-shtfinal/src/esp32s3_telemetry.ino`
   (1157 lines), firmware ID `pigpulse-mic-sht45-20261113-shtfinal`.
-- Nothing in this investigation was changed on the ESP32 or in its firmware. The Pi-side
-  AP watchdog calibration and the Expo deploy fix are recorded in commit `777fbac`.
+- **Nothing was changed on the ESP32 or in its firmware.**
 
-## Timeline (Pi-local PST)
+## Corrected timeline (UTC; Manila = UTC+8)
 
-| Time | Event — measured |
-|---|---|
-| 17:42, 17:44, 17:51 | Watchdog `AP radio degraded: rx_rate_info=20/10 (< 40) → restarting hostapd`. AP restarts drop all clients. |
-| 17:44:41 | Mic associated (aid 1), WPA pairwise handshake completed. |
-| 17:51:51 | Mic authenticated + associated again; 17:51:52 DHCPDISCOVER/OFFER/REQUEST/ACK → `192.168.69.15`, host `esp32s3-DD313C`. |
-| 18:40:22 | Watchdog: `ghost station 68:ee:8f:dd:31:3c: rx frozen at 287781041 for 61s, 192.168.69.15 unreachable → deauthenticate` / `deauthenticate sent`. |
-| 18:40:27 | hostapd: `STA 68:ee:8f:dd:31:3c IEEE 802.11: deauthenticated due to local deauth request`. |
-| 19:45:45 | Pi rebooted (cause still unknown; no undervoltage evidence). |
-| 19:47:11–18 | hostapd failed 34× (`No such device` — USB dongle not yet enumerated); AP back 19:47:41. |
-| 06:13:18 (18 Nov) | Portal hotspot connect stopped hostapd under `/run/pigpulse/ap-hold`; `ASSOC-REJECT status=16` on 5 GHz / 5180 MHz. AP restored 06:16:24. |
+| UTC | Manila | Event — measured |
+|---|---|---|
+| 08:54:11 | 16:54:11 | Mic authenticated + associated (aid 1) on **wlan1** (USB dongle); WPA pairwise handshake; DHCPACK `192.168.69.15`, host `esp32s3-DD313C`. |
+| 09:42:06 | 17:42:06 | Watchdog restarts hostapd (`rx_rate_info` 20/10 < 40). Mic re-associates. |
+| 09:44:41 | 17:44:41 | Watchdog restarts hostapd again. Mic re-associates + DHCPACK. |
+| 09:51:51 | 17:51:51 | Watchdog restarts hostapd again. Mic re-associates + DHCPACK. |
+| 09:54:15 | 17:54:15 | Audio stream established (≈96 kB/s sustained, soak `esp_bytes` climbing). |
+| **10:38:57.9** | **18:38:57.9** | **LAST audio byte AND LAST telemetry row — same millisecond** (soak `lastms`=5199 at 10:39:03 ⇒ last byte 10:38:57.801; PB `timestamp`=1794911937898). |
+| 10:39:03 | 18:39:03 | `esp_audio_ingest` closes the half-open socket after its 5 s silence timeout (`connected 1→0 stale 0→1, lastMs=5199`). No FIN observed before the ingest's own silence-close. |
+| 10:40:22 | 18:40:22 | Watchdog: `ghost station 68:ee:8f:dd:31:3c: rx frozen … → deauthenticate`. |
+| 10:40:27 | 18:40:27 | hostapd: `deauthenticated due to local deauth request`. |
+| 10:40:28 | 18:40:28 | mosquitto: `Client s3-mic-01 has exceeded timeout, disconnecting` → LWT fires. Bridge inserts **zero row** (`mic=false, rms=0, peak=0, sr=48000`) = the retained will. |
+| **11:45:53** | **19:45:53** | **Pi reboots — 67 minutes AFTER the mic died.** No shutdown sequence in the journal. |
+| 11:46:09 | 19:46:09 | Bridge starts, restores anchor state, reconnects 11:46:16. |
+| 16:10:00 | 00:10:00 (18th) | Bridge **reconnects** (not a board sighting); paho redelivers the **retained will** → `resumed after 13617 s of silence` + a second identical zero row. |
+| 00:18:30 (18th) | 08:18:30 | Pi reboots again (2nd in 33 h). |
+| 01:17 (18th) | 09:17 | Pi reboots again (3rd). |
+| 00:54:52 / 01:09:47 / 01:19:57 | 08:54 / 09:09 / 09:19 | Three more **identical zero rows**, each timestamped to a bridge reconnect — same retained will. |
 
-## AP/connection checks — all measured
+## The two "zero rows" are broker artifacts, not board sightings
 
-- `ssid=PigPulse`, `hw_mode=g`, `channel=6`, `wpa=2`, `wpa_key_mgmt=WPA-PSK`,
-  `rsn_pairwise=CCMP`, `macaddr_acl=0`, `ignore_broadcast_ssid=0`, `wmm_enabled=0`.
-- The AP passphrase **matches** the constant hard-coded in the flashed firmware (compared
-  in-shell; value not recorded in this document).
-- AP BSSID is `00:1f:05:6c:51:bc` on wlan1. The mic completed a full WPA handshake and DHCP
-  on **this same BSSID** at 17:44 and 17:51 — so AP identity, credentials, channel and
-  encryption are proven workable for this exact firmware.
-- Entire hostapd journal contains **no** wrong-password, 4-way-handshake failure, auth reject,
-  or blacklist line for any client.
-- AP restarted again at 19:47 and 06:16; the mic ignored both.
-- After 18:40:27 there is no mic MAC in hostapd, dnsmasq, kernel logs, ARP/neighbour table,
-  or `:9090` connections. `esp.age_s` ≈ 38,000 s (last telemetry 19:46:08, 17 Nov).
-- A CCTV station is currently associated to this AP at −10 dBm (`rx_rate_info=360`), proving
-  the AP is beaconing and accepting clients.
+`backend/bridge/local_bridge.py`:
 
-**Conclusion: the AP is not refusing the mic. The mic is emitting nothing.**
+- **line 331** — `payload["timestamp"] = int(ANCHOR.now_ms())`: the row timestamp is the
+  **bridge's arrival clock**, never the device's.
+- **lines 307–310** — subscribes `pig/+/telemetry`; paho delivers **retained** messages on
+  subscribe.
+- **lines 333–336** — `ANCHOR.observe()` computes the gap in **monotonic** seconds from a
+  state file (`/var/lib/pigpulse/bridge/anchor_state.json`, `ANCHOR.load()` on start), so a
+  "13617 s silence" can span reboots and reconnects and is **not** a measurement of the
+  board.
+- Firmware **line 625/632** — the will is
+  `{"mic":false,"rms":0,"peak":0,"sr":48000}` with **retain=true**.
 
-## Code review of the flashed firmware
+⇒ Every zero row is the will being redelivered on a bridge reconnect. The last three rows
+(08:54, 09:09, 09:19 Manila) are **reconnect artifacts**, not evidence the board returned.
 
-- `setup()` calls `wifi_connect()` unconditionally (line 984).
-- `wifi_connect()` always runs `WiFi.scanNetworks()` (line 428) then `WiFi.begin()` (436).
-  No stored flag or conditional can skip it.
-- `loop()` calls `wifi_task()` every pass (991). It retries at 10 s (definite failure) / 30 s,
-  performs a full radio reset at 120 s (`disconnect(true,false)` → `mode(WIFI_STA)` → `begin`,
-  lines 529–542), and `ESP.restart()` at 900 s (561–565).
-- `sht_task()` (304) is a bounded state machine with a 50 ms Wire timeout; `i2s_install()`
-  returns errors. No unbounded loop exists before `wifi_connect()`.
+## The decisive measurement: both streams died at the same millisecond
 
-Therefore a powered, *running* board cannot stay radio-silent for ~12 h. The only documented
-code-adjacent mechanism is a boot/reset loop: lines 107–120 record that the board runs on a
-"DIY 5 V brick with mixed cables", draws 500–600 mA at the TX power set on lines 440–455
-(`WIFI_POWER_19_5dBm`, raised from 8.5 dBm on 2026-11-11), and that this can sag 3V3 below
-brownout and reset the chip. The firmware carries a brownout detector (RTC boot count +
-reset reason) whose output is only visible on serial / MQTT telemetry.
+- Soak `esp_bytes` last increment: 395,850,680 at 10:38:57.8.
+- Last telemetry row payload timestamp: 1794911937898 = 10:38:57.898.
 
-## Additional evidence (direct PocketBase query, admin auth in-process)
+Audio and MQTT are **separate tasks** on the board. A blocked `tcpStream.write()` (the
+documented ~5 s stall at lines 99–105) would stall audio while MQTT kept publishing. Here
+**both stopped together**, and the board stayed associated for another 90 s (the AP had to
+deauth a ghost). That is a **chip-level event** — reset, brownout, crash or power loss —
+not a software stall.
 
-- The last genuine mic row is `timestamp=1794911935894` (19:46:15 PST) with `mic=true`.
-- The next row, 19:47:08 PST, is the firmware's MQTT **will** (`mic=false`, `rms=0`) — the
-  broker saw the session drop, not the mic reporting a failure.
-- The firmware's diagnostic counters (`boots`, `rr`, `br`, `rssi`, `wrms`, …) are **not present
-  in the PocketBase schema** (unknown fields are silently dropped), so they cannot confirm or
-  refute a brownout. The 19.5 dBm brownout theory is therefore **unverified speculation**, not
-  a grounded finding.
+## The diagnostic counters exist but were thrown away
 
-## Root-cause ranking (revised)
+Firmware lines 869–883 build the telemetry payload with:
 
-1. **Power loss / board-level fault at ~18:40** — the only hypothesis consistent with all
-   measurements: the AP is accepting clients, credentials match, the firmware lacks any path
-   to stay silent while running, and no RF appears after the watchdog deauth. Not confirmed —
-   requires a device readout.
-2. **Boot-loop / hard fault on the board** — possible but unverified; the firmware's brownout
-   counter exists but its value is only available on serial. Do **not** rebuild firmware on
-   this theory alone.
-3. **AP triggered the original event** — the watchdog deauth at 18:40:22 is real, caused by
-   the old brcmfmac-calibrated watchdog running against the USB-dongle AP; now calibrated.
-   It explains the trigger, not the 12 h silence.
-4. **Firmware defect** — not supported. The firmware worked normally until 18:40 (WPA, DHCP,
-   audio), so a rebuild is not justified without a serial log showing a fault. The "known
-   good" label is an archive-documentation claim, not a fresh readout from the chip.
-5. **AP credential/config mismatch** — ruled out (password matches, successful handshakes on
-   this BSSID, no auth-failure logs, two later AP restarts ignored).
+```
+"boots":%lu, "rr":%lu, "br":%lu, "txp":%ld,
+"pubms":%lu, "wrms":%lu, "pubn":%lu, "wrn":%lu
+```
 
-## Constraints and next steps
+- `boots` = RTC boot count, `rr` = `esp_reset_reason()`, `br` = brownout-seen flag.
+- Lines 906–917 compute exactly the discriminator the investigation needs:
+  `reason 15/16 BROWNOUT` ⇒ rail sagged; `reason 1 POWER-ON` ⇒ supply dropped out.
 
-- The board is updated **by OTA only**; with no IP it is unreachable, so any firmware rebuild
-  requires a one-time USB flash. No USB-serial adapter is attached to the Pi (checked).
-- `tcpdump` is not installed on the Pi, so probe-frame sniffing was not possible (no config was
-  changed by that attempt).
-- To distinguish brownout loop from dead supply/radio, capture the serial boot lines
-  (`[boot] count=N reason=15/16 BROWNOUT` vs `reason=1 POWER-ON`, then `[wifi] scan count=`).
-- A firmware rebuild is NOT warranted on current evidence: the firmware worked normally until
-  18:40. Do not rebuild without a serial log showing a fault.
+**PocketBase's `telemetry` schema has no `boots` / `rr` / `br` / `txp` / `pubms` / `pubn` /
+`wrn` fields**, and PocketBase silently drops unknown fields. Measured: **zero** occurrences
+of `"boots":` anywhere in the journal. The board was transmitting the answer and the
+pipeline discarded it.
 
-## Radio-role rollback (per operator request, 06:53–06:56 PST)
+## The Pi is itself unstable (separate, serious finding)
 
-- Fresh snapshot of the live (swapped) state before changing anything:
-  `/root/pigpulse-backups/radio-roles-pre-revert-20261118-065345` (9 files).
-- Applied `backend/portal/rollback-radio-roles.sh` with the original
-  `radio-roles-20261117-161319` backup — all 9 files restored, AP resolved to `wlan0`.
-- Measured after: hostapd active, AP `ssid=PigPulse` on `wlan0` (brcmfmac,
-  `dc:a6:32:87:63:a1`), channel 6, gateway `192.168.69.1` on wlan0; stale AP address flushed
-  from the dongle `wlan1`.
-- Watchdog calibration drop-in (added for the USB dongle) removed and archived; effective
-  environment restored to `PIGPULSE_AP_MIN_RATE=40` (original brcmfmac calibration).
-- CCTV re-associated at 06:54:27 with a fresh DHCP lease for `192.168.69.2`, proving the
-  reverted AP accepts clients.
-- **Mic still absent 3+ minutes after rollback:** no association, no DHCP, no hostapd event;
-  telemetry age 11.17 h. The AP/connection side is now fully reverted and working, so the
-  remaining fault is at the board (power or radio), unconfirmed without a device readout.
+- Three hard resets in 33 h: 11:45:53Z 17 Nov, 00:18:30Z 18 Nov, 01:17Z 18 Nov.
+- Each ends with **normal service logs and no shutdown sequence** — no `Stopping…`, no
+  `Reached target Shutdown`, no kernel panic, **no `Under-voltage detected`**.
+- `bcm2835-wdt` is active: `systemd` reports *"Watchdog running with a hardware timeout of
+  1min"*. A userspace/kernel hang longer than 60 s produces exactly this signature: an
+  abrupt reset with nothing logged.
+- Consequence: the Pi is a **hostile host** for the AP and all services, independent of the
+  mic. This did **not** cause the mic's death (the mic died 67 min before the first reset),
+  but it will keep taking the AP down.
+
+## Root-cause ranking (corrected)
+
+1. **Board-level power loss / brownout at 10:38:57.9Z** — best fit. Explains: simultaneous
+   loss of both tasks, no FIN, no reassociation, no association/authentication attempt
+   afterwards, survival of a user power-cycle, and other clients unaffected. The firmware's own comment (lines
+   107–118) names the mechanism: USB-powered from a *DIY 5 V brick with mixed cables*,
+   500–600 mA peaks at 19.5 dBm, series resistance sagging 3V3 under the brownout
+   threshold. **Unconfirmed** — needs the serial readout.
+2. **Hard fault / crash loop before WiFi init** — possible, but a resetting chip re-runs `esp_wifi_init` and would attempt association; **no association or authentication attempt** appears in 23 h of hostapd/dnsmasq logs, which argues against it. (Probe requests are not logged at hostapd's default level, so "zero probes" is **not** a measurable claim here.)
+3. **Watchdog deauth** — real, but it happened **90 s after** the board stopped; it is a
+   *consequence* (ghost cleanup), not the cause. The three earlier AP restarts explain the
+   09:42/09:44/09:51 reassociations, not the death.
+4. **Firmware defect** — not supported. `setup()` calls `wifi_connect()` unconditionally;
+   `loop()` calls `wifi_task()` every pass with retry/radio-reset/`ESP.restart()`; no code
+   path leaves a *running* board silent. A rebuild is not justified without a serial fault.
+5. **AP credentials / config** — ruled out: passphrase matches the flashed constant, full
+   WPA handshakes + DHCP on this BSSID at 08:54/09:42/09:44/09:51, no auth-failure lines in
+   the entire hostapd journal, and the mic ignored later AP restarts.
+
+## What is still unproven
+
+- Whether the board **lost power**, **browned out**, or **hard-faulted** at 10:38:57.9Z.
+  Only `boots`/`rr`/`br` on serial can separate these, and those fields never reached
+  PocketBase.
+- Whether the board is currently **unpowered** (brick/cable/connector) or **powered but not
+  running the app**.
+
+## The one decisive physical test
+
+Board USB → laptop, then:
+
+```bash
+ls /dev/ttyACM*                                   # expect /dev/ttyACM0
+esptool --chip esp32s3 --port /dev/ttyACM0 chip_id
+python3 -m serial.tools.miniterm /dev/ttyACM0 115200
+```
+
+Read the boot lines:
+
+- `[boot] count=N reason=15 BROWNOUT` (or 16) ⇒ **the 3V3 rail sagged** → replace the 5 V
+  brick / cable / connector first.
+- `[boot] count=N reason=1 POWER-ON` with `count` **not** rising across resets ⇒ **the
+  supply is dropping out completely** → power path.
+- `[wifi] scan count=0` or no `[wifi]` line at all ⇒ the app never reaches WiFi init →
+  flash/boot fault.
+
+## Recommended fixes (not yet applied)
+
+1. **Close the observability gap** — add `boots`, `rr`, `br`, `txp`, `pubms`, `pubn`, `wrn`
+   to the `telemetry` collection via a PocketBase migration, so the next event is diagnosable
+   without serial.
+2. **Stop the retained-will artifact** — the bridge inserts a zero row on every reconnect.
+   Either ignore the retained will (deliver-once / clear-retain check) or stop retaining the
+   LWT, so the app never shows a fabricated "mic offline" sample.
+3. **Pi watchdog resets** — investigate separately (hang source); consider raising the
+   hardware watchdog or adding a heartbeat, and check the Pi's 5 V supply.
+
+## Radio-role rollback (unchanged, 06:53–06:56 Manila)
+
+- Pre-change snapshot `/root/pigpulse-backups/radio-roles-pre-revert-20261118-065345` (9 files).
+- `backend/portal/rollback-radio-roles.sh` applied; AP resolved to `wlan0`.
+- Measured: hostapd active, `ssid=PigPulse` on `wlan0` (brcmfmac `dc:a6:32:87:63:a1`), ch 6,
+  gateway `192.168.69.1` on wlan0, stale dongle IP flushed.
+- Watchdog calibration drop-in removed/archived; `PIGPULSE_AP_MIN_RATE=40` restored.
+- CCTV re-associated with a fresh lease for `192.168.69.2`.
+- Mic still absent: **0** hostapd lines for `68:ee:8f:dd:31:3c` since boot.
