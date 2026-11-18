@@ -91,12 +91,32 @@ pipeline discarded it.
 
 ## The Pi is itself unstable (separate, serious finding)
 
-- Three hard resets in 33 h: 11:45:53Z 17 Nov, 00:18:30Z 18 Nov, 01:17Z 18 Nov.
-- Each ends with **normal service logs and no shutdown sequence** — no `Stopping…`, no
-  `Reached target Shutdown`, no kernel panic, **no `Under-voltage detected`**.
-- `bcm2835-wdt` is active: `systemd` reports *"Watchdog running with a hardware timeout of
-  1min"*. A userspace/kernel hang longer than 60 s produces exactly this signature: an
-  abrupt reset with nothing logged.
+- **Five boots today**; hard resets roughly hourly (17th 19:45, 18th 08:18, 09:17, ~10:15,
+  ~12:01). Each ends with **normal service logs and no shutdown sequence** — no `Stopping…`,
+  no `Reached target Shutdown`, no kernel panic, no `Reached target Shutdown`.
+- `/sys/fs/pstore` is **empty** — no saved panic/reset record from the previous boot.
+- `bcm2835-wdt` is active via the stock Raspberry Pi drop-in
+  `/usr/lib/systemd/system.conf.d/40-rpi-enable-watchdog.conf`
+  (`RuntimeWatchdogSec=1m`, `RebootWatchdogSec=2m`). A systemd/kernel stall > 60 s produces
+  exactly this signature: an abrupt reset with nothing logged.
+
+**Ruled out by direct readout** (not by inference):
+
+| Check | Reading | Verdict |
+|---|---|---|
+| `vcgencmd get_throttled` | `0x0` (bit 16 clear) | no undervoltage ever |
+| `vcgencmd measure_temp` | 46.2 °C | not thermal |
+| `free -h` | 3.1 GiB available, swap 0 B used | no memory pressure |
+| OOM kills (all journal) | 0 | no OOM |
+| D-state processes / `vmstat` `wa` | none / 0 after first sample | no I/O stall |
+| `systemctl --failed` | 0 units | nothing failing |
+| kernel log | no hung task / mmc / EXT4 error | no kernel fault |
+
+So the resets are **not** power-thermal-memory-software as far as the Pi can measure itself.
+The remaining cause is an **external reset with no on-device trace** — most consistent with a
+brief VBUS/power interruption (a loose USB-C connection or a sagging 5 V supply), which a
+clean power loss would not log and which would not necessarily trip the undervoltage flag.
+
 - Consequence: the Pi is a **hostile host** for the AP and all services, independent of the
   mic. This did **not** cause the mic's death (the mic died 67 min before the first reset),
   but it will keep taking the AP down.
@@ -190,8 +210,9 @@ Read the boot lines:
    Skip retained messages (`msg.retain`) or stop retaining the LWT, so the app never shows a
    fabricated "mic offline" sample. Note the firmware's retained `mic:false` also leaves
    retained-state-only consumers reporting offline even after live telemetry resumes.
-3. **Pi watchdog resets** — investigate separately (hang source); consider raising the
-   hardware watchdog or adding a heartbeat, and check the Pi's 5 V supply.
+3. **Pi hard resets (~hourly)** — software causes are ruled out by the readout table above.
+   Check/replace the Pi's 5 V supply and USB-C cable first; raising `RuntimeWatchdogSec` via
+   an `/etc/systemd/system.conf.d/` drop-in is a **mitigation, not a fix**.
 4. **Firmware defects (queue; do not flash blind)** — per the audit:
    (a) make the 900 s chip restart reachable (the 120 s recycle resets `lastLinkMs`);
    (b) check and log `WiFi.mode`/`WiFi.begin`/`WiFi.setTxPower` return values;
