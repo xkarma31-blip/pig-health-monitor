@@ -101,6 +101,32 @@ pipeline discarded it.
   mic. This did **not** cause the mic's death (the mic died 67 min before the first reset),
   but it will keep taking the AP down.
 
+## Firmware audit (static, 2026-11-18)
+
+A line-by-line audit of the flashed source found four real defects. None is proven to have
+fired on the device, but they change what "the firmware cannot stay silent" means:
+
+1. **The 900 s chip restart is unreachable.** `wifi_task()` recycles at 120 s
+   (`WIFI_RECYCLE_MS`) and resets `lastLinkMs = nowMs` at **line 542**, so
+   `nowMs - lastLinkMs` can never reach `WIFI_HARD_RESET_MS` (900 s, line 561).
+   `ESP.restart()` is dead code in an ongoing outage. A wedged WiFi driver is therefore
+   never cleared by a full chip reboot.
+2. **Radio re-init failures are unchecked and unlogged.** Lines 537–541 call
+   `WiFi.mode(WIFI_STA)`, `WiFi.begin(...)`, `WiFi.setTxPower(...)` and discard every
+   return value. If STA re-init or `begin()` fails, the radio stays off with no log line.
+3. **TX power is downgraded on every recycle and never restored.** Boot uses
+   `WIFI_POWER_19_5dBm` (line 453); the recycle sets `WIFI_POWER_8_5dBm` (line 541).
+   Weakens the link after the first recycle; not a silence cause.
+4. **PubSubClient is used without `mqttMutex` in two failure paths** (lines 1000–1004 and
+   1032–1033), racing the MQTT task. A genuine thread-safety violation that could produce
+   MQTT-only silence.
+
+Also confirmed: **no NVS/Preferences radio-off flag exists**, `disconnect()` is always
+called with `eraseap=false`, and every boot runs `WiFi.mode(WIFI_STA)` +
+`WiFi.begin(WIFI_SSID, WIFI_PASS)`. So **no persistent state can keep the radio off across
+a power-cycle.** Boot's longest pre-association wait is ~25 s (10 s scan + 15 s connect
+loop) — far shorter than our 23 h observation window.
+
 ## Root-cause ranking (corrected)
 
 1. **Board-level power loss / brownout at 10:38:57.9Z** — best fit. Explains: simultaneous
@@ -113,9 +139,12 @@ pipeline discarded it.
 3. **Watchdog deauth** — real, but it happened **90 s after** the board stopped; it is a
    *consequence* (ghost cleanup), not the cause. The three earlier AP restarts explain the
    09:42/09:44/09:51 reassociations, not the death.
-4. **Firmware defect** — not supported. `setup()` calls `wifi_connect()` unconditionally;
-   `loop()` calls `wifi_task()` every pass with retry/radio-reset/`ESP.restart()`; no code
-   path leaves a *running* board silent. A rebuild is not justified without a serial fault.
+4. **Firmware defect** — **partially supported, as a persistence mechanism rather than the
+   trigger.** The audit above shows a wedged board *can* stay silent indefinitely (unreachable
+   900 s restart + unchecked reinit), but **not across a genuine power-cycle**, because no NVS
+   flag stores radio-off and every boot re-runs `WiFi.begin()`. So the firmware explains
+   *why it never self-healed*, not *why it stopped*. A rebuild is still not justified without
+   a serial fault — but defects 1–4 are real and should be fixed regardless.
 5. **AP credentials / config** — ruled out: passphrase matches the flashed constant, full
    WPA handshakes + DHCP on this BSSID at 08:54/09:42/09:44/09:51, no auth-failure lines in
    the entire hostapd journal, and the mic ignored later AP restarts.
@@ -158,10 +187,17 @@ Read the boot lines:
    to the `telemetry` collection via a PocketBase migration, so the next event is diagnosable
    without serial.
 2. **Stop the retained-will artifact** — the bridge inserts a zero row on every reconnect.
-   Either ignore the retained will (deliver-once / clear-retain check) or stop retaining the
-   LWT, so the app never shows a fabricated "mic offline" sample.
+   Skip retained messages (`msg.retain`) or stop retaining the LWT, so the app never shows a
+   fabricated "mic offline" sample. Note the firmware's retained `mic:false` also leaves
+   retained-state-only consumers reporting offline even after live telemetry resumes.
 3. **Pi watchdog resets** — investigate separately (hang source); consider raising the
    hardware watchdog or adding a heartbeat, and check the Pi's 5 V supply.
+4. **Firmware defects (queue; do not flash blind)** — per the audit:
+   (a) make the 900 s chip restart reachable (the 120 s recycle resets `lastLinkMs`);
+   (b) check and log `WiFi.mode`/`WiFi.begin`/`WiFi.setTxPower` return values;
+   (c) restore 19.5 dBm after a successful (re)connect;
+   (d) take `mqttMutex` in the two failure paths.
+   These explain why the board never self-healed, but a flash needs the serial readout first.
 
 ## Radio-role rollback (unchanged, 06:53–06:56 Manila)
 
