@@ -29,6 +29,8 @@ on the Pi is Manila. Never mix them.
 | `[D]` | `/root/.local/share/opencode/opencode.db`, session `ses_e2dacb1cdf` | direct record of the ad hoc diagnostic |
 | `[L]` | live SSH/HTTPS readouts on 2026-11-19 (~00:53 UTC) | device readouts |
 | `[S]` | `/tmp/opencode/soak-fresh.db` | ingest-side SQLite |
+| `[SER]` | `/dev/ttyACM0` on the laptop, 8 s capture 2026-11-19 ~01:31 UTC | board serial (device readout) |
+| `[MQ]` | Pi broker retained telemetry `pig/s3-mic-01/telemetry`, 2026-11-19 ~01:31 UTC | board-published state (device readout) |
 
 A verdict of **handoff-reported** means the claim comes from `[N1]`–`[N4]` and is
 *not independently present in the supplied evidence files*. That is a citation
@@ -40,10 +42,10 @@ limitation, not a refutation.
 
 | # | Claim | Verdict | Source / qualification |
 |---|---|---|---|
-| 1 | **Nov 17** was a full-board power loss: `boots=1`, `rr=1` (`ESP_RST_POWERON`), `br=0` — not brownout, reset, panic or watchdog | **board-published, handoff-reported** | `[N1]`; NVS values are board-published per the record. `[E4]` only shows the broker timeout at 10:40:28 UTC 11-17 and no reconnect until 12:29:50 11-18; it supplies no NVS fields. |
+| 1 | **Nov 17** was a full-board power loss: `boots=1`, `rr=1` (`ESP_RST_POWERON`), `br=0` — not brownout, reset, panic or watchdog | **board-published, handoff-reported; current boot chain corroborates** | `[N1]` for the Nov-17 triple. `[MQ]` now reads the *current* boot chain `boots=3, rr=3, prr=1, br=0`: three boots, current = SW reset (18c OTA), previous = POWERON, no brownout — consistent with a power-on boot in the chain. The specific Nov-17 values are not independently recoverable now. |
 | 2 | **Nov 18** was a *separate* incident: SHT45 command-phase I²C stall wedging `loop()`; `mqttTask` continued | **best-supported hypothesis, not proven** | `[N1]`; mechanism structurally possible in `[F]`. Exact frozen `Wire` call **uncaptured** — no serial attachment. The "mqttTask kept publishing" detail is handoff-reported, not in `[E1]`–`[E4]`. |
-| 3 | Radio was not broken: reassociation succeeded; RSSI ≈ −49 / −48…−52 dBm; audio ≈ 96,000 B/s | **partly measured, partly handoff-reported** | Reassociation + handshake: `[E2]:78,80`; DHCP: `[E1]:16341`; broker: `[E4]:605-606`. RSSI −49/−48…−52 not in `[E1]`–`[E4]`; `[N2]` measures −55 and −60 dBm at revival/after OTA. 96,000 B/s not logged literally; `[N2]` measures 95,968 / 98,677 bps and `[S]` byte growth over 14:33:12–14:33:22 is ≈95,846 B/s. |
-| 4 | `otaguard-20261118b` was resident throughout the broker session | **NOT PROVEN — do not claim** | Image-linked only by a unique retained LWT literal reported in `[N2]`; broker continuity proves MQTT presence, not image residency `[E4]`. The retained LWT was later lost. |
+| 3 | Radio was not broken: reassociation succeeded; RSSI ≈ −49 / −48…−52 dBm; audio ≈ 96,000 B/s | **MEASURED 2026-11-19** | Reassociation + handshake: `[E2]:78,80`; DHCP: `[E1]:16341`; broker: `[E4]:605-606`. `[MQ]` now reads `rssi=-46 dBm`; `[SER]` reads `tcp:96063 B/s` and `[MQ]` `bps=96063` (≈96,000). The historical −49/−48…−52 values are not in `[E1]`–`[E4]`; current link is stronger (−46). |
+| 4 | `otaguard-20261118b` was resident throughout the broker session | **NOT PROVEN historically; current image MEASURED** | Historical image linkage only via a unique retained LWT literal `[N2]`; `[E4]` records client ID + IP, never payloads. `[MQ]` now reports `firmware=pigpulse-mic-sht45-otaguard-20261118c`, so the **current** session is 18c. The Nov-18 18b residency claim remains unproven; broker continuity never proved image identity. |
 | 5 | Image mtime proves flash or boot time | **REJECTED** | Filesystem metadata, not a device readout. |
 | 6 | 900 s `ESP.restart()` recovery is unreachable — the 120 s recycle resets `lastLinkMs` | **SUPPORTED (source)** | `[F]:603-604,630,650,669-673`; also true in 18c. |
 | 7 | No firmware/NVS path can hold STA off across boot | **SUPPORTED (source)** | `[F]:433,454`; framework `_persistent=true` / `WIFI_STORAGE_FLASH`; no `WiFi.persistent(false)`. |
@@ -207,10 +209,62 @@ Audio and telemetry must not be collapsed into one failure — see §3.3.
 
 ---
 
-## 7. Evidence boundaries
+## 7. Independent device readouts (2026-11-19, ~01:31 UTC)
 
-- **No ESP serial/readout** for Nov 17–18: no NVS dump, no `[sht45]`/`[wifi]` lines,
-  no backtrace from the incident. The only `Saved PC` is from a 2026-10-19 capture.
+These were taken directly from the board during this investigation, not from the
+handoff. They are the strongest grounding in this record.
+
+**Serial (`[SER]`, 8 s capture on `/dev/ttyACM0`, read-only; mic stayed connected):**
+
+```
+[sht45] temperature=31.15 C humidity=76.42 % CRC=OK
+RMS24: 78446 Peak24: 162138 nz:512% -40.6 dBFS tcp:96063 B/s wifi:1 mqtt:1 tcp:1
+[sht45] temperature=31.14 C humidity=76.72 % CRC=OK
+[mqtt] connected
+RMS24: 54519 Peak24: 104422 nz:512% -43.7 dBFS tcp:95968 B/s wifi:1 mqtt:1 tcp:1
+RMS24: 27596 Peak24: 78012 nz:512% -49.7 dBFS tcp:121 B/s wifi:1 mqtt:1 tcp:1
+[sht45] temperature=32.54 C humidity=70.64 % CRC=OK
+```
+
+**Retained MQTT telemetry (`[MQ]`, `pig/s3-mic-01/telemetry`, retain=true):**
+
+```
+mic=True  rms=87075  peak=158406  sr=48000
+boots=3  rr=3  prr=1  br=0
+txp=78  rssi=-46  heap=174936  sps=48031
+irf=0  irr=0  txd=0  txr=1  bps=96063  dc=-27  clip=0  batch=512  omax=692
+temperature=32.56  humidity=70.63
+firmware=pigpulse-mic-sht45-otaguard-20261118c
+fmt: rate=48000 encoding=s16le endian=little channels=1 bytes_per_frame=2 bytes_per_sec=96000
+```
+
+**What this proves:**
+
+- **96,000 B/s is real** — serial `tcp:96063 B/s`, MQTT `bps=96063`, fmt `bytes_per_sec=96000`.
+- **The live image is 18c** — `firmware=...otaguard-20261118c`.
+- **The boot chain is consistent with a power-on in its history** — `boots=3`,
+  `rr=3` (SW reset, the OTA reboot), `prr=1` (previous reset = POWERON), `br=0`
+  (no brownout flag).
+- **TX power is 19.5 dBm** — `txp=78`, and `78/4 = 19.5`.
+- **The SHT45 is healthy right now** — repeated `CRC=OK`, `temperature≈31–33 °C`,
+  `humidity≈70–77 %`, `irf=0`, `irr=0`. The Nov-18 wedge is therefore not
+  reproducing and was either transient or misdiagnosed.
+- **Audio is real, not zeros** — serial RMS `27k–78k`, peak `78k–162k`,
+  `−40.6 to −49.7 dBFS`, `dc=-27`, `clip=0`.
+- **RSSI is −46 dBm** — a strong link, better than the −55/−60 at revival.
+
+**Correction to the handoff:** the retained `death:true` LWT was observed at
+01:14 UTC and by 01:31 UTC the retained telemetry had been **overwritten by live
+`mic:true` telemetry** — it was superseded, not "lost".
+
+---
+
+## 8. Evidence boundaries
+
+- **No ESP serial/readout from the incident window itself** (Nov 17–18): no NVS dump,
+  no `[sht45]`/`[wifi]` lines, no backtrace from 14:33 or 16:46. The only `Saved PC`
+  is from a 2026-10-19 capture. **Current** serial and retained telemetry were read on
+  2026-11-19 (§7); they describe the healthy present, not the failure.
 - `[E1]`/`[E3]` end 12:40:37/12:40:18 UTC; `[E4]` ends 16:35:02 UTC. Claims about
   16:46:48 come from `[N2]`, not these files.
 - No RSSI, no AP channel/width/mode, no PCM byte-rate, and no MQTT payloads are
@@ -218,12 +272,13 @@ Audio and telemetry must not be collapsed into one failure — see §3.3.
   `diag_state.py:196` hardcodes `"wlan1"` and reads the dongle.
 - Historical "Pi hard resets hourly" was a finding of the replaced document, not of
   this evidence set; it is not carried forward as established.
-- **No physical-device confirmation is made here.** Every statement is a measurement
-  of a cited source or an inference explicitly labelled as such.
+- **Device readouts in §7 are real measurements of the current board** (serial and
+  retained MQTT). No statement about the *incident* is a device confirmation — those
+  remain measurements of cited logs or inferences explicitly labelled as such.
 
 ---
 
-## 8. Recovery steps
+## 9. Recovery steps
 
 1. **Physical (blocking):** 5 V ≥ 2 A ESP supply, short thick cable, 470–1000 µF +
    100 nF at the inlet, fan on its own branch. Pi PSU/USB-C cable swap test.
