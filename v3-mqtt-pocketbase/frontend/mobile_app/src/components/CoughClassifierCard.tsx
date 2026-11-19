@@ -49,26 +49,34 @@ type ViewState =
     };
 
 function readState(s: CoughStatus | null): ViewState {
+  // Distinguish three truths: service down (OFFLINE), service up but gated /
+  // no audio (STANDBY), and actively scoring (LIVE). A missing mic must never
+  // read as a cough rate of zero.
   if (!s || s.ok !== true) return { kind: 'unreachable' };
   if (s.enabled === false) return { kind: 'off' };
   const model = s.model?.name;
   const a = s.aggregate;
-  if (!s.audio?.connected || !a || !a.windows || typeof a.rate_pct !== 'number') {
-    return { kind: 'standby', model };
-  }
+  const audioUp = s.audio?.connected === true;
+  const ratePct = a && typeof a.rate_pct === 'number' ? a.rate_pct : null;
+  const windows = a && typeof a.windows === 'number' ? a.windows : 0;
+  const hasScores = audioUp && ratePct !== null && windows > 0;
+  if (!hasScores || ratePct === null) return { kind: 'standby', model };
   const ageS =
     typeof s.server_ts === 'number'
       ? Math.max(0, Math.round(Date.now() / 1000 - s.server_ts))
       : -1;
+  // Clock-skew guard: if the Pi clock is off by more than 5 min, the age is
+  // meaningless — report it as unknown rather than a huge "stale" number.
+  const reliableAge = ageS >= 0 && ageS < 300;
   return {
     kind: 'live',
-    verdict: a.verdict || 'NO DATA',
-    rate: `${a.rate_pct.toFixed(1)}%`,
-    mean: typeof a.mean_p === 'number' ? a.mean_p.toFixed(3) : '—',
-    windows: a.windows,
-    why: a.why || '',
+    verdict: a?.verdict || 'NO DATA',
+    rate: `${ratePct.toFixed(1)}%`,
+    mean: typeof a?.mean_p === 'number' ? a.mean_p.toFixed(3) : '—',
+    windows,
+    why: a?.why || '',
     ageS,
-    stale: ageS > 120,
+    stale: reliableAge && ageS > 120,
     model,
   };
 }
@@ -103,7 +111,7 @@ export default function CoughClassifierCard() {
     state.kind === 'loading'
       ? 'READING…'
       : state.kind === 'unreachable'
-        ? 'NO READING'
+        ? 'OFFLINE — CLASSIFIER DOWN'
         : state.kind === 'off'
           ? 'CLASSIFICATION OFF'
           : state.kind === 'standby'
@@ -116,11 +124,11 @@ export default function CoughClassifierCard() {
     state.kind === 'loading'
       ? 'Reading the Pi classifier status.'
       : state.kind === 'unreachable'
-        ? 'No answer from the classifier. It is stopped or gated until the barn mic returns — this is not a cough count.'
+        ? 'No answer from the classifier service. It is stopped or unreachable — not a cough count.'
         : state.kind === 'off'
           ? 'The classifier is running but classification is switched off.'
           : state.kind === 'standby'
-            ? `Waiting for clean mic audio. Nothing is being scored, so no cough rate is shown.${state.model ? ` Model: ${state.model}.` : ''}`
+            ? `Classifier is up but waiting for clean mic audio. Nothing is being scored, so no cough rate is shown.${state.model ? ` Model: ${state.model}.` : ''}`
             : `${state.rate} of scored windows · mean p ${state.mean} · ${state.windows} windows in ${state.why.replace(/^.*?last 60 s/, 'the last 60 s') || 'the last 60 s'}${
                 state.ageS >= 0 ? ` · read ${state.ageS}s ago` : ''
               }`;
