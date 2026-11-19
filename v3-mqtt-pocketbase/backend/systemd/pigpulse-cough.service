@@ -1,0 +1,28 @@
+[Unit]
+Description=PigPulse on-device cough classifier (PANNs Cnn14_16k + logistic head)
+Documentation=file:/home/pigpulse/cough/README.txt
+# Audio comes from pigpulse-thermal's /esp/stream, so start after it. If the
+# thermal unit is restarted the classifier reconnects on its own (the loop has
+# backoff), hence Wants= rather than Requires= — a classifier crash must never
+# take the thermal dashboard down, and vice versa.
+After=pigpulse-thermal.service network-online.target
+Wants=pigpulse-thermal.service network-online.target
+
+[Service]
+Type=simple
+User=pigpulse
+Group=pigpulse
+WorkingDirectory=/home/pigpulse/cough
+ExecStart=/home/pigpulse/cough/.venv/bin/python /home/pigpulse/cough/cough_classifier.py
+Restart=always
+RestartSec=10
+# The 4 Hz thermal loop is the safety-critical path; the model is a background
+# analyst, so it yields CPU and is killed first under memory pressure.
+Nice=5
+CPUWeight=50
+OOMScoreAdjust=200
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

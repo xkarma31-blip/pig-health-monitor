@@ -1,0 +1,11 @@
+[Unit]
+Description=Check PigPulse mic quality every 30 seconds
+
+[Timer]
+OnBootSec=20
+OnUnitActiveSec=30
+Persistent=true
+Unit=pigpulse-audio-gate.service
+
+[Install]
+WantedBy=timers.target

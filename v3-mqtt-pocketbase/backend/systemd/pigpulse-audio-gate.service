@@ -1,0 +1,14 @@
+[Unit]
+Description=PigPulse mic quality gate — writes /run/pigpulse/audio-ok only on valid audio
+Documentation=file:/home/pigpulse/cough/audio_gate.py
+After=pigpulse-thermal.service
+Wants=pigpulse-thermal.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /home/pigpulse/cough/audio_gate.py --enforce
+# Root is required only to write /run/pigpulse/audio-ok; the check itself is
+# read-only and never connects to the single-client TCP :9090.
+User=root
+NoNewPrivileges=true
+PrivateTmp=true

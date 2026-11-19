@@ -1,0 +1,9 @@
+[Unit]
+Description=Start the cough classifier only when the audio gate is open
+
+[Path]
+PathExists=/run/pigpulse/audio-ok
+Unit=pigpulse-cough.service
+
+[Install]
+WantedBy=multi-user.target

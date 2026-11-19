@@ -1022,3 +1022,39 @@ declared dead while the ESP is still holding buffered audio.
 
 **Current source on the board:**
 `firmware/esp32s3-mic-ambient/arduino/esp32s3_telemetry-flashed-20261113/`.
+
+---
+
+## known-good #— `otaguard-20261118c` (archived 2026-11-19, live at time of archive)
+
+> Rectifies the missing canonical row for the image that was OTA-flashed at
+> 2026-11-18 23:44:57 UTC (07:44:57 +08). The 18b archive exists only in the
+> `~/sandbox/pigpulse-ota-hardening` worktree; 18c is archived here so the
+> canonical revert path is no longer forward-only.
+
+| Item | Value |
+|---|---|
+| FIRMWARE_ID | `pigpulse-mic-sht45-otaguard-20261118c` (`esp32s3_telemetry.ino:48`) |
+| Binary | `docs/known-good-20261118c/firmware-otaguard-20261118c.bin` |
+| Binary sha256 | `d5543f14006caef50bee9c8bb8e928777623b417d119890d71f99630ae2a050c` |
+| Source | `docs/known-good-20261118c/esp32s3_telemetry.ino` |
+| Source sha256 | `10010b031a64ff0198aa89691ea4b09dc7ecab6b0d5bb390d107d3ec595e3bfe` |
+| Copied from | Pi `~/ota/firmware-otaguard-20261118c.bin` (hash verified both sides); source from the sandbox hardening worktree |
+
+**Measured evidence (readouts, not "it compiled"):**
+
+- `/esp/status` at 2026-11-19 01:14 UTC: `connected:true`,
+  `peer:192.168.69.15:51420`, `nonzeroPct:99.5–100`, `signal:true`,
+  `rate:48000`, `bindError:null`, `lastMs:2`.
+- ARP `192.168.69.15 → 68:ee:8f:dd:31:3c REACHABLE`; DHCP lease for
+  `esp32s3-DD313C` renewed.
+- Audio-gate sample (2 s raw loopback): `nonzero 99.98 %`, RMS `2103.62`,
+  DC `-8.6`, clip `0.0 %`, diff-mean `250.8` → PASS.
+- Post-OTA from the deployment notes: `98,677 bps`, `rssi −60 dBm`, `txp:78`
+  (19.5 dBm); revival before OTA `95,968 bps`, `rssi −55 dBm`.
+
+**Caveats:** this image is the rollback target, not a certified fix — the
+Nov-18 14:33 wedge mechanism (SHT45 command-phase I²C) is still unproven and
+no serial fault log exists. **Do not flash a hardening build without one.**
+The Pi-side power path (5 V ≥2 A, short thick cable, bulk capacitance) remains
+the physical work that actually removes the failure mode.
