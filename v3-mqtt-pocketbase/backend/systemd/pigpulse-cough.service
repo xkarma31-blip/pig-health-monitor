@@ -1,6 +1,9 @@
 [Unit]
 Description=PigPulse on-device cough classifier (PANNs Cnn14_16k + logistic head)
 Documentation=file:/home/pigpulse/cough/README.txt
+# Checked when the service starts. Removing the flag later is handled by
+# audio_gate.py --enforce, which stops an already-running classifier.
+ConditionPathExists=/run/pigpulse/audio-ok
 # Audio comes from pigpulse-thermal's /esp/stream, so start after it. If the
 # thermal unit is restarted the classifier reconnects on its own (the loop has
 # backoff), hence Wants= rather than Requires= — a classifier crash must never

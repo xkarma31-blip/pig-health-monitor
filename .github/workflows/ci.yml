@@ -118,6 +118,7 @@ jobs:
           (cd v3-mqtt-pocketbase/backend/bridge && python3 -m unittest discover -s tests -p 'test_*.py')
           (cd v3-mqtt-pocketbase/backend/thermal-pi && python3 -m unittest discover -s tests -p 'test_*.py')
           (cd v3-mqtt-pocketbase/backend/workers && python3 -m unittest discover -s tests -p 'test_*.py')
+          (cd v3-mqtt-pocketbase/backend/systemd && python3 -m unittest discover -s tests -p 'test_*.py')
           # The portal suite lives beside the module it tests (there is no
           # tests/ subdirectory) and covers the path-traversal, SSRF and
           # allowlist guards of the local onboarding portal.
