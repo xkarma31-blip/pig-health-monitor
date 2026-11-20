@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Platform, ScrollView, Text, TouchableOpacity, View, StyleSheet } from 'react-native';
+import { Platform, ScrollView, Text, TextInput, TouchableOpacity, View, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../theme';
 import { useAuth } from '../../hooks/useAuth';
@@ -88,6 +88,7 @@ export default function SettingsScreen() {
   const [now, setNow] = useState(() => Date.now());
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [accessMode, setAccessMode] = useState<AccessMode>('auto');
+  const [remoteUrl, setRemoteUrl] = useState('');
   const [remoteTest, setRemoteTest] = useState<{
     state: 'idle' | 'testing' | 'ok' | 'fail';
     ms?: number;
@@ -103,6 +104,7 @@ export default function SettingsScreen() {
         setSoundEnabled(setup.soundEnabled === true);
         applySoundPreference(setup.soundEnabled === true);
         setAccessMode(setup.accessMode);
+        setRemoteUrl(setup.remotePbUrl);
       } catch {
         if (alive) setSoundEnabled(false);
       }
@@ -206,6 +208,24 @@ export default function SettingsScreen() {
     }
   };
 
+  const saveRemoteUrl = async () => {
+    const clean = remoteUrl.trim().replace(/\/+$/, '');
+    if (clean && !/^https?:\/\//i.test(clean)) {
+      showToast('Use http:// or https://');
+      return;
+    }
+    try {
+      const setup = await loadFarmerSetup();
+      await saveFarmerSetup({ remotePbUrl: clean });
+      setAccessConfig(accessMode, clean, setup.lanPbUrl);
+      setRemoteTest({ state: 'idle' });
+      showToast(clean ? 'Remote URL saved' : 'Remote URL cleared');
+      setTimeout(() => router.replace('/tabs'), 500);
+    } catch {
+      showToast('Could not save the remote URL');
+    }
+  };
+
   return (
     <ScrollView
       style={[styles.screen, { backgroundColor: colors.bg, flex: 1 }]}
@@ -267,6 +287,33 @@ export default function SettingsScreen() {
                 >
                   {remoteTestText}
                 </Text>
+              </View>
+              <Text style={[typography.caption, { color: colors.textMuted, marginTop: spacing.md }]}>
+                Remote (public) PocketBase URL
+              </Text>
+              <Text style={[typography.bodySmall, { color: colors.textMuted, marginBottom: 4, fontSize: 13 }]}>
+                Use a public tunnel URL — not the Tailscale IP — if the phone has no Tailscale.
+              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <TextInput
+                  value={remoteUrl}
+                  onChangeText={setRemoteUrl}
+                  placeholder="https://your-public-pb-url"
+                  placeholderTextColor={colors.textMuted}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="url"
+                  accessibilityLabel="Remote PocketBase URL"
+                  style={[styles.urlInput, { borderColor: colors.divider, color: colors.textPrimary, backgroundColor: colors.surface }]}
+                />
+                <ActionButton
+                  variant="secondary"
+                  onPress={saveRemoteUrl}
+                  accessibilityLabel="Save remote URL"
+                  accessibilityHint="Stores the public PocketBase URL"
+                >
+                  Save
+                </ActionButton>
               </View>
             </View>
           </ListGroup>
@@ -492,6 +539,7 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1 },
   sectionHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 8 },
+  urlInput: { flex: 1, borderWidth: 1, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 16 },
   nodeTop: { flexDirection: 'row', alignItems: 'center' },
   nodeStats: { flexDirection: 'row', justifyContent: 'space-between' },
   row: { flexDirection: 'row', alignItems: 'center' },
