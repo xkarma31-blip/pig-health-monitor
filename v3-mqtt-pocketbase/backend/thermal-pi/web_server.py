@@ -43,6 +43,8 @@ import struct
 import subprocess
 import threading
 import time
+import urllib.request
+from collections import deque
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, quote, urlparse
@@ -373,6 +375,10 @@ _last_error = "starting"
 admin_console = None
 _console_error: str | None = None
 _cached: dict | None = None
+# 20261121: ring buffer of (wall_time, pixels) so /diff can compare the live
+# frame against a recent one. 120 frames at ~2 FPS ≈ 60 s. This is the only
+# history kept; the dashboard itself still draws only the newest frame.
+_frame_history: deque = deque(maxlen=120)
 # Frames the driver called a success but that were physically
 # impossible (corrupt buffer). Used only to log the recovery.
 _corrupt_frames_skipped = 0
@@ -580,6 +586,10 @@ def _loop() -> None:
                 if thermal_publish.frame_is_plausible(st):
                     st["ok"] = True
                     _cached = st
+                    try:
+                        _frame_history.append((time.time(), list(st.get("pixels") or [])))
+                    except Exception:
+                        pass
                     _frame_seq += 1
                     _last_ok = True
                     # 2026-09-30: log the transition back to life once, so a
@@ -940,6 +950,90 @@ class Handler(BaseHTTPRequestHandler):
                 200, "text/csv", body,
                 {"Content-Disposition": "attachment; filename=mlx90640_frame.csv"},
             )
+            return
+        if path == "/diff":
+            try:
+                secs = max(1, min(60, int(query.get("seconds", ["5"])[0])))
+            except Exception:
+                secs = 5
+            with _lock:
+                cur = dict(_cached) if _cached else None
+                hist = list(_frame_history)
+            if not cur or not hist:
+                self._send(503, "application/json",
+                           b'{"ok":false,"error":"no frames yet"}')
+                return
+            now = time.time()
+            target = now - secs
+            ref_ts, ref_px = min(hist, key=lambda hp: abs(hp[0] - target))
+            cur_px = cur.get("pixels") or []
+            n = min(len(cur_px), len(ref_px))
+            if not n:
+                self._send(503, "application/json",
+                           b'{"ok":false,"error":"empty frames"}')
+                return
+            deltas = [abs(cur_px[i] - ref_px[i]) for i in range(n)]
+            changed = sum(1 for d in deltas if d > 0.5)
+            body = {
+                "ok": True,
+                "seconds": secs,
+                "compared_age_s": round(now - ref_ts, 2),
+                "current_frame_age_s": (round(now - (cur.get("ts", 0) / 1000.0), 2)
+                                        if cur.get("ts") else None),
+                "pixels": n,
+                "mean_abs_delta_c": round(sum(deltas) / n, 3),
+                "max_abs_delta_c": round(max(deltas), 3),
+                "changed_pixels_gt_0.5c": changed,
+                "changed_pct": round(100.0 * changed / n, 2),
+            }
+            self._send(200, "application/json", json.dumps(body).encode())
+            return
+        if path == "/api/alerts":
+            # Same-origin read-only alerts for the public demo page. Proxied
+            # server-side so the page works on the AP (no internet) and over
+            # the HTTPS tunnel (no mixed content / no CORS problem).
+            try:
+                req = urllib.request.Request(
+                    "http://127.0.0.1:8090/api/collections/alerts/records"
+                    "?perPage=10&sort=-created",
+                    headers={"Accept": "application/json"})
+                with urllib.request.urlopen(req, timeout=4) as r:
+                    self._send(200, "application/json", r.read())
+            except Exception as e:  # noqa: BLE001
+                self._send(502, "application/json",
+                           json.dumps({"error": type(e).__name__}).encode())
+            return
+        if path == "/api/telemetry":
+            # Same-origin latest telemetry for the public demo page.
+            try:
+                req = urllib.request.Request(
+                    "http://127.0.0.1:8090/api/collections/telemetry/records"
+                    "?perPage=10&sort=-timestamp",
+                    headers={"Accept": "application/json"})
+                with urllib.request.urlopen(req, timeout=4) as r:
+                    self._send(200, "application/json", r.read())
+            except Exception as e:  # noqa: BLE001
+                self._send(502, "application/json",
+                           json.dumps({"error": type(e).__name__}).encode())
+            return
+        if path == "/latency":
+            now = time.time()
+            with _lock:
+                cur = dict(_cached) if _cached else None
+            cap_ms = cur.get("ts") if cur else None
+            body = {
+                "ok": True,
+                "frame_age_s": (round(now - cap_ms / 1000.0, 2)
+                                if cap_ms else None),
+                "fps": round(_fps_ema, 2),
+                "cloud_sync_interval_s": 10,
+                "public_api_cache_s": 5,
+                "widget_poll_s": 30,
+                "note": ("Pi dashboard is real-time (~0.5 s). Cloud sync adds "
+                         "~10 s; the public API caches ~5 s; the widget polls "
+                         "every ~30 s."),
+            }
+            self._send(200, "application/json", json.dumps(body).encode())
             return
         if path == "/health":
             addr_s = i2c_addrs_cached().replace("\n", " ")

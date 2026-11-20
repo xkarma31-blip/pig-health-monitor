@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PigPulse — public demo</title>
+<style>
+  :root { --bg:#0d1117; --card:#161b22; --line:#30363d; --text:#e6edf3; --muted:#9aa7b4;
+          --cyan:#39d0d8; --green:#3ddc84; --amber:#ffb454; --red:#ff6b6b; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text);
+         font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; font-size:17px; line-height:1.45; }
+  header { padding:20px 18px 10px; border-bottom:1px solid var(--line); }
+  h1 { margin:0; font-size:26px; letter-spacing:.3px; color:var(--cyan); }
+  .sub { color:var(--muted); font-size:14px; margin-top:4px; }
+  main { padding:14px; max-width:720px; margin:0 auto; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px;
+          padding:16px; margin-bottom:14px; }
+  .card h2 { margin:0 0 10px; font-size:15px; text-transform:uppercase;
+             letter-spacing:.8px; color:var(--muted); }
+  .row { display:flex; justify-content:space-between; gap:12px; padding:5px 0;
+         border-bottom:1px dashed rgba(255,255,255,.06); }
+  .row:last-child { border-bottom:0; }
+  .k { color:var(--muted); }
+  .v { font-weight:700; text-align:right; }
+  .ok { color:var(--green); } .warn { color:var(--amber); } .bad { color:var(--red); }
+  .big { font-size:34px; font-weight:800; color:var(--cyan); }
+  .bar { height:12px; background:#0b0f14; border-radius:6px; overflow:hidden; margin-top:6px; }
+  .bar > i { display:block; height:100%; width:0; background:linear-gradient(90deg,var(--green),var(--amber),var(--red)); }
+  .alert { padding:8px 10px; border-left:3px solid var(--amber); background:#1b1f27;
+           border-radius:6px; margin:6px 0; font-size:14px; }
+  .muted { color:var(--muted); font-size:13px; }
+  footer { padding:14px 18px 26px; color:var(--muted); font-size:12px; text-align:center; }
+  .pill { display:inline-block; padding:2px 9px; border-radius:999px; font-size:12px; font-weight:800; }
+</style>
+</head>
+<body>
+<header>
+  <h1>PigPulse</h1>
+  <div class="sub">Public demo · read-only · screening only, not a clinical device</div>
+</header>
+<main>
+  <section class="card" id="conn">
+    <h2>Barn mic</h2>
+    <div class="row"><span class="k">Ingest</span><span class="v" id="espState">…</span></div>
+    <div class="row"><span class="k">Peer</span><span class="v" id="espPeer">—</span></div>
+    <div class="row"><span class="k">Signal (non-zero)</span><span class="v" id="espSig">—</span></div>
+    <div class="bar"><i id="espBar"></i></div>
+  </section>
+
+  <section class="card" id="thermal">
+    <h2>Thermal scene</h2>
+    <div class="row"><span class="k">Centre</span><span class="v big" id="thCenter">—</span></div>
+    <div class="row"><span class="k">Max</span><span class="v" id="thMax">—</span></div>
+    <div class="row"><span class="k">Frame rate</span><span class="v" id="thFps">—</span></div>
+    <div class="row"><span class="k">Frame age</span><span class="v" id="thAge">—</span></div>
+    <div class="row"><span class="k">Status</span><span class="v" id="thState">—</span></div>
+    <div class="muted" style="margin-top:8px;">Scene screening only. A scene-centre value is not an animal temperature.</div>
+  </section>
+
+  <section class="card" id="cough">
+    <h2>Cough classifier</h2>
+    <div class="row"><span class="k">State</span><span class="v" id="coState">—</span></div>
+    <div class="row"><span class="k">Verdict (60 s)</span><span class="v" id="coVerdict">—</span></div>
+    <div class="row"><span class="k">Windows scored</span><span class="v" id="coWin">—</span></div>
+    <div class="row"><span class="k">Over threshold</span><span class="v" id="coRate">—</span></div>
+    <div class="muted" style="margin-top:8px;">Ranks, does not diagnose. At the operating threshold there are false positives.</div>
+  </section>
+
+  <section class="card" id="alerts">
+    <h2>Recent alerts</h2>
+    <div id="alertList" class="muted">Loading…</div>
+  </section>
+</main>
+<footer>PigPulse · public read-only demo · data from the Pi edge · <span id="updated">—</span></footer>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const fmt = (v, u) => (v === null || v === undefined || v === '') ? '—' : `${v}${u||''}`;
+
+async function getJSON(url) {
+  const r = await fetch(url, { cache: 'no-store' });
+  if (!r.ok) throw new Error(`${url} -> ${r.status}`);
+  return r.json();
+}
+
+async function refresh() {
+  const [esp, data, cough, alerts] = await Promise.all([
+    getJSON('/esp/status').catch(() => null),
+    getJSON('/data').catch(() => null),
+    getJSON('/cough/api/status').catch(() => null),
+    getJSON('/api/alerts').catch(() => null),
+  ]);
+
+  if (esp) {
+    const ok = !!esp.connected;
+    $('espState').innerHTML = `<span class="pill ${ok ? 'ok' : 'bad'}">${ok ? 'LIVE' : 'OFFLINE'}</span>`;
+    $('espPeer').textContent = esp.peer || '—';
+    const pct = Number(esp.nonzeroPct || 0);
+    $('espSig').textContent = `${pct.toFixed(1)} %`;
+    $('espBar').style.width = `${Math.max(0, Math.min(100, pct))}%`;
+  } else {
+    $('espState').innerHTML = `<span class="pill bad">NO DATA</span>`;
+  }
+
+  if (data) {
+    $('thCenter').textContent = fmt(data.center, ' °C');
+    $('thMax').textContent = fmt(data.max, ' °C');
+    $('thFps').textContent = fmt(data.fps);
+    $('thAge').textContent = data.ts ? `${((Date.now() - data.ts) / 1000).toFixed(1)} s` : '—';
+    $('thState').innerHTML = data.ok ? '<span class="ok">frame valid</span>' : '<span class="bad">no valid frame</span>';
+  }
+
+  if (cough && cough.aggregate) {
+    const a = cough.aggregate;
+    $('coState').innerHTML = cough.enabled ? '<span class="ok">ACTIVE</span>' : '<span class="warn">OFF</span>';
+    $('coVerdict').textContent = a.verdict || '—';
+    $('coWin').textContent = a.windows ?? '—';
+    $('coRate').textContent = a.rate_pct !== null && a.rate_pct !== undefined ? `${a.rate_pct.toFixed(1)} %` : '—';
+  } else {
+    $('coState').innerHTML = '<span class="bad">OFFLINE</span>';
+  }
+
+  if (alerts && Array.isArray(alerts.items)) {
+    const items = alerts.items.slice(0, 8);
+    $('alertList').innerHTML = items.length
+      ? items.map((a) => `<div class="alert"><b>${a.type || 'ALERT'}</b> · ${a.deviceId || ''}<br>${(a.message || '').slice(0, 160)}</div>`).join('')
+      : '<div class="muted">No alerts recorded.</div>';
+  } else {
+    $('alertList').innerHTML = '<div class="muted">Alerts unavailable.</div>';
+  }
+
+  $('updated').textContent = `updated ${new Date().toLocaleTimeString()}`;
+}
+
+refresh();
+setInterval(refresh, 10000);
+</script>
+</body>
+</html>
