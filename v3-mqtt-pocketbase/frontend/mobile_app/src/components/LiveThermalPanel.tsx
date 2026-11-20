@@ -740,7 +740,7 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
   const sourceChip: Chip = liveFrame
     ? { text: '● LIVE — pi-thermal-01 · MLX90640 32×24', fg: colors.healthy, bg: colors.healthySoft }
     : pbMode
-      ? { text: '● LIVE STATS — camera frames unavailable', fg: colors.watch, bg: colors.watchSoft }
+      ? { text: '● LIVE STATS', fg: colors.info, bg: colors.infoSoft }
       : staleStats
         ? { text: `● OFFLINE — last reading ${agoLabel(pb?.timestamp, pi.now)}`, fg: colors.watch, bg: colors.watchSoft }
         : { text: '● OFFLINE — barn unreachable', fg: colors.textSecondary, bg: colors.surfaceVariant };
@@ -807,7 +807,7 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
         >
           <Text style={[typography.h2, { color: colors.textPrimary, fontSize: 16, textAlign: 'center' }]}>
             {pb
-              ? 'Camera frames unavailable'
+              ? 'No live frame'
               : pi.frameError
                 ? 'No live thermal frame'
                 : 'Barn offline — no live data'}
@@ -823,8 +823,8 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
             style={[typography.bodySmall, { color: colors.textSecondary, textAlign: 'center', marginTop: spacing.sm, lineHeight: 20 }]}
           >
             {pb
-              ? 'Live thermal frames travel over the barn network (Pi console). Readings below are the latest received.'
-              : 'No frames from the Pi console and no recent readings. Check the PigPulse box power and your connection — this screen retries automatically.'}
+              ? 'Live frames resume automatically when the barn network is reachable.'
+              : 'No frames from the Pi console and no recent readings. This screen retries automatically.'}
           </Text>
           {staleStats && pb ? (
             <Text style={[typography.bodySmall, { color: colors.textMuted, textAlign: 'center', marginTop: spacing.md }]}>
@@ -993,19 +993,19 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
               padding: spacing.md,
             }}
           >
-            <Text style={[typography.bodySmall, { color: colors.textSecondary, textAlign: 'center' }]}>
-              {pi.base
-                ? 'Waiting for a camera frame…'
-                : 'CCTV shows here when the companion bridge is reachable.'}
+            <Text style={[typography.bodySmall, { color: colors.textMuted, textAlign: 'center' }]}>
+              CCTV OFF
             </Text>
           </View>
         )}
-        <Text style={[typography.bodySmall, { color: colors.textPrimary, marginTop: spacing.sm, fontSize: 12 }]}>
-          {cctvState.label}
+        <Text style={[typography.bodySmall, { color: colors.textMuted, marginTop: spacing.sm, fontSize: 12 }]}>
+          {cctvState.showFrame ? cctvState.label : 'CCTV OFF'}
         </Text>
-        <Text style={[typography.bodySmall, { color: colors.textMuted, marginTop: 2, fontSize: 12 }]}>
-          {cctvState.reason}
-        </Text>
+        {cctvState.showFrame ? (
+          <Text style={[typography.bodySmall, { color: colors.textMuted, marginTop: 2, fontSize: 12 }]}>
+            {cctvState.reason}
+          </Text>
+        ) : null}
       </View>
     </View>
   );
