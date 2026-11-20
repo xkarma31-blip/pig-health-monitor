@@ -1,39 +1,40 @@
-# Expo web (.expo.app) vs Vercel
+# Expo web hosting and Vercel status — 2026-11-20
 
-Official Expo docs state: “Expo Hosting is a react hosting service that allows you to deploy an exported Expo web build to a preview or production URL.”
+## Current deployment
 
-## What `.expo.app` is
+Expo Hosting is the current data-capable web deployment:
 
-It is a hosting URL for an exported Expo web build. It is **not** a different app runtime and `.expo/` is not a deploy target.
+- Production: `https://pigpulse.expo.app`
+- Deployment URL: `https://pigpulse--3x12hwzewm.expo.app`
 
-Example from Expo docs: preview `https://my-app--or1170q9ix.expo.app/`, production `https://my-app.expo.app/`.
+The Expo server routes in `frontend/mobile_app/src/app/api/` mirror the former Vercel bridges:
 
-## Difference from current Vercel setup
+- `GET /api/telemetry`
+- `GET /api/pi`
+- `POST /api/chat`
 
-- Current app uses `web.output: single` (SPA) and Vercel rewrites all routes to `/`.
-- Current data bridges `/api/telemetry` and `/api/pi` are Vercel serverless functions. A static SPA export to Expo Hosting will not run those functions.
-- Expo docs warn: “Uploading only the client directory to a static host does not provide server rendering.”
-- Expo Hosting with `server` output can support API routes, but that is a different deployment shape and needs migration/testing.
+The proxy URL and key used by `/api/telemetry` and `/api/pi` remain server-side. `/api/chat` uses its offline fallback unless a provider key is configured.
 
-## Safe path
+## Export targets
 
-1. Keep Vercel as the data+app bridge until Expo server deployment is validated.
-2. Export with `npx expo export -p web`.
-3. Preview on Expo Hosting only as a UI check, with the API limitation labelled.
-4. To move fully, migrate `/api/telemetry` and `/api/pi` into Expo server routes and verify `/app/tabs`, `/app/thermal`, and deep-route reload.
+`frontend/mobile_app/app.config.js` selects the export shape:
 
-## Deployed preview
-
-A preview Expo Hosting deployment was created on 2026-11-18:
-
-`https://pigpulse--je9n921m7v.expo.app`
-
-Verified HTTP 200. It is the same exported Expo web app, but the current `/api/telemetry` and `/api/pi` bridges are Vercel serverless functions; until they are migrated to Expo server routes, treat this URL as a UI preview. Vercel remains the data-capable deployment.
-
-## Commands
+- `PIGPULSE_WEB_TARGET=expo-hosting` removes the `/app` base path and uses Expo's `server` output so the `/api/*` routes run on Expo Hosting.
+- Without that variable, the app retains the static `single` output and `/app` base path used by the Pi portal. A plain export is not data-capable on Expo Hosting.
 
 ```bash
-npx expo export -p web
-eas deploy              # preview .expo.app URL
+cd v3-mqtt-pocketbase/frontend/mobile_app
+PIGPULSE_WEB_TARGET=expo-hosting npx expo export -p web
+eas deploy              # deployment .expo.app URL
 eas deploy --prod       # production .expo.app URL
 ```
+
+## Measured verification
+
+On 2026-11-20, `GET /api/telemetry?collection=telemetry&perPage=1`, `GET /api/pi`, and `POST /api/chat` returned HTTP 200 on the production Expo URL; `/api/pi` reported `status=NORMAL`. A telemetry request without a readable collection correctly returns HTTP 400.
+
+The deployment URL identifies a particular release, while the production alias is the stable public URL.
+
+## Vercel status
+
+The Vercel provider returned HTTP 402 during the release check, so Vercel is not a current data-capable deployment. Keep the Pi portal's static `/app` export separate from the Expo Hosting server export.
