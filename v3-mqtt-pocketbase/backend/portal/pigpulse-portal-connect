@@ -24,12 +24,12 @@ FREQFILE=/etc/pigpulse/wan-sta.freq
 ENABLED=/etc/pigpulse/wan-sta.enabled
 SKIPPED=/etc/pigpulse/wan-sta.skipped
 UP=/usr/local/sbin/pigpulse-wan-sta-up
-WAN_RADIO_MAC=dc:a6:32:87:63:a1
-AP_RADIO_MAC=00:1f:05:6c:51:bc
-WAN_IF=$(/usr/local/sbin/pigpulse-wlan-iface "$WAN_RADIO_MAC" 2>/dev/null || true)
-AP_IF=$(/usr/local/sbin/pigpulse-wlan-iface "$AP_RADIO_MAC" 2>/dev/null || true)
-WAN_IF=${WAN_IF:-wlan0}
-AP_IF=${AP_IF:-wlan1}
+WAN_RADIO_MAC=00:1f:05:6c:51:bc
+AP_RADIO_MAC=dc:a6:32:87:63:a1
+WAN_IF=$(/usr/local/sbin/pigpulse-wlan-iface "$WAN_RADIO_MAC") || { echo "radio resolver failed for WAN radio $WAN_RADIO_MAC" >&2; exit 1; }
+[ -n "$WAN_IF" ] || { echo "radio resolver returned no interface for WAN radio $WAN_RADIO_MAC" >&2; exit 1; }
+AP_IF=$(/usr/local/sbin/pigpulse-wlan-iface "$AP_RADIO_MAC") || { echo "radio resolver failed for AP radio $AP_RADIO_MAC" >&2; exit 1; }
+[ -n "$AP_IF" ] || { echo "radio resolver returned no interface for AP radio $AP_RADIO_MAC" >&2; exit 1; }
 STAMP=$(date +%Y%m%d-%H%M%S)
 BK=/root/pigpulse-backups/portal-$STAMP
 

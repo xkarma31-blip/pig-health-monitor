@@ -1,7 +1,8 @@
 #!/bin/sh
-# Assign the AP gateway address to the AP radio (the radio the sensors are paired to) (MAC-resolved).
+# Assign the AP gateway address to the measured AP radio (MAC-resolved).
 set -e
-IFACE=$(/usr/local/sbin/pigpulse-wlan-iface 00:1f:05:6c:51:bc) || exit 0
-[ -n "$IFACE" ] || exit 0
+AP_RADIO_MAC=dc:a6:32:87:63:a1
+IFACE=$(/usr/local/sbin/pigpulse-wlan-iface "$AP_RADIO_MAC") || { echo "radio resolver failed for AP radio $AP_RADIO_MAC" >&2; exit 1; }
+[ -n "$IFACE" ] || { echo "radio resolver returned no interface for AP radio $AP_RADIO_MAC" >&2; exit 1; }
 ip link set "$IFACE" up
 ip addr replace 192.168.69.1/24 dev "$IFACE"

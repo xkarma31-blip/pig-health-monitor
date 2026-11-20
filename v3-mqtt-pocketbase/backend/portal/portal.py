@@ -29,6 +29,7 @@ import re
 import shutil
 import socket
 import subprocess
+import sys
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -50,61 +51,57 @@ FIRST_RUN = "/etc/pigpulse/portal-seen"
 ALLOW5G = "/etc/pigpulse/wan-sta-allow-5g"
 
 # --- radio identity -------------------------------------------------------
-# The USB dongle and the built-in radio SWAP their kernel names across
-# reboots, so "wlan0"/"wlan1" are NOT stable identities. Resolve by MAC.
-#   BUILTIN  -> 5 GHz capable -> used as the WAN client
-#   DONGLE   -> 2.4 GHz only  -> hosts the PigPulse AP (ESP32-S3 + Tapo)
-WAN_RADIO_MAC = "dc:a6:32:87:63:a1"
-AP_RADIO_MAC = "00:1f:05:6c:51:bc"
+# The radios SWAP their kernel names across reboots, so interface names are
+# NOT stable identities. Resolve the measured radio roles by MAC.
+WAN_RADIO_MAC = "00:1f:05:6c:51:bc"
+AP_RADIO_MAC = "dc:a6:32:87:63:a1"
 
 
 def _iface_for_mac(mac: str) -> str | None:
-    """Primary netdev of the radio with this MAC (None if not present)."""
-    base = "/sys/class/net"
+    """Resolve a radio MAC through the authoritative Pi resolver."""
     try:
-        names = sorted(os.listdir(base))
-    except OSError:
+        result = subprocess.run(
+            ["/usr/local/sbin/pigpulse-wlan-iface", mac],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        print(f"radio resolver failed for {mac}: {exc}", file=sys.stderr, flush=True)
         return None
-    for name in names:
-        # A virtual station inherits its parent's MAC; skip those so we return
-        # the radio's OWN interface, not the vif we attach to it.
-        if name.endswith("sta"):
-            continue
-        try:
-            with open(os.path.join(base, name, "address"), "r") as fh:
-                if fh.read().strip().lower() == mac.lower():
-                    return name
-        except OSError:
-            continue
-    return None
+    if result.returncode != 0:
+        detail = (result.stderr or "").strip() or f"exit status {result.returncode}"
+        print(f"radio resolver failed for {mac}: {detail}", file=sys.stderr, flush=True)
+        return None
+    lines = (result.stdout or "").strip().splitlines()
+    if not lines:
+        print(f"radio resolver returned no interface for {mac}", file=sys.stderr, flush=True)
+        return None
+    return lines[0].strip()
 
 
 def wan_iface() -> str | None:
-    """Interface of the built-in radio (the WAN/STA side)."""
+    """Interface of the measured managed/WAN radio."""
     return _iface_for_mac(WAN_RADIO_MAC)
 
 
 def ap_iface() -> str | None:
-    """Interface of the dongle radio (the PigPulse AP side)."""
+    """Interface of the measured AP/client radio."""
     return _iface_for_mac(AP_RADIO_MAC)
 
 
 def _own_radio_bssids() -> set[str]:
-    """MACs of every local radio, so our own AP is never offered upstream."""
+    """MACs of the measured local radios, so our own AP is never offered upstream."""
     out: set[str] = set()
-    base = "/sys/class/net"
-    try:
-        names = os.listdir(base)
-    except OSError:
-        return out
-    for name in names:
-        if not os.path.isdir(os.path.join(base, name, "wireless")):
+    for mac in (AP_RADIO_MAC, WAN_RADIO_MAC):
+        iface = _iface_for_mac(mac)
+        if not iface:
             continue
-        try:
-            with open(os.path.join(base, name, "address"), "r") as fh:
-                out.add(fh.read().strip().lower())
-        except OSError:
-            continue
+        link = run(["ip", "-o", "link", "show", "dev", iface], 5)
+        match = re.search(r"link/\S+\s+([0-9a-fA-F:]{17})", link)
+        if match:
+            out.add(match.group(1).lower())
     return out
 CONNECT = "/usr/local/sbin/pigpulse-portal-connect"
 HOSTED = "https://pig-health-monitor.vercel.app"
@@ -267,11 +264,14 @@ def scan_networks(force: bool = False) -> list[dict]:
 
 def ap_info() -> dict:
     info = {"channel": None, "freq": None, "clients": 0, "ssid": None}
-    out = run(["/sbin/iw", "dev", ap_iface() or "wlan1", "info"], 6)
+    ap = ap_iface()
+    if not ap:
+        return info
+    out = run(["/sbin/iw", "dev", ap, "info"], 6)
     m = re.search(r"channel (\d+) \((\d+) MHz\)", out)
     if m:
         info["channel"], info["freq"] = int(m.group(1)), int(m.group(2))
-    out = run(["hostapd_cli", "-p", "/var/run/hostapd", "-i", ap_iface() or "wlan0", "status"], 6)
+    out = run(["hostapd_cli", "-p", "/var/run/hostapd", "-i", ap, "status"], 6)
     for line in out.splitlines():
         # `status` reports ssid[0]=..., `get_config` reports ssid=...
         if line.startswith("ssid[0]=") or line.startswith("ssid="):
@@ -283,7 +283,7 @@ def ap_info() -> dict:
     except OSError:
         pass
     if not info["clients"]:
-        out = run(["hostapd_cli", "-p", "/var/run/hostapd", "-i", ap_iface() or "wlan0", "all_sta"], 6)
+        out = run(["hostapd_cli", "-p", "/var/run/hostapd", "-i", ap, "all_sta"], 6)
         info["clients"] = sum(1 for ln in out.splitlines() if re.match(r"^[0-9a-f]{2}:", ln))
     return info
 
@@ -294,10 +294,11 @@ def associated() -> bool:
     The status file is written once, when the uplink finishes. Nothing rewrites
     it if the link drops later, so a stale `UP` would claim internet that is not
     there — measured 2026-11-12: `wan-sta.status` said
-    `UP ip=192.168.254.194` while `iw dev wlan0sta link` said
-    `Not connected` and the interface held a 169.254 address.
+    `UP ip=192.168.254.194` while the station interface reported
+    `Not connected` and held a 169.254 address.
     """
-    return "Connected to" in run(["/sbin/iw", "dev", wan_iface() or "wlan0", "link"], 5)
+    wan = wan_iface()
+    return bool(wan) and "Connected to" in run(["/sbin/iw", "dev", wan, "link"], 5)
 
 
 def tailscale_ip() -> str:
@@ -328,7 +329,8 @@ def status() -> dict:
     if venue["freq"].isdigit():
         venue["freq"] = int(venue["freq"])
     ip = read_addr = ""
-    out = run(["ip", "-4", "-o", "addr", "show", wan_iface() or "wlan0"], 5)
+    wan = wan_iface()
+    out = run(["ip", "-4", "-o", "addr", "show", wan], 5) if wan else ""
     m = re.search(r"inet (\d+\.\d+\.\d+\.\d+)", out)
     # A 169.254 address is not an uplink: it means DHCP failed. Reporting it as
     # the uplink IP is how the page came to show "UP · 169.254.134.112".

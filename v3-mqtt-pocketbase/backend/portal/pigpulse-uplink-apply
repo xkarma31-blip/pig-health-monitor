@@ -1,42 +1,29 @@
 #!/bin/bash
 # Split-radio uplink: the WAN radio -> venue; the AP radio stays on the other one.
 #
-# MAC-addressed, never name-addressed: the dongle and the built-in radio swap
-# their kernel names across reboots, and name-addressing silently put the WAN
-# client on the wrong radio (and once pointed it at our OWN AP, which reports
-# "connected" with no internet and no error).
+# MAC-addressed, never name-addressed: radio interface names are not stable
+# identities. Resolve both measured roles through the authoritative resolver;
+# if either resolution fails, stop visibly instead of selecting another radio.
 #
 # The radio's OWN interface is used for the client: brcmfmac does not support
 # adding a virtual managed interface, and the rtl8192cu dongle wedges on scan
 # often enough to need a reset.
 set -u
 CONF=/etc/wpa_supplicant/wpa-split.conf
-AP_RADIO_MAC=00:1f:05:6c:51:bc     # dongle (rtl8192cu, 2.4 GHz) -> hosts the PigPulse AP
-WAN_RADIO_MAC=dc:a6:32:87:63:a1    # built-in (brcmfmac, dual-band) -> WAN client
+AP_RADIO_MAC=dc:a6:32:87:63:a1
+WAN_RADIO_MAC=00:1f:05:6c:51:bc
 
-AP_IF=$(/usr/local/sbin/pigpulse-wlan-iface "$AP_RADIO_MAC") || AP_IF=""
-WAN_IF=$(/usr/local/sbin/pigpulse-wlan-iface "$WAN_RADIO_MAC" || true)
-if [ -z "$WAN_IF" ]; then
-  # No WAN radio present (the USB dongle has failed). Report the truth instead
-  # of leaving a stale status file claiming a connection that is not there.
-  mkdir -p /run/pigpulse
-  printf 'STATE=DOWN band=none ip=none gw=none freq=0 want_freq=%s ch=0 want_bssid=%s assoc=none wan=none\n' \
-    "$(head -1 /etc/pigpulse/wan-sta.freq 2>/dev/null || echo 0)" \
-    "$(head -1 /etc/pigpulse/wan-sta.bssid 2>/dev/null || echo none)" \
-    > /run/pigpulse/wan-sta.status
-  chmod 644 /run/pigpulse/wan-sta.status 2>/dev/null || true
-  echo "no WAN radio present (USB dongle missing) - internet must come from eth1"
-  exit 0
-fi
+AP_IF=$(/usr/local/sbin/pigpulse-wlan-iface "$AP_RADIO_MAC") || { echo "radio resolver failed for AP radio $AP_RADIO_MAC" >&2; exit 1; }
+[ -n "$AP_IF" ] || { echo "radio resolver returned no interface for AP radio $AP_RADIO_MAC" >&2; exit 1; }
+WAN_IF=$(/usr/local/sbin/pigpulse-wlan-iface "$WAN_RADIO_MAC") || { echo "radio resolver failed for WAN radio $WAN_RADIO_MAC" >&2; exit 1; }
+[ -n "$WAN_IF" ] || { echo "radio resolver returned no interface for WAN radio $WAN_RADIO_MAC" >&2; exit 1; }
 PID="/run/wpa_supplicant-$WAN_IF.pid"
 
 # Never point the uplink at our own AP.
-if [ -n "$AP_IF" ]; then
-  AP_MAC=$(cat "/sys/class/net/$AP_IF/address" 2>/dev/null | tr 'A-Z' 'a-z')
-  if [ -n "$AP_MAC" ] && grep -qi "bssid=$AP_MAC" "$CONF" 2>/dev/null; then
-    echo "refusing: upstream BSSID is our own AP ($AP_MAC)"
-    exit 1
-  fi
+AP_MAC=$(cat "/sys/class/net/$AP_IF/address" 2>/dev/null | tr 'A-Z' 'a-z')
+if [ -n "$AP_MAC" ] && grep -qi "bssid=$AP_MAC" "$CONF" 2>/dev/null; then
+  echo "refusing: upstream BSSID is our own AP ($AP_MAC)"
+  exit 1
 fi
 
 # The WAN radio can wedge in SCANNING and a plain `iw scan`

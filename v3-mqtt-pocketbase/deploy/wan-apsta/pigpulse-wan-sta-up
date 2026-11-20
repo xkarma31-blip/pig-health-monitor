@@ -63,12 +63,12 @@ case "${1:-}" in
   *) echo "usage: $0 [--plan|--discover]" >&2; exit 2 ;;
 esac
 
-WAN_RADIO_MAC=dc:a6:32:87:63:a1
-AP_RADIO_MAC=00:1f:05:6c:51:bc
-STA=$(/usr/local/sbin/pigpulse-wlan-iface "$WAN_RADIO_MAC" 2>/dev/null || true)
-AP=$(/usr/local/sbin/pigpulse-wlan-iface "$AP_RADIO_MAC" 2>/dev/null || true)
-STA=${STA:-wlan0}
-AP=${AP:-wlan1}
+WAN_RADIO_MAC=00:1f:05:6c:51:bc
+AP_RADIO_MAC=dc:a6:32:87:63:a1
+STA=$(/usr/local/sbin/pigpulse-wlan-iface "$WAN_RADIO_MAC") || { echo "radio resolver failed for WAN radio $WAN_RADIO_MAC" >&2; exit 1; }
+[ -n "$STA" ] || { echo "radio resolver returned no interface for WAN radio $WAN_RADIO_MAC" >&2; exit 1; }
+AP=$(/usr/local/sbin/pigpulse-wlan-iface "$AP_RADIO_MAC") || { echo "radio resolver failed for AP radio $AP_RADIO_MAC" >&2; exit 1; }
+[ -n "$AP" ] || { echo "radio resolver returned no interface for AP radio $AP_RADIO_MAC" >&2; exit 1; }
 IW=$(command -v iw || echo /usr/sbin/iw)
 WPACLI=$(command -v wpa_cli || echo /sbin/wpa_cli)
 CONF=/etc/wpa_supplicant/wpa-pigpulse-uplink.conf
