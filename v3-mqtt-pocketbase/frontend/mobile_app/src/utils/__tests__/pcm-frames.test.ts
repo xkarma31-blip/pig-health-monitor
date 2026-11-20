@@ -55,9 +55,13 @@ interface TsApi {
 
 declare const __dirname: string;
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const fs = require('node:fs') as unknown as NodeFs;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const path = require('node:path') as unknown as NodePath;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const vm = require('node:vm') as unknown as NodeVm;
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const createRequire = (require('node:module') as unknown as NodeModuleApi).createRequire;
 
 const UTILS = path.resolve(__dirname, '..');

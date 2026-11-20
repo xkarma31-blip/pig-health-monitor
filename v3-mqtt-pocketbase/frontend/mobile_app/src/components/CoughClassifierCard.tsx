@@ -97,12 +97,13 @@ export default function CoughClassifierCard() {
 
   useEffect(() => {
     let alive = true;
-    void refresh();
+    const first = setTimeout(() => { if (alive) void refresh(); }, 0);
     const timer = setInterval(() => {
       if (alive) void refresh();
     }, 30_000);
     return () => {
       alive = false;
+      clearTimeout(first);
       clearInterval(timer);
     };
   }, [refresh]);

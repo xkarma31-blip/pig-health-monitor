@@ -23,7 +23,6 @@ import {
   AGING_MS,
   FUTURE_TOLERANCE_MS,
   LEGACY_WATCH_C,
-  LEGACY_ALERT_C,
   frameTime,
   sourceScope,
   cacheKeyFor,

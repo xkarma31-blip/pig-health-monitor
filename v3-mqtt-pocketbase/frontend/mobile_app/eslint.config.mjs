@@ -22,7 +22,11 @@ export default [
     // etc. are real globals rather than the browser's.
     files: ['**/*.js', '**/*.mjs', '**/*.cjs'],
     languageOptions: { globals: nodeGlobals },
-    rules: { 'no-undef': 'off' },
+    rules: {
+      'no-undef': 'off',
+      // CommonJS config plugins and .cjs tests use require() legitimately.
+      '@typescript-eslint/no-require-imports': 'off',
+    },
   },
   {
     files: ['**/*.{ts,tsx}'],
