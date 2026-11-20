@@ -52,9 +52,9 @@ limitation, not a refutation.
 | 7 | No firmware/NVS path can hold STA off across boot | **SUPPORTED (source)** | `[F]:433,454`; framework `_persistent=true` / `WIFI_STORAGE_FLASH`; no `WiFi.persistent(false)`. |
 | 8 | `esp_uptime_s`, `esp_bytes`, `esp_chunks`, `esp_accepted` are **ingest-side**, not board-liveness | **SUPPORTED** | `[L]` `/esp/status` counters belong to `esp_audio_ingest`; `[S]` ingest accepts. |
 | 9 | Duplicate JSON `txp` keys: final `txp=78` = 19.5 dBm; earlier value ignored | **SUPPORTED** | `[F]:979,983,999`; `78/4=19.5` per `[F]:471-473`; `[N2]` records live `txp:78`. The earlier `txp` value is the `txPartialWrites` counter, so the duplicate key masks the partial-write count entirely — a firmware-key cleanup item. |
-| 10 | Two `:9090` evictions came from an **ad hoc** OpenCode/SSH `curl`, not a persisted client | **SUPPORTED** | `[D]`: loopback connects at epoch 1795005637/8 (12:40:37/8 UTC) occur 0.4 s after the SSH session started; the investigating agent concluded this at 16:59–17:06 UTC. Only two occurrences in the whole journal. **No cron, timer, portal, health-check or daemon connects to `:9090`.** |
+| 10 | Two `:9090` evictions came from an **ad hoc** OpenCode/SSH `curl`, not a persisted client | **SUPPORTED** | `[D]`: loopback connects at epoch 1795005637/8 (12:40:37/8 UTC) occur 0.4 s after the SSH session started; the investigating agent concluded this at 16:59–17:06 UTC. Only two occurrences in the whole journal. **No cron, timer, portal, health-check or daemon connects to `:9090`.** **Source-confirmed:** the former INMP441/Pi-GPIO microphone path is decommissioned (`CANON.md:781,785,819-822`); the ESP32-S3 barn mic `s3-mic-01` is the only mic, and TCP `:9090` keeps exactly one active client, closing the prior socket when a second stream connects (`backend/thermal-pi/esp_audio_ingest.py:313-324`; `backend/thermal-pi/ambient_ingest.py:4-9`). **The monitor must never connect to `:9090`.** |
 | 11 | `local_bridge.py:331` stamps arrival time without filtering `msg.retain` → retained will looks fresh | **SUPPORTED** | `backend/bridge/local_bridge.py:307-310,331`; `[N1]`. |
-| 12 | The final PCM ended ~14:33:16 UTC; the later 16:45–16:46 UTC radio/broker failure came **afterwards** | **SUPPORTED as two events** | `[L]` journal: `[esp-audio] ESP connected` 22:33:02 +08 (=14:33:02 UTC), `no audio for 90s` 22:34:46 +08 (=14:34:46 UTC); `~14:33:16` is the watchdog-window derivation `14:34:46 − 90 s`. `[N2]` records an alert stamped 00:46:16 +08 (=16:46:16 UTC) with 100% ping loss and ARP INCOMPLETE; that is an **alert timestamp, not a measured death instant**. The death instant itself is uncaptured. Do not collapse the two incidents. |
+| 12 | The final PCM ended ~14:33:16 UTC; the later 16:45–16:46 UTC radio/network failure (100% ping loss, ARP INCOMPLETE) came afterwards | **SUPPORTED as two events** | `[L]` journal: `[esp-audio] ESP connected` 22:33:02 +08 (=14:33:02 UTC), `no audio for 90s` 22:34:46 +08 (=14:34:46 UTC); `~14:33:16` is the watchdog-window derivation `14:34:46 − 90 s`. `[N2]` records an alert stamped 00:46:16 +08 (=16:46:16 UTC) with 100% ping loss and ARP INCOMPLETE; that is an **alert timestamp, not a measured death instant**. The death instant itself is uncaptured. Do not collapse the two incidents. |
 | 13 | Three Nov 17 zero rows at `09:42:07.109Z`, `09:44:42.274Z`, `09:51:53.691Z` | **UNRESOLVED** | Explicitly unresolved in this record; they are not attributed to `[N1]` and are not claimed to be caused by the retained-LWT mechanism until their trigger is evidenced. `[S]` has no rows at those exact epochs; nearest zero-block rows are `09:42:32.314Z`, `09:44:42.316Z`, `09:51:52.324Z` (see §5). |
 | 14 | Mic is online now | **MEASURED 2026-11-19** | `[L]`: `connected:true`, `peer:192.168.69.15:51420`, `nonzeroPct:99.7`, ARP `.15 REACHABLE`, DHCP lease renewed. |
 
@@ -121,13 +121,13 @@ unsupported and is **withdrawn**.
 - `[N2]` records an alert stamped **00:46:16 +08 = 16:46:16 UTC** with 100% ping
   loss and ARP INCOMPLETE. This is an **alert timestamp, not a measured death
   instant**; the death instant itself is uncaptured.
-- Boots arithmetic: `boots:2` is the revival POWERON at approximately
-  **23:41:46 UTC** (`rr:1`, streaming resumed), and `boots:3` is the 18c OTA SW
-  reset at approximately **23:44:57 UTC**. The **daytime streaming session**
-  lasted approximately three hours; the broker session was unbroken from
-  13:45:29 through at least 16:35:02 UTC (§3.2). **Inferred:** no board boot
-  occurred during 16:46–23:41 UTC, from the boots arithmetic plus `[N2]`'s
-  handoff-reported "app never executed" statement.
+- **Handoff-reported boots arithmetic [N2]:** `boots:2` is the revival POWERON
+  at approximately **23:41:46 UTC [N2]** (`rr:1`, streaming resumed), and
+  `boots:3` is the 18c OTA SW reset at approximately **23:44:57 UTC**. The
+  **measured broker session** lasted approximately three hours:
+  **13:45:29–16:35:02 UTC**, unbroken within supplied coverage (§3.2, `[E4]`).
+  **Inferred:** no board boot occurred during 16:46–23:41 UTC, from the boots
+  arithmetic plus `[N2]`'s handoff-reported "app never executed" statement.
 - The earlier "`boots:2` ≈ 14:30 UTC charger move, streamed ~2 h" reading is
   **withdrawn**. Charger-transfer timing and mechanism remain unresolved. The
   blue-LED/power-path account is `[N2]`-reported inference, not a device readout.
@@ -229,9 +229,11 @@ observed retention/supersession sequence cannot be re-derived from that log set.
   byte-identical for 1,911 samples through 19:51:42.730Z.
 - At 14:33:02.514Z, `amb_state='sht-missing'` with cached `amb_temp_c=32.66`,
   `amb_rh=69.33`, `amb_age_s=0.7` — a cached ambient value, not a fresh reading.
-- At **16:46:52.608Z**, a *different* event: `amb_state_change sht-missing→esp-offline`
-  as `amb_age_s` climbed to 85.0. No ESP reconnect accompanies it. This confirms
-  §3.3: the 14:33 audio stop and the 16:46 state change are separate.
+- At **16:46:52.608Z**, a *different* event: `amb_state_change sht-missing→esp-offline`.
+  The `amb_age_s=85.0` was the **last recorded value from the approximately
+  14:34 UTC trail end**, not an observed live climb at the reported death event.
+  No ESP reconnect accompanies it. This confirms §3.3: the 14:33 audio stop and
+  the 16:46 state change are separate.
 - `esp_uptime_s` rose 17,516 → 36,616 s while `esp_conn=0` and all three counters were
   frozen — in lockstep with the 10 s sampling clock. `esp_last_ms` grew from 6,023 ms
   to 19,106,238 ms. Both are collector-side ages, not board self-reports (#8).
@@ -285,9 +287,17 @@ fmt: rate=48000 encoding=s16le endian=little channels=1 bytes_per_frame=2 bytes_
   `rr=3` (SW reset, the OTA reboot), `prr=1` (previous reset = POWERON), `br=0`
   (no brownout flag).
 - **TX power is 19.5 dBm** — `txp=78`, and `78/4 = 19.5`.
-- **The SHT45 is healthy right now** — repeated `CRC=OK`, `temperature≈31–33 °C`,
-  `humidity≈70–77 %`, `irf=0`, `irr=0`. The Nov-18 wedge does not reproduce in
-  this readout and remains unproven.
+- **Measured now (`[SER]`, `[MQ]`):** the SHT45 reports repeated `CRC=OK`,
+  `temperature≈31–33 °C`, and `humidity≈70–77 %`. **Source-defined (`[F]`,
+  canonical 18c source):** its SHT45/I²C diagnostics are `srf`/`sage` (failed
+  reads / age of the last good reading) and `sfs`/`sfc`/`sfw`/`sle` (failure
+  kinds / last I²C error), with `sdt`/`slr` (measurement delay / last CRC byte);
+  the `[MQ]` excerpt does not report their values. **Inferred:** the SHT45 is
+  healthy now; the Nov-18 wedge does not reproduce in this readout and remains
+  unproven.
+- **Measured now (`[MQ]`):** no I²S read failures or retries are recorded
+  (`irf=0`, `irr=0`); `[F]:975-976` source-defines these as I²S microphone
+  read-failure/retry counters, not SHT45/I²C counters.
 - **Audio is real, not zeros** — serial RMS `27k–78k`, peak `78k–162k`,
   `−40.6 to −49.7 dBFS`, `dc=-27`, `clip=0`.
 - **RSSI is −46 dBm** — measured current RSSI, stronger than the
@@ -303,6 +313,8 @@ fmt: rate=48000 encoding=s16le endian=little channels=1 bytes_per_frame=2 bytes_
 
 - Evidence was gathered in fallback order: **PigPulse hotspot → Pi venue LAN →
   Tailscale → offline**.
+- **Evidence hierarchy (record policy):** live MQTT broker traffic is decisive;
+  AP association/DHCP and router-side reads are corroborating only.
 - **No ESP serial/readout from the incident window itself** (Nov 17–18): no NVS dump,
   no `[sht45]`/`[wifi]` lines, no backtrace from 14:33 or 16:46. The only `Saved PC`
   is from a 2026-10-19 capture. **Current** serial and retained telemetry were read on
