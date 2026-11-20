@@ -1,0 +1,64 @@
+name: Build Android APK (no EAS quota)
+
+# Free APK build on GitHub-hosted runners. The Expo project is prebuilt here
+# (android/ is generated, not committed), so this does not consume the EAS
+# Free-plan Android build quota. The APK is debug-signed by Expo's template
+# for internal distribution.
+#
+# Trigger manually from the Actions tab, or push this file.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [capstone-remediation-20261113]
+    paths:
+      - '.github/workflows/build-apk.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: v3-mqtt-pocketbase/frontend/mobile_app
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: v3-mqtt-pocketbase/frontend/mobile_app/package-lock.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Expo prebuild (android)
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Build release APK
+        working-directory: v3-mqtt-pocketbase/frontend/mobile_app/android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: pigpulse-preview-apk
+          path: v3-mqtt-pocketbase/frontend/mobile_app/android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
