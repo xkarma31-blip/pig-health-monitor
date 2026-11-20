@@ -21,6 +21,7 @@ class StatusTests(unittest.TestCase):
 
         with patch.object(portal, "run", side_effect=run), \
              patch.object(portal, "read", return_value="UP ip=192.168.254.194"), \
+             patch.object(portal, "wan_iface", return_value="wan0"), \
              patch.object(portal, "internet_up", return_value=False), \
              patch.object(portal, "ap_info", return_value={}):
             return portal.status()
@@ -50,9 +51,9 @@ class StatusTests(unittest.TestCase):
                                      "inet 192.168.254.194/24")
         self.assertEqual(result["remote"], "http://100.69.139.63:8090")
 
-    def test_radio_roles_match_dual_band_wan_and_dongle_ap(self):
-        self.assertEqual(portal.WAN_RADIO_MAC, "dc:a6:32:87:63:a1")
-        self.assertEqual(portal.AP_RADIO_MAC, "00:1f:05:6c:51:bc")
+    def test_radio_roles_match_measured_ap_and_managed_radios(self):
+        self.assertEqual(portal.WAN_RADIO_MAC, "00:1f:05:6c:51:bc")
+        self.assertEqual(portal.AP_RADIO_MAC, "dc:a6:32:87:63:a1")
 
     def test_scan_uses_absolute_iw_path(self):
         source = Path(portal.__file__).read_text()
@@ -60,17 +61,113 @@ class StatusTests(unittest.TestCase):
 
     def test_portal_connect_resolves_wan_interface_by_mac(self):
         source = Path(__file__).with_name("pigpulse-portal-connect").read_text()
+        self.assertIn("WAN_RADIO_MAC=00:1f:05:6c:51:bc", source)
+        self.assertIn("AP_RADIO_MAC=dc:a6:32:87:63:a1", source)
         self.assertIn("WAN_IF=", source)
+        self.assertNotIn("WAN_IF=${WAN_IF:-wlan0}", source)
+        self.assertNotIn("AP_IF=${AP_IF:-wlan1}", source)
         self.assertNotIn("wlan0sta", source)
 
     def test_wan_sta_up_resolves_both_radios_by_mac(self):
         source = Path(__file__).parents[2].joinpath(
             "deploy/wan-apsta/pigpulse-wan-sta-up").read_text()
-        self.assertIn("WAN_RADIO_MAC=dc:a6:32:87:63:a1", source)
-        self.assertIn("AP_RADIO_MAC=00:1f:05:6c:51:bc", source)
+        self.assertIn("WAN_RADIO_MAC=00:1f:05:6c:51:bc", source)
+        self.assertIn("AP_RADIO_MAC=dc:a6:32:87:63:a1", source)
+        self.assertNotIn("STA=${STA:-wlan0}", source)
+        self.assertNotIn("AP=${AP:-wlan1}", source)
         self.assertNotIn("STA=wlan0sta", source)
         self.assertNotIn("AP=wlan0", source)
         self.assertNotIn("render_ap_conf \"$PCH\"", source)
+
+    def test_all_shell_radio_consumers_use_measured_role_mapping(self):
+        consumers = {
+            "pigpulse-portal-connect": {
+                "WAN_RADIO_MAC": "00:1f:05:6c:51:bc",
+                "AP_RADIO_MAC": "dc:a6:32:87:63:a1",
+            },
+            "pigpulse-ap-resolve": {
+                "AP_RADIO_MAC": "dc:a6:32:87:63:a1",
+            },
+            "pigpulse-ap-static-ip": {
+                "AP_RADIO_MAC": "dc:a6:32:87:63:a1",
+            },
+            "pigpulse-uplink-apply": {
+                "WAN_RADIO_MAC": "00:1f:05:6c:51:bc",
+                "AP_RADIO_MAC": "dc:a6:32:87:63:a1",
+            },
+            "pigpulse-wan-sta-up": {
+                "WAN_RADIO_MAC": "00:1f:05:6c:51:bc",
+                "AP_RADIO_MAC": "dc:a6:32:87:63:a1",
+            },
+        }
+        for name, roles in consumers.items():
+            source = (Path(__file__).with_name(name) if name != "pigpulse-wan-sta-up"
+                      else Path(__file__).parents[2].joinpath(
+                          "deploy/wan-apsta", name)).read_text()
+            with self.subTest(consumer=name):
+                for role, mac in roles.items():
+                    self.assertIn(f"{role}={mac}", source)
+
+    def test_shell_resolver_failures_are_visible_and_non_zero(self):
+        consumers = {
+            "pigpulse-portal-connect": 2,
+            "pigpulse-ap-resolve": 1,
+            "pigpulse-ap-static-ip": 1,
+            "pigpulse-uplink-apply": 2,
+            "pigpulse-wan-sta-up": 2,
+        }
+        strict_call = re.compile(
+            r'/usr/local/sbin/pigpulse-wlan-iface\s+"\$\{?[A-Z_]+\}?"\)'
+            r'\s*\|\|\s*\{[^\n}]*exit 1;'
+        )
+        fallback = re.compile(
+            r'(?m)^\s*(?:IFACE|WAN_IF|AP_IF|STA|AP)\s*=\s*'
+            r'(?:\$\{[^}]*:-\s*)?wlan[01]\b'
+        )
+        for name, expected_calls in consumers.items():
+            source = (Path(__file__).with_name(name) if name != "pigpulse-wan-sta-up"
+                      else Path(__file__).parents[2].joinpath(
+                          "deploy/wan-apsta", name)).read_text()
+            source_lines = source.splitlines()
+            resolver_indexes = [
+                index for index, line in enumerate(source_lines)
+                if "pigpulse-wlan-iface" in line
+            ]
+            with self.subTest(consumer=name):
+                self.assertEqual(len(strict_call.findall(source)), expected_calls)
+                self.assertTrue(resolver_indexes)
+                for index in resolver_indexes:
+                    resolver_line = source_lines[index]
+                    self.assertNotIn("2>/dev/null", resolver_line)
+                    match = re.match(r"^\s*([A-Z_]+)=", resolver_line)
+                    self.assertIsNotNone(match)
+                    variable = match.group(1)
+                    self.assertIn(index + 1, range(len(source_lines)))
+                    guard = source_lines[index + 1]
+                    self.assertIn(f'[ -n "${variable}" ]', guard)
+                    self.assertIn("exit 1", guard)
+                self.assertIsNone(fallback.search(source))
+
+    def test_portal_uses_authoritative_interface_resolver(self):
+        source = Path(portal.__file__).read_text()
+        code = "\n".join(line for line in source.splitlines()
+                         if not line.lstrip().startswith("#"))
+        self.assertIn('"/usr/local/sbin/pigpulse-wlan-iface"', code)
+        self.assertNotIn('"/sys/class/net"', code)
+        self.assertIsNone(re.search(r'["\']wlan[01]["\']', code))
+
+    def test_portal_resolver_failure_never_selects_an_interface(self):
+        failed = subprocess.CompletedProcess(
+            ["/usr/local/sbin/pigpulse-wlan-iface", "00:1f:05:6c:51:bc"],
+            1, stdout="", stderr="radio not found\n",
+        )
+        with patch.object(portal.subprocess, "run", return_value=failed) as resolver:
+            self.assertIsNone(portal._iface_for_mac("00:1f:05:6c:51:bc"))
+        resolver.assert_called_once()
+        self.assertEqual(
+            resolver.call_args.args[0],
+            ["/usr/local/sbin/pigpulse-wlan-iface", "00:1f:05:6c:51:bc"],
+        )
 
 
 class WorkerTests(unittest.TestCase):
