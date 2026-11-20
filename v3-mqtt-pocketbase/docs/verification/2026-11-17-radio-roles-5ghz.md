@@ -1,6 +1,16 @@
 # Radio role correction and 5 GHz scan verification — 2026-11-17
 
-**Status:** applied live, reversible, measured.
+**Status:** historical record; applied live, reversible, measured on 2026-11-17.
+
+> **Historical topology only.** The interface names and radio-role assignment
+> recorded below describe the Pi state measured on 2026-11-17. A later device
+> readout (2026-11-20) measured the AP/client radio MAC as
+> `dc:a6:32:87:63:a1` and the managed/WAN radio MAC as
+> `00:1f:05:6c:51:bc`; the radio may still resolve to `wlan0` or `wlan1`, and
+> the managed radio may still be `DOWN`. Current consumers therefore resolve
+> the measured roles by MAC through `/usr/local/sbin/pigpulse-wlan-iface` and
+> never infer identity from an interface name or link state. The measurements
+> below are retained unchanged as evidence of what was true on 2026-11-17.
 
 ---
 
