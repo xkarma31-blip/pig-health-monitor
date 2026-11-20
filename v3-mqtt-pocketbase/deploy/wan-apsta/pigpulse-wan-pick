@@ -8,9 +8,9 @@
 #   5G <bssid> <freq> <signal>   the SSID is visible only on 5 GHz
 #   NONE                         the SSID is not visible at all
 #
-# With split radios the built-in dual-band radio is the WAN client and the
-# 2.4 GHz dongle keeps hosting the barn AP. Therefore 5 GHz is preferred when
-# both bands are visible; 2.4 GHz remains the fallback.
+# With split radios, the managed/WAN radio prefers 5 GHz while the separate AP
+# radio remains on 2.4 GHz. Therefore 5 GHz is preferred when both bands are
+# visible; 2.4 GHz remains the fallback.
 #
 # A preferred BSSID gets a large bonus so a known-good access point keeps being
 # chosen over a marginally stronger one, while still ranking inside its band.

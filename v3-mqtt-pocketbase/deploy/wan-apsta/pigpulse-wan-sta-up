@@ -45,9 +45,10 @@
 #   configuration found for the current AP").
 #
 # Band policy (split radios):
-#   The built-in dual-band radio is the WAN client. Prefer 5 GHz when offered,
-#   fall back to 2.4 GHz. The USB dongle keeps hosting the AP on 2.4 GHz, so
-#   the ESP32-S3 mic and Tapo camera remain visible in either case.
+#   Roles are resolved by measured MAC, not by built-in/USB labels. The managed/
+#   WAN radio (00:1f:05:6c:51:bc) prefers 5 GHz when offered and falls back to
+#   2.4 GHz. The AP radio (dc:a6:32:87:63:a1) stays on 2.4 GHz, so the ESP32-S3
+#   mic and Tapo camera remain visible regardless of the uplink band.
 #
 # FAIL-SAFE RULE: the AP beats the WAN. Every failure in `connect` leaves the
 # AP running exactly where `--plan` put it, terminates only the station side,

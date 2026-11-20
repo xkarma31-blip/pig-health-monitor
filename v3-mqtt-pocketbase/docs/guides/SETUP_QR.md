@@ -12,7 +12,7 @@ SVG version: `../assets/setup-wifi-qr.svg`.
 
 - The QR encodes the local Pi address only — no password, no cloud URL.
 - If the phone is on another network, join **PigPulse** first.
-- The page lists 2.4 GHz and 5 GHz networks scanned by the Pi's built-in dual-band radio; the USB dongle keeps hosting the barn AP.
+- The setup page scans for 2.4 GHz and 5 GHz networks with the MAC-resolved managed/WAN radio when available. If no managed interface resolves, it briefly stops the AP radio to scan and then restores it; the barn AP normally remains on 2.4 GHz.
 - After connecting, the page offers Skip / continue locally and a download link for the app stored on the Pi.
 
 Regenerate with:
