@@ -10,7 +10,8 @@ asserts the things that are easy to get quietly wrong:
 
   A. every page and API endpoint answers
   B. traversal and non-allowlisted paths are refused with 404
-  C. dev mode starts NO I2C loop, NO :9090 listener, NO MQTT publisher
+  C. dev mode starts NO I2C loop and opens NO new physical listener
+     (including :9090); listener checks are passive and never connect
   D. NO datum is tagged `live` in dev mode -- that would mean the console
      invented or mislabelled hardware state
   E. the known credential literal never appears in a served source response
@@ -23,15 +24,26 @@ Exit code 0 only if every check passes.
 from __future__ import annotations
 
 import argparse
+import ast
 import hashlib
 import json
-import socket
+import os
 import subprocess
 import sys
 import time
 import urllib.error
 import urllib.request
 from pathlib import Path
+from urllib.parse import quote
+
+try:
+    from scripts.mic_port_guard import MIC_PORT, active_mic_connection_lines
+except ModuleNotFoundError as exc:
+    if exc.name != "scripts.mic_port_guard":
+        raise
+    # Direct execution puts scripts/ on sys.path instead of its parent.
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from mic_port_guard import MIC_PORT, active_mic_connection_lines
 
 HERE = Path(__file__).resolve().parent
 APP = HERE.parent
@@ -77,53 +89,161 @@ def code_of(path: str) -> int:
         return 0
 
 
-def port_open(port: int, host: str = "127.0.0.1") -> bool:
-    with socket.socket() as s:
-        s.settimeout(1.0)
-        return s.connect_ex((host, port)) == 0
-
-
-def listening_ports() -> set[int]:
-    """Every TCP port currently in LISTEN, via /proc (no external tools)."""
-    ports: set[int] = set()
+def _tcp_rows() -> list[tuple[int, int, str, int]]:
+    """Return (local port, remote port, state, inode) from /proc TCP tables."""
+    rows: list[tuple[int, int, str, int]] = []
     for name in ("/proc/net/tcp", "/proc/net/tcp6"):
         try:
             lines = Path(name).read_text().splitlines()[1:]
         except OSError:
             continue
-        for ln in lines:
-            f = ln.split()
-            if len(f) > 3 and f[3] == "0A":       # 0A = TCP_LISTEN
+        for line in lines:
+            fields = line.split()
+            if len(fields) < 10:
+                continue
+            try:
+                local_port = int(fields[1].rsplit(":", 1)[1], 16)
+                remote_port = int(fields[2].rsplit(":", 1)[1], 16)
+                inode = int(fields[9])
+            except (ValueError, IndexError):
+                continue
+            rows.append((local_port, remote_port, fields[3], inode))
+    return rows
+
+
+def _descendant_pids(root_pid: int) -> set[int]:
+    """Return root_pid plus live descendants, using /proc PPid values."""
+    parents: dict[int, int] = {}
+    for proc in Path("/proc").iterdir():
+        if not proc.name.isdigit():
+            continue
+        try:
+            status = (proc / "status").read_text()
+        except OSError:
+            continue
+        for line in status.splitlines():
+            if line.startswith("PPid:"):
                 try:
-                    ports.add(int(f[1].split(":")[1], 16))
+                    parents[int(proc.name)] = int(line.split()[1])
                 except (ValueError, IndexError):
                     pass
-    return ports
+                break
+    pids = {root_pid}
+    pending = [root_pid]
+    while pending:
+        parent = pending.pop()
+        for pid, ppid in parents.items():
+            if ppid == parent and pid not in pids:
+                pids.add(pid)
+                pending.append(pid)
+    return pids
 
 
-def literal_is_only_in_comments(text: str, literal: str) -> bool:
-    """True if every occurrence of `literal` sits on a comment line.
+def _socket_inodes(pids: set[int]) -> set[int]:
+    """Return socket inodes owned by the given process tree."""
+    inodes: set[int] = set()
+    for pid in pids:
+        fd_dir = Path(f"/proc/{pid}/fd")
+        try:
+            fds = list(fd_dir.iterdir())
+        except OSError:
+            continue
+        for fd in fds:
+            try:
+                target = os.readlink(fd)
+            except OSError:
+                continue
+            if target.startswith("socket:[") and target.endswith("]"):
+                try:
+                    inodes.add(int(target[8:-1]))
+                except ValueError:
+                    pass
+    return inodes
 
-    Distinguishes a live credential from a maintainer warning. `local_bridge.py`
-    says "admin123 shipped in this file for months" as a comment explaining
-    the purge — that is history, not a secret, and masking it would destroy
-    the warning. A literal in executable position IS a leak.
+
+def child_listening_ports(pid: int) -> set[int]:
+    """Return listening ports attributable to a child and its descendants."""
+    inodes = _socket_inodes(_descendant_pids(pid))
+    return {
+        local_port
+        for local_port, _remote_port, state, inode in _tcp_rows()
+        if state == "0A" and inode in inodes
+    }
+
+
+def child_outbound_mic_connections(pid: int) -> list[tuple[int, int, str, int]]:
+    """Return sampled outbound :9090 rows attributable to a child process tree."""
+    inodes = _socket_inodes(_descendant_pids(pid))
+    return [
+        row
+        for row in _tcp_rows()
+        if row[1] == MIC_PORT and row[3] in inodes
+    ]
+
+
+def literal_leak_lines(source: str, literal: str) -> list[int]:
+    """Return executable string-literal lines containing ``literal``.
+
+    Comments and module/class/function docstrings are evidence, not live
+    credentials, so they are deliberately ignored.
     """
-    for line in text.splitlines():
-        if literal not in line:
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return []
+
+    docstring_ranges: list[tuple[int, int]] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.Module, ast.ClassDef, ast.FunctionDef,
+                                 ast.AsyncFunctionDef)) or not node.body:
             continue
-        stripped = line.lstrip()
-        if stripped.startswith("#"):
-            continue                      # whole-line comment
-        if stripped.startswith(('"""', "'''")) or stripped.startswith(("r\"\"\"", "r'''")):
-            continue                      # docstring line
-        # Trailing comment: everything after an unquoted '#' is prose. Only
-        # accept it when the literal sits after that marker.
-        hash_at = line.find("#")
-        if hash_at != -1 and line.index(literal) > hash_at:
+        first = node.body[0]
+        if (isinstance(first, ast.Expr) and isinstance(first.value, ast.Constant)
+                and isinstance(first.value.value, str)):
+            docstring_ranges.append((first.value.lineno, first.value.end_lineno or
+                                     first.value.lineno))
+
+    quoted = len(literal) >= 2 and literal[0] == literal[-1] and literal[0] in "\"'"
+    needle = literal[1:-1] if quoted else literal
+    leaks: set[int] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
             continue
+        if any(start <= node.lineno <= end for start, end in docstring_ranges):
+            continue
+        leaked = node.value == needle if quoted else needle in node.value
+        if leaked:
+            leaks.add(node.lineno)
+    return sorted(leaks)
+
+
+def source_response_is_valid(payload: object, path: str) -> bool:
+    """True only for a successful, correctly addressed Python source envelope."""
+    if not isinstance(payload, dict) or "error" in payload:
         return False
-    return True
+    source = payload.get("source")
+    if (payload.get("path") != path or not isinstance(source, str)
+            or not source.strip()):
+        return False
+    try:
+        tree = ast.parse(source)
+    except (SyntaxError, ValueError):
+        return False
+    meaningful = [
+        node for node in tree.body
+        if not (
+            isinstance(node, ast.Expr)
+            and isinstance(node.value, ast.Constant)
+            and isinstance(node.value.value, str)
+        )
+        and not (isinstance(node, ast.Pass))
+        and not (
+            isinstance(node, ast.Expr)
+            and isinstance(node.value, ast.Constant)
+            and node.value.value is Ellipsis
+        )
+    ]
+    return bool(meaningful)
 
 
 def walk_tags(obj, out: list[str]) -> None:
@@ -143,6 +263,25 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dev-source", default="/media/solrahk/rootfs")
     args = ap.parse_args()
+
+    # Static preflight is the primary safety layer.  The runtime /proc sample
+    # below is supplementary: a short-lived socket can close before it is
+    # observed, while the source guard remains deterministic.
+    try:
+        self_source = Path(__file__).read_text(encoding="utf-8")
+        child_source = (APP / "web_server.py").read_text(encoding="utf-8")
+        self_hits = active_mic_connection_lines(self_source)
+        child_hits = active_mic_connection_lines(child_source)
+    except (OSError, SyntaxError, ValueError) as exc:
+        print(f"mic-port guard preflight failed: {exc}")
+        return 2
+    if not check("verifier source has no active :9090 path", not self_hits,
+                 f"lines: {self_hits or 'none'}"):
+        return 2
+    if not check("child source has no active :9090 path", not child_hits,
+                 f"lines: {child_hits or 'none'}"):
+        return 2
+
     root = Path(args.dev_source)
     if not root.is_dir():
         print(f"dev source not mounted: {root}")
@@ -159,8 +298,6 @@ def main() -> int:
         st = db.stat()
         return (h, st.st_mtime_ns, st.st_size)
     before = fingerprint()
-    before_ports = listening_ports()
-    print(f"  (pre-existing listeners on this host: {sorted(before_ports)})\n")
 
     srv = subprocess.Popen(
         [sys.executable, "-u", "web_server.py", "--dev-source", str(root),
@@ -168,14 +305,16 @@ def main() -> int:
         cwd=APP, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
     )
     try:
+        ready = False
         for _ in range(60):
-            if port_open(PORT):
+            if PORT in child_listening_ports(srv.pid):
+                ready = True
                 break
             if srv.poll() is not None:
                 print("server exited early:\n" + (srv.stdout.read() if srv.stdout else ""))
                 return 2
             time.sleep(0.25)
-        if not port_open(PORT):
+        if not ready:
             print("server never bound :8085")
             return 2
         time.sleep(0.5)
@@ -192,19 +331,16 @@ def main() -> int:
             check(f"refused {p}", c == 404, f"HTTP {c}")
 
         print("\nC. dev mode starts nothing physical")
-        check("no ESP listener on :9090", not port_open(9090))
-        # Do NOT assert "port 8080 is free": on this laptop :8080 is held by
-        # docker-proxy regardless of anything the console does. The honest
-        # question is whether the dev server opened any listener AT ALL
-        # beyond the one port it was told to bind, so compare the full
-        # listening set captured before launch against the set now.
-        now_ports = listening_ports()
-        new_ports = sorted(now_ports - before_ports)
-        check("no new listener opened beyond the requested port",
-              set(new_ports) <= {PORT}, f"new: {new_ports or 'none'}")
+        # Do NOT connect to :9090 to test it. The ESP32-S3 PCM path accepts
+        # one client, so even a harmless probe can evict the live audio
+        # consumer. Attribute passive /proc listener rows to this child tree.
+        child_ports = child_listening_ports(srv.pid)
+        check("no listener on :9090 from verifier child (passive, attributable)",
+              MIC_PORT not in child_ports, f"child listeners: {sorted(child_ports)}")
+        check("child opened no listener beyond the requested port",
+              child_ports <= {PORT}, f"child listeners: {sorted(child_ports)}")
         check("only :8085 is bound by this process",
-              PORT in now_ports and now_ports - before_ports == {PORT},
-              f"listening: {sorted(now_ports)}")
+              child_ports == {PORT}, f"child listeners: {sorted(child_ports)}")
 
         print("\nD. anti-mock: no datum claims to be live")
         body = json.loads(get("/admin/api/full")[1])
@@ -229,24 +365,54 @@ def main() -> int:
               pb["available"]["tag"] == "snapshot", pb["available"]["tag"])
 
         print("\nE. credentials never served")
-        for path in ("cctv/tapo_mjpeg_server.py", "bridge/local_bridge.py",
-                     "thermal-pi/config.py", "workers/cloud_sync.py",
-                     "thermal-pi/web_server.py", "thermal-pi/admin_console.py"):
-            from urllib.parse import quote
-            st, raw = get("/admin/api/code?path=" + quote(path))
-            txt = raw.decode("utf-8", "replace")
-            leaks = [lit for lit in FORBIDDEN_LITERALS
-                     if lit in txt and not literal_is_only_in_comments(txt, lit)]
-            note = ", ".join(leaks) if leaks else (
-                "mentions exist but only inside comments/docstrings" if any(
-                    lit in txt for lit in FORBIDDEN_LITERALS) else "no literal present")
-            check(f"no live secret in {path}", not leaks, note)
-        st, raw = get("/admin/api/code?path=" + "cctv%2Ftapo_mjpeg_server.py")
-        d = json.loads(raw)
+        source_paths = ("cctv/tapo_mjpeg_server.py", "bridge/local_bridge.py",
+                        "thermal-pi/config.py", "workers/cloud_sync.py",
+                        "thermal-pi/web_server.py", "thermal-pi/admin_console.py")
+        payloads: dict[str, dict] = {}
+        for path in source_paths:
+            try:
+                status, raw = get("/admin/api/code?path=" + quote(path))
+            except urllib.error.HTTPError as exc:
+                status = exc.code
+                raw = exc.read()
+            except Exception as exc:  # noqa: BLE001
+                check(f"no live secret in {path}", False,
+                      f"source request failed: {type(exc).__name__}: {exc}")
+                continue
+            try:
+                payload = json.loads(raw)
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                payload = None
+            if not (status == 200 and source_response_is_valid(payload, path)):
+                check(f"no live secret in {path}", False,
+                      f"HTTP {status}; invalid source envelope")
+                continue
+
+            payloads[path] = payload
+            source = payload["source"]
+            leak_lines = {lit: literal_leak_lines(source, lit)
+                          for lit in FORBIDDEN_LITERALS}
+            live_leaks = [lit for lit, lines in leak_lines.items() if lines]
+            if live_leaks:
+                note = ", ".join(f"{lit} at lines {leak_lines[lit]}"
+                                 for lit in live_leaks)
+            elif any(lit in source for lit in FORBIDDEN_LITERALS):
+                note = "mentions exist but only inside comments/docstrings"
+            else:
+                note = "no literal present"
+            check(f"no live secret in {path}", not live_leaks, note)
+
+        redaction_payload = payloads.get("cctv/tapo_mjpeg_server.py", {})
+        redactions = redaction_payload.get("redactions")
         check("redaction count reported to the operator",
-              isinstance(d.get("redactions"), dict) and
-              d["redactions"].get("value", 0) > 0,
-              f"{d.get('redactions', {}).get('value')} redactions")
+              isinstance(redactions, dict) and redactions.get("value", 0) > 0,
+              f"{redactions.get('value') if isinstance(redactions, dict) else 'missing'} redactions")
+
+        outbound_rows = child_outbound_mic_connections(srv.pid)
+        check("no outbound :9090 connection from verifier child (/proc sample, attributable)",
+              not outbound_rows,
+              "no attributable rows; sample is limited because transient sockets may already be closed"
+              if not outbound_rows else f"rows: {outbound_rows}")
 
         print("\nF. pre-existing routes unchanged")
         check("legacy /audio tombstone is 410", code_of("/audio") == 410,
