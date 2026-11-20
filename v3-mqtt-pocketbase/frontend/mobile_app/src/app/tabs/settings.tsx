@@ -1,11 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ScrollView, Text, TouchableOpacity, View, StyleSheet } from 'react-native';
+import { Platform, ScrollView, Text, TouchableOpacity, View, StyleSheet } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useTheme } from '../../theme';
 import { useAuth } from '../../hooks/useAuth';
 import { subscribeSensors } from '../../utils/pocketbase-data';
 import { telemetryTime } from '../../utils/telemetry-time';
 import { useBreakpoint } from '../../hooks/useBreakpoint';
+import {
+  getAccessReason,
+  resolveSelectedSource,
+  setAccessConfig,
+} from '../../utils/pocketbase';
+import type { AccessMode } from '../../utils/source-policy';
 import {
   toDeviceFields,
   formatFirmware,
@@ -81,6 +87,12 @@ export default function SettingsScreen() {
   const [reloadKey, setReloadKey] = useState(0);
   const [now, setNow] = useState(() => Date.now());
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const [accessMode, setAccessMode] = useState<AccessMode>('auto');
+  const [remoteTest, setRemoteTest] = useState<{
+    state: 'idle' | 'testing' | 'ok' | 'fail';
+    ms?: number;
+    detail?: string;
+  }>({ state: 'idle' });
 
   useEffect(() => {
     let alive = true;
@@ -90,6 +102,7 @@ export default function SettingsScreen() {
         if (!alive) return;
         setSoundEnabled(setup.soundEnabled === true);
         applySoundPreference(setup.soundEnabled === true);
+        setAccessMode(setup.accessMode);
       } catch {
         if (alive) setSoundEnabled(false);
       }
@@ -130,6 +143,69 @@ export default function SettingsScreen() {
 
   const contentMax = tier === 'expanded' ? 960 : tier === 'medium' ? 720 : undefined;
 
+  const source = resolveSelectedSource();
+  const sourceLabel =
+    source.kind === 'local' ? 'LOCAL · hotspot'
+      : source.kind === 'lan' ? 'LAN · venue'
+        : source.kind === 'remote' ? 'REMOTE · tunnel'
+          : source.kind === 'offline' ? 'OFFLINE'
+            : source.kind === 'web-same-origin' ? 'WEB · same origin'
+              : String(source.kind).toUpperCase();
+  const sourceTone =
+    source.kind === 'local' ? { fg: colors.healthy }
+      : source.kind === 'lan' ? { fg: colors.watch }
+        : source.kind === 'remote' ? { fg: colors.accent }
+          : source.kind === 'offline' ? { fg: colors.alert }
+            : { fg: colors.textMuted };
+  const modeHelp =
+    accessMode === 'auto'
+      ? 'Probes hotspot → venue LAN → tunnel, then uses the fastest reachable. Stale data is labelled.'
+      : accessMode === 'local'
+        ? 'Uses the PigPulse hotspot / saved Pi address. Lowest latency; no internet needed.'
+        : 'Uses the public tunnel to the same Pi. Higher latency; offline and stale states are labelled.';
+  const remoteTestText =
+    remoteTest.state === 'testing' ? 'Testing…'
+      : remoteTest.state === 'ok' ? `Reachable · ${remoteTest.ms ?? '?'} ms`
+        : remoteTest.state === 'fail' ? `Unreachable${remoteTest.detail ? ` · ${remoteTest.detail}` : ''}`
+          : 'Not tested';
+
+  const changeMode = async (mode: AccessMode) => {
+    setAccessMode(mode);
+    try {
+      const setup = await loadFarmerSetup();
+      await saveFarmerSetup({ accessMode: mode });
+      setAccessConfig(mode, setup.remotePbUrl, setup.lanPbUrl);
+      showToast(mode === 'auto' ? 'Connection: Auto' : mode === 'local' ? 'Connection: Local' : 'Connection: Remote');
+      // Remount the tabs so the data hooks re-probe and re-resolve with the new mode.
+      setTimeout(() => router.replace('/tabs'), 600);
+    } catch {
+      showToast('Could not save the connection mode');
+    }
+  };
+
+  const testRemote = async () => {
+    setRemoteTest({ state: 'testing' });
+    try {
+      const setup = await loadFarmerSetup();
+      const base = (setup.remotePbUrl || '').replace(/\/+$/, '');
+      if (!base) { setRemoteTest({ state: 'fail', detail: 'no remote URL saved' }); return; }
+      const t0 = Date.now();
+      const res = await fetch(`${base}/api/health`, {
+        headers: { Accept: 'application/json' },
+        signal: AbortSignal.timeout ? AbortSignal.timeout(6000) : undefined,
+      });
+      if (!res.ok) { setRemoteTest({ state: 'fail', detail: `HTTP ${res.status}` }); return; }
+      const body = (await res.json()) as { code?: number };
+      if (body && body.code === 200) {
+        setRemoteTest({ state: 'ok', ms: Date.now() - t0 });
+      } else {
+        setRemoteTest({ state: 'fail', detail: 'unexpected payload' });
+      }
+    } catch (e) {
+      setRemoteTest({ state: 'fail', detail: e instanceof Error ? e.message : 'unreachable' });
+    }
+  };
+
   return (
     <ScrollView
       style={[styles.screen, { backgroundColor: colors.bg, flex: 1 }]}
@@ -140,6 +216,62 @@ export default function SettingsScreen() {
       showsVerticalScrollIndicator={false}
     >
       <Text style={[typography.h1, { color: colors.textPrimary }]}>Settings</Text>
+
+      {Platform.OS !== 'web' && (
+        <View style={{ marginTop: spacing.xl }}>
+          <View style={styles.sectionHead}>
+            <Text style={[typography.caption, { color: colors.textMuted }]}>Connection</Text>
+            <Text style={[typography.bodySmall, { color: sourceTone.fg, fontSize: 14, fontWeight: '800' }]}>
+              {sourceLabel}
+            </Text>
+          </View>
+          <ListGroup>
+            <View style={{ padding: spacing.md }}>
+              <SegmentedControl
+                options={[
+                  { key: 'auto', label: 'Auto' },
+                  { key: 'local', label: 'Local' },
+                  { key: 'remote', label: 'Remote' },
+                ]}
+                value={accessMode}
+                onChange={(k) => changeMode(k as AccessMode)}
+              />
+              <Text style={[typography.bodySmall, { color: colors.textSecondary, marginTop: spacing.sm }]}>
+                {modeHelp}
+              </Text>
+              <Text style={[typography.bodySmall, { color: colors.textMuted, marginTop: 4 }]}>
+                {getAccessReason()}
+              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm, flexWrap: 'wrap' }}>
+                <ActionButton
+                  variant="secondary"
+                  onPress={testRemote}
+                  disabled={remoteTest.state === 'testing'}
+                  accessibilityLabel="Test remote connection"
+                  accessibilityHint="Probes the saved public tunnel health endpoint"
+                >
+                  {remoteTest.state === 'testing' ? 'Testing…' : 'Test remote'}
+                </ActionButton>
+                <Text
+                  style={[
+                    typography.bodySmall,
+                    {
+                      marginLeft: spacing.sm,
+                      color: remoteTest.state === 'ok'
+                        ? colors.healthy
+                        : remoteTest.state === 'fail'
+                          ? colors.alert
+                          : colors.textMuted,
+                    },
+                  ]}
+                >
+                  {remoteTestText}
+                </Text>
+              </View>
+            </View>
+          </ListGroup>
+        </View>
+      )}
 
       {/* Hardware nodes */}
       <View style={{ marginTop: spacing.xl }}>

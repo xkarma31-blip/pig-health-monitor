@@ -1,0 +1,18 @@
+[Unit]
+Description=PigPulse Cloudflare Tunnel (public, authenticated via Cloudflare Access)
+Documentation=file:/home/pigpulse/pig-health-monitor/v3-mqtt-pocketbase/backend/thermal-pi/scripts/setup-cloudflare-tunnel.sh
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pigpulse
+Group=pigpulse
+ExecStart=/home/pigpulse/bin/cloudflared --config /home/pigpulse/.cloudflared/config.yml tunnel run
+Restart=always
+RestartSec=10
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
