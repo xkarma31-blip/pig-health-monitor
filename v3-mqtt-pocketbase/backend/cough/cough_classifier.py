@@ -130,14 +130,20 @@ try:
 except Exception as exc:  # pragma: no cover - fail visibly, never fabricate
     EVALUATION = {"records": [], "error": f"evaluation manifest unavailable: {exc}"}
 
-_so = ort.SessionOptions()
-_so.intra_op_num_threads = ORT_THREADS
-_so.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-_t0 = time.time()
-SESS = ort.InferenceSession(str(HERE / "cnn14_16k_body.onnx"), _so,
-                            providers=["CPUExecutionProvider"])
-print(f"[cough] model ready in {time.time() - _t0:.1f}s "
-      f"(threshold {THRESH}, {len(COEF)}-d)", flush=True)
+SESS = None
+
+
+def load_model():
+    """Create the ONNX session once, on first real inference or at startup."""
+    global SESS
+    if SESS is None:
+        _so = ort.SessionOptions()
+        _so.intra_op_num_threads = ORT_THREADS
+        _so.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+        SESS = ort.InferenceSession(
+            str(HERE / "cnn14_16k_body.onnx"), _so,
+            providers=["CPUExecutionProvider"])
+    return SESS
 
 
 def numpy_logmel(y: np.ndarray, n_fft: int = 512, hop: int = 160) -> np.ndarray:
@@ -158,8 +164,9 @@ def numpy_logmel(y: np.ndarray, n_fft: int = 512, hop: int = 160) -> np.ndarray:
 
 def embed(window: np.ndarray) -> np.ndarray:
     lm = numpy_logmel(window)
-    return SESS.run(["embedding"],
-                    {"logmel": lm[None, None, :, :].astype(np.float32)})[0][0]
+    session = SESS or load_model()
+    return session.run(["embedding"],
+                       {"logmel": lm[None, None, :, :].astype(np.float32)})[0][0]
 
 
 def cough_prob(e: np.ndarray) -> float:
@@ -1089,6 +1096,10 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main() -> int:
+    _t0 = time.time()
+    load_model()
+    print(f"[cough] model ready in {time.time() - _t0:.1f}s "
+          f"(threshold {THRESH}, {len(COEF)}-d)", flush=True)
     threading.Thread(target=audio_loop, name="audio", daemon=True).start()
     threading.Thread(target=scorer_loop, name="scorer", daemon=True).start()
     srv = ThreadingHTTPServer((LISTEN_HOST, LISTEN_PORT), Handler)

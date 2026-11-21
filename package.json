@@ -8,6 +8,7 @@
     "ci:backend": "bash -n v3-mqtt-pocketbase/backend/scripts/*.sh v3-mqtt-pocketbase/backend/thermal-pi/scripts/*.sh && find v3-mqtt-pocketbase/backend -name '*.py' -not -path '*/__pycache__/*' -exec python3 -m py_compile {} + && echo 'backend OK'",
     "test:backend": "python3 -m unittest discover -s v3-mqtt-pocketbase/backend/thermal-pi/tests -p 'test_*.py'",
     "test:cough": "python3 -m unittest discover -s v3-mqtt-pocketbase/backend/thermal-pi/tests -p 'test_cough_manual_session.py' -v",
+    "test:cough:http": "python3 -m unittest discover -s v3-mqtt-pocketbase/backend/thermal-pi/tests -p 'test_cough_manual_http.py' -v",
     "scan:secrets": ".husky/pre-commit || true",
     "deploy:landing": "bash scripts/deploy-landing.sh",
     "diag:pi": "PI_HOST=${PI_HOST:-raspberrypi.local}; ssh -o StrictHostKeyChecking=accept-new pigpulse@$PI_HOST 'python3 ~/thermal-pi/scripts/pi_diag.py'",
