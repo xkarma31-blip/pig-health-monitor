@@ -492,27 +492,43 @@ git commit -m "feat: expose manual cough session in status"
 Insert after `aggregate()` and before `status()`:
 
 ```python
-def score_manual_clip(name: str, label: str) -> dict[str, Any]:
-    """Score one operator-labeled archive clip. No side effects outside manual state."""
+MAX_POST_BYTES = 16 * 1024
+
+
+def score_manual_clip(name: str, label: str,
+                      embed_fn=None, prob_fn=None) -> dict[str, Any]:
+    """Score one operator-labeled archive clip. No side effects outside manual state.
+
+    embed_fn/prob_fn are injectable so HTTP tests never need the 304 MB ONNX body.
+    The generation guard prevents a reset during inference from accepting a stale
+    result into the newly reset session.
+    """
     label = validate_label(label)
     path = resolve_clip(name, CLIPS_DIR)
     w = read_wav_window(path, sample_rate=SR, samples=WINDOW_N)
-    e = embed(w)
-    p = cough_prob(e)
+    with ST.manual_lock:
+        generation = ST.manual.session_id
+
+    e = (embed_fn or embed)(w)
+    p = (prob_fn or cough_prob)(e)
     predicted = "cough" if p >= THRESH else "other"
     result = {
         "file": name,
-        "p": round(p, 6),
+        "p": round(float(p), 6),
         "predicted": predicted,
         "threshold": THRESH,
         "ts": time.time(),
     }
     with ST.manual_lock:
+        if ST.manual.session_id != generation:
+            raise ValueError("session changed during scoring; rerun")
         ST.manual.record(label, predicted, result)
+        session = ST.manual.status()
         return {
             "ok": True,
+            "session_id": session["session_id"],
             "result": ST.manual.last,
-            "session": ST.manual.status(),
+            "session": session,
         }
 
 
@@ -528,19 +544,38 @@ def reset_manual_session() -> str:
 
 Add `from typing import Any` to the imports if not already present.
 
-**Step 2: Extend POST routing**
+**Step 2: Extend POST routing with strict parsing**
 
-Replace the current `do_POST` body with routing that keeps toggle behavior and adds the two routes:
+Replace the current `do_POST` body with:
 
 ```python
+    def _read_json_body(self):  # noqa: N802
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+        except (TypeError, ValueError):
+            return None, 400
+        if n < 0 or n > MAX_POST_BYTES:
+            return None, 413
+        raw = self.rfile.read(n) if n else b"{}"
+        try:
+            payload = json.loads(raw.decode("utf-8") or "{}")
+        except Exception:  # noqa: BLE001
+            return None, 400
+        if not isinstance(payload, dict):
+            return None, 400
+        return payload, None
+
     def do_POST(self):  # noqa: N802
         path = self.path.split("?", 1)[0]
-        n = int(self.headers.get("Content-Length") or 0)
-        raw = self.rfile.read(n) if n else b"{}"
+        payload, err = self._read_json_body()
+        if err:
+            self._json(err, {"ok": False, "error":
+                              "oversized body" if err == 413 else "bad json"})
+            return
 
         if path == "/api/toggle":
             try:
-                want = bool(json.loads(raw.decode() or "{}").get("enabled"))
+                want = bool(payload.get("enabled"))
             except Exception as e:  # noqa: BLE001
                 self._json(400, {"ok": False, "error": f"bad json: {e}"})
                 return
@@ -552,12 +587,12 @@ Replace the current `do_POST` body with routing that keeps toggle behavior and a
             return
 
         if path == "/api/manual/run":
+            name = payload.get("file")
+            label = payload.get("label")
+            if not isinstance(name, str) or not name:
+                self._json(400, {"ok": False, "error": "file is required"})
+                return
             try:
-                payload = json.loads(raw.decode() or "{}")
-                name = payload.get("file")
-                label = payload.get("label")
-                if not isinstance(name, str) or not name:
-                    raise ValueError("file is required")
                 response = score_manual_clip(name, label)
             except (ValueError, OSError, wave.Error) as e:
                 self._json(400, {"ok": False, "error": str(e)})
@@ -765,6 +800,7 @@ After the verdict card closing `</div>` (the card beginning `<div class="card"><
   <div class="row">
     <select id="manualClip" aria-label="Saved clip"><option value="">Loading clips…</option></select>
     <select id="manualLabel" aria-label="Operator label">
+      <option value="">Select label...</option>
       <option value="cough">cough</option>
       <option value="other">other</option>
     </select>
@@ -796,17 +832,40 @@ async function manualLoadClips() {
     const j = await r.json();
     coughClips = j.clips || [];
     const sel = $('manualClip');
-    sel.innerHTML = coughClips.length
-      ? coughClips.map(c => '<option value="' + c.file + '">' + c.file + '</option>').join('')
-      : '<option value="">No saved clips</option>';
+    sel.replaceChildren();
+    if (!coughClips.length) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'No saved clips';
+      sel.append(opt);
+    } else {
+      const first = document.createElement('option');
+      first.value = '';
+      first.textContent = 'Select clip...';
+      sel.append(first);
+      for (const c of coughClips) {
+        const opt = document.createElement('option');
+        opt.value = c.file;
+        opt.textContent = c.file;
+        sel.append(opt);
+      }
+    }
     manualEnableRun();
   } catch (e) {
-    $('manualClip').innerHTML = '<option value="">Clip list unavailable</option>';
+    const sel = $('manualClip');
+    sel.replaceChildren();
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = 'Clip list unavailable';
+    sel.append(opt);
+    manualEnableRun();
   }
 }
 
 function manualEnableRun() {
-  $('manualRun').disabled = !($('manualClip').value && $('manualLabel').value);
+  const clip = $('manualClip').value;
+  const label = $('manualLabel').value;
+  $('manualRun').disabled = !(clip && (label === 'cough' || label === 'other'));
 }
 
 function manualRender(m) {
@@ -927,6 +986,7 @@ Inside the cough card, after the line containing `<div class="q sp">Ranks, does 
             <div class="row sp" style="gap:10px; align-items:center;">
               <select id="coughClip" aria-label="Saved cough clip" style="max-width:240px;"><option value="">Loading clips…</option></select>
               <select id="coughManualLabel" aria-label="Label for selected clip">
+                <option value="">Select label...</option>
                 <option value="cough">cough</option>
                 <option value="other">other</option>
               </select>
@@ -963,26 +1023,48 @@ After `coughStrip(rows, thr);`, add:
       ' · ' + (last.correct ? 'correct' : 'wrong') +
       ' · TP/FP/FN/TN ' + m.tp + '/' + m.fp + '/' + m.fn + '/' + m.tn;
   }
-  const runBtn = document.getElementById('coughRun');
-  runBtn.disabled = !(document.getElementById('coughClip').value &&
-                       document.getElementById('coughManualLabel').value);
+  coughUpdateRunButton();
+```
+
+Add this helper once, before `coughRender`:
+
+```javascript
+function coughUpdateRunButton() {
+  const clip = document.getElementById('coughClip').value;
+  const label = document.getElementById('coughManualLabel').value;
+  document.getElementById('coughRun').disabled =
+    !(clip && (label === 'cough' || label === 'other'));
+}
 ```
 
 Before `document.getElementById('coughBtn').addEventListener('click', coughToggle);`, add:
 
 ```javascript
 async function coughLoadClips() {
+  const sel = document.getElementById('coughClip');
   try {
     const r = await fetch('/cough/api/clips', {cache:'no-store'});
     const j = await r.json();
     const clips = j.clips || [];
-    document.getElementById('coughClip').innerHTML = clips.length
-      ? clips.map(c => '<option value="' + c.file + '">' + c.file + '</option>').join('')
-      : '<option value="">No saved clips</option>';
-    document.getElementById('coughRun').disabled = false;
+    sel.replaceChildren();
+    const first = document.createElement('option');
+    first.value = '';
+    first.textContent = clips.length ? 'Select clip...' : 'No saved clips';
+    sel.append(first);
+    for (const c of clips) {
+      const opt = document.createElement('option');
+      opt.value = c.file;
+      opt.textContent = c.file;
+      sel.append(opt);
+    }
   } catch (e) {
-    document.getElementById('coughClip').innerHTML = '<option value="">Clip list unavailable</option>';
+    sel.replaceChildren();
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = 'Clip list unavailable';
+    sel.append(opt);
   }
+  coughUpdateRunButton();
 }
 
 async function coughManualRun() {
@@ -1020,9 +1102,8 @@ async function coughManualReset() {
 
 document.getElementById('coughRun').addEventListener('click', coughManualRun);
 document.getElementById('coughReset').addEventListener('click', coughManualReset);
-document.getElementById('coughClip').addEventListener('change', () => {
-  document.getElementById('coughRun').disabled = !document.getElementById('coughClip').value;
-});
+document.getElementById('coughClip').addEventListener('change', coughUpdateRunButton);
+document.getElementById('coughManualLabel').addEventListener('change', coughUpdateRunButton);
 coughLoadClips();
 ```
 
@@ -1110,7 +1191,225 @@ git commit -m "docs: document manual cough evaluation boundaries"
 
 ---
 
-### Task 10: Full verification and handoff
+### Task 10: Add lazy model seam and HTTP integration tests
+
+**Objective:** Let tests import the classifier without the uncommitted 304 MB ONNX body, then prove manual runs and Reset do not contaminate live state or durable artifacts.
+
+**Files:**
+- Modify: `v3-mqtt-pocketbase/backend/cough/cough_classifier.py` (model load near lines 122-129, `embed()` near line 148, `main()` near line 846)
+- Create: `v3-mqtt-pocketbase/backend/thermal-pi/tests/test_cough_manual_http.py`
+- Modify: `package.json` (add `test:cough:http`)
+
+**Step 1: Add the lazy model seam**
+
+Replace the module-level ONNX session construction with:
+
+```python
+SESS = None
+
+
+def load_model():
+    """Create the ONNX session once, on first real inference or at startup."""
+    global SESS
+    if SESS is None:
+        _so = ort.SessionOptions()
+        _so.intra_op_num_threads = ORT_THREADS
+        _so.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+        SESS = ort.InferenceSession(
+            str(HERE / "cnn14_16k_body.onnx"), _so,
+            providers=["CPUExecutionProvider"])
+    return SESS
+```
+
+In `embed()`, use `session = SESS or load_model()` before `session.run(...)`. In `main()`, call `load_model()` before starting the audio and scorer threads. Production behavior is unchanged; import no longer requires the ONNX file.
+
+**Step 2: Write failing HTTP/side-effect tests**
+
+Create `test_cough_manual_http.py`. Stub `onnxruntime` before importing the classifier, then point module globals at temporary paths:
+
+```python
+import pathlib
+import sys
+import tempfile
+import threading
+import types
+import unittest
+import urllib.request
+import wave
+from unittest import mock
+
+fake_ort = types.ModuleType("onnxruntime")
+fake_ort.SessionOptions = lambda: types.SimpleNamespace()
+fake_ort.GraphOptimizationLevel = types.SimpleNamespace(ORT_ENABLE_ALL=1)
+fake_ort.InferenceSession = lambda *a, **k: None
+fake_ort.CPUExecutionProvider = "CPU"
+sys.modules.setdefault("onnxruntime", fake_ort)
+
+BACKEND = pathlib.Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(BACKEND / "cough"))
+import cough_classifier as cc  # noqa: E402
+
+
+class ManualHttpTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.root = pathlib.Path(self.tmp.name)
+        self.clips = self.root / "clips"
+        self.clips.mkdir()
+        self.log = self.root / "windows.jsonl"
+        self.log.touch()
+        self.patches = [
+            mock.patch.object(cc, "CLIPS_DIR", self.clips),
+            mock.patch.object(cc, "WINDOWS_LOG", self.log),
+        ]
+        for p in self.patches:
+            p.start()
+        cc.ST.manual.reset()
+        cc.ST.windows.clear()
+        cc.ST.scored = 0
+        cc.ST.infer_ms.clear()
+        cc.ST.last_cough_alert = 0.0
+
+    def tearDown(self):
+        for p in reversed(self.patches):
+            p.stop()
+        self.tmp.cleanup()
+
+    def _write_clip(self, name="clip.wav"):
+        path = self.clips / name
+        with wave.open(str(path), "wb") as wf:
+            wf.setnchannels(1)
+            wf.setsampwidth(2)
+            wf.setframerate(16000)
+            wf.writeframes(b"\x00" * 80000 * 2)
+        return name
+
+    def test_manual_run_has_no_live_or_durable_side_effects(self):
+        name = self._write_clip()
+        before_log = self.log.read_bytes()
+        before_clips = sorted(str(p) for p in self.clips.iterdir())
+        with mock.patch.object(cc, "capture_frame", side_effect=AssertionError), \
+             mock.patch.object(cc.subprocess, "run", side_effect=AssertionError):
+            out = cc.score_manual_clip(
+                name, "cough",
+                embed_fn=lambda w: [0.0] * 2048,
+                prob_fn=lambda e: 0.7,
+            )
+        self.assertTrue(out["ok"])
+        self.assertEqual(out["result"]["predicted"], "cough")
+        self.assertTrue(out["result"]["correct"])
+        self.assertEqual(out["session"]["tp"], 1)
+        self.assertEqual(cc.ST.windows, cc.ST.windows.__class__(maxlen=720))
+        self.assertEqual(cc.ST.scored, 0)
+        self.assertEqual(self.log.read_bytes(), before_log)
+        self.assertEqual(sorted(str(p) for p in self.clips.iterdir()), before_clips)
+
+    def test_reset_clears_only_test_session_state(self):
+        cc.ST.windows.append({"ts": 1, "p": 0.9, "above": True})
+        cc.ST.last_cough_alert = 123.0
+        cc.ST.scored = 9
+        cc.ST.enabled = True
+        old = cc.ST.manual.session_id
+        sid = cc.reset_manual_session()
+        self.assertNotEqual(sid, old)
+        self.assertEqual(len(cc.ST.windows), 0)
+        self.assertEqual(cc.ST.last_cough_alert, 0.0)
+        self.assertEqual(cc.ST.scored, 9)
+        self.assertTrue(cc.ST.enabled)
+        self.assertEqual(cc.aggregate()["verdict"], "NO DATA")
+
+    def test_reset_during_inference_rejects_stale_result(self):
+        name = self._write_clip()
+        def embed_then_reset(w):
+            cc.reset_manual_session()
+            return [0.0] * 2048
+        with self.assertRaises(ValueError):
+            cc.score_manual_clip(name, "cough", embed_fn=embed_then_reset,
+                                 prob_fn=lambda e: 0.7)
+        self.assertEqual(cc.ST.manual.summary()["windows"], 0)
+```
+
+**Step 3: Add route-level checks**
+
+Append to the same class:
+
+```python
+    def _post(self, path, payload=b"{}", content_type="application/json"):
+        srv = cc.ThreadingHTTPServer(("127.0.0.1", 0), cc.Handler)
+        thread = threading.Thread(target=srv.serve_forever, daemon=True)
+        thread.start()
+        try:
+            req = urllib.request.Request(
+                f"http://127.0.0.1:{srv.server_address[1]}{path}",
+                data=payload, method="POST",
+                headers={"Content-Type": content_type})
+            with urllib.request.urlopen(req, timeout=5) as r:
+                return r.status, r.read()
+        except urllib.error.HTTPError as e:
+            return e.code, e.read()
+        finally:
+            srv.shutdown()
+            srv.server_close()
+            thread.join(timeout=5)
+
+    def test_post_routes_and_limits(self):
+        name = self._write_clip()
+        import json
+        ok = json.dumps({"file": name, "label": "other"}).encode()
+        code, body = self._post("/api/manual/run", ok)
+        self.assertEqual(code, 200)
+        j = json.loads(body)
+        self.assertIn("session_id", j)
+        self.assertIn("result", j)
+        self.assertIn("session", j)
+
+        code, _ = self._post("/api/manual/run", b'{"file":"x","label":"COUGH"}')
+        self.assertEqual(code, 400)
+        code, _ = self._post("/api/manual/run", b"[]")
+        self.assertEqual(code, 400)
+        code, _ = self._post("/api/manual/run", b"x" * (16 * 1024 + 1))
+        self.assertEqual(code, 413)
+        code, _ = self._post("/api/manual/reset")
+        self.assertEqual(code, 200)
+        code, _ = self._post("/api/does-not-exist")
+        self.assertEqual(code, 404)
+
+
+if __name__ == "__main__":
+    unittest.main()
+```
+
+Add `import urllib.error` near the other imports.
+
+**Step 4: Add the npm script**
+
+In `package.json`, add after `test:cough`:
+
+```json
+    "test:cough:http": "python3 -m unittest discover -s v3-mqtt-pocketbase/backend/thermal-pi/tests -p 'test_cough_manual_http.py' -v",
+```
+
+**Step 5: Verify**
+
+Run:
+
+```bash
+npm run test:cough:http
+npm run ci:backend
+```
+
+Expected: all HTTP/side-effect tests pass; `backend OK`.
+
+**Step 6: Commit**
+
+```bash
+git add v3-mqtt-pocketbase/backend/cough/cough_classifier.py v3-mqtt-pocketbase/backend/thermal-pi/tests/test_cough_manual_http.py package.json
+git commit -m "test: add manual cough HTTP isolation tests"
+```
+
+---
+
+### Task 11: Full verification and handoff
 
 **Objective:** Prove the gates pass and that no stream was contaminated.
 
@@ -1123,13 +1422,15 @@ Run:
 ```bash
 npm run ci:backend
 npm run test:cough
+npm run test:cough:http
 npm run test:backend
 ```
 
 Expected:
 
 - `backend OK`
-- `Ran 10 tests ... OK`
+- helper tests OK
+- HTTP/side-effect tests OK
 - existing thermal backend suite passes with the same count as baseline.
 
 **Step 2: JSON and diff checks**
