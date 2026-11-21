@@ -62,14 +62,7 @@ class ManualSession:
         return self.summary()
 
     def summary(self) -> dict[str, Any]:
-        """Return counts and metrics; undefined ratios are None.
-
-        Recall has no negative predictions when no positives exist, so it
-        collapses to 0.0 rather than None. The false-positive rate is measured
-        against positive predictions (fp / (tp + fp)) and is therefore
-        undefined when nothing was predicted positive.
-        """
-        recall_den = self.tp + self.fn
+        """Return counts and metrics; undefined ratios are None."""
         return {
             "session_id": self.session_id,
             "windows": self.windows,
@@ -79,8 +72,8 @@ class ManualSession:
             "tn": self.tn,
             "accuracy": _ratio(self.tp + self.tn, self.windows),
             "precision": _ratio(self.tp, self.tp + self.fp),
-            "recall": round(self.tp / recall_den, 6) if recall_den else 0.0,
-            "false_positive_rate": _ratio(self.fp, self.tp + self.fp),
+            "recall": _ratio(self.tp, self.tp + self.fn),
+            "false_positive_rate": _ratio(self.fp, self.fp + self.tn),
         }
 
     def status(self) -> dict[str, Any]:

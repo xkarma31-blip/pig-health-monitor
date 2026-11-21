@@ -39,8 +39,8 @@ class TestManualSession(unittest.TestCase):
         s.record("other", "other", {"p": 0.01})
         summary = s.summary()
         self.assertIsNone(summary["precision"])
-        self.assertIsNone(summary["false_positive_rate"])
-        self.assertEqual(summary["recall"], 0.0)
+        self.assertEqual(summary["false_positive_rate"], 0.0)
+        self.assertIsNone(summary["recall"])
 
     def test_last_result_carries_label_prediction_and_correctness(self):
         s = ManualSession()
