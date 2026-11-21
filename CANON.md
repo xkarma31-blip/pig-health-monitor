@@ -75,18 +75,17 @@ tolerates it; **the wiring wants attention.**
 >
 > The Pi came back. The camera came back. **Two devices did not:**
 >
-> - **MLX90640 (thermal):** `pigpulse-thermal` is `active` but retries every
->   10 s and logs `I2C FAULT ... [EREMOTEIO]`. `sudo i2cdetect -y 1` shows
->   **no device at 0x33** — the sensor does not ACK at all. `/data` returns
->   `ok:false` (no cached frame after restart). Power flags are clean
->   (`get_throttled=0x0`), which only means the Pi's PMIC saw no sag — this
->   is the sensor's 3V3/wiring, not the SoC.
+> - **MLX90640 (thermal):** did not respond between the power cut and
+>   ~10:16 PST — the service logged `EREMOTEIO` every 10 s and
+>   `/live/data` returned the I2C fault. **But the sensor is back**, and
+>   this entry is updated to say so (see correction note below).
 > - **ESP32-S3 (mic/ambient):** not associated to the AP, `ping
->   192.168.69.15` fails, and `dnsmasq` has logged **zero** DHCP requests
+>   192.168.69.15` failed, and `dnsmasq` had logged **zero** DHCP requests
 >   from `68:ee:8f:dd:31:3c` since the cut. Its last fresh row is
 >   `01:47:06Z`; a single later row at `02:01:35Z` repeats `rms=74043`,
 >   `ambient=31.55`, `humidity=72.67` **exactly**, so it is a frozen or
->   replayed buffer, not a live reading.
+>   replayed buffer, not a live reading. **Now live again**: `/esp/status`
+>   shows `connected:true`, 48 kHz stream, peer 192.168.69.15.
 >
 > The watchdog did its job in a real incident: `MIC_DISCONNECTED /
 > CRITICAL` at `01:47:16.720Z` with a **77,039-byte JPEG** attached — the
@@ -109,6 +108,21 @@ tolerates it; **the wiring wants attention.**
 > strips `verdict`/`bodyTemp`/`temperature`/`alerts` by design — the raw
 > frame claim stays out of the database; only the derived, zone-based
 > verdict is persisted.
+
+> **Correction 2026-11-21 ~10:16 PST — the MLX90640 is alive.** The
+> "no device" reading was a **probe artifact**: `i2cdetect` sends a
+> 0-byte write (quick write) to 0x33, and the MLX90640 does not ACK that
+> transaction — it does ACK real reads. Measured:
+> `sudo i2ctransfer -y 1 w2@0x33 0x24 0x00 r2` → exit 0, returns `0x00 0xaa`;
+> `pigpulse-thermal` at 10:15:50 logged `Initialized (addr=0x33, 4.0 Hz,
+> emissivity=0.95)` and `first frame OK (center=53.00 C, ambient=34.28 C)`;
+> now `systemctl is-active` and `/data` = `ok=True, HYPERTHERMIA,
+> center=49.06, ambient=34.64, src=sht45, hum=64.7, thi=87.3`.
+> `i2cdetect -y 1` **still shows `--`** — do not read "i2cdetect clean" as
+> absence. One corrupt frame was correctly rejected by the
+> `not_converting` guard before "first frame OK". The outage window
+> 09:48–10:15 remains unexplained — intermittent, no evidence of a permanent
+> fault; watch for repeats.
 
 
 > **The clock hypothesis was tested and rejected (2026-11-13).** The obvious
