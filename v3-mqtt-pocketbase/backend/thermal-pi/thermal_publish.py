@@ -315,6 +315,11 @@ class ThermalPublisher:
             "thi": (round(float(st["thi"]), 1)
                     if st.get("thi") is not None else None),
             "heatStressCon": bool(st.get("heatStressCon", False)),
+            # Which thermometer produced `ambient`: the SHT45 air probe, or the
+            # MLX90640's own die temperature. The two differ by ~12 C because
+            # the die self-heats, so a stored row without this label cannot be
+            # told apart from a real air reading. Research-audit requirement.
+            "ambientSrc": st.get("ambientSrc"),
         }
         if self._publish("telemetry", payload):
             self._published += 1
