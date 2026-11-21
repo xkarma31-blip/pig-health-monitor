@@ -114,6 +114,10 @@ ALLOW = [
     ipaddress.ip_network("::1/128"),
     ipaddress.ip_network("192.168.69.0/24"),   # the Pi's own AP
     ipaddress.ip_network("10.42.0.0/24"),      # laptop tether (bench work)
+    # Tailscale mesh — remote peers (the farm's workers) reach the Pi over
+    # the encrypted tunnel; without this, phones/peers off the barn AP got
+    # 403 from every portal route. (2026-11-21, Master's request.)
+    ipaddress.ip_network("100.64.0.0/10"),
 ]
 
 SCAN24 = [
