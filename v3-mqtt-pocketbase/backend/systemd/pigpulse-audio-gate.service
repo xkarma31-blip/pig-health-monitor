@@ -11,4 +11,6 @@ ExecStart=/usr/bin/python3 /home/pigpulse/cough/audio_gate.py --enforce
 # read-only and never connects to the single-client TCP :9090.
 User=root
 NoNewPrivileges=true
-PrivateTmp=true
+# PrivateTmp was removed (2026-11-21): it made the gate write the
+# /run/pigpulse/audio-ok flag into a private tmpfs that pigpulse-cough
+# never sees, so the classifier stayed gated forever.
