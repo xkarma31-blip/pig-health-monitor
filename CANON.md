@@ -69,6 +69,57 @@ tunnel/PB/MQTT/thermal. Changes committed: `deedf92` (portal mesh allowlist),
 - Re-verify after recovery: mic telemetry fresh, `/esp/status connected=true`,
   camera frame at `/cctv?snapshot=1`, `wan-sta.status` truthful, load < 2.
 
+### ROOT CAUSE FOUND AND FIXED 2026-11-21 12:30 PST — brcmfmac firmware wedged
+
+**The AP "invisible" was a wedged built-in Wi-Fi firmware, not distance, not
+hidden SSID, not the dongle.** Measured proof:
+
+- `dmesg`: `brcmf_proto_bcdc_msg failed w/status -110` and
+  `brcmf_cfg80211_dump_station: BRCMF_C_GET_ASSOCLIST failed, err=-110`
+  (`-110` = `ETIMEDOUT`) — hostapd said `AP-ENABLED` but the firmware
+  wasn't answering commands (no beacons reached clients).
+- Laptop: `Error: No network with SSID 'PigPulse' found` — decisive
+  client-side proof the AP was effectively down.
+
+**Fix applied (12:21–12:29 PST):**
+1. `modprobe -r brcmfmac_cyw && modprobe -r brcmfmac && modprobe brcmfmac`
+   — full firmware reload. Firmware re-init in dmesg at 12:21:15.
+2. **Critical follow-up the reload broke**: wlan0 lost `192.168.69.1/24`
+   (the hardcoded gateway for CCTV `192.168.69.2` + ESP `192.168.69.15`).
+   `192.168.69.1` ping failed. **Fixed** by re-running
+   `pigpulse-ap-static-ip` → `inet 192.168.69.1/24 scope global wlan0`.
+   Lesson: **any brcmfmac reload MUST be followed by re-running
+   `pigpulse-ap-static-ip`** or the whole Barn network loses its gateway.
+3. `systemctl restart hostapd` (it was stopped for the reload) →
+   `state=ENABLED`, ch6.
+4. `systemctl restart pigpulse-audio-gate` → wrote `/run/pigpulse/audio-ok`
+   → classifier `pigpulse-cough` started (`/cough/api/status ok=true`).
+
+**Verified after fix (12:30 PST):**
+- Laptop scan: `DC:A6:32:87:63:A1 PigPulse Infra 6 100 ▂▄▆█ WPA2` — **visible**.
+- Laptop `nmcli dev wifi connect PigPulse password capstone` → **successfully
+  activated**. Phone scan: PigPulse `-47 dBm` — strong.
+- AP gateway `192.168.69.1` ping 0.135 ms; CCTV `192.168.69.2` + ESP
+  `192.168.69.15` responded; 3 stations on wlan0;
+  `/esp/status connected=true lastMs=17`, `/ambient state=live`,
+  `/data ok=true verdict=HYPERTHERMIA`, CCTV snapshot 67 KB JPEG.
+- All services active: hostapd, dnsmasq, PocketBase, bridge, thermal,
+  CCTV, portal, classifier, mosquitto, tailscaled.
+- Internet via eth1 tether intact; public Funnel `/live/data` 200.
+
+**Remaining intermittent issue (pre-existing, firmware-level):** the ESP audio
+stream cycles — TCP connected but silent for ~60–90 s, then resumes (`stale=true`,
+`lastMs` climbing, `maxGapInMs` ~108 s). Documented in §2.x. Not a software
+regression; needs ESP firmware attention. Barn camera/ESP associations also
+flap. Do NOT keep restarting services to chase this — it self-recovers.
+
+**Mistakes I made today (own honestly):** put the WAN dongle (wlan1) into
+monitor mode 4× for RF sniffing (left it DOWN); killed my own SSH session;
+ran background jobs that left stale sshd sessions (load 7); forgot the static
+IP after the firmware reload (fixed). Root cause of the AP fault was NOT my
+doing — the brcmfmac firmware wedged after the 11:10 Barn event and the
+Pi replug; my reload fixed it.
+
 ---
 
 ## 0. CORRECTIONS OF 2026-11-13 — READ FIRST
