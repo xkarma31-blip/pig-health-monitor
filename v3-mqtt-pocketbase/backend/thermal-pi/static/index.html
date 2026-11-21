@@ -343,9 +343,9 @@
             <div class="strip" id="coughStrip" title="last windows (5 s each, newest right) — dashed line = decision threshold"></div>
             <div class="stripHint">Newest 12 windows, oldest → newest. Bar over the dashed line = window above threshold.</div>
 
-            <div class="row sp" style="gap:10px; align-items:center;">
-              <select id="coughClip" aria-label="Saved cough clip" style="max-width:240px;"><option value="">Loading clips…</option></select>
-              <select id="coughManualLabel" aria-label="Label for selected clip">
+            <div class="sp" style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+              <select id="coughClip" aria-label="Saved cough clip" style="width:auto; max-width:240px;"><option value="">Loading clips…</option></select>
+              <select id="coughManualLabel" aria-label="Label for selected clip" style="width:auto;">
                 <option value="">Select label...</option>
                 <option value="cough">cough</option>
                 <option value="other">other</option>
