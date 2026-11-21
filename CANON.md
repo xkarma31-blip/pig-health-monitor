@@ -7,8 +7,8 @@
 > Last verified against the working tree: **2026-11-13** (full end-to-end audit:
 > every claim below was read off the live Pi, the live laptop rig, raw MQTT on
 > the wire, or the databases — not from a spec sheet). **Section 0.9's widget
-> and thermal claims were verified 2026-11-17.** The previous verification was
-> 2026-10-29.
+> and thermal claims were verified 2026-11-17.** **§0.1's SHT45 live status was
+> re-measured 2026-11-21.** The previous verification was 2026-10-29.
 
 ---
 
@@ -42,6 +42,25 @@ PocketBase zero-rate, minute by minute   48.3% -> 32.2% -> 21.7% -> 4.5% -> 0.0%
 
 **Residual, physical:** the SHT45's I²C connection still NACKs. The firmware
 tolerates it; **the wiring wants attention.**
+
+> **LIVE STATUS 2026-11-21 09:33 PST — the sensor is currently HEALTHY.**
+> Measured on the Pi, not inferred:
+>
+> ```
+> GET https://127.0.0.1:8080/ambient
+>   {"state":"live","ok":true,"temperature":31.48,"humidity":72.38,
+>    "thi":84.0,"thiClass":"severe","ambientCount":569,"micOnline":true}
+> raw MQTT pig/s3-mic-01/telemetry
+>   {"mic":true,"temperature":31.45,"humidity":72.52,...,"sle":2,
+>    "boots":98,"rssi":-54}
+> ```
+>
+> It came back after the ESP rebooted (`boots` 97 → 98) at ~09:13 PST. The
+> `sle=2` counter is cumulative and predates this boot, so it is **not**
+> evidence of a fault in the current session. Treat the I²C fault as
+> **intermittent, not permanent** — do not report the SHT45 as dead without
+> re-reading `/ambient`; and do not call it fixed either, since the wiring
+> fault has not been touched.
 
 > **The clock hypothesis was tested and rejected (2026-11-13).** The obvious
 > explanation — long leads raising bus capacitance so the sensor misreads its
