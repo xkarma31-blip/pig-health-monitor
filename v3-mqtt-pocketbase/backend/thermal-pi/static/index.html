@@ -337,11 +337,23 @@
             </div>
             <div class="statGrid sp">
               <div class="stat"><span class="label">Last window</span><span class="value" id="coughLast" style="font-size:16px;">-</span></div>
-              <div class="stat"><span class="label">Gaps dropped · CPU</span><span class="value" id="coughDrops" style="font-size:16px;">-</span></div>
+              <div class="stat"><span class="label">Gaps dropped · CPU · RSS</span><span class="value" id="coughDrops" style="font-size:16px;">-</span></div>
             </div>
 
             <div class="strip" id="coughStrip" title="last windows (5 s each, newest right) — dashed line = decision threshold"></div>
             <div class="stripHint">Newest 12 windows, oldest → newest. Bar over the dashed line = window above threshold.</div>
+
+            <div class="row sp" style="gap:10px; align-items:center;">
+              <select id="coughClip" aria-label="Saved cough clip" style="max-width:240px;"><option value="">Loading clips…</option></select>
+              <select id="coughManualLabel" aria-label="Label for selected clip">
+                <option value="">Select label...</option>
+                <option value="cough">cough</option>
+                <option value="other">other</option>
+              </select>
+              <button id="coughRun" class="btnOn" style="width:auto;padding:11px 16px;" disabled>Run</button>
+              <button id="coughReset" class="btnOff" style="width:auto;padding:11px 16px;">Reset</button>
+            </div>
+            <div class="cardSub" id="coughManualResult">No manual run yet.</div>
 
             <div class="q sp">Ranks, does not detect: ~1 false alarm per true cough on a single window — read the 60 s verdict, never one bar. <a href="/cough">Full table + model card →</a></div>
           </div>
@@ -1345,6 +1357,12 @@ function coughStrip(rows, threshold) {
            '%" title="' + w.iso + '  p=' + w.p.toFixed(4) + (w.above ? '  ABOVE' : '') + '"></i>';
   }).join('');
 }
+function coughUpdateRunButton() {
+  const clip = document.getElementById('coughClip').value;
+  const label = document.getElementById('coughManualLabel').value;
+  document.getElementById('coughRun').disabled =
+    !(clip && (label === 'cough' || label === 'other'));
+}
 function coughRender(s) {
   const enabled = !!s.enabled;
   const pill = document.getElementById('coughPill');
@@ -1376,11 +1394,27 @@ function coughRender(s) {
   const rt = s.runtime || {};
   const drops = rt.dropped_gappy || 0;
   const dropsEl = document.getElementById('coughDrops');
-  dropsEl.textContent = drops + ' · ' + (rt.cpu_pct_now !== undefined ? rt.cpu_pct_now.toFixed(0) : '-') + '%';
+  const rss = (s.runtime && s.runtime.rss_mb !== undefined) ? s.runtime.rss_mb.toFixed(0) : '-';
+  dropsEl.textContent = drops + ' · ' +
+    (rt.cpu_pct_now !== undefined ? rt.cpu_pct_now.toFixed(0) : '-') + '% · ' + rss + ' MB';
   dropsEl.style.color = drops > 0 ? 'var(--amber)' : 'var(--green)';
 
   const thr = (s.model && s.model.threshold) || 0.2061;
   coughStrip(rows, thr);
+
+  const m = s.manual || {};
+  const res = document.getElementById('coughManualResult');
+  if (!m.windows) {
+    res.textContent = 'No manual run yet.';
+  } else {
+    const last = m.last || {};
+    res.textContent = 'Manual: ' + (last.file || '') +
+      ' · label ' + (last.label || '') + ' · p ' +
+      (last.p === undefined ? '-' : Number(last.p).toFixed(4)) +
+      ' · ' + (last.correct ? 'correct' : 'wrong') +
+      ' · TP/FP/FN/TN ' + m.tp + '/' + m.fp + '/' + m.fn + '/' + m.tn;
+  }
+  coughUpdateRunButton();
 }
 async function coughRefresh() {
   try {
@@ -1414,6 +1448,72 @@ async function coughToggle() {
   }
   await coughRefresh();
 }
+async function coughLoadClips() {
+  const sel = document.getElementById('coughClip');
+  try {
+    const r = await fetch('/cough/api/clips', {cache:'no-store'});
+    const j = await r.json();
+    const clips = j.clips || [];
+    sel.replaceChildren();
+    const first = document.createElement('option');
+    first.value = '';
+    first.textContent = clips.length ? 'Select clip...' : 'No saved clips';
+    sel.append(first);
+    for (const c of clips) {
+      const opt = document.createElement('option');
+      opt.value = c.file;
+      opt.textContent = c.file;
+      sel.append(opt);
+    }
+  } catch (e) {
+    sel.replaceChildren();
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = 'Clip list unavailable';
+    sel.append(opt);
+  }
+  coughUpdateRunButton();
+}
+
+async function coughManualRun() {
+  const btn = document.getElementById('coughRun');
+  btn.disabled = true;
+  try {
+    const r = await fetch('/cough/api/manual/run', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        file: document.getElementById('coughClip').value,
+        label: document.getElementById('coughManualLabel').value})});
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'run failed');
+    await coughRefresh();
+  } catch (e) {
+    document.getElementById('coughManualResult').textContent = 'Run failed: ' + e.message;
+    btn.disabled = false;
+  }
+}
+
+async function coughManualReset() {
+  const btn = document.getElementById('coughReset');
+  btn.disabled = true;
+  try {
+    const r = await fetch('/cough/api/manual/reset', {method:'POST'});
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'reset failed');
+    await coughRefresh();
+  } catch (e) {
+    document.getElementById('coughManualResult').textContent = 'Reset failed: ' + e.message;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+document.getElementById('coughRun').addEventListener('click', coughManualRun);
+document.getElementById('coughReset').addEventListener('click', coughManualReset);
+document.getElementById('coughClip').addEventListener('change', coughUpdateRunButton);
+document.getElementById('coughManualLabel').addEventListener('change', coughUpdateRunButton);
+coughLoadClips();
+
 document.getElementById('coughBtn').addEventListener('click', coughToggle);
 coughRefresh();
 setInterval(coughRefresh, COUGH_POLL_MS);
