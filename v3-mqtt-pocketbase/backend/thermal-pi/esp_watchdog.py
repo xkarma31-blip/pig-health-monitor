@@ -131,6 +131,27 @@ def _has_live_packet(stdout: str) -> bool:
     return any(line.strip() == "0" for line in stdout.splitlines())
 
 
+def _capture_frame() -> str:
+    """Best-effort CCTV snapshot as a data URL for the alert record.
+
+    Same contract as the thermal/cough publishers: a missing camera never
+    blocks the alert, but every alert should carry the frame that backs it.
+    """
+    try:
+        import base64
+        import ssl
+        import urllib.request
+
+        ctx = ssl._create_unverified_context()
+        url = "https://127.0.0.1:8080/cctv?snapshot=1"
+        with urllib.request.urlopen(url, timeout=3, context=ctx) as resp:
+            data = resp.read()
+        if not data or not data.startswith(b"\xff\xd8"):
+            return ""
+        return "data:image/jpeg;base64," + base64.b64encode(data).decode()
+    except Exception:
+        return ""
+
 class EspWatchdog:
     def __init__(
         self,
@@ -222,27 +243,6 @@ class EspWatchdog:
             self.now_ms() // 1000,
         )
         return associated, lease
-
-    def _capture_frame() -> str:
-        """Best-effort CCTV snapshot as a data URL for the alert record.
-
-        Same contract as the thermal/cough publishers: a missing camera never
-        blocks the alert, but every alert should carry the frame that backs it.
-        """
-        try:
-            import base64
-            import ssl
-            import urllib.request
-
-            ctx = ssl._create_unverified_context()
-            url = "https://127.0.0.1:8080/cctv?snapshot=1"
-            with urllib.request.urlopen(url, timeout=3, context=ctx) as resp:
-                data = resp.read()
-            if not data or not data.startswith(b"\xff\xd8"):
-                return ""
-            return "data:image/jpeg;base64," + base64.b64encode(data).decode()
-        except Exception:
-            return ""
 
     def _publish_alert(self, state: str) -> bool:
         if state == "OFFLINE":
