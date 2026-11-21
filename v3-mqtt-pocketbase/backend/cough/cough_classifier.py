@@ -124,6 +124,12 @@ INTERCEPT = float(HEAD["intercept"])
 THRESH = float(HEAD["threshold"])
 META = HEAD["meta"]
 
+EVALUATION_FILE = HERE / "evaluation.json"
+try:
+    EVALUATION = json.loads(EVALUATION_FILE.read_text())
+except Exception as exc:  # pragma: no cover - fail visibly, never fabricate
+    EVALUATION = {"records": [], "error": f"evaluation manifest unavailable: {exc}"}
+
 _so = ort.SessionOptions()
 _so.intra_op_num_threads = ORT_THREADS
 _so.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
@@ -603,6 +609,7 @@ def status() -> dict:
             },
             "aggregate": agg,
             "manual": manual,
+            "evaluation": EVALUATION,
             "active_result_source": (
                 "live" if agg.get("windows", 0) > 0
                 else "manual" if manual.get("last") is not None

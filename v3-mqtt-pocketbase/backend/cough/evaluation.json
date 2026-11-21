@@ -1,0 +1,99 @@
+{
+  "generated": "2026-11-21",
+  "method": "shipped head.json threshold applied to features5s embeddings; recomputed from artifacts on 2026-11-21",
+  "threshold": 0.2061,
+  "records": [
+    {
+      "id": "aswine_holdout",
+      "kind": "labeled_evaluation",
+      "dataset": "aSwine",
+      "role": "same-farm holdout, 31 files never used in training",
+      "n": 2268,
+      "positives": 203,
+      "threshold": 0.2061,
+      "confusion": {"tp": 101, "fp": 145, "fn": 102, "tn": 1920},
+      "metrics": {
+        "accuracy": 0.8911,
+        "precision": 0.4106,
+        "recall": 0.4975,
+        "f1": 0.4499,
+        "false_positive_rate": 0.0702,
+        "roc_auc": 0.8079,
+        "pr_auc": 0.4037
+      },
+      "source_files": [
+        "sandbox/ai-output/capstone-research/datasets/features5s/features_aswine_test.npz",
+        "backend/cough/head.json"
+      ],
+      "source_hash": "76f662490e40f47dc716b41c2d44e3040f9c102db471ee0d14f76f1df5cf59d2 + d3d229593cd2a875c15fd7533dd7589140d87d440471615a019e15a3d1e22566",
+      "note": "Labels are weak 1 s intervals containing a cough, not event-level onsets. This is labeled evaluation, not live field accuracy."
+    },
+    {
+      "id": "mapda_cross_species",
+      "kind": "labeled_evaluation",
+      "dataset": "MAP-DA",
+      "role": "held-out cross-species evaluation; deposit has no training split",
+      "n": 3140,
+      "positives": 266,
+      "threshold": 0.2061,
+      "confusion": {"tp": 0, "fp": 0, "fn": 266, "tn": 2874},
+      "metrics": {
+        "accuracy": 0.9153,
+        "accuracy_is_vacuous": true,
+        "precision": null,
+        "recall": 0.0,
+        "f1": 0.0,
+        "false_positive_rate": 0.0,
+        "roc_auc": 0.8504,
+        "pr_auc": 0.3811
+      },
+      "source_files": [
+        "sandbox/ai-output/capstone-research/datasets/features5s/features_mapda_heldout_xspecies.npz",
+        "backend/cough/head.json"
+      ],
+      "source_hash": "2be6516eec6dc598450c5c27342b0efcdbe7a250c0077f1a1bd95e4a01c35426 + d3d229593cd2a875c15fd7533dd7589140d87d440471615a019e15a3d1e22566",
+      "note": "At the deployed threshold the model predicts no positives. The published 0.36 precision / 0.60 recall is a different threshold-0.0 operating point and must not be shown as deployed."
+    },
+    {
+      "id": "aswine_corpus",
+      "kind": "dataset_inventory",
+      "dataset": "aSwine",
+      "role": "primary training source",
+      "n": 14119,
+      "positives": 1096,
+      "note": "154 files, 15.46 h, 10,979 weakly labeled 1 s intervals; file-level split 123 train / 31 holdout; train 627 cough / 8084 other; holdout 203 / 2065; CC BY-NC 4.0."
+    },
+    {
+      "id": "mapda_corpus",
+      "kind": "dataset_inventory",
+      "dataset": "MAP-DA",
+      "role": "held-out cross-species source",
+      "n": 725,
+      "positives": 266,
+      "note": "725 clips, 16.08 min, 44.1 kHz stereo normalized to 16 kHz mono; cough 266, ab 211, metal 200, excretion 48."
+    },
+    {
+      "id": "panns_backbone",
+      "kind": "model_artifact",
+      "dataset": "AudioSet",
+      "role": "frozen feature extractor",
+      "note": "PANNs Cnn14_16k, mAP 0.438. Not PigPulse-labeled audio and not an accuracy result."
+    },
+    {
+      "id": "live_barn_history",
+      "kind": "unlabeled_live",
+      "dataset": "PigPulse barn",
+      "role": "historical observation",
+      "n": 1511,
+      "positives": null,
+      "note": "0 cough detections, mean p 0.0105, max p 0.0687, observed 2026-11-13. Unlabeled live observation, not accuracy."
+    },
+    {
+      "id": "manual_session",
+      "kind": "manual",
+      "dataset": "Pi clip archive",
+      "role": "operator-labeled manual runs",
+      "note": "Dynamic session counts come from /api/status.manual. Clips are unlabeled until the operator labels them; results are not field accuracy."
+    }
+  ]
+}
