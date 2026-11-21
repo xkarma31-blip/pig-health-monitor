@@ -62,6 +62,55 @@ tolerates it; **the wiring wants attention.**
 > re-reading `/ambient`; and do not call it fixed either, since the wiring
 > fault has not been touched.
 
+> **POWER-LOSS INCIDENT 2026-11-21 09:46:37 PST — thermal and mic are DOWN.**
+> Measured, not inferred:
+>
+> | Evidence | Reading |
+> |---|---|
+> | Last line of the previous boot | `09:46:37` bridge telemetry log, no shutdown sequence |
+> | `last -x` shutdown records | none — hard cut, not a clean reboot |
+> | Panic / OOM in previous boot | none found |
+> | Camera 802.11 rx counter | `1,039,344,204` → `44,594,264` (counter reset = camera power-cycled) |
+> | New boot | `09:46:35`, NTP re-synchronised |
+>
+> The Pi came back. The camera came back. **Two devices did not:**
+>
+> - **MLX90640 (thermal):** `pigpulse-thermal` is `active` but retries every
+>   10 s and logs `I2C FAULT ... [EREMOTEIO]`. `sudo i2cdetect -y 1` shows
+>   **no device at 0x33** — the sensor does not ACK at all. `/data` returns
+>   `ok:false` (no cached frame after restart). Power flags are clean
+>   (`get_throttled=0x0`), which only means the Pi's PMIC saw no sag — this
+>   is the sensor's 3V3/wiring, not the SoC.
+> - **ESP32-S3 (mic/ambient):** not associated to the AP, `ping
+>   192.168.69.15` fails, and `dnsmasq` has logged **zero** DHCP requests
+>   from `68:ee:8f:dd:31:3c` since the cut. Its last fresh row is
+>   `01:47:06Z`; a single later row at `02:01:35Z` repeats `rms=74043`,
+>   `ambient=31.55`, `humidity=72.67` **exactly**, so it is a frozen or
+>   replayed buffer, not a live reading.
+>
+> The watchdog did its job in a real incident: `MIC_DISCONNECTED /
+> CRITICAL` at `01:47:16.720Z` with a **77,039-byte JPEG** attached — the
+> first live proof of the module-level `_capture_frame` fix.
+> `pi-thermal-01`'s last row before the cut was `center=43.89,
+> ambient=38.19, ambientSrc=mlx-internal, humidity=0` — the die-temp
+> fallback, correctly labelled as such.
+>
+> **Do not** call either sensor dead: both were measuring minutes before
+> the event. **Do not** call the power fixed either. Physical checks, in
+> order: (1) measure 3V3 at the MLX90640 VDD and reseat SDA/SCL/GND,
+> (2) confirm the ESP32-S3's own supply is alive and its WiFi credentials
+> survived (brown-out NVS corruption is possible), (3) replace the 5 V
+> feed with ≥2 A, 18 AWG, 1000 µF bulk — the measured 4.5 V / 3.13 V under
+> load predates this incident and is the leading suspect.
+>
+> Schema note (same day): `telemetry` gained `ambientSrc` (`sht45` /
+> `mlx-internal`) and `pipelineVerdict` (the radiometry verdict:
+> `WARMUP|NORMAL|SUSPECT|FEVER|HYPERTHERMIA`). The bridge guard still
+> strips `verdict`/`bodyTemp`/`temperature`/`alerts` by design — the raw
+> frame claim stays out of the database; only the derived, zone-based
+> verdict is persisted.
+
+
 > **The clock hypothesis was tested and rejected (2026-11-13).** The obvious
 > explanation — long leads raising bus capacitance so the sensor misreads its
 > own address — was tested by A/B-ing the I²C clock on the live board over
