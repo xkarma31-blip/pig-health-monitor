@@ -59,9 +59,9 @@
       "kind": "dataset_inventory",
       "dataset": "aSwine",
       "role": "primary training source",
-      "n": 14119,
-      "positives": 1096,
-      "note": "154 files, 15.46 h, 10,979 weakly labeled 1 s intervals; file-level split 123 train / 31 holdout; train 627 cough / 8084 other; holdout 203 / 2065; CC BY-NC 4.0."
+      "n": 10979,
+      "positives": 830,
+      "note": "154 files, 15.46 h, 10,979 weakly labeled 1 s intervals in the aSwine train+holdout splits only; file-level split 123 train / 31 holdout; train 627 cough / 8084 other; holdout 203 / 2065; CC BY-NC 4.0. The 14,119/1,096 figures in the merged feature corpus include MAP-DA and belong to the whole corpus, not aSwine alone."
     },
     {
       "id": "mapda_corpus",

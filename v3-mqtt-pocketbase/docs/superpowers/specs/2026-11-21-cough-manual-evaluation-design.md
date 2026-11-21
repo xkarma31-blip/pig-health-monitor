@@ -1,7 +1,7 @@
 # Design — Manual cough evaluation, reset semantics, and provenance-separated statistics
 
 - **Date:** 2026-11-21
-- **Status:** Approved for spec review; implementation has not started.
+- **Status:** Implemented and verified 2026-11-21; follow-ups recorded in the final integration review.
 - **Canonical scope:** `v3-mqtt-pocketbase/backend/cough/` and the Pi dashboard surfaces.
 - **Canon note:** this file lives under `v3-mqtt-pocketbase/docs/` because repository-root `docs/` is frozen reference material (`CANON.md §3.1`).
 

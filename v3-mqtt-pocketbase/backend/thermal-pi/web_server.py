@@ -1163,8 +1163,8 @@ class Handler(BaseHTTPRequestHandler):
         """Cough toggle, manual run, and manual reset accept POST; others 405.
 
         Added for /cough so the enable/disable switch can be a real POST
-        instead of a state-changing GET. No existing endpoint used POST, so
-        nothing else changes behaviour.
+        instead of a state-changing GET. /announce is the only other POST
+        endpoint; all other cough routes return 405.
         """
         url = urlparse(self.path)
         if url.path == "/announce":
