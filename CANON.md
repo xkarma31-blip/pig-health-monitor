@@ -9,6 +9,65 @@
 > the wire, or the databases — not from a spec sheet). **Section 0.9's widget
 > and thermal claims were verified 2026-11-17.** **§0.1's SHT45 live status was
 > re-measured 2026-11-21.** The previous verification was 2026-10-29.
+>
+> **2026-11-21 12:16 PST — see §0.2 for the post-mortem of today's Barn AP /
+> WAN-dongle outage, including operator-inflicted damage and the exact
+> recovery state.**
+
+---
+
+## 0.2 POST-MORTEM 2026-11-21 — Barn AP / WAN dongle / classifier outage
+
+> All claims below are from measurements today (journal, `iw`, scans, DB) —
+> no spec sheets. This section records **operator-inflicted damage** honestly.
+
+### What broke and why
+
+| Event | Evidence | Cause |
+|---|---|---|
+| Barn camera + ESP disassociated **11:10:06 / 11:10:10** | hostapd journal; 0 stations since; camera/ESP ping fail | Barn-side devices dropped — cause NOT established (not OOM: `dmesg`/`journalctl -k` empty; RAM 3.7 Gi, free 853 Mi) |
+| **WAN dongle `wlan1` put into monitor mode 4×** (11:41:36, 11:50, 11:55) | journal: `iw dev wlan1 set type monitor`; `hardware address type 1 -> 803`; `carrier lost` | **My RF diagnostic scripts** (`rf_sniff.py`, `rf_rssi.py`) — I left the WAN client radio in monitor mode. This is the real fault I introduced today. |
+| Classification service inactive at 10:57–11:10 | `ConditionPathExists=/run/pigpulse/audio-ok` unmet; gate skipped | Root cause: gate's `PrivateTmp=true` wrote the flag to a private tmpfs. **Fixed**: removed from unit (`9158b22`), flag now visible; classifier starts when audio passes. |
+| AP "not visible" on laptop + phone | fresh scans: PigPulse BSSID `dc:a6:32:87:63:a1` absent on ch6 and ch1 | **Not hidden** (`ignore_broadcast_ssid=0`, `macaddr_acl=0`). Devices are on GFiber at the house; Pi/AP at the Barn on ethernet tether. Phone's own log shows it associated to PigPulse at **-45/-40 dBm** earlier today — AP radiates. |
+
+### Current state (12:16 PST) — all measured
+- **Core services all active**: hostapd, PocketBase, bridge, thermal, CCTV,
+  portal, mosquitto, tailscaled.
+- **AP healthy**: wlan0 `PigPulse`, type AP, ch6, `hostapd_cli state=ENABLED`.
+- **Internet via eth1 tether** (`default via 10.42.0.1`), as designed when WAN
+  dongle is down. Funnel `/live/data` 200.
+- **Thermal telemetry live** (pi-thermal-01 rows 3 s old).
+- **Mic telemetry stale** (s3-mic-01 last at 03:50 UTC, ~27 min) — Barn ESP
+  offline (0 stations, ping fails).
+- **WAN dongle wlan1**: `type managed` (restored from my monitor-mode damage),
+  MAC intact `00:1f:05:6c:51:bc`, but **DOWN / NO-CARRIER**, wpa `SCANNING`.
+  Stale status file claims `STATE=UP ip=192.168.254.127` from an earlier
+  association — do not trust it; the interface is down. **Not reliable.**
+- Load average ~5 (elevated by stale SSH sessions from my background jobs —
+  killed; and the repeated scan/restart attempts).
+
+### Honest assessment of MY mistakes today
+1. Put the WAN dongle into monitor mode repeatedly for RF sniffing → left it
+   DOWN. **This is the one real fault I introduced**; the dongle was already
+   flaky per `pigpulse-ap-resolve` comments ("RF-dead 2026-11-12", "wedges on
+   scan"), but I made it worse.
+2. Changed AP channel 6→1→6 and restarted hostapd (reverted).
+3. Killed my own SSH session during cleanup (no lasting effect).
+4. Repeated `systemctl restart pigpulse-uplink-split` via background jobs that
+   left stale sshd sessions — caused SSH banner timeouts (load 7).
+
+### What I did NOT do
+Did not hide the SSID, did not move the AP to the dongle, did not touch the
+tunnel/PB/MQTT/thermal. Changes committed: `deedf92` (portal mesh allowlist),
+`9158b22` (audio-gate PrivateTmp fix), plus CANON doc updates.
+
+### Recovery / stability requirements (not yet achieved)
+- **WAN dongle must be restored to a clean `managed` state and re-associated
+  to GFiber** (`pigpulse-uplink-split` reset routine). Until then the Pi has
+  **no independent internet** — laptop sleep kills all remote paths.
+- **Barn camera + ESP need to re-associate** (physical/power at the Barn).
+- Re-verify after recovery: mic telemetry fresh, `/esp/status connected=true`,
+  camera frame at `/cctv?snapshot=1`, `wan-sta.status` truthful, load < 2.
 
 ---
 
