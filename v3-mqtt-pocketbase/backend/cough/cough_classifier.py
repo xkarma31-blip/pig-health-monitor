@@ -61,6 +61,8 @@ except Exception as _e:                       # pragma: no cover
     print(f"[cough] pcm_downmix unavailable ({_e}); falling back to upstream 16 kHz",
           flush=True)
 
+from manual_session import ManualSession       # noqa: E402
+
 HERE = Path(__file__).resolve().parent
 STATE_FILE = HERE / "state.json"
 # 20261120: durable audit trail. The in-RAM deque (maxlen 720) resets on every
@@ -227,6 +229,8 @@ class State:
         self.upstream_error = ""
         self.infer_ms: deque = deque(maxlen=200)
         self.scored = 0
+        self.manual = ManualSession()
+        self.manual_lock = threading.RLock()
         self.last_cough_alert = 0.0
         self.skipped_disabled = 0
         self.skipped_busy = 0
@@ -516,6 +520,8 @@ def status() -> dict:
     # `with ST.lock:` block — this caught a real self-deadlock on the first
     # request, because threading.Lock is not reentrant.
     agg = aggregate()
+    with ST.manual_lock:
+        manual = ST.manual.status()
     with ST.lock:
         return {
             "ok": True,
@@ -546,6 +552,12 @@ def status() -> dict:
                 "ort_threads": ORT_THREADS,
             },
             "aggregate": agg,
+            "manual": manual,
+            "active_result_source": (
+                "live" if agg.get("windows", 0) > 0
+                else "manual" if manual.get("last") is not None
+                else "none"
+            ),
             "windows": list(ST.windows)[-60:][::-1],
             "model": {
                 "name": "PANNs Cnn14_16k (frozen) + logistic head",
