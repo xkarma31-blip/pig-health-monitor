@@ -1130,11 +1130,11 @@ Do not use `git add -A`; the same file has unrelated uncommitted mic-staleness c
 
 ### Task 9: Update documentation and proxy comments
 
-**Objective:** Document semantics and make the read-only boundary explicit without changing behavior.
+**Objective:** Document semantics, make the read-only boundary explicit, and harden the Pi HTTPS proxy's cough POST surface with an allowlist and body limit.
 
 **Files:**
 - Modify: `v3-mqtt-pocketbase/backend/cough/README.md`
-- Modify: `v3-mqtt-pocketbase/backend/thermal-pi/web_server.py` (docstring near line 1140)
+- Modify: `v3-mqtt-pocketbase/backend/thermal-pi/web_server.py` (`do_POST` docstring and cough POST routing near lines 1139-1153)
 - Modify: `v3-mqtt-pocketbase/backend/workers/readonly_pb_proxy.py` (comment near line 383)
 
 **Step 1: README section**
@@ -1156,7 +1156,39 @@ accuracy**. Labeled evaluation numbers live in `evaluation.json` and are labeled
 by dataset, threshold, and confusion counts.
 ```
 
-**Step 2: Proxy comments**
+**Step 2: Harden the Pi HTTPS proxy cough POST surface**
+
+Near the other module constants in `web_server.py`, add:
+
+```python
+COUGH_POST_ROUTES = {"/api/toggle", "/api/manual/run", "/api/manual/reset"}
+COUGH_MAX_POST_BYTES = 16 * 1024
+```
+
+In `Handler.do_POST`, replace the cough branch with:
+
+```python
+        if url.path == "/cough" or url.path.startswith("/cough/"):
+            target = url.path[len("/cough"):] or "/"
+            if target not in COUGH_POST_ROUTES:
+                self._send(405, "text/plain",
+                           b"POST not allowed for this cough route")
+                return
+            try:
+                length = int(self.headers.get("Content-Length") or 0)
+            except (TypeError, ValueError):
+                self._send(400, "text/plain", b"Bad Content-Length")
+                return
+            if length < 0 or length > COUGH_MAX_POST_BYTES:
+                self._send(413, "text/plain", b"Request body too large")
+                return
+            self._proxy_cough(url, "POST")
+            return
+```
+
+Keep `GET /cough*` unchanged and keep `/announce` unchanged.
+
+**Step 3: Proxy comments**
 
 In `web_server.py`, change the `do_POST` docstring first sentence to:
 
@@ -1171,7 +1203,7 @@ In `readonly_pb_proxy.py`, append to the `PI_ROUTES` comment:
     # deliberately forwards only /cough/api/status as a GET.
 ```
 
-**Step 3: Verify**
+**Step 4: Verify**
 
 Run:
 
@@ -1182,7 +1214,7 @@ npm run ci:backend
 
 Expected: `backend OK`.
 
-**Step 4: Commit**
+**Step 5: Commit**
 
 ```bash
 git add v3-mqtt-pocketbase/backend/cough/README.md v3-mqtt-pocketbase/backend/thermal-pi/web_server.py v3-mqtt-pocketbase/backend/workers/readonly_pb_proxy.py
