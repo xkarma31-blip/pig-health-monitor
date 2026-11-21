@@ -32,7 +32,7 @@ It does **not** change firmware, retrain the model, delete audit history, or exp
 | Reset scope | Test-session only: manual counts, last result, session ID, current 60-second verdict, and alert-cooldown latch. |
 | Reset must not do | Change `enabled`; delete `windows.jsonl`, WAV clips, alerts, lifetime counters, or evaluation data. |
 | Memory scope | Show existing classifier RSS in the Pi cough card and manual panel. No threshold or alert. |
-| Exposure | Controls remain on the Pi/LAN dashboard; the public proxy stays read-only. |
+| Exposure | Controls are **Pi-dashboard controls, not authenticated operator controls**. The public proxy stays read-only; any client that can reach the Pi HTTPS server can currently POST through `/cough/*`. |
 
 ---
 
@@ -115,6 +115,13 @@ Response:
 
 Derived values are `null` when their denominator is zero.
 
+POST request bodies must be JSON objects no larger than 16 KiB. Malformed JSON,
+non-object JSON, missing/invalid `file`, and missing/invalid `label` return `400`;
+an oversized body returns `413`. A reset that races an in-flight inference is
+guarded by capturing the session generation before inference and verifying it
+again under `ST.manual_lock` before recording, so an old result cannot land in a
+newly reset session.
+
 ### 5.2 `POST /api/manual/reset`
 
 Effect:
@@ -131,6 +138,9 @@ Response:
 { "ok": true, "session_id": "uuid", "ts": 1760000000.0 }
 ```
 
+If a body is supplied it must be a valid JSON object within 16 KiB; otherwise
+return `400` or `413` as above.
+
 ### 5.3 `GET /api/status`
 
 Existing fields keep their names and meanings. Add:
@@ -143,7 +153,7 @@ The UI still renders live and manual panels separately; `active_result_source` i
 
 ### 5.4 Existing `/api/clips`
 
-The uncommitted `/api/clips` endpoint is the clip source for the dashboard selector. No new upload endpoint is added.
+The already-committed `/api/clips` endpoint is the clip source for the dashboard selector. No new upload endpoint is added.
 
 ---
 
@@ -204,8 +214,9 @@ Each record carries: `id`, `kind` (`labeled_evaluation`, `unlabeled_live`, `manu
 Add to the existing card:
 
 - clip selector populated from `/api/clips`;
-- label selector with exactly `cough` / `other`;
-- **Run** button, disabled until both are selected;
+- label selector with an empty `Select label...` placeholder plus exactly `cough` / `other`;
+- **Run** button, disabled until both a clip and an explicit valid label are selected, controlled by one shared enable helper;
+- clip options are created with DOM APIs and `textContent`, never interpolated into `innerHTML`;
 - **Reset** button;
 - result line: clip, operator label, score, prediction, correct/incorrect;
 - session line: windows, TP, FP, FN, TN, accuracy, precision, recall, FP rate;
@@ -232,7 +243,7 @@ No functional change. `CoughClassifierCard` remains read-only and does not show 
 - No upload, no arbitrary dataset path, no shell invocation, no new dependency.
 - Manual runs never publish MQTT alerts.
 - Reset never deletes files or changes `enabled`.
-- POST routes remain LAN/Pi-dashboard-only through the existing HTTPS proxy.
+- POST routes are Pi-dashboard controls, not authenticated operator controls. The classifier listens only on loopback, but the Pi HTTPS server accepts any client that can reach it; the public proxy still refuses writes. Do not describe this as an authorization boundary.
 - Firmware is untouched; no serial fault log is required because no flashing occurs.
 
 ---
@@ -240,8 +251,10 @@ No functional change. `CoughClassifierCard` remains read-only and does not show 
 ## 10. Testing
 
 - Pure helper tests: label validation, confusion accumulation, undefined-denominator `null`, reset/new session ID.
-- Validator tests: path traversal, missing file, wrong channel count/rate/width, wrong sample count.
+- Validator tests: path traversal, missing file, wrong channel count/rate/width, wrong sample count, absolute paths, sibling-prefix paths, and symlink escapes.
+- A lazy `load_model()` seam and injected `embed_fn` / `prob_fn` let HTTP tests import the classifier without the uncommitted 304 MB ONNX body. Production behavior is unchanged: `main()` calls `load_model()` before starting threads.
 - Integration checks: manual run does not add to `State.windows`, `windows.jsonl`, clips, alerts, or lifetime counters.
+- HTTP checks: strict JSON-object parsing, 16 KiB body limit with `413`, `400` for invalid inputs, top-level `session_id`, and generation guard when Reset races inference.
 - Reset checks: verdict becomes `NO DATA`, cooldown latch clears, `enabled` and durable artifacts are unchanged.
 - Backend gate: `npm run ci:backend` plus focused Python tests.
 - Browser check: select clip + label → Run shows a result; Reset clears it; RSS remains visible; no alert is published.
@@ -253,11 +266,13 @@ No functional change. `CoughClassifierCard` remains read-only and does not show 
 - `backend/cough/cough_classifier.py`
 - `backend/cough/manual_session.py` (new)
 - `backend/cough/evaluation.json` (new)
-- `backend/cough/tests/test_manual_session.py` (new)
+- `backend/thermal-pi/tests/test_cough_manual_session.py` (new)
+- `backend/thermal-pi/tests/test_cough_manual_http.py` (new)
 - `backend/thermal-pi/static/index.html`
 - `backend/cough/README.md`
-- `backend/thermal-pi/web_server.py` docstring only if needed
+- `backend/thermal-pi/web_server.py` (POST allowlist and body limit)
 - `backend/workers/readonly_pb_proxy.py` comment only if needed
+- root `package.json` (test script)
 
 ---
 
@@ -282,4 +297,6 @@ No functional change. `CoughClassifierCard` remains read-only and does not show 
 5. The aSwine numbers are shown with dataset, threshold, confusion counts, and the “not live accuracy” qualifier.
 6. MAP-DA is not presented as having a usable positive-prediction operating point at `0.2061`.
 7. Classifier RSS is visible in the Pi cough card.
-8. All backend and browser gates pass; no independent provider is retried after HTTP 429.
+8. Manual routes are described as Pi-dashboard controls, not authenticated operator controls; the public proxy refuses writes.
+9. HTTP tests run without the 304 MB ONNX body via the lazy-model injection seam.
+10. All backend and browser gates pass; no independent provider is retried after HTTP 429.
