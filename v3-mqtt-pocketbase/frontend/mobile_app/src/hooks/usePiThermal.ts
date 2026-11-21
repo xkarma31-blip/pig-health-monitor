@@ -46,6 +46,11 @@ export interface PiPbStats {
   min?: number;
   ambient?: number;
   verdict?: string;
+  /**
+   * Radiometry pipeline verdict (WARMUP/NORMAL/SUSPECT/FEVER/HYPERTHERMIA).
+   * Stored under its own name because the thermal guard strips `verdict`.
+   */
+  pipelineVerdict?: string;
   timestamp?: unknown;
 }
 
@@ -125,12 +130,18 @@ export function usePiThermal(): PiThermalSnapshot {
         max: num(rec.max),
         min: num(rec.min),
         ambient: num(rec.ambient),
+        pipelineVerdict:
+          typeof rec.pipelineVerdict === 'string'
+            ? rec.pipelineVerdict
+            : undefined,
         verdict:
-          typeof rec.verdict === 'string'
-            ? rec.verdict
-            : typeof rec.status === 'string'
-              ? rec.status
-              : undefined,
+          typeof rec.pipelineVerdict === 'string' && rec.pipelineVerdict
+            ? rec.pipelineVerdict
+            : typeof rec.verdict === 'string'
+              ? rec.verdict
+              : typeof rec.status === 'string'
+                ? rec.status
+                : undefined,
         timestamp: rec.timestamp ?? rec.created,
       });
     });

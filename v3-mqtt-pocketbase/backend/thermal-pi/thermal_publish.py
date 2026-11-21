@@ -320,6 +320,18 @@ class ThermalPublisher:
             # the die self-heats, so a stored row without this label cannot be
             # told apart from a real air reading. Research-audit requirement.
             "ambientSrc": st.get("ambientSrc"),
+            # The radiometry pipeline's verdict (WARMUP/NORMAL/SUSPECT/FEVER/
+            # HYPERTHERMIA), computed from drift-corrected zones, not from the
+            # raw frame centre. It is published under its own name because the
+            # bridge's thermal guard deliberately strips `verdict`/`bodyTemp`
+            # (Master, 2026-11-02: a scene temperature must never be stored as
+            # a pig temperature). Without this field the fever deliverable was
+            # computed, shown on the dashboard, and then thrown away before it
+            # reached the database — verified 2026-11-21: rows carried
+            # verdict='' while /data said HYPERTHERMIA. A name the guard does
+            # not know is the only way to persist the derived claim while
+            # keeping the raw claim dropped.
+            "pipelineVerdict": st.get("verdict", "UNKNOWN"),
         }
         if self._publish("telemetry", payload):
             self._published += 1
