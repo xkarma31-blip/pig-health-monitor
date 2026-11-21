@@ -675,6 +675,8 @@ PAGE = r"""<!doctype html>
     border-radius:0 8px 8px 0;color:#e8eefc;font-size:16px}
  a{color:var(--cyan)}
  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px}
+ select{font:inherit;font-size:16px;padding:10px;border-radius:9px;
+        background:#2e2e55;color:#f2f6ff;border:1px solid #3a3a66}
 </style></head><body>
 <h1>PigPulse &mdash; Cough Classifier <span class="pill off" id="statePill">OFF</span></h1>
 <div class="sub">On-device acoustic inference &middot; barn mic &rarr; this Pi &rarr; nothing leaves the device</div>
@@ -696,6 +698,21 @@ PAGE = r"""<!doctype html>
       <div><div class="k">Mean p</div><div class="v" id="aggMean">-</div></div>
     </div>
   </div>
+</div>
+
+<div class="card"><h2>Manual evaluation &mdash; labeled Pi clip</h2>
+  <div class="row">
+    <select id="manualClip" aria-label="Saved clip"><option value="">Loading clips…</option></select>
+    <select id="manualLabel" aria-label="Operator label">
+      <option value="">Select label...</option>
+      <option value="cough">cough</option>
+      <option value="other">other</option>
+    </select>
+    <button id="manualRun" class="btn-on" disabled>Run</button>
+    <button id="manualReset" class="btn-off">Reset</button>
+  </div>
+  <div class="sub" id="manualResult" style="margin-top:12px">No manual run yet.</div>
+  <div class="grid" style="margin-top:14px" id="manualStats"></div>
 </div>
 
 <div class="card"><h2>Runtime</h2><div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(132px,1fr))">
@@ -785,13 +802,6 @@ function render(s){
       : 'Every scored window really was 5 s of continuous audio. Nothing has been discarded for gaps.';
 
   const m = s.model;
-  $('modelNote').innerHTML =
-    '<b>It ranks, it does not detect.</b> At the operating threshold it reaches '+
-    'precision <b>0.41</b> and recall <b>0.50</b> per 5 s window &mdash; that is '+
-    'roughly one false alarm per true cough, so a single window is <b>never</b> a '+
-    'diagnosis. Read the 60 s verdict instead. Cross-species ROC '+
-    (m.roc_auc_cross_species||'-')+' is '+(m.roc_auc_cross_species>0.8?'good':'weak')+
-    ', but the labels come from one farm and the cough labels are weak.';
   $('modelGrid').innerHTML = [
     ['Checkpoint','Cnn14_16k mAP 0.438 (AudioSet)'],
     ['Window', m.window_s+' s / '+m.frame_count+' frames'],
@@ -802,6 +812,22 @@ function render(s){
     ['ROC-AUC cross-species', m.roc_auc_cross_species],
     ['Runtime', m.runtime],
   ].map(([k,v])=>'<div><div class="k">'+k+'</div><div class="mono">'+v+'</div></div>').join('');
+
+  manualRender(s.manual);
+  const evalRec = (s.evaluation && s.evaluation.records || [])
+    .find(r => r.id === 'aswine_holdout');
+  if (evalRec) {
+    const c = evalRec.confusion, m = evalRec.metrics;
+    $('modelNote').innerHTML =
+      '<b>Labeled evaluation — aSwine holdout, not live accuracy.</b> '+
+      'TP '+c.tp+' · FP '+c.fp+' · FN '+c.fn+' · TN '+c.tn+
+      ' · accuracy '+(100*m.accuracy).toFixed(1)+' %'+
+      ' · precision '+m.precision.toFixed(3)+
+      ' · recall '+m.recall.toFixed(3)+
+      ' · false-positive rate '+m.false_positive_rate.toFixed(3)+
+      '. MAP-DA at this threshold predicts no positives; its ROC-AUC '+
+      m.roc_auc+' is ranking only.';
+  }
 
   const rows = s.windows || [];
   if(!rows.length){
@@ -816,6 +842,110 @@ function render(s){
       '</td></tr>').join('');
   }
 }
+
+let coughClips = [];
+
+async function manualLoadClips() {
+  try {
+    const r = await fetch(BASE + '/api/clips', {cache:'no-store'});
+    const j = await r.json();
+    coughClips = j.clips || [];
+    const sel = $('manualClip');
+    sel.replaceChildren();
+    if (!coughClips.length) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'No saved clips';
+      sel.append(opt);
+    } else {
+      const first = document.createElement('option');
+      first.value = '';
+      first.textContent = 'Select clip...';
+      sel.append(first);
+      for (const c of coughClips) {
+        const opt = document.createElement('option');
+        opt.value = c.file;
+        opt.textContent = c.file;
+        sel.append(opt);
+      }
+    }
+    manualEnableRun();
+  } catch (e) {
+    const sel = $('manualClip');
+    sel.replaceChildren();
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = 'Clip list unavailable';
+    sel.append(opt);
+    manualEnableRun();
+  }
+}
+
+function manualEnableRun() {
+  const clip = $('manualClip').value;
+  const label = $('manualLabel').value;
+  $('manualRun').disabled = !(clip && (label === 'cough' || label === 'other'));
+}
+
+function manualRender(m) {
+  const stats = $('manualStats');
+  if (!m || !m.windows) {
+    stats.innerHTML = '';
+    $('manualResult').textContent = 'No manual run yet.';
+    return;
+  }
+  const cells = [
+    ['Windows', m.windows], ['TP', m.tp], ['FP', m.fp], ['FN', m.fn], ['TN', m.tn],
+    ['Accuracy', m.accuracy === null ? '-' : (100 * m.accuracy).toFixed(1) + ' %'],
+    ['Precision', m.precision === null ? '-' : m.precision.toFixed(3)],
+    ['Recall', m.recall === null ? '-' : m.recall.toFixed(3)],
+    ['FP rate', m.false_positive_rate === null ? '-' : m.false_positive_rate.toFixed(3)],
+  ];
+  stats.innerHTML = cells.map(([k,v]) =>
+    '<div><div class="k">'+k+'</div><div class="mono">'+v+'</div></div>').join('');
+  const last = m.last || {};
+  $('manualResult').textContent = last.file
+    ? last.file + ' · label ' + last.label + ' · p ' + Number(last.p).toFixed(4)
+      + ' · predicted ' + last.predicted + ' · ' + (last.correct ? 'CORRECT' : 'WRONG')
+    : 'No manual run yet.';
+}
+
+async function manualRunClick() {
+  const btn = $('manualRun');
+  btn.disabled = true;
+  try {
+    const r = await fetch(BASE + '/api/manual/run', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({file:$('manualClip').value, label:$('manualLabel').value})});
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'run failed');
+    manualRender(j.session);
+  } catch (e) {
+    $('manualResult').textContent = 'Run failed: ' + e.message;
+  } finally {
+    manualEnableRun();
+  }
+}
+
+async function manualResetClick() {
+  $('manualReset').disabled = true;
+  try {
+    const r = await fetch(BASE + '/api/manual/reset', {method:'POST'});
+    const j = await r.json();
+    if (!j.ok) throw new Error(j.error || 'reset failed');
+    await refresh();
+  } catch (e) {
+    $('manualResult').textContent = 'Reset failed: ' + e.message;
+  } finally {
+    $('manualReset').disabled = false;
+  }
+}
+
+$('manualRun').onclick = manualRunClick;
+$('manualReset').onclick = manualResetClick;
+$('manualClip').onchange = manualEnableRun;
+$('manualLabel').onchange = manualEnableRun;
+manualLoadClips();
 
 async function refresh(){
   try{
