@@ -734,10 +734,19 @@ class ZoneFeverPipeline:
     # -- public -------------------------------------------------------------
     def update(self, frame_c: Sequence[float] | np.ndarray,
                t_s: float = 0.0,
-               ambient_c: float = 25.0) -> dict:
+               ambient_c: float = 25.0,
+               humidity_c: float | None = None,
+               thi_c: float | None = None) -> dict:
         """
         One pipeline tick. `frame_c` may be a 768 list (the format the rest of
         thermal-pi uses) or a (24, 32) array.
+
+        `humidity_c` (SHT45 RH %) and `thi_c` (Temperature-Humidity Index) are
+        carried through for Jia et al. (2020): humidity must be modelled
+        alongside ambient, or a humid tropical pen reads every pig as feverish.
+        They are recorded on the payload for the research audit trail and used
+        to annotate (not override) the verdict — the zone logic stays the
+        authority, but a high-THI frame is flagged as heat-stress-confounded.
         """
         arr = np.asarray(frame_c, dtype=np.float64).reshape(H, W)
 
@@ -896,9 +905,20 @@ class ZoneFeverPipeline:
             "max": round(hot, 2),
             "min": round(mn, 2),
             "ambient": round(float(ambient_c), 2),
+            "humidity": (round(float(humidity_c), 1)
+                         if humidity_c is not None else None),
+            "thi": (round(float(thi_c), 1)
+                    if thi_c is not None else None),
             "status": verdict,
             "alerts": flags,
             "verdict": verdict,
+            # --- Jia et al. heat-stress confound -----------------------------
+            # A high THI means the whole pen is heat-stressed, not one pig
+            # feverish: an absolute fever flag is then a confound, not a
+            # diagnosis. Annotated (never overridden) so the research audit
+            # can separate true fever from a hot day. See fever-pipeline notes.
+            "heatStressCon": (thi_c >= 78.0
+                              if thi_c is not None else None),
             # --- new, additive ----------------------------------------------
             "zoneCount": len(zones),
             "zones": zones,

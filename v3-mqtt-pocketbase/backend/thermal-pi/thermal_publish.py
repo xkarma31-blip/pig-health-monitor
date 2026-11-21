@@ -306,6 +306,15 @@ class ThermalPublisher:
             "status": st.get("verdict", "UNKNOWN"),
             "alerts": flags,
             "verdict": st.get("verdict", "UNKNOWN"),
+            # Jia et al. (2020): humidity + THI must be modelled alongside
+            # ambient. Carried so the fever verdict is research-auditable —
+            # a high-THI frame flags the verdict as heat-stress-confounded
+            # rather than a true fever.
+            "humidity": (round(float(st["humidity"]), 1)
+                         if st.get("humidity") is not None else None),
+            "thi": (round(float(st["thi"]), 1)
+                    if st.get("thi") is not None else None),
+            "heatStressCon": bool(st.get("heatStressCon", False)),
         }
         if self._publish("telemetry", payload):
             self._published += 1

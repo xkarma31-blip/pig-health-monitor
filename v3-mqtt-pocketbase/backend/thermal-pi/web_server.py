@@ -518,12 +518,21 @@ def _loop() -> None:
                 sht_c = (amb_src.get("temperature")
                          if amb_src.get("state") == "live" else None)
                 ambient_c = sht_c if sht_c is not None else amb[0]
+                # Jia et al. (2020): humidity must be modelled alongside
+                # ambient, or a humid tropical pen reads every pig as feverish.
+                # Both are recorded on every frame for the research audit; a
+                # high THI annotates the verdict as heat-stress-confounded.
+                sht_h = (amb_src.get("humidity")
+                         if amb_src.get("state") == "live" else None)
+                sht_thi = (amb_src.get("thi")
+                           if amb_src.get("state") == "live" else None)
 
                 st = pigpulse_stats.frame_stats(img)
                 if _radiometry is not None:
                     # Correction chain: drift compensation (clamped, reference
                     # region), per-pixel rolling baseline, zone classification.
-                    res = _radiometry.update(img, t1, ambient_c)
+                    res = _radiometry.update(img, t1, ambient_c,
+                                             humidity_c=sht_h, thi_c=sht_thi)
                     bias = float(res.get("driftBiasC", 0.0))
                     corrected = [x - bias for x in img]
                     # Legacy dashboard/publisher keys, recomputed on the
@@ -539,6 +548,14 @@ def _loop() -> None:
                     st["pixels"] = [round(x, 2) for x in corrected]
                     st["ambientSrc"] = ("sht45" if sht_c is not None
                                         else "mlx-internal")
+                    # Jia et al. (2020): humidity + THI reach the published
+                    # telemetry so every row is research-auditable.
+                    if "humidity" in res:
+                        st["humidity"] = res["humidity"]
+                    if "thi" in res:
+                        st["thi"] = res["thi"]
+                    if "heatStressCon" in res:
+                        st["heatStressCon"] = res["heatStressCon"]
                     st["radiometry"] = {
                         "zoneCount": res.get("zoneCount"),
                         "baselineReady": res.get("baselineReady"),
@@ -551,6 +568,9 @@ def _loop() -> None:
                         "driftAbsorbedC": res.get("driftAbsorbedC"),
                         "reflectedTempC": res.get("reflectedTempC"),
                         "roiPeakC": res.get("roiPeakC"),
+                        "humidity": res.get("humidity"),
+                        "thi": res.get("thi"),
+                        "heatStressCon": res.get("heatStressCon"),
                     }
                 else:
                     # Legacy path (PIGPULSE_RADIOMETRY=0 or import failure):
