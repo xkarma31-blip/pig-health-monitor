@@ -146,9 +146,11 @@ export async function fetchPiJson<T>(base: string, path: string, timeoutMs = 400
 }
 
 async function blobToRenderable(blob: Blob): Promise<string> {
-  if (Platform.OS === 'web' && typeof URL !== 'undefined' && 'createObjectURL' in URL) {
-    return URL.createObjectURL(blob);
-  }
+  // Data URLs on BOTH web and native. Blob object URLs can be revoked while
+  // still displayed (the frame buffer evicts old frames, and the panel shows
+  // a clock-aligned older frame), which renders a gray box. Data URLs are
+  // immutable strings — no revoke lifecycle, no gray frame. 6 KB JPEGs make
+  // this cheap (~8.5 KB base64).
   return await new Promise<string>((resolve, reject) => {
     try {
       const r = new FileReader();

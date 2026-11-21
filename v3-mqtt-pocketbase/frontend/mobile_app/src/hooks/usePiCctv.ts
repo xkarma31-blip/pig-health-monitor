@@ -39,6 +39,9 @@ export interface PiCctvSnapshot {
 }
 
 const POLL_MS = 2500;
+// On the remote (Expo/bridge) path, poll slower: the free-tier host
+// rate-limits uncached requests, and CCTV does not need 2.5 s freshness.
+const REMOTE_POLL_MS = 10_000;
 const LIVE_WINDOW_MS = 8000;
 const MAX_FRAMES = 8;
 
@@ -90,7 +93,8 @@ export function usePiCctv(base: string | null): PiCctvSnapshot {
     };
 
     void tick();
-    const poll = setInterval(() => void tick(), POLL_MS);
+    const pollMs = base === '/api/pi' || base.endsWith('/api/pi') ? REMOTE_POLL_MS : POLL_MS;
+    const poll = setInterval(() => void tick(), pollMs);
     const clock = setInterval(() => setNow(Date.now()), 1000);
 
     return () => {

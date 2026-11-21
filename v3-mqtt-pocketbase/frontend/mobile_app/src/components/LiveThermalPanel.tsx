@@ -976,6 +976,7 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
       >
         {cctvUrl ? (
           <Image
+            key={cctvUrl.slice(-24)}
             source={{ uri: cctvUrl }}
             style={{ width: '100%', aspectRatio: 16 / 9, borderRadius: radius.md, backgroundColor: colors.bg }}
             resizeMode="cover"

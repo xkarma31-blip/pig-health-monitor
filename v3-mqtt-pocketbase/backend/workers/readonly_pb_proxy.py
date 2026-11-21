@@ -571,7 +571,10 @@ class Handler(BaseHTTPRequestHandler):
             return
         self.send_response(200)
         self.send_header("Content-Type", "image/jpeg")
-        self.send_header("Cache-Control", "no-cache")
+        # Cache for 10 s: the Expo free-tier host rate-limits uncached
+        # requests, and CCTV does not need sub-10 s freshness. The app still
+        # polls, but the browser/CDN serves most frames from cache.
+        self.send_header("Cache-Control", "public, max-age=10")
         self.send_header("Access-Control-Allow-Origin", "*")
         if frame_ts.isdigit():
             self.send_header("X-Frame-Ts", frame_ts)

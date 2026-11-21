@@ -37,12 +37,15 @@ import os
 import queue
 import socket
 import ssl
+import subprocess
 import sys
 import threading
 import time
+import wave
 from collections import deque
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.parse import urlparse, parse_qs
 
 import numpy as np
 import onnxruntime as ort
@@ -60,6 +63,20 @@ except Exception as _e:                       # pragma: no cover
 
 HERE = Path(__file__).resolve().parent
 STATE_FILE = HERE / "state.json"
+# 20261120: durable audit trail. The in-RAM deque (maxlen 720) resets on every
+# restart, so every scored window is also appended to a JSONL file, and any
+# window above the clip threshold is written to a WAV file. This is what makes
+# "which frame was classified" answerable after the fact.
+WINDOWS_LOG = HERE / "windows.jsonl"
+CLIPS_DIR = HERE / "clips"
+CLIP_THRESHOLD = float(os.environ.get("COUGH_CLIP_THRESHOLD", "0.05"))
+# 20261121: one cough alert per minute maximum. The thermal publisher latches
+# per "sick pig"; here we latch per time window so a coughing pen produces a
+# useful trickle, not 12 alerts a minute.
+COUGH_ALERT_COOLDOWN_S = float(os.environ.get("COUGH_ALERT_COOLDOWN_S", "60"))
+# Optional override so the alert path can be tested without waiting for a real
+# cough above the model threshold. Leave unset in production.
+ALERT_THRESHOLD_ENV = os.environ.get("COUGH_ALERT_THRESHOLD", "")
 
 SR = 16000
 WINDOW_S = 5.0
@@ -143,6 +160,57 @@ def db(x: float) -> float:
     return 20.0 * math.log10(max(x, 1e-9))
 
 
+def save_clip(w: np.ndarray, rec: dict) -> str | None:
+    """Write a 5 s mono 16 kHz WAV for a scored window.
+
+    Returns the path relative to CLIPS_DIR, or None on failure. Never raises:
+    a full disk must not take the classifier down.
+    """
+    try:
+        day = time.strftime("%Y%m%d", time.localtime(rec["ts"]))
+        d = CLIPS_DIR / day
+        d.mkdir(parents=True, exist_ok=True)
+        name = (f"{time.strftime('%H%M%S', time.localtime(rec['ts']))}"
+                f"_p{rec['p']:.4f}.wav")
+        path = d / name
+        pcm = np.clip(w, -1.0, 1.0)
+        pcm16 = (pcm * 32767.0).astype("<i2")
+        with wave.open(str(path), "wb") as wf:
+            wf.setnchannels(1)
+            wf.setsampwidth(2)
+            wf.setframerate(SR)
+            wf.writeframes(pcm16.tobytes())
+        return str(path.relative_to(CLIPS_DIR))
+    except Exception:
+        return None
+
+
+def capture_frame() -> str:
+    """Best-effort CCTV snapshot as a data URL for the alert record.
+
+    Same contract as the thermal publisher's `_capture_frame`: a missing camera
+    never blocks an alert, and the frame is what the camera saw at the moment
+    the cough was scored. Returns '' on any failure.
+    """
+    try:
+        import base64
+        import ssl
+        import urllib.request
+
+        ctx = ssl._create_unverified_context()
+        url = os.environ.get(
+            "PIGPULSE_CCTV_SNAPSHOT_URL",
+            "https://127.0.0.1:8080/cctv?snapshot=1",
+        )
+        with urllib.request.urlopen(url, timeout=3, context=ctx) as resp:
+            data = resp.read()
+        if not data or not data.startswith(b"\xff\xd8"):
+            return ""
+        return "data:image/jpeg;base64," + base64.b64encode(data).decode()
+    except Exception:
+        return ""
+
+
 # ------------------------------------------------------------------- state
 class State:
     def __init__(self) -> None:
@@ -159,6 +227,7 @@ class State:
         self.upstream_error = ""
         self.infer_ms: deque = deque(maxlen=200)
         self.scored = 0
+        self.last_cough_alert = 0.0
         self.skipped_disabled = 0
         self.skipped_busy = 0
         self.dropped_gappy = 0     # window thrown away: audio had gaps
@@ -338,6 +407,59 @@ def scorer_loop() -> None:
             "infer_ms": round(ms, 1),
             "emb_norm": round(float(np.linalg.norm(e)), 3),
         }
+        # Durable audit: one JSON line per scored window, even if the process
+        # restarts a minute later. Append-only; the scorer is the only writer.
+        if p >= CLIP_THRESHOLD:
+            clip = save_clip(w, rec)
+            if clip:
+                rec["clip"] = clip
+        try:
+            with WINDOWS_LOG.open("a") as f:
+                f.write(json.dumps(rec, separators=(",", ":")) + "\n")
+        except Exception:
+            pass
+        # Cough alert: same MQTT alerts topic as thermal, so the bridge writes
+        # it to PocketBase → cloud sync → app. Throttled to one per minute.
+        try:
+            alert_threshold = (float(ALERT_THRESHOLD_ENV)
+                               if ALERT_THRESHOLD_ENV else THRESH)
+        except ValueError:
+            alert_threshold = THRESH
+        if p >= alert_threshold:
+            now_a = time.time()
+            with ST.lock:
+                due = now_a - ST.last_cough_alert >= COUGH_ALERT_COOLDOWN_S
+                if due:
+                    ST.last_cough_alert = now_a
+            if due:
+                msg = (f"Cough window p={p:.4f} >= {alert_threshold:.4f} at "
+                       f"{time.strftime('%H:%M:%S', time.localtime(ts))}")
+                if rec.get("clip"):
+                    msg += f" · clip {rec['clip']}"
+                alert = {
+                    "type": "COUGH",
+                    "deviceId": "s3-mic-01",
+                    "severity": "warning",
+                    "message": msg,
+                    "ts": int(ts * 1000),
+                    "p": round(p, 6),
+                }
+                # Attach the CCTV frame at the moment of the alert, same as the
+                # thermal publisher does. Best-effort: a missing camera never
+                # blocks the alert, but the app needs the frame to show what was
+                # happening when the cough was scored. This is the "frame" field
+                # the app's AlertDetail already knows how to render.
+                frame = capture_frame()
+                if frame:
+                    alert["frame"] = frame
+                try:
+                    subprocess.run(
+                        ["mosquitto_pub", "-h", "127.0.0.1", "-t",
+                         "pig/s3-mic-01/alerts", "-m", json.dumps(alert)],
+                        timeout=5, check=False,
+                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                except Exception:
+                    pass
         with ST.lock:
             ST.windows.append(rec)
             ST.scored += 1
@@ -670,6 +792,35 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/api/windows":
             with ST.lock:
                 self._json(200, {"windows": list(ST.windows)[-200:][::-1]})
+        elif path == "/api/clips":
+            limit = 50
+            try:
+                qs = parse_qs(urlparse(self.path).query)
+                limit = max(1, min(200, int(qs.get("limit", ["50"])[0])))
+            except Exception:
+                pass
+            clips = []
+            if CLIPS_DIR.exists():
+                files = sorted(CLIPS_DIR.rglob("*.wav"),
+                               key=lambda x: x.stat().st_mtime, reverse=True)
+                for p in files[:limit]:
+                    try:
+                        clips.append({"file": str(p.relative_to(CLIPS_DIR)),
+                                      "size": p.stat().st_size,
+                                      "mtime": p.stat().st_mtime})
+                    except OSError:
+                        continue
+            self._json(200, {"clips": clips, "threshold": CLIP_THRESHOLD})
+        elif path == "/api/clip":
+            qs = parse_qs(urlparse(self.path).query)
+            name = (qs.get("file") or [""])[0]
+            root = CLIPS_DIR.resolve()
+            p = (CLIPS_DIR / name).resolve()
+            if not str(p).startswith(str(root)) or not p.is_file():
+                self._json(404, {"ok": False, "error": "not found"})
+                return
+            self._send(200, "audio/wav", p.read_bytes())
+            return
         elif path == "/robots.txt":
             self._send(200, "text/plain", b"User-agent: *\nDisallow:\n")
         else:

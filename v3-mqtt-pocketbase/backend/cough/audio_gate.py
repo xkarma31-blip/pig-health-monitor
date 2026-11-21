@@ -29,6 +29,8 @@ import urllib.request
 
 URL = "https://127.0.0.1:8080/esp/stream?rate=16000&raw=1"
 FLAG = "/run/pigpulse/audio-ok"
+FAIL_FILE = "/run/pigpulse/audio-gate-fails"
+FAIL_STRIKES = 3
 SAMPLE_RATE = 16000
 WINDOW_S = 2.0
 BYTES = int(SAMPLE_RATE * WINDOW_S) * 2  # s16le mono after downmix
@@ -88,24 +90,36 @@ def measure(a: array.array) -> dict:
     return m
 
 
-def enforce(good: bool, result: dict) -> None:
-    import os
+def enforce(good: bool, result: dict) -> bool:
+    """Apply hysteresis and return True if the gate is OPEN after this check.
+
+    A single 2 s glitch must not stop the classifier: it takes FAIL_STRIKES
+    consecutive failed checks (~90 s at the 30 s timer) to close the gate.
+    """
     import subprocess
     from pathlib import Path
     flag = Path(FLAG)
-    existed = flag.exists()
+    fails = 0
+    try:
+        fails = int(Path(FAIL_FILE).read_text().strip() or "0")
+    except Exception:
+        fails = 0
     if good:
+        fails = 0
         flag.parent.mkdir(parents=True, exist_ok=True)
         flag.touch(mode=0o644, exist_ok=True)
-    elif existed:
-        flag.unlink(missing_ok=True)
-        # Only stop on a transition to bad; a service that was never started
-        # by the gate needs no action.
-        subprocess.run(["systemctl", "stop", "pigpulse-cough.service"],
-                       capture_output=True, timeout=15)
-    if not good and not existed:
-        return
-    os.chmod(FLAG, 0o644) if good else None
+    else:
+        fails += 1
+        if fails >= FAIL_STRIKES:
+            if flag.exists():
+                flag.unlink(missing_ok=True)
+                subprocess.run(["systemctl", "stop", "pigpulse-cough.service"],
+                               capture_output=True, timeout=15)
+    try:
+        Path(FAIL_FILE).write_text(str(fails))
+    except Exception:
+        pass
+    return flag.exists()
 
 
 def main() -> int:
@@ -119,16 +133,18 @@ def main() -> int:
         result = {"pass": False, "reason": f"fetch_error: {type(e).__name__}: {e}"}
         print(json.dumps(result))
         if args.enforce:
-            enforce(False, result)
+            open_ = enforce(False, result)
+            return 0 if open_ else 1
         return 1
     print(json.dumps(result, sort_keys=True))
+    open_ = True
     if args.enforce:
         try:
-            enforce(result["pass"], result)
+            open_ = enforce(result["pass"], result)
         except Exception as e:
             print(json.dumps({"enforce_error": f"{type(e).__name__}: {e}"}))
             return 2
-    return 0 if result["pass"] else 1
+    return 0 if (result["pass"] or open_) else 1
 
 
 if __name__ == "__main__":
