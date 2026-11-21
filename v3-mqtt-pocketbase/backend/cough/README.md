@@ -115,3 +115,16 @@ difference in the model or the head.
 **0 coughs in 1511 windows.** The classifier is running and scoring; the barn
 simply has not produced a detected cough in that window. That is a statement
 about the audio, not about the model.
+
+## Manual evaluation (2026-11-21)
+
+The dashboard can score a saved 5 s clip after an operator labels it `cough` or
+`other` **before** the score is shown. `POST /api/manual/run` uses the same
+embedding and logistic head as live audio. It does not append to `windows.jsonl`,
+save a clip, publish a cough alert, or increment `runtime.windows_scored`.
+
+`POST /api/manual/reset` clears the manual session, the current 60 s verdict, and
+the alert cooldown latch. It does not switch classification off and never deletes
+history. Manual statistics are operator-labeled Pi-clip results, **not field
+accuracy**. Labeled evaluation numbers live in `evaluation.json` and are labeled
+by dataset, threshold, and confusion counts.

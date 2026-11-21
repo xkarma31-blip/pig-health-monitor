@@ -108,6 +108,9 @@ _CCTV_FIRST_FRAME_S = 5.0
 # Hard cap for /esp/record?seconds= (WAV is built in memory: 60 s ~= 11 MB)
 ESP_RECORD_MAX_S = 60
 
+COUGH_POST_ROUTES = {"/api/toggle", "/api/manual/run", "/api/manual/reset"}
+COUGH_MAX_POST_BYTES = 16 * 1024
+
 # How long /esp/stream waits for the mic's first chunk before answering 503.
 # Opening a stream that never carries audio would make the UI claim playback
 # over silence; the mic pushes every ~40 ms, so 2 s is already generous.
@@ -1157,7 +1160,7 @@ class Handler(BaseHTTPRequestHandler):
         self._send(404, "text/plain", b"Not found")
 
     def do_POST(self) -> None:  # noqa: N802
-        """Only the cough toggle accepts a POST; every other path is 405.
+        """Cough toggle, manual run, and manual reset accept POST; others 405.
 
         Added for /cough so the enable/disable switch can be a real POST
         instead of a state-changing GET. No existing endpoint used POST, so
@@ -1168,6 +1171,19 @@ class Handler(BaseHTTPRequestHandler):
             self._announce(url)
             return
         if url.path == "/cough" or url.path.startswith("/cough/"):
+            target = url.path[len("/cough"):] or "/"
+            if target not in COUGH_POST_ROUTES:
+                self._send(405, "text/plain",
+                           b"POST not allowed for this cough route")
+                return
+            try:
+                length = int(self.headers.get("Content-Length") or 0)
+            except (TypeError, ValueError):
+                self._send(400, "text/plain", b"Bad Content-Length")
+                return
+            if length < 0 or length > COUGH_MAX_POST_BYTES:
+                self._send(413, "text/plain", b"Request body too large")
+                return
             self._proxy_cough(url, "POST")
             return
         self._send(405, "text/plain", b"Method not allowed")

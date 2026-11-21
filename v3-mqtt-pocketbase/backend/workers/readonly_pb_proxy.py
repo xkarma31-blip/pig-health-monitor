@@ -382,6 +382,8 @@ class Handler(BaseHTTPRequestHandler):
 
     # Read-only passthrough to the Pi thermal console (the deployed app's live
     # thermal view rides this). Key gate applies like everything else.
+    # Manual run/reset POSTs stay on the Pi dashboard; this public proxy
+    # deliberately forwards only /cough/api/status as a GET.
     PI_ROUTES = {"/data", "/ambient", "/esp/status", "/health", "/cough/api/status"}
 
     def _proxy_pi(self, path: str, query: str) -> None:
