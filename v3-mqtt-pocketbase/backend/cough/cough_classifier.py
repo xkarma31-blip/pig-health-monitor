@@ -45,6 +45,7 @@ import wave
 from collections import deque
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlparse, parse_qs
 
 import numpy as np
@@ -61,7 +62,8 @@ except Exception as _e:                       # pragma: no cover
     print(f"[cough] pcm_downmix unavailable ({_e}); falling back to upstream 16 kHz",
           flush=True)
 
-from manual_session import ManualSession       # noqa: E402
+from manual_session import (ManualSession, resolve_clip, read_wav_window,
+                            validate_label)                      # noqa: E402
 
 HERE = Path(__file__).resolve().parent
 STATE_FILE = HERE / "state.json"
@@ -97,6 +99,7 @@ UPSTREAM_PATH = ("/esp/stream?rate=native&raw=1" if pcm_downmix is not None
                  else "/esp/stream?rate=16000&raw=1")
 LISTEN_HOST = "127.0.0.1"
 LISTEN_PORT = 8096
+MAX_POST_BYTES = 16 * 1024
 ORT_THREADS = int(os.environ.get("REC_ORT_THREADS", "2"))
 # Measured on the Pi (2026-11-16, real 304 MB Cnn14_16k model, 4 cores):
 #   intra_op 1 -> 2552.9 ms/window   2 -> 1346.1 ms   3 -> 958.2 ms   4 -> 890.2 ms
@@ -514,6 +517,53 @@ def aggregate() -> dict:
     }
 
 
+def score_manual_clip(name: str, label: str,
+                      embed_fn=None, prob_fn=None) -> dict[str, Any]:
+    """Score one operator-labeled archive clip. No side effects outside manual state.
+
+    embed_fn/prob_fn are injectable so HTTP tests never need the 304 MB ONNX body.
+    The generation guard prevents a reset during inference from accepting a stale
+    result into the newly reset session.
+    """
+    label = validate_label(label)
+    path = resolve_clip(name, CLIPS_DIR)
+    w = read_wav_window(path, sample_rate=SR, samples=WINDOW_N)
+    with ST.manual_lock:
+        generation = ST.manual.session_id
+
+    e = (embed_fn or embed)(w)
+    p = (prob_fn or cough_prob)(e)
+    predicted = "cough" if p >= THRESH else "other"
+    result = {
+        "file": name,
+        "p": round(float(p), 6),
+        "predicted": predicted,
+        "threshold": THRESH,
+        "ts": time.time(),
+    }
+    with ST.manual_lock:
+        if ST.manual.session_id != generation:
+            raise ValueError("session changed during scoring; rerun")
+        ST.manual.record(label, predicted, result)
+        session = ST.manual.status()
+        return {
+            "ok": True,
+            "session_id": session["session_id"],
+            "result": ST.manual.last,
+            "session": session,
+        }
+
+
+def reset_manual_session() -> str:
+    """Clear manual state and the live 60 s verdict; keep all durable state."""
+    with ST.manual_lock:
+        session_id = ST.manual.reset()
+    with ST.lock:
+        ST.windows.clear()
+        ST.last_cough_alert = 0.0
+    return session_id
+
+
 def status() -> dict:
     ST.sample_cpu()
     # aggregate() takes the lock itself, so it must be called OUTSIDE any
@@ -838,21 +888,64 @@ class Handler(BaseHTTPRequestHandler):
         else:
             self._json(404, {"ok": False, "error": "not found", "path": path})
 
-    def do_POST(self):  # noqa: N802
-        path = self.path.split("?", 1)[0]
-        if path != "/api/toggle":
-            self._json(404, {"ok": False, "error": "not found", "path": path})
-            return
-        n = int(self.headers.get("Content-Length") or 0)
+    def _read_json_body(self):
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+        except (TypeError, ValueError):
+            return None, 400
+        if n < 0 or n > MAX_POST_BYTES:
+            return None, 413
         raw = self.rfile.read(n) if n else b"{}"
         try:
-            want = bool(json.loads(raw.decode() or "{}").get("enabled"))
-        except Exception as e:  # noqa: BLE001
-            self._json(400, {"ok": False, "error": f"bad json: {e}"})
+            payload = json.loads(raw.decode("utf-8") or "{}")
+        except Exception:  # noqa: BLE001
+            return None, 400
+        if not isinstance(payload, dict):
+            return None, 400
+        return payload, None
+
+    def do_POST(self):  # noqa: N802
+        path = self.path.split("?", 1)[0]
+        payload, err = self._read_json_body()
+        if err:
+            self._json(err, {"ok": False, "error":
+                              "oversized body" if err == 413 else "bad json"})
             return
-        ST.set_enabled(want)
-        print(f"[cough] classification {'ENABLED' if want else 'disabled'}", flush=True)
-        self._json(200, {"ok": True, "enabled": ST.enabled, "ts": ST.toggle_ts})
+
+        if path == "/api/toggle":
+            try:
+                want = bool(payload.get("enabled"))
+            except Exception as e:  # noqa: BLE001
+                self._json(400, {"ok": False, "error": f"bad json: {e}"})
+                return
+            ST.set_enabled(want)
+            print(f"[cough] classification {'ENABLED' if want else 'disabled'}",
+                  flush=True)
+            self._json(200, {"ok": True, "enabled": ST.enabled,
+                             "ts": ST.toggle_ts})
+            return
+
+        if path == "/api/manual/run":
+            name = payload.get("file")
+            label = payload.get("label")
+            if not isinstance(name, str) or not name:
+                self._json(400, {"ok": False, "error": "file is required"})
+                return
+            try:
+                response = score_manual_clip(name, label)
+            except (ValueError, OSError, wave.Error) as e:
+                self._json(400, {"ok": False, "error": str(e)})
+                return
+            self._json(200, response)
+            return
+
+        if path == "/api/manual/reset":
+            sid = reset_manual_session()
+            self._json(200, {"ok": True, "session_id": sid,
+                             "ts": time.time()})
+            return
+
+        self._json(404, {"ok": False, "error": "not found", "path": path})
 
 
 def main() -> int:
