@@ -816,6 +816,8 @@ function render(s){
   manualRender(s.manual);
   const evalRec = (s.evaluation && s.evaluation.records || [])
     .find(r => r.id === 'aswine_holdout');
+  const mapdaRec = (s.evaluation && s.evaluation.records || [])
+    .find(r => r.id === 'mapda_cross_species');
   if (evalRec) {
     const c = evalRec.confusion, m = evalRec.metrics;
     $('modelNote').innerHTML =
@@ -826,7 +828,8 @@ function render(s){
       ' · recall '+m.recall.toFixed(3)+
       ' · false-positive rate '+m.false_positive_rate.toFixed(3)+
       '. MAP-DA at this threshold predicts no positives; its ROC-AUC '+
-      m.roc_auc+' is ranking only.';
+      (mapdaRec && mapdaRec.metrics ? mapdaRec.metrics.roc_auc : '-')+
+      ' is ranking only.';
   }
 
   const rows = s.windows || [];
