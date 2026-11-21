@@ -995,7 +995,7 @@ export function LiveThermalPanel({ pi }: { pi: PiThermalSnapshot }) {
             }}
           >
             <Text style={[typography.bodySmall, { color: colors.textMuted, textAlign: 'center' }]}>
-              CCTV OFF
+              {cctvMode === 'off' ? 'CCTV OFF' : cctvState.showFrame ? 'CONNECTING…' : 'NO FRAME YET'}
             </Text>
           </View>
         )}

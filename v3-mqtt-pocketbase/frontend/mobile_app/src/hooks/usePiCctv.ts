@@ -42,7 +42,10 @@ const POLL_MS = 2500;
 // On the remote (Expo/bridge) path, poll slower: the free-tier host
 // rate-limits uncached requests, and CCTV does not need 2.5 s freshness.
 const REMOTE_POLL_MS = 10_000;
-const LIVE_WINDOW_MS = 8000;
+// The live window must be >= the poll interval, or the newest frame is
+// declared stale for the tail of every cycle (10 s poll > 8 s window used
+// to blank CCTV 2 s out of 10 — and far worse when a poll ran slow).
+const LIVE_WINDOW_MS = 20_000;
 const MAX_FRAMES = 8;
 
 function revoke(url: string) {
