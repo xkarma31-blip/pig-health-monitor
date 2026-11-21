@@ -22,7 +22,9 @@ fake_ort.GraphOptimizationLevel = types.SimpleNamespace(ORT_ENABLE_ALL=1)
 fake_ort.InferenceSession = lambda *a, **k: types.SimpleNamespace(
     run=lambda outputs, feed: [np.zeros((1, 2048), dtype=np.float32)])
 fake_ort.CPUExecutionProvider = "CPU"
-sys.modules.setdefault("onnxruntime", fake_ort)
+_ORT_WAS_IMPORTED = "onnxruntime" in sys.modules
+_ORT_ORIGINAL = sys.modules.get("onnxruntime")
+sys.modules["onnxruntime"] = fake_ort
 
 BACKEND = pathlib.Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(BACKEND / "cough"))
@@ -44,6 +46,9 @@ class ManualHttpTest(unittest.TestCase):
         for p in self.patches:
             p.start()
         cc.ST.manual.reset()
+        cc.ST.enabled = False
+        cc.ST.toggle_ts = 0.0
+        cc.SESS = None
         cc.ST.windows.clear()
         cc.ST.scored = 0
         cc.ST.infer_ms.clear()
@@ -52,6 +57,10 @@ class ManualHttpTest(unittest.TestCase):
     def tearDown(self):
         for p in reversed(self.patches):
             p.stop()
+        if _ORT_WAS_IMPORTED:
+            sys.modules["onnxruntime"] = _ORT_ORIGINAL
+        else:
+            sys.modules.pop("onnxruntime", None)
         self.tmp.cleanup()
 
     def _write_clip(self, name="clip.wav"):
